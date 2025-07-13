@@ -172,7 +172,8 @@ export class MemStorage implements IStorage {
       score: null,
       correctAnswers: null,
       totalQuestions: insertQuiz.questionCount,
-      answers: null
+      answers: null,
+      timeLimit: insertQuiz.timeLimit || null
     };
     this.quizzes.set(id, quiz);
     return quiz;
@@ -261,7 +262,7 @@ export class MemStorage implements IStorage {
       .map(date => new Date(date!).toDateString())
       .sort();
     
-    const uniqueDates = [...new Set(dates)];
+    const uniqueDates = Array.from(new Set(dates));
     if (uniqueDates.length === 0) return 0;
     
     let streak = 1;

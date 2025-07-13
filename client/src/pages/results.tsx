@@ -15,6 +15,8 @@ export default function Results() {
   const { data: quiz, isLoading } = useQuery<Quiz>({
     queryKey: ['/api/quiz', quizId],
     enabled: !!quizId,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
@@ -34,20 +36,51 @@ export default function Results() {
     );
   }
 
-  if (!quiz || !quiz.completedAt) {
+  if (!quiz) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Results Not Found</h1>
-            <p className="text-gray-600">The quiz results you're looking for don't exist or the quiz hasn't been completed.</p>
+            <p className="text-gray-600">The quiz you're looking for doesn't exist.</p>
             <Button 
               onClick={() => setLocation("/")}
               className="mt-4 bg-primary hover:bg-blue-700"
             >
               Return to Dashboard
             </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!quiz.completedAt) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Quiz Not Completed</h1>
+            <p className="text-gray-600">This quiz hasn't been completed yet.</p>
+            <div className="mt-4 text-sm text-gray-500">
+              Debug info: completedAt = {JSON.stringify(quiz.completedAt)}
+            </div>
+            <div className="flex gap-4 justify-center mt-4">
+              <Button 
+                onClick={() => setLocation(`/quiz/${quizId}`)}
+                className="bg-primary hover:bg-blue-700"
+              >
+                Continue Quiz
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setLocation("/")}
+              >
+                Return to Dashboard
+              </Button>
+            </div>
           </div>
         </div>
       </div>

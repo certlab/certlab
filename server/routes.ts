@@ -122,7 +122,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const quiz = await storage.createQuiz({
         ...quizData,
-        userId
+        userId,
+        subcategoryIds: quizData.subcategoryIds || []
       });
       
       res.json(quiz);
@@ -216,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user progress for each category
       for (const categoryId of quiz.categoryIds as number[]) {
         const categoryQuestions = questions.filter(q => q.categoryId === categoryId);
-        const categoryCorrect = results.filter(r => {
+        const categoryCorrect = results.filter((r: any) => {
           const question = questions.find(q => q.id === r.questionId);
           return question?.categoryId === categoryId && r.correct;
         }).length;
