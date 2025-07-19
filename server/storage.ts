@@ -1,9 +1,10 @@
 import { 
   users, categories, subcategories, questions, quizzes, userProgress, lectures, masteryScores,
+  badges, userBadges, userGameStats,
   type User, type InsertUser, type Category, type InsertCategory,
   type Subcategory, type InsertSubcategory, type Question, type InsertQuestion,
   type Quiz, type InsertQuiz, type UserProgress, type InsertUserProgress,
-  type MasteryScore, type InsertMasteryScore
+  type MasteryScore, type InsertMasteryScore, type Badge, type UserBadge, type UserGameStats
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, desc, gte, lte } from "drizzle-orm";
@@ -53,6 +54,7 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   constructor() {
     this.seedData();
+    this.createSystemBadges();
   }
 
   private async seedData() {
@@ -2277,14 +2279,14 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     return totalWeight > 0 ? Math.round(totalWeightedScore / totalWeight) : 0;
   }
 
-  // Override updateQuiz to update mastery scores when quiz is completed
+  // Override updateQuiz to update mastery scores and check achievements when quiz is completed
   async updateQuiz(id: number, updates: Partial<Quiz>): Promise<Quiz> {
     const [updatedQuiz] = await db.update(quizzes)
       .set(updates)
       .where(eq(quizzes.id, id))
       .returning();
 
-    // If quiz is being completed with answers, update mastery scores
+    // If quiz is being completed with answers, update mastery scores and check achievements
     if (updates.completedAt && updates.answers && Array.isArray(updates.answers)) {
       const quiz = await this.getQuiz(id);
       if (quiz) {
@@ -2302,10 +2304,393 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
             isCorrect
           );
         }
+
+        // Check for new achievements after quiz completion
+        await this.checkAndAwardAchievements(quiz.userId);
+        
+        // Update user activity streak
+        await this.updateUserActivity(quiz.userId);
       }
     }
 
     return updatedQuiz;
+  }
+
+  // Update user activity for streak tracking
+  async updateUserActivity(userId: number): Promise<void> {
+    const gameStats = await this.getUserGameStats(userId);
+    if (!gameStats) {
+      await this.initializeUserGameStats(userId);
+      return;
+    }
+
+    const today = new Date();
+    const lastActivity = gameStats.lastActivityDate ? new Date(gameStats.lastActivityDate) : null;
+    
+    // Check if activity is on consecutive day
+    let newCurrentStreak = 1;
+    if (lastActivity) {
+      const daysDiff = Math.floor((today.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysDiff === 1) {
+        // Consecutive day - increment streak
+        newCurrentStreak = gameStats.currentStreak + 1;
+      } else if (daysDiff === 0) {
+        // Same day - keep current streak
+        newCurrentStreak = gameStats.currentStreak;
+      }
+      // daysDiff > 1 means streak is broken, reset to 1
+    }
+
+    await this.updateUserGameStats(userId, {
+      currentStreak: newCurrentStreak,
+      longestStreak: Math.max(gameStats.longestStreak, newCurrentStreak),
+      lastActivityDate: today
+    });
+  }
+
+  // Achievement System Methods
+  async initializeUserGameStats(userId: number): Promise<UserGameStats> {
+    // Check if stats already exist
+    const [existingStats] = await db.select().from(userGameStats)
+      .where(eq(userGameStats.userId, userId));
+    
+    if (existingStats) {
+      return existingStats;
+    }
+    
+    // Create new game stats for user
+    const [newStats] = await db.insert(userGameStats).values({
+      userId,
+      totalPoints: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      lastActivityDate: new Date(),
+      totalBadgesEarned: 0,
+      level: 1,
+      nextLevelPoints: 100
+    }).returning();
+    
+    return newStats;
+  }
+
+  async getUserGameStats(userId: number): Promise<UserGameStats | undefined> {
+    const [stats] = await db.select().from(userGameStats)
+      .where(eq(userGameStats.userId, userId));
+    return stats;
+  }
+
+  async updateUserGameStats(userId: number, updates: Partial<UserGameStats>): Promise<UserGameStats> {
+    const [updated] = await db.update(userGameStats)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(userGameStats.userId, userId))
+      .returning();
+    return updated;
+  }
+
+  async getUserBadges(userId: number): Promise<UserBadge[]> {
+    return await db.select()
+      .from(userBadges)
+      .where(eq(userBadges.userId, userId))
+      .orderBy(desc(userBadges.earnedAt));
+  }
+
+  async awardBadge(userId: number, badgeId: number, progress: number = 100): Promise<UserBadge> {
+    // Check if user already has this badge
+    const [existing] = await db.select().from(userBadges)
+      .where(and(eq(userBadges.userId, userId), eq(userBadges.badgeId, badgeId)));
+    
+    if (existing) {
+      // Update progress if it's a progressive badge
+      const [updated] = await db.update(userBadges)
+        .set({ progress, isNotified: false })
+        .where(eq(userBadges.id, existing.id))
+        .returning();
+      return updated;
+    }
+    
+    // Award new badge
+    const [newBadge] = await db.insert(userBadges).values({
+      userId,
+      badgeId,
+      progress,
+      isNotified: false
+    }).returning();
+    
+    // Update user game stats
+    const currentStats = await this.getUserGameStats(userId);
+    if (currentStats) {
+      const badge = await this.getBadge(badgeId);
+      await this.updateUserGameStats(userId, {
+        totalPoints: currentStats.totalPoints + (badge?.points || 10),
+        totalBadgesEarned: currentStats.totalBadgesEarned + 1
+      });
+    }
+    
+    return newBadge;
+  }
+
+  async getBadge(badgeId: number): Promise<Badge | undefined> {
+    const [badge] = await db.select().from(badges)
+      .where(eq(badges.id, badgeId));
+    return badge;
+  }
+
+  async getAllBadges(): Promise<Badge[]> {
+    return await db.select().from(badges)
+      .orderBy(badges.category, badges.name);
+  }
+
+  async createSystemBadges(): Promise<void> {
+    // Check if badges already exist
+    const existingBadges = await db.select().from(badges);
+    if (existingBadges.length > 0) return;
+    
+    console.log("Creating achievement badge system...");
+    
+    // Define comprehensive badge system
+    const systemBadges = [
+      // Progress Badges
+      {
+        name: "First Steps",
+        description: "Complete your first learning session",
+        icon: "👶",
+        category: "progress",
+        requirement: { type: "quiz_completed", count: 1 },
+        color: "green",
+        rarity: "common",
+        points: 10
+      },
+      {
+        name: "Getting Started",
+        description: "Complete 5 learning sessions",
+        icon: "🚀",
+        category: "progress", 
+        requirement: { type: "quiz_completed", count: 5 },
+        color: "blue",
+        rarity: "common",
+        points: 25
+      },
+      {
+        name: "Learning Momentum",
+        description: "Complete 10 learning sessions",
+        icon: "📚",
+        category: "progress",
+        requirement: { type: "quiz_completed", count: 10 },
+        color: "purple",
+        rarity: "uncommon",
+        points: 50
+      },
+      {
+        name: "Quiz Master",
+        description: "Complete 25 learning sessions",
+        icon: "🎓",
+        category: "progress",
+        requirement: { type: "quiz_completed", count: 25 },
+        color: "gold",
+        rarity: "rare",
+        points: 100
+      },
+      
+      // Performance Badges
+      {
+        name: "Perfect Score",
+        description: "Achieve 100% on a learning session",
+        icon: "🌟",
+        category: "performance",
+        requirement: { type: "perfect_score", count: 1 },
+        color: "yellow",
+        rarity: "uncommon",
+        points: 30
+      },
+      {
+        name: "High Achiever",
+        description: "Score 90% or higher on 5 learning sessions",
+        icon: "🏆",
+        category: "performance",
+        requirement: { type: "high_score", threshold: 90, count: 5 },
+        color: "gold",
+        rarity: "rare",
+        points: 75
+      },
+      {
+        name: "Consistent Performer",
+        description: "Maintain 80%+ average across 10 sessions",
+        icon: "⭐",
+        category: "performance",
+        requirement: { type: "avg_score", threshold: 80, count: 10 },
+        color: "silver",
+        rarity: "rare",
+        points: 100
+      },
+      
+      // Streak Badges
+      {
+        name: "Daily Learner",
+        description: "Complete sessions on 3 consecutive days",
+        icon: "🔥",
+        category: "streak",
+        requirement: { type: "daily_streak", count: 3 },
+        color: "orange",
+        rarity: "uncommon",
+        points: 40
+      },
+      {
+        name: "Dedication",
+        description: "Complete sessions on 7 consecutive days",
+        icon: "💪",
+        category: "streak",
+        requirement: { type: "daily_streak", count: 7 },
+        color: "red",
+        rarity: "rare",
+        points: 100
+      },
+      {
+        name: "Unstoppable",
+        description: "Complete sessions on 14 consecutive days",
+        icon: "⚡",
+        category: "streak",
+        requirement: { type: "daily_streak", count: 14 },
+        color: "purple",
+        rarity: "legendary",
+        points: 200
+      },
+      
+      // Mastery Badges
+      {
+        name: "Subject Expert",
+        description: "Achieve 95%+ mastery in any certification area",
+        icon: "🧠",
+        category: "mastery",
+        requirement: { type: "mastery_score", threshold: 95 },
+        color: "blue",
+        rarity: "rare",
+        points: 150
+      },
+      {
+        name: "Multi-Domain Master",
+        description: "Achieve 85%+ mastery in 3 different areas",
+        icon: "🎯",
+        category: "mastery",
+        requirement: { type: "multi_mastery", threshold: 85, areas: 3 },
+        color: "rainbow",
+        rarity: "legendary",
+        points: 300
+      },
+      
+      // Special Achievement Badges
+      {
+        name: "Study Guide Scholar",
+        description: "Generate your first personalized study guide",
+        icon: "📖",
+        category: "special",
+        requirement: { type: "study_guide", count: 1 },
+        color: "purple",
+        rarity: "uncommon",
+        points: 50
+      },
+      {
+        name: "Improvement Seeker",
+        description: "Use review incorrect feature 5 times",
+        icon: "🔄",
+        category: "special",
+        requirement: { type: "review_sessions", count: 5 },
+        color: "green",
+        rarity: "uncommon",
+        points: 40
+      }
+    ];
+    
+    await db.insert(badges).values(systemBadges);
+    console.log(`Created ${systemBadges.length} achievement badges`);
+  }
+
+  async checkAndAwardAchievements(userId: number): Promise<UserBadge[]> {
+    const newBadges: UserBadge[] = [];
+    
+    // Get user statistics
+    const userStats = await this.getUserStats(userId);
+    const userQuizzes = await this.getUserQuizzes(userId);
+    const completedQuizzes = userQuizzes.filter(q => q.completedAt);
+    const userGameStats = await this.getUserGameStats(userId);
+    const existingBadges = await this.getUserBadges(userId);
+    const existingBadgeIds = existingBadges.map(b => b.badgeId);
+    
+    // Get all available badges
+    const allBadges = await this.getAllBadges();
+    
+    for (const badge of allBadges) {
+      // Skip if user already has this badge
+      if (existingBadgeIds.includes(badge.id)) continue;
+      
+      const req = badge.requirement as any;
+      let shouldAward = false;
+      
+      // Check different badge requirements
+      switch (req.type) {
+        case "quiz_completed":
+          shouldAward = completedQuizzes.length >= req.count;
+          break;
+          
+        case "perfect_score":
+          const perfectScores = completedQuizzes.filter(q => q.score === 100);
+          shouldAward = perfectScores.length >= req.count;
+          break;
+          
+        case "high_score":
+          const highScores = completedQuizzes.filter(q => (q.score || 0) >= req.threshold);
+          shouldAward = highScores.length >= req.count;
+          break;
+          
+        case "avg_score":
+          if (completedQuizzes.length >= req.count) {
+            const avgScore = completedQuizzes.reduce((sum, q) => sum + (q.score || 0), 0) / completedQuizzes.length;
+            shouldAward = avgScore >= req.threshold;
+          }
+          break;
+          
+        case "daily_streak":
+          shouldAward = (userGameStats?.currentStreak || 0) >= req.count;
+          break;
+          
+        case "mastery_score":
+          const masteryScores = await this.getUserMasteryScores(userId);
+          const highMastery = masteryScores.filter(m => m.masteryPercentage >= req.threshold);
+          shouldAward = highMastery.length > 0;
+          break;
+          
+        case "multi_mastery":
+          const allMastery = await this.getUserMasteryScores(userId);
+          const qualifyingAreas = allMastery.filter(m => m.masteryPercentage >= req.threshold);
+          shouldAward = qualifyingAreas.length >= req.areas;
+          break;
+          
+        case "study_guide":
+          const userLectures = await this.getUserLectures(userId);
+          shouldAward = userLectures.length >= req.count;
+          break;
+          
+        case "review_sessions":
+          // Count adaptive/review quizzes
+          const reviewSessions = completedQuizzes.filter(q => 
+            q.title?.includes("Review") || q.title?.includes("Adaptive")
+          );
+          shouldAward = reviewSessions.length >= req.count;
+          break;
+      }
+      
+      if (shouldAward) {
+        const newBadge = await this.awardBadge(userId, badge.id);
+        newBadges.push(newBadge);
+      }
+    }
+    
+    return newBadges;
+  }
+
+  async updateUserBadgeNotification(userId: number, badgeId: number, isNotified: boolean): Promise<void> {
+    await db.update(userBadges)
+      .set({ isNotified })
+      .where(and(eq(userBadges.userId, userId), eq(userBadges.badgeId, badgeId)));
   }
 }
 

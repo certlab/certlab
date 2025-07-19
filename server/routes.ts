@@ -446,6 +446,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Achievement system endpoints
+  app.get('/api/user/:userId/achievements', async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Initialize game stats if they don't exist
+      await storage.initializeUserGameStats(userId);
+      
+      // Check for new achievements
+      const newBadges = await storage.checkAndAwardAchievements(userId);
+      
+      // Get all user badges with badge details
+      const userBadges = await storage.getUserBadges(userId);
+      const allBadges = await storage.getAllBadges();
+      
+      // Combine badge data with user progress
+      const badgeData = userBadges.map(userBadge => {
+        const badge = allBadges.find(b => b.id === userBadge.badgeId);
+        return {
+          ...userBadge,
+          badge: badge
+        };
+      });
+      
+      // Get game stats
+      const gameStats = await storage.getUserGameStats(userId);
+      
+      res.json({
+        badges: badgeData,
+        gameStats,
+        newBadges: newBadges.length
+      });
+    } catch (error) {
+      console.error('Error fetching user achievements:', error);
+      res.status(500).json({ error: 'Failed to fetch achievements' });
+    }
+  });
+
+  app.get('/api/badges', async (req: Request, res: Response) => {
+    try {
+      const badges = await storage.getAllBadges();
+      res.json(badges);
+    } catch (error) {
+      console.error('Error fetching badges:', error);
+      res.status(500).json({ error: 'Failed to fetch badges' });
+    }
+  });
+
+  app.post('/api/user/:userId/achievements/check', async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const newBadges = await storage.checkAndAwardAchievements(userId);
+      
+      res.json({
+        newBadges: newBadges.length,
+        badges: newBadges
+      });
+    } catch (error) {
+      console.error('Error checking achievements:', error);
+      res.status(500).json({ error: 'Failed to check achievements' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

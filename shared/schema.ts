@@ -135,6 +135,62 @@ export const insertMasteryScoreSchema = createInsertSchema(masteryScores).omit({
   lastUpdated: true,
 });
 
+// Achievement badges for gamified learning milestones
+export const badges = pgTable("badges", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // e.g., "First Steps", "Quiz Master", "Streak Champion"
+  description: text("description").notNull(),
+  icon: text("icon").notNull(), // Icon class or emoji
+  category: text("category").notNull(), // "progress", "performance", "streak", "mastery"
+  requirement: jsonb("requirement").notNull(), // Flexible requirement definition
+  color: text("color").notNull(), // Badge color theme
+  rarity: text("rarity").notNull(), // "common", "uncommon", "rare", "legendary"
+  points: integer("points").default(0), // Gamification points awarded
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User badges - tracks which badges users have earned
+export const userBadges = pgTable("user_badges", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  badgeId: integer("badge_id").notNull(),
+  earnedAt: timestamp("earned_at").defaultNow(),
+  progress: integer("progress").default(0), // For progressive badges
+  isNotified: boolean("is_notified").default(false), // Whether user has seen the achievement
+});
+
+// User statistics for gamification
+export const userGameStats = pgTable("user_game_stats", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  totalPoints: integer("total_points").default(0),
+  currentStreak: integer("current_streak").default(0),
+  longestStreak: integer("longest_streak").default(0),
+  lastActivityDate: timestamp("last_activity_date"),
+  totalBadgesEarned: integer("total_badges_earned").default(0),
+  level: integer("level").default(1), // User level based on points
+  nextLevelPoints: integer("next_level_points").default(100),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Insert schemas for achievement system
+export const insertBadgeSchema = createInsertSchema(badges).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserBadgeSchema = createInsertSchema(userBadges).omit({
+  id: true,
+  earnedAt: true,
+});
+
+export const insertUserGameStatsSchema = createInsertSchema(userGameStats).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Login schema
 export const loginSchema = z.object({
   email: z.string().email(),
@@ -175,3 +231,9 @@ export type CreateQuizData = z.infer<typeof createQuizSchema>;
 export type SubmitAnswerData = z.infer<typeof submitAnswerSchema>;
 export type InsertMasteryScore = z.infer<typeof insertMasteryScoreSchema>;
 export type MasteryScore = typeof masteryScores.$inferSelect;
+export type InsertBadge = z.infer<typeof insertBadgeSchema>;
+export type Badge = typeof badges.$inferSelect;
+export type InsertUserBadge = z.infer<typeof insertUserBadgeSchema>;
+export type UserBadge = typeof userBadges.$inferSelect;
+export type InsertUserGameStats = z.infer<typeof insertUserGameStatsSchema>;
+export type UserGameStats = typeof userGameStats.$inferSelect;

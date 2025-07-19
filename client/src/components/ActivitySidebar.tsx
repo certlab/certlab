@@ -384,6 +384,20 @@ export default function ActivitySidebar() {
           <Button
             variant="outline"
             className="w-full justify-start material-shadow-hover"
+            onClick={() => window.location.href = '/achievements'}
+          >
+            <div className="flex items-center space-x-3">
+              <i className="fas fa-trophy text-yellow-500"></i>
+              <div className="text-left">
+                <h4 className="text-sm font-medium text-gray-900">View Badges</h4>
+                <p className="text-xs text-gray-500">Learning achievements</p>
+              </div>
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="w-full justify-start material-shadow-hover"
             onClick={handleViewAnalytics}
           >
             <div className="flex items-center space-x-3">
