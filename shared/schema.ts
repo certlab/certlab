@@ -48,6 +48,9 @@ export const quizzes = pgTable("quizzes", {
   correctAnswers: integer("correct_answers"),
   totalQuestions: integer("total_questions"),
   answers: jsonb("answers"), // Array of user answers
+  isAdaptive: boolean("is_adaptive").default(false),
+  adaptiveMetrics: jsonb("adaptive_metrics"), // Tracks wrong answer patterns
+  difficultyLevel: integer("difficulty_level").default(1), // 1-5 scale
 });
 
 export const userProgress = pgTable("user_progress", {
@@ -58,6 +61,10 @@ export const userProgress = pgTable("user_progress", {
   totalQuestions: integer("total_questions").notNull().default(0),
   averageScore: integer("average_score").notNull().default(0),
   lastQuizDate: timestamp("last_quiz_date"),
+  adaptiveDifficulty: integer("adaptive_difficulty").default(1), // 1-5 scale
+  consecutiveCorrect: integer("consecutive_correct").default(0),
+  consecutiveWrong: integer("consecutive_wrong").default(0),
+  weakSubcategories: jsonb("weak_subcategories"), // Array of struggling subcategory IDs
 });
 
 // Insert schemas

@@ -138,6 +138,14 @@ Core entities include:
   - **View Analytics**: Smart scroll to progress section with helpful notification about detailed analytics
   - **Smart State Management**: Actions disabled appropriately (e.g., Review Incorrect requires completed quizzes)
   - **Error Handling**: Proper authentication checks and error messages for all quick actions
+- **Adaptive Learning System**: Revolutionary AI-driven question adjustment based on user performance
+  - **Smart Question Count**: Automatically increases question count (up to 100%) when users struggle with topics
+  - **Performance Analysis**: Tracks consecutive correct/wrong streaks and identifies weak subcategories
+  - **Difficulty Scaling**: Dynamic 1-5 difficulty adjustment based on user progress patterns
+  - **Adaptive Quiz Creation**: New `/api/quiz/adaptive` endpoint for intelligent quiz generation
+  - **Enhanced Quick Actions**: Review Incorrect now uses adaptive learning for targeted improvement
+  - **User Feedback**: Real-time notifications showing adaptive adjustments and reasoning
+  - **Database Schema**: Extended schema with adaptive metrics, difficulty levels, and performance tracking
 - **Database Integration**: Migrated from in-memory storage to PostgreSQL database
   - Added `server/db.ts` with Drizzle database configuration
   - Updated `DatabaseStorage` class to use actual database queries

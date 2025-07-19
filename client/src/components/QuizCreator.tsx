@@ -20,6 +20,7 @@ export default function QuizCreator() {
   const [selectedSubcategories, setSelectedSubcategories] = useState<number[]>([]);
   const [questionCount, setQuestionCount] = useState("20");
   const [timeLimit, setTimeLimit] = useState("30");
+  const [isAdaptive, setIsAdaptive] = useState(false);
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
@@ -32,11 +33,22 @@ export default function QuizCreator() {
 
   const createQuizMutation = useMutation({
     mutationFn: async (quizData: any) => {
-      const response = await apiRequest({ method: "POST", endpoint: "/api/quiz", data: quizData });
+      const endpoint = isAdaptive ? "/api/quiz/adaptive" : "/api/quiz";
+      const response = await apiRequest({ method: "POST", endpoint, data: quizData });
       return response.json();
     },
     onSuccess: (quiz) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      
+      // Show adaptive learning feedback if applicable
+      if (quiz.adaptiveInfo && quiz.adaptiveInfo.increasePercentage > 0) {
+        toast({
+          title: "Adaptive Learning Activated",
+          description: `Question count increased by ${quiz.adaptiveInfo.increasePercentage}% based on your performance (${quiz.adaptiveInfo.originalQuestionCount} → ${quiz.adaptiveInfo.adaptedQuestionCount} questions)`,
+          variant: "default",
+        });
+      }
+      
       setLocation(`/quiz/${quiz.id}`);
     },
     onError: () => {
@@ -97,6 +109,7 @@ export default function QuizCreator() {
       questionCount: parseInt(questionCount),
       timeLimit: timeLimit === "0" ? undefined : parseInt(timeLimit),
       userId: currentUser.id,
+      isAdaptive: isAdaptive,
     };
 
     createQuizMutation.mutate(quizData);
@@ -206,6 +219,33 @@ export default function QuizCreator() {
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        {/* Adaptive Learning Toggle */}
+        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <i className="fas fa-brain text-blue-600"></i>
+              <div>
+                <h4 className="font-medium text-gray-900">Adaptive Learning</h4>
+                <p className="text-sm text-gray-600">
+                  Automatically increases question count when you get answers wrong
+                </p>
+              </div>
+            </div>
+            <Checkbox
+              checked={isAdaptive}
+              onCheckedChange={setIsAdaptive}
+            />
+          </div>
+          {isAdaptive && (
+            <div className="mt-3 p-3 bg-white rounded border border-blue-100">
+              <p className="text-xs text-gray-700">
+                <i className="fas fa-info-circle text-blue-500 mr-2"></i>
+                When enabled, the system analyzes your performance and may add up to 100% more questions to areas where you're struggling.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Start Quiz Button */}

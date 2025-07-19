@@ -115,20 +115,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create quiz
+  // Create quiz with adaptive learning
   app.post("/api/quiz", async (req, res) => {
     try {
       const quizData = createQuizSchema.parse(req.body);
       const userId = parseInt(req.body.userId);
+      const isAdaptive = req.body.isAdaptive || false;
       
       if (!userId) {
         return res.status(400).json({ message: "User ID required" });
       }
       
+      // Calculate adaptive question count if adaptive learning is enabled
+      let adaptiveQuestionCount = quizData.questionCount;
+      if (isAdaptive && quizData.categoryIds) {
+        adaptiveQuestionCount = await storage.getAdaptiveQuestionCount(userId, quizData.questionCount, quizData.categoryIds);
+      }
+      
       const quiz = await storage.createQuiz({
         ...quizData,
         userId,
-        subcategoryIds: quizData.subcategoryIds || []
+        questionCount: adaptiveQuestionCount,
+        subcategoryIds: quizData.subcategoryIds || [],
+        isAdaptive,
+        difficultyLevel: 1
       });
       
       res.json(quiz);
@@ -220,13 +230,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completedAt: new Date()
       });
       
-      // Update user progress for each category
+      // Update user progress for each category and adaptive learning metrics
       for (const categoryId of quiz.categoryIds as number[]) {
         const categoryQuestions = questions.filter(q => q.categoryId === categoryId);
-        const categoryCorrect = results.filter((r: any) => {
+        const categoryResults = results.filter((r: any) => {
           const question = questions.find(q => q.id === r.questionId);
-          return question?.categoryId === categoryId && r.correct;
-        }).length;
+          return question?.categoryId === categoryId;
+        });
+        const categoryCorrect = categoryResults.filter(r => r.correct).length;
         const categoryScore = categoryQuestions.length > 0 
           ? Math.round((categoryCorrect / categoryQuestions.length) * 100)
           : 0;
@@ -237,6 +248,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           averageScore: categoryScore,
           lastQuizDate: new Date()
         });
+
+        // Update adaptive learning metrics
+        if (quiz.isAdaptive) {
+          await storage.updateAdaptiveProgress(quiz.userId, categoryId, categoryResults);
+        }
       }
       
       res.json({
@@ -270,6 +286,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(progress);
     } catch (error) {
       res.status(400).json({ message: "Failed to get user progress" });
+    }
+  });
+
+  // Create adaptive quiz - enhanced version of regular quiz
+  app.post("/api/quiz/adaptive", async (req, res) => {
+    try {
+      const { title, categoryIds, subcategoryIds, questionCount, timeLimit, userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID required" });
+      }
+
+      // Always calculate adaptive question count for this endpoint
+      const adaptiveQuestionCount = await storage.getAdaptiveQuestionCount(userId, questionCount, categoryIds);
+      
+      const quiz = await storage.createQuiz({
+        title: title || "Adaptive Learning Quiz",
+        categoryIds,
+        subcategoryIds: subcategoryIds || [],
+        questionCount: adaptiveQuestionCount,
+        timeLimit,
+        userId,
+        isAdaptive: true,
+        difficultyLevel: 1
+      });
+      
+      res.json({
+        ...quiz,
+        adaptiveInfo: {
+          originalQuestionCount: questionCount,
+          adaptedQuestionCount: adaptiveQuestionCount,
+          increasePercentage: Math.round(((adaptiveQuestionCount - questionCount) / questionCount) * 100)
+        }
+      });
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create adaptive quiz" });
     }
   });
 

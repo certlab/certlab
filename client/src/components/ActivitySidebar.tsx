@@ -109,12 +109,45 @@ export default function ActivitySidebar() {
 
     const categoryId = getLowestPerformingCategory();
     const quizData = {
-      title: "Review Incorrect Answers",
+      title: "Adaptive Review - Incorrect Answers",
       categoryIds: [categoryId],
       questionCount: 10,
       userId: currentUser.id,
+      isAdaptive: true, // Enable adaptive learning for review sessions
     };
-    createQuizMutation.mutate(quizData);
+    
+    // Use adaptive endpoint for targeted practice
+    const mutation = {
+      mutationFn: async (data: any) => {
+        const response = await apiRequest({ 
+          method: "POST", 
+          endpoint: "/api/quiz/adaptive", 
+          data 
+        });
+        return response.json();
+      },
+      onSuccess: (quiz: any) => {
+        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+        
+        if (quiz.adaptiveInfo && quiz.adaptiveInfo.increasePercentage > 0) {
+          toast({
+            title: "Smart Review Activated",
+            description: `Added ${quiz.adaptiveInfo.increasePercentage}% more questions to help you master this topic (${quiz.adaptiveInfo.originalQuestionCount} → ${quiz.adaptiveInfo.adaptedQuestionCount})`,
+          });
+        }
+        
+        window.location.href = `/quiz/${quiz.id}`;
+      },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to create adaptive quiz. Please try again.",
+          variant: "destructive",
+        });
+      },
+    };
+    
+    mutation.mutationFn(quizData).then(mutation.onSuccess).catch(mutation.onError);
   };
 
   const handleRandomQuiz = () => {

@@ -1773,6 +1773,108 @@ export class DatabaseStorage implements IStorage {
     
     return streak;
   }
+
+  // Adaptive Learning Methods
+  async updateAdaptiveProgress(userId: number, categoryId: number, quizResults: any[]): Promise<void> {
+    const [existingProgress] = await db
+      .select()
+      .from(userProgress)
+      .where(and(eq(userProgress.userId, userId), eq(userProgress.categoryId, categoryId)));
+
+    if (!existingProgress) return;
+
+    // Calculate consecutive streaks
+    let consecutiveCorrect = 0;
+    let consecutiveWrong = 0;
+    let currentStreak = 0;
+    let isCorrectStreak = false;
+
+    // Analyze recent answers (last 10)
+    const recentResults = quizResults.slice(-10);
+    for (let i = recentResults.length - 1; i >= 0; i--) {
+      const isCorrect = recentResults[i].correct;
+      if (i === recentResults.length - 1) {
+        isCorrectStreak = isCorrect;
+        currentStreak = 1;
+      } else if ((isCorrect && isCorrectStreak) || (!isCorrect && !isCorrectStreak)) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+
+    if (isCorrectStreak) {
+      consecutiveCorrect = currentStreak;
+    } else {
+      consecutiveWrong = currentStreak;
+    }
+
+    // Identify weak subcategories
+    const subcategoryPerformance = new Map();
+    quizResults.forEach((result: any) => {
+      if (result.subcategoryId) {
+        if (!subcategoryPerformance.has(result.subcategoryId)) {
+          subcategoryPerformance.set(result.subcategoryId, { correct: 0, total: 0 });
+        }
+        const perf = subcategoryPerformance.get(result.subcategoryId);
+        perf.total++;
+        if (result.correct) perf.correct++;
+      }
+    });
+
+    const weakSubcategories = Array.from(subcategoryPerformance.entries())
+      .filter(([_, perf]: [any, any]) => perf.total >= 3 && (perf.correct / perf.total) < 0.6)
+      .map(([subcategoryId, _]) => subcategoryId);
+
+    // Adjust adaptive difficulty (1-5 scale)
+    let adaptiveDifficulty = existingProgress.adaptiveDifficulty || 1;
+    
+    if (consecutiveCorrect >= 5) {
+      adaptiveDifficulty = Math.min(5, adaptiveDifficulty + 1);
+    } else if (consecutiveWrong >= 3) {
+      adaptiveDifficulty = Math.max(1, adaptiveDifficulty - 1);
+    }
+
+    await db
+      .update(userProgress)
+      .set({
+        consecutiveCorrect,
+        consecutiveWrong,
+        adaptiveDifficulty,
+        weakSubcategories: weakSubcategories
+      })
+      .where(eq(userProgress.id, existingProgress.id));
+  }
+
+  async getAdaptiveQuestionCount(userId: number, baseCount: number, categoryIds: number[]): Promise<number> {
+    const userProgresses = await db
+      .select()
+      .from(userProgress)
+      .where(and(
+        eq(userProgress.userId, userId),
+        inArray(userProgress.categoryId, categoryIds)
+      ));
+
+    if (userProgresses.length === 0) return baseCount;
+
+    // Calculate adaptive multiplier based on recent performance
+    let avgDifficulty = userProgresses.reduce((sum, p) => sum + (p.adaptiveDifficulty || 1), 0) / userProgresses.length;
+    let maxConsecutiveWrong = Math.max(...userProgresses.map(p => p.consecutiveWrong || 0));
+    
+    // Increase questions based on difficulty and consecutive wrong answers
+    let multiplier = 1;
+    
+    if (maxConsecutiveWrong >= 3) {
+      multiplier += 0.5; // 50% more questions if struggling
+    }
+    
+    if (avgDifficulty <= 2) {
+      multiplier += 0.3; // 30% more questions for lower difficulty
+    }
+
+    // Cap the increase at 2x the original count
+    return Math.min(Math.ceil(baseCount * multiplier), baseCount * 2);
+  }
 }
 
 export const storage = new DatabaseStorage();
