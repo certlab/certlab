@@ -170,12 +170,15 @@ Core entities include:
   - **Color-coded Feedback**: Green trophy (≥85%) vs red warning (<85%) visual indicators
   - **Quiz Result Classification**: Automatic pass/fail determination and database storage
   - **Performance Metrics**: Pass rate integrated into user statistics and progress tracking
-- **Lecture Generation System**: AI-powered study guides based on missed questions
-  - **Automatic Generation**: Creates personalized lectures for quizzes scoring <85%
-  - **Topic-based Content**: Focuses on specific topics where user answered incorrectly
-  - **Shareable Links**: Lectures accessible via `/api/lecture/:id` for collaborative learning
-  - **Comprehensive Study Guides**: Includes core concepts, study tips, and recommended actions
-  - **Database Integration**: Lectures stored with user tracking and read status
+- **Lecture Generation System**: AI-powered study guides based on comprehensive performance analysis
+  - **Performance-Based Generation**: Creates personalized study guides analyzing all completed learning sessions
+  - **Weak Area Identification**: Identifies categories with <70% performance for focused improvement
+  - **Comprehensive Analysis**: Analyzes overall statistics, trends, and performance patterns
+  - **Personalized Recommendations**: Provides specific study approaches for each weak area
+  - **Actionable Study Plans**: Includes next steps, resource recommendations, and progress tracking
+  - **Smart Content Creation**: Focuses on top 3 weakest areas with motivational messaging
+  - **User-Initiated Generation**: 'Generate Study Guide' button in Quick Actions sidebar
+  - **Database Integration**: Lectures stored with comprehensive performance analysis data
 - **Mastery Score System**: Rolling average percentage (0-100%) based on correct/incorrect answers across all certification areas
   - **Cross-Area Tracking**: User progress contributes to overall mastery score regardless of selected certifications
   - **Rolling Average Calculation**: Weighted average based on total answers per area for balanced scoring

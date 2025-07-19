@@ -383,6 +383,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate personalized lecture based on user performance
+  app.post("/api/user/:userId/generate-lecture", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Analyze user performance to identify weak areas
+      const userQuizzes = await storage.getUserQuizzes(userId);
+      const completedQuizzes = userQuizzes.filter(quiz => quiz.completedAt && quiz.answers);
+      
+      if (completedQuizzes.length === 0) {
+        return res.status(400).json({ 
+          message: "No completed quizzes found. Take some learning sessions first to generate personalized study guides." 
+        });
+      }
+
+      // Generate performance-based lecture
+      const lecture = await storage.generatePerformanceLecture(userId);
+      res.json(lecture);
+    } catch (error) {
+      console.error("Error generating performance lecture:", error);
+      res.status(500).json({ message: "Failed to generate personalized study guide" });
+    }
+  });
+
   // Create quiz with difficulty filtering
   app.post("/api/quiz/filtered", async (req, res) => {
     try {

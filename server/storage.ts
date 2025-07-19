@@ -1984,6 +1984,224 @@ ${missedTopics.map((topic, index) => `
     return content.trim();
   }
 
+  // Performance-based lecture generation
+  async generatePerformanceLecture(userId: number): Promise<any> {
+    // Get user's completed quizzes
+    const userQuizzes = await this.getUserQuizzes(userId);
+    const completedQuizzes = userQuizzes.filter(quiz => quiz.completedAt && quiz.answers);
+
+    if (completedQuizzes.length === 0) {
+      throw new Error("No completed quizzes found for analysis");
+    }
+
+    // Analyze performance across all quizzes to identify weak areas
+    const performanceAnalysis = await this.analyzeUserPerformance(userId, completedQuizzes);
+
+    // Get category information for the weakest areas
+    const weakestCategories = performanceAnalysis.weakestAreas.slice(0, 3); // Focus on top 3 weak areas
+    const categoryData = await Promise.all(
+      weakestCategories.map(async (area) => {
+        const [category] = await db.select().from(categories).where(eq(categories.id, area.categoryId));
+        return { ...area, categoryName: category?.name || 'Unknown Category' };
+      })
+    );
+
+    // Generate comprehensive lecture content
+    const lectureContent = this.generatePerformanceBasedLecture(
+      categoryData, 
+      performanceAnalysis.overallStats,
+      performanceAnalysis.recommendations
+    );
+
+    // Create and save the lecture
+    const [lecture] = await db.insert(lectures).values({
+      userId,
+      quizId: null, // Performance-based, not tied to specific quiz
+      title: `Personalized Study Guide - Performance Analysis`,
+      content: lectureContent,
+      topics: performanceAnalysis.focusTopics,
+      categoryId: weakestCategories[0]?.categoryId || 35, // Default to first category
+      subcategoryId: null
+    }).returning();
+
+    return lecture;
+  }
+
+  private async analyzeUserPerformance(userId: number, completedQuizzes: any[]): Promise<{
+    weakestAreas: any[];
+    overallStats: any;
+    focusTopics: string[];
+    recommendations: string[];
+  }> {
+    // Get all questions from completed quizzes to analyze performance
+    const categoryPerformance = new Map<number, { correct: number; total: number; subcategories: Map<number, { correct: number; total: number }> }>();
+
+    for (const quiz of completedQuizzes) {
+      if (!quiz.answers || !Array.isArray(quiz.answers)) continue;
+
+      const questions = await this.getQuestionsByCategories(
+        quiz.categoryIds as number[],
+        quiz.subcategoryIds as number[]
+      );
+
+      for (let i = 0; i < quiz.answers.length && i < questions.length; i++) {
+        const question = questions[i];
+        const answer = quiz.answers[i];
+        const isCorrect = answer.correct === true;
+
+        // Track category performance
+        if (!categoryPerformance.has(question.categoryId)) {
+          categoryPerformance.set(question.categoryId, { 
+            correct: 0, 
+            total: 0, 
+            subcategories: new Map() 
+          });
+        }
+        
+        const catPerf = categoryPerformance.get(question.categoryId)!;
+        catPerf.total++;
+        if (isCorrect) catPerf.correct++;
+
+        // Track subcategory performance
+        if (!catPerf.subcategories.has(question.subcategoryId)) {
+          catPerf.subcategories.set(question.subcategoryId, { correct: 0, total: 0 });
+        }
+        
+        const subPerf = catPerf.subcategories.get(question.subcategoryId)!;
+        subPerf.total++;
+        if (isCorrect) subPerf.correct++;
+      }
+    }
+
+    // Calculate weakest areas (categories with <70% performance)
+    const weakestAreas = Array.from(categoryPerformance.entries())
+      .map(([categoryId, perf]) => ({
+        categoryId,
+        percentage: Math.round((perf.correct / perf.total) * 100),
+        questionsAnswered: perf.total,
+        correctAnswers: perf.correct
+      }))
+      .filter(area => area.percentage < 70)
+      .sort((a, b) => a.percentage - b.percentage);
+
+    // Overall statistics
+    const totalQuestions = Array.from(categoryPerformance.values()).reduce((sum, perf) => sum + perf.total, 0);
+    const totalCorrect = Array.from(categoryPerformance.values()).reduce((sum, perf) => sum + perf.correct, 0);
+    const overallPercentage = Math.round((totalCorrect / totalQuestions) * 100);
+
+    const overallStats = {
+      totalQuizzes: completedQuizzes.length,
+      totalQuestions,
+      correctAnswers: totalCorrect,
+      overallPercentage,
+      averageQuizScore: Math.round(completedQuizzes.reduce((sum, q) => sum + (q.score || 0), 0) / completedQuizzes.length)
+    };
+
+    // Focus topics for improvement
+    const focusTopics = weakestAreas.map(area => `Category ${area.categoryId} (${area.percentage}%)`);
+
+    // Generate recommendations
+    const recommendations = [
+      `Focus on your weakest areas: ${weakestAreas.length > 0 ? weakestAreas.slice(0, 2).map(a => `Category ${a.categoryId}`).join(', ') : 'Continue practice'}`,
+      `Overall performance: ${overallPercentage}% - ${overallPercentage >= 80 ? 'Excellent progress!' : overallPercentage >= 60 ? 'Good progress, keep improving' : 'Needs significant improvement'}`,
+      `Recommended study time: ${weakestAreas.length > 2 ? '2-3 hours per week' : '1-2 hours per week'} on identified weak areas`
+    ];
+
+    return {
+      weakestAreas,
+      overallStats,
+      focusTopics,
+      recommendations
+    };
+  }
+
+  private generatePerformanceBasedLecture(
+    weakestCategories: any[], 
+    overallStats: any, 
+    recommendations: string[]
+  ): string {
+    const content = `
+# Personalized Study Guide - Performance Analysis
+
+## Your Learning Progress Overview
+
+Based on your quiz performance across ${overallStats.totalQuizzes} learning sessions with ${overallStats.totalQuestions} total questions:
+
+**Overall Performance:** ${overallStats.overallPercentage}% correct (${overallStats.correctAnswers}/${overallStats.totalQuestions})
+**Average Session Score:** ${overallStats.averageQuizScore}%
+
+${overallStats.overallPercentage >= 80 ? 
+  '🎉 **Excellent Progress!** You\'re demonstrating strong mastery across certification areas.' : 
+  overallStats.overallPercentage >= 60 ? 
+  '📈 **Good Progress!** You\'re building solid knowledge with room for targeted improvement.' : 
+  '🎯 **Focus Required!** Concentrated study on weak areas will significantly improve your performance.'
+}
+
+## Priority Focus Areas
+
+${weakestCategories.length > 0 ? 
+  weakestCategories.map((area, index) => `
+### ${index + 1}. ${area.categoryName}
+**Current Performance:** ${area.percentage}% (${area.correctAnswers}/${area.questionsAnswered} questions)
+
+**Why This Needs Attention:**
+- Performance below 70% indicates knowledge gaps that could impact certification success
+- This area has appeared in ${area.questionsAnswered} of your recent questions
+
+**Recommended Study Approach:**
+- Review fundamental concepts and principles
+- Focus on practical application scenarios
+- Take additional practice sessions in this specific area
+- Study official certification guides for detailed explanations
+
+**Key Areas to Master:**
+- Understand core terminology and definitions
+- Practice identifying real-world scenarios
+- Review industry best practices and standards
+- Master both theoretical concepts and practical implementation
+
+---
+`).join('') : 
+  'Great job! No critical weak areas identified. Continue with balanced practice across all certification domains.'
+}
+
+## Personalized Recommendations
+
+${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
+
+## Next Steps
+
+1. **Immediate Actions:**
+   - Take focused learning sessions on your weakest areas
+   - Review official study materials for identified weak topics
+   - Practice with additional questions in problem areas
+
+2. **Weekly Study Plan:**
+   - Spend 60-70% of study time on weak areas identified above
+   - Maintain 30-40% of time reviewing stronger areas
+   - Track improvement with regular learning sessions
+
+3. **Progress Tracking:**
+   - Retake learning sessions in weak areas after studying
+   - Monitor your mastery score improvements
+   - Aim for 80%+ consistency before moving to new topics
+
+## Study Resources
+
+- **Official Certification Guides:** Focus on chapters covering your weak areas
+- **Practice Questions:** Concentrate on question types you struggle with
+- **Hands-on Labs:** Apply concepts practically when possible
+- **Study Groups:** Discuss weak areas with peers or online communities
+
+---
+
+*This personalized study guide was generated based on your performance analysis on ${new Date().toLocaleDateString()}*
+*Continue taking learning sessions to update and refine your study recommendations*
+`;
+
+    return content.trim();
+  }
+
   // Mastery Score Methods - Rolling average across all certification areas
   async updateMasteryScore(userId: number, categoryId: number, subcategoryId: number, isCorrect: boolean): Promise<void> {
     // Find existing mastery score record

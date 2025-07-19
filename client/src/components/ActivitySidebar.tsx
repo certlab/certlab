@@ -173,6 +173,46 @@ export default function ActivitySidebar() {
     createQuizMutation.mutate(quizData);
   };
 
+  const handleGenerateLecture = async () => {
+    if (!currentUser) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to generate study guides.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await apiRequest({ 
+        method: "POST", 
+        endpoint: `/api/user/${currentUser.id}/generate-lecture` 
+      });
+      const lecture = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: "Study Guide Generated",
+          description: "Your personalized study guide has been created based on your performance!",
+        });
+        
+        // Redirect to lecture view
+        window.open(`/lecture/${lecture.id}`, '_blank');
+        
+        // Refresh lectures list
+        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      } else {
+        throw new Error(lecture.message || "Failed to generate study guide");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Unable to generate study guide. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleViewAnalytics = () => {
     // For now, scroll to the progress section
     const progressSection = document.querySelector('[data-progress-section]');
@@ -286,6 +326,26 @@ export default function ActivitySidebar() {
           <CardTitle className="font-medium text-gray-900">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="p-4 space-y-3">
+          <Button
+            variant="outline"
+            className="w-full justify-start material-shadow-hover"
+            onClick={handleGenerateLecture}
+            disabled={createQuizMutation.isPending || completedQuizzes.length === 0}
+          >
+            <div className="flex items-center space-x-3">
+              <i className="fas fa-book-open text-purple-500"></i>
+              <div className="text-left">
+                <h4 className="text-sm font-medium text-gray-900">Generate Study Guide</h4>
+                <p className="text-xs text-gray-500">
+                  {completedQuizzes.length === 0 
+                    ? "Complete learning sessions first" 
+                    : "Personalized based on performance"
+                  }
+                </p>
+              </div>
+            </div>
+          </Button>
+
           <Button
             variant="outline"
             className="w-full justify-start material-shadow-hover"
