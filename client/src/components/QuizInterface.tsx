@@ -202,18 +202,22 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
             
             {/* Answer Options */}
             <RadioGroup
-              value={selectedAnswer?.toString()}
+              key={currentQuestion.id} // Force re-render when question changes
+              value={selectedAnswer?.toString() || ""}
               onValueChange={handleAnswerChange}
               className="space-y-3"
             >
               {(currentQuestion.options as any[]).map((option, index) => (
                 <div
-                  key={index}
+                  key={`${currentQuestion.id}-option-${index}`}
                   className="flex items-start space-x-3 p-4 border border-gray-200 rounded-lg hover:border-primary hover:bg-primary hover:bg-opacity-5 transition-all"
                 >
-                  <RadioGroupItem value={index.toString()} id={`option-${index}`} />
+                  <RadioGroupItem 
+                    value={index.toString()} 
+                    id={`question-${currentQuestion.id}-option-${index}`}
+                  />
                   <Label 
-                    htmlFor={`option-${index}`} 
+                    htmlFor={`question-${currentQuestion.id}-option-${index}`} 
                     className="text-gray-700 cursor-pointer flex-1"
                   >
                     {option.text}
