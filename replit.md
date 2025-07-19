@@ -111,11 +111,12 @@ Core entities include:
 
 ### Recent Changes (July 19, 2025)
 - **Authentic Certification Data Integration**: Updated with real certification content
-  - Integrated data from comprehensive certification question database (57,672+ questions)
+  - Based on comprehensive certification question database (57,672+ total questions available)
   - Added 6 major certifications: CC, CGRC, CISA, CISM, CISSP, Cloud+
-  - Implemented authentic domain structure for each certification
+  - Implemented authentic domain structure for each certification (30 domains total)
   - Updated categories and subcategories with actual certification domains
-  - Added sample questions from each certification area
+  - Added 15 comprehensive sample questions covering key domains from each certification
+  - Question distribution: CC (4), CISSP (3), CGRC (2), CISA (2), CISM (2), Cloud+ (2)
 - **Database Integration**: Migrated from in-memory storage to PostgreSQL database
   - Added `server/db.ts` with Drizzle database configuration
   - Updated `DatabaseStorage` class to use actual database queries
