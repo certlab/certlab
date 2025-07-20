@@ -3,11 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge as BadgeUI } from "@/components/ui/badge";
 import { Trophy, Star, Target, Flame, Award, Lock, CheckCircle } from "lucide-react";
-// Get current user from localStorage
-const getCurrentUser = () => {
-  const userData = localStorage.getItem('user');
-  return userData ? JSON.parse(userData) : null;
-};
+import { localStorage } from "@/lib/localStorage";
 
 interface BadgeProgress {
   badge: {
@@ -71,7 +67,7 @@ const getRarityColor = (rarity: string) => {
 };
 
 export function AchievementProgress() {
-  const currentUser = getCurrentUser();
+  const currentUser = localStorage.getCurrentUser();
   
   const { data: progressData, isLoading } = useQuery<AchievementProgressData>({
     queryKey: ["/api/user", currentUser?.id, "achievement-progress"],

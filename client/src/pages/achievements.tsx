@@ -4,12 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Trophy, Target, Flame, Star, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-// Get current user from localStorage
-const getCurrentUser = () => {
-  const userData = localStorage.getItem('user');
-  return userData ? JSON.parse(userData) : null;
-};
+import { localStorage } from "@/lib/localStorage";
 
 interface Badge {
   id: number;
@@ -24,7 +19,7 @@ interface Badge {
 }
 
 export default function AchievementsPage() {
-  const currentUser = getCurrentUser();
+  const currentUser = localStorage.getCurrentUser();
   
   const { data: allBadges } = useQuery<Badge[]>({
     queryKey: ["/api/badges"],
