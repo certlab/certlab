@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import adminRoutes from "./admin-routes";
@@ -270,11 +270,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user progress for each category and adaptive learning metrics
       for (const categoryId of quiz.categoryIds as number[]) {
         const categoryQuestions = questions.filter(q => q.categoryId === categoryId);
-        const categoryResults = results.filter((r: any) => {
+        const categoryResults = results.filter((r: { questionId: number; correct: boolean }) => {
           const question = questions.find(q => q.id === r.questionId);
           return question?.categoryId === categoryId;
         });
-        const categoryCorrect = categoryResults.filter(r => r.correct).length;
+        const categoryCorrect = categoryResults.filter((r: { correct: boolean }) => r.correct).length;
         const categoryScore = categoryQuestions.length > 0 
           ? Math.round((categoryCorrect / categoryQuestions.length) * 100)
           : 0;
@@ -293,19 +293,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? quiz.subcategoryIds as number[]
             : questions.filter(q => q.categoryId === categoryId).map(q => q.subcategoryId);
           
-          const uniqueSubcategories = [...new Set(subcategoriesToProcess)];
+          const uniqueSubcategories = Array.from(new Set(subcategoriesToProcess));
           
           for (const subcategoryId of uniqueSubcategories) {
             const subcategoryQuestions = questions.filter(q => 
               q.categoryId === categoryId && q.subcategoryId === subcategoryId
             );
-            const subcategoryResults = results.filter((r: any) => {
+            const subcategoryResults = results.filter((r: { questionId: number; correct: boolean }) => {
               const question = questions.find(q => q.id === r.questionId);
               return question?.categoryId === categoryId && question?.subcategoryId === subcategoryId;
             });
             
             if (subcategoryQuestions.length > 0 && subcategoryResults.length > 0) {
-              const subcategoryCorrect = subcategoryResults.filter(r => r.correct).length;
+              const subcategoryCorrect = subcategoryResults.filter((r: { correct: boolean }) => r.correct).length;
               await storage.updateMasteryScoreBulk(
                 quiz.userId,
                 categoryId,

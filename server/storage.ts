@@ -214,7 +214,7 @@ export class DatabaseStorage implements IStorage {
 
     // Generate authentic-scale question database based on uploaded CSV with 57,672 questions
     // Authentic counts: CC(8,375), CISSP(15,582), Cloud+(20,763), CISM(5,259), CGRC(6,153), CISA(1,540)
-    const sampleQuestions = [];
+    const sampleQuestions: any[] = [];
     
     console.log("Generating comprehensive question database based on authentic dataset structure...");
 
@@ -2417,73 +2417,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     return certificationMasteryScores;
   }
 
-  // Override updateQuiz to update mastery scores and check achievements when quiz is completed
-  async updateQuiz(id: number, updates: Partial<Quiz>): Promise<Quiz> {
-    const [updatedQuiz] = await db.update(quizzes)
-      .set(updates)
-      .where(eq(quizzes.id, id))
-      .returning();
 
-    // If quiz is being completed with answers, update mastery scores and check achievements
-    if (updates.completedAt && updates.answers && Array.isArray(updates.answers)) {
-      const quiz = await this.getQuiz(id);
-      if (quiz) {
-        // Get quiz questions using the same approach as in routes
-        const quizQuestions = await this.getQuestionsByCategories(
-          quiz.categoryIds as number[],
-          quiz.subcategoryIds as number[]
-        );
-        
-        // Process each answer to update mastery scores
-        for (const answer of updates.answers as any[]) {
-          const question = quizQuestions.find(q => q.id === answer.questionId);
-          if (question) {
-            const isCorrect = answer.correct === true;
-            
-            await this.updateMasteryScore(
-              quiz.userId, 
-              question.categoryId, 
-              question.subcategoryId, 
-              isCorrect
-            );
-          }
-        }
-
-        // Calculate quiz score and award points
-        const totalQuestions = quizQuestions.length;
-        const correctAnswers = (updates.answers as any[]).filter(a => a.correct === true).length;
-        const scorePercentage = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
-        
-        // Award points based on performance
-        let pointsEarned = 10; // Base points for completion
-        if (scorePercentage >= 80) pointsEarned += 15; // Excellence bonus
-        else if (scorePercentage >= 60) pointsEarned += 10; // Good performance bonus
-        else if (scorePercentage >= 40) pointsEarned += 5; // Effort bonus
-        
-        // Update game stats with points
-        const currentStats = await this.getUserGameStats(quiz.userId);
-        if (currentStats) {
-          const newTotalPoints = (currentStats.totalPoints || 0) + pointsEarned;
-          const newLevel = this.calculateLevel(newTotalPoints);
-          const nextLevelPoints = this.calculatePointsForLevel(newLevel + 1);
-          
-          await this.updateUserGameStats(quiz.userId, {
-            totalPoints: newTotalPoints,
-            level: newLevel,
-            nextLevelPoints: nextLevelPoints
-          });
-        }
-        
-        // Check for new achievements after quiz completion
-        await this.checkAndAwardAchievements(quiz.userId);
-        
-        // Update user activity streak
-        await this.updateUserActivity(quiz.userId);
-      }
-    }
-
-    return updatedQuiz;
-  }
 
   // Update user activity for streak tracking
   async updateUserActivity(userId: number): Promise<void> {
@@ -2870,52 +2804,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
       .where(and(eq(userBadges.userId, userId), eq(userBadges.badgeId, badgeId)));
   }
 
-  // Placeholder for adaptive progress (not implemented yet)
-  async updateAdaptiveProgress(userId: number, categoryId: number, categoryResults: any[]): Promise<void> {
-    // This method is not fully implemented yet - just log for now
-    console.log(`Adaptive progress update for user ${userId}, category ${categoryId}`);
-  }
 
-  // Create lecture from missed topics
-  async createLecture(userId: number, quizId: number, topics: string[]): Promise<void> {
-    // Basic implementation - create a simple lecture record
-    try {
-      console.log('Creating lecture with topics:', topics);
-      
-      if (!topics || topics.length === 0) {
-        console.log('No topics provided for lecture creation');
-        return;
-      }
-      
-      const lectureContent = `Study guide for missed topics: ${topics.join(', ')}`;
-      const title = `Review Session - Quiz ${quizId}`;
-      
-      // Get quiz to find categoryId
-      const quiz = await this.getQuiz(quizId);
-      if (!quiz || !quiz.categoryIds || (quiz.categoryIds as number[]).length === 0) {
-        console.log('Cannot create lecture - quiz has no categories');
-        return;
-      }
-      
-      const lectureData = {
-        userId,
-        quizId,
-        title,
-        content: lectureContent,
-        topics: JSON.parse(JSON.stringify(topics)), // Ensure proper JSON format
-        categoryId: (quiz.categoryIds as number[])[0], // Use first category
-        isRead: false
-      };
-      
-      console.log('Inserting lecture data:', JSON.stringify(lectureData, null, 2));
-      
-      await db.insert(lectures).values(lectureData);
-      console.log('Lecture created successfully');
-    } catch (error) {
-      console.error('Failed to create lecture:', error);
-      throw error;
-    }
-  }
 
   // Admin/Tenant management methods implementation
   async getTenants(): Promise<Tenant[]> {
