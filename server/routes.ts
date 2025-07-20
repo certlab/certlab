@@ -750,6 +750,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get quiz details
       const quiz = await storage.getQuiz(quizId);
+      console.log('Generate lecture - Quiz found:', quiz);
+      console.log('Generate lecture - User ID from session:', userId);
       if (!quiz || quiz.userId !== userId) {
         return res.status(404).json({ message: "Quiz not found" });
       }
