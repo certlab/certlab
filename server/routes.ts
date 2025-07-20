@@ -159,16 +159,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "User ID required" });
       }
       
+      // Check available questions for the selected categories
+      const availableQuestions = await storage.getQuestionsByCategories(
+        quizData.categoryIds,
+        quizData.subcategoryIds || []
+      );
+      
+      const availableCount = availableQuestions.length;
+      
       // Calculate adaptive question count if adaptive learning is enabled
       let adaptiveQuestionCount = quizData.questionCount;
       if (isAdaptive && quizData.categoryIds) {
         adaptiveQuestionCount = await storage.getAdaptiveQuestionCount(userId, quizData.questionCount, quizData.categoryIds);
       }
       
+      // Use the lesser of requested questions or available questions
+      const finalQuestionCount = Math.min(adaptiveQuestionCount, availableCount);
+      
+      if (finalQuestionCount === 0) {
+        return res.status(400).json({ 
+          message: "No questions available for the selected categories" 
+        });
+      }
+      
       const quiz = await storage.createQuiz({
         ...quizData,
         userId,
-        questionCount: adaptiveQuestionCount,
+        questionCount: finalQuestionCount,
         subcategoryIds: quizData.subcategoryIds || [],
         isAdaptive,
         difficultyLevel: 1,
@@ -269,14 +286,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
       
-      const score = Math.round((correctAnswers / quiz.questionCount) * 100);
+      // Use the actual number of questions available, not the requested count
+      const actualQuestionCount = Math.min(questions.length, quiz.questionCount);
+      const score = actualQuestionCount > 0 ? Math.round((correctAnswers / actualQuestionCount) * 100) : 0;
       
       // Update quiz with total questions count
       const updatedQuiz = await storage.updateQuiz(quizId, {
         answers: answers,
         score,
         correctAnswers,
-        totalQuestions: quiz.questionCount,
+        totalQuestions: actualQuestionCount,
         completedAt: new Date()
       });
       
@@ -383,7 +402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         results,
         score,
         correctAnswers,
-        totalQuestions: quiz.questionCount,
+        totalQuestions: actualQuestionCount,
         passed: isPassing,
         passingThreshold: 85
       });
