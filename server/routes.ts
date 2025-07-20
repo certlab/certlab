@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import adminRoutes from "./admin-routes";
 import { 
   insertUserSchema, 
   loginSchema, 
@@ -581,6 +582,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to check achievements' });
     }
   });
+
+  // Mount admin routes
+  app.use("/api/admin", adminRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

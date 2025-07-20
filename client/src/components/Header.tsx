@@ -62,6 +62,14 @@ export default function Header() {
             </Button>
             <Button 
               variant="ghost" 
+              onClick={() => setLocation("/admin")}
+              className="text-muted-foreground hover:text-primary"
+            >
+              <i className="fas fa-cog mr-2"></i>
+              Admin
+            </Button>
+            <Button 
+              variant="ghost" 
               onClick={() => setLocation("/accessibility")}
               className="text-muted-foreground hover:text-primary"
             >

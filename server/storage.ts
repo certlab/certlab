@@ -1,7 +1,7 @@
 import { 
-  users, categories, subcategories, questions, quizzes, userProgress, lectures, masteryScores,
+  tenants, users, categories, subcategories, questions, quizzes, userProgress, lectures, masteryScores,
   badges, userBadges, userGameStats,
-  type User, type InsertUser, type Category, type InsertCategory,
+  type Tenant, type InsertTenant, type User, type InsertUser, type Category, type InsertCategory,
   type Subcategory, type InsertSubcategory, type Question, type InsertQuestion,
   type Quiz, type InsertQuiz, type UserProgress, type InsertUserProgress,
   type MasteryScore, type InsertMasteryScore, type Badge, type UserBadge, type UserGameStats
@@ -10,18 +10,36 @@ import { db } from "./db";
 import { eq, and, inArray, desc, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
+  // Tenant management
+  getTenants(): Promise<Tenant[]>;
+  getTenant(id: number): Promise<Tenant | undefined>;
+  createTenant(tenant: InsertTenant): Promise<Tenant>;
+  updateTenant(id: number, updates: Partial<InsertTenant>): Promise<Tenant>;
+  deleteTenant(id: number): Promise<void>;
+  
   // User management
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getUsersByTenant(tenantId: number): Promise<User[]>;
   
   // Categories and subcategories
-  getCategories(): Promise<Category[]>;
-  getSubcategories(categoryId?: number): Promise<Subcategory[]>;
+  getCategories(tenantId?: number): Promise<Category[]>;
+  getSubcategories(categoryId?: number, tenantId?: number): Promise<Subcategory[]>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category>;
+  deleteCategory(id: number): Promise<void>;
+  createSubcategory(subcategory: InsertSubcategory): Promise<Subcategory>;
+  updateSubcategory(id: number, updates: Partial<InsertSubcategory>): Promise<Subcategory>;
+  deleteSubcategory(id: number): Promise<void>;
   
   // Questions
-  getQuestionsByCategories(categoryIds: number[], subcategoryIds?: number[], difficultyLevels?: number[]): Promise<Question[]>;
+  getQuestionsByCategories(categoryIds: number[], subcategoryIds?: number[], difficultyLevels?: number[], tenantId?: number): Promise<Question[]>;
   getQuestion(id: number): Promise<Question | undefined>;
+  createQuestion(question: InsertQuestion): Promise<Question>;
+  updateQuestion(id: number, updates: Partial<InsertQuestion>): Promise<Question>;
+  deleteQuestion(id: number): Promise<void>;
+  getQuestionsByTenant(tenantId: number): Promise<Question[]>;
   
   // Quizzes
   createQuiz(quiz: InsertQuiz): Promise<Quiz>;
@@ -50,6 +68,21 @@ export interface IStorage {
   getUserMasteryScores(userId: number): Promise<MasteryScore[]>;
   calculateOverallMasteryScore(userId: number): Promise<number>;
   getCertificationMasteryScores(userId: number): Promise<{ categoryId: number; masteryScore: number }[]>;
+  
+  // Admin/Tenant management methods
+  getTenants(): Promise<Tenant[]>;
+  getTenant(id: number): Promise<Tenant | undefined>;
+  createTenant(tenant: InsertTenant): Promise<Tenant>;
+  updateTenant(id: number, updates: Partial<InsertTenant>): Promise<Tenant>;
+  deleteTenant(id: number): Promise<void>;
+  getTenantCategories(tenantId: number): Promise<Category[]>;
+  getTenantSubcategories(tenantId: number): Promise<Subcategory[]>;
+  createTenantCategory(tenantId: number, category: Omit<InsertCategory, "tenantId">): Promise<Category>;
+  updateTenantCategory(tenantId: number, categoryId: number, updates: Partial<Omit<InsertCategory, "tenantId">>): Promise<Category>;
+  deleteTenantCategory(tenantId: number, categoryId: number): Promise<void>;
+  createTenantSubcategory(tenantId: number, subcategory: Omit<InsertSubcategory, "tenantId">): Promise<Subcategory>;
+  updateTenantSubcategory(tenantId: number, subcategoryId: number, updates: Partial<Omit<InsertSubcategory, "tenantId">>): Promise<Subcategory>;
+  deleteTenantSubcategory(tenantId: number, subcategoryId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -69,12 +102,12 @@ export class DatabaseStorage implements IStorage {
     // Seed categories based on authentic certification data structure
     // Question counts from uploaded CSV: CC(8,375), CISSP(15,582), Cloud+(20,763), CISM(5,259), CGRC(6,153), CISA(1,540)
     const cats = [
-      { name: "CC", description: "Certified in Cybersecurity", icon: "fas fa-shield-alt" },
-      { name: "CGRC", description: "Certified in Governance, Risk and Compliance", icon: "fas fa-balance-scale" },
-      { name: "CISA", description: "Certified Information Systems Auditor", icon: "fas fa-search" },
-      { name: "CISM", description: "Certified Information Security Manager", icon: "fas fa-cogs" },
-      { name: "CISSP", description: "Certified Information Systems Security Professional", icon: "fas fa-lock" },
-      { name: "Cloud+", description: "CompTIA Cloud+ Certification", icon: "fas fa-cloud" },
+      { tenantId: 1, name: "CC", description: "Certified in Cybersecurity", icon: "fas fa-shield-alt" },
+      { tenantId: 1, name: "CGRC", description: "Certified in Governance, Risk and Compliance", icon: "fas fa-balance-scale" },
+      { tenantId: 1, name: "CISA", description: "Certified Information Systems Auditor", icon: "fas fa-search" },
+      { tenantId: 1, name: "CISM", description: "Certified Information Security Manager", icon: "fas fa-cogs" },
+      { tenantId: 1, name: "CISSP", description: "Certified Information Systems Security Professional", icon: "fas fa-lock" },
+      { tenantId: 1, name: "Cloud+", description: "CompTIA Cloud+ Certification", icon: "fas fa-cloud" },
     ];
     
     const insertedCategories = await db.insert(categories).values(cats).returning();
@@ -86,11 +119,11 @@ export class DatabaseStorage implements IStorage {
     const ccCategory = insertedCategories.find(cat => cat.name === "CC");
     if (ccCategory) {
       subcategoriesData.push(
-        { categoryId: ccCategory.id, name: "Security Principles", description: "Domain 1: Security Principles" },
-        { categoryId: ccCategory.id, name: "Business Continuity & Incident Response", description: "Domain 2: Business Continuity, Disaster Recovery, and Incident Response Concepts" },
-        { categoryId: ccCategory.id, name: "Access Control Concepts", description: "Domain 3: Access Control Concepts" },
-        { categoryId: ccCategory.id, name: "Network Security", description: "Domain 4: Network Security Concepts" },
-        { categoryId: ccCategory.id, name: "Security Operations", description: "Domain 5: Security Operations Concepts" }
+        { tenantId: 1, categoryId: ccCategory.id, name: "Security Principles", description: "Domain 1: Security Principles" },
+        { tenantId: 1, categoryId: ccCategory.id, name: "Business Continuity & Incident Response", description: "Domain 2: Business Continuity, Disaster Recovery, and Incident Response Concepts" },
+        { tenantId: 1, categoryId: ccCategory.id, name: "Access Control Concepts", description: "Domain 3: Access Control Concepts" },
+        { tenantId: 1, categoryId: ccCategory.id, name: "Network Security", description: "Domain 4: Network Security Concepts" },
+        { tenantId: 1, categoryId: ccCategory.id, name: "Security Operations", description: "Domain 5: Security Operations Concepts" }
       );
     }
 
@@ -98,13 +131,13 @@ export class DatabaseStorage implements IStorage {
     const cgrcCategory = insertedCategories.find(cat => cat.name === "CGRC");
     if (cgrcCategory) {
       subcategoriesData.push(
-        { categoryId: cgrcCategory.id, name: "Security & Privacy Governance", description: "Domain 1: Security and Privacy Governance, Risk Management, and Compliance Program" },
-        { categoryId: cgrcCategory.id, name: "Information System Scope", description: "Domain 2: Scope of the Information System" },
-        { categoryId: cgrcCategory.id, name: "Control Selection & Approval", description: "Domain 3: Selection and Approval of Security and Privacy Controls" },
-        { categoryId: cgrcCategory.id, name: "Control Implementation", description: "Domain 4: Implementation of Security and Privacy Controls" },
-        { categoryId: cgrcCategory.id, name: "Control Assessment & Audit", description: "Domain 5: Assessment/Audit of Security and Privacy Controls" },
-        { categoryId: cgrcCategory.id, name: "System Compliance", description: "Domain 6: System Compliance" },
-        { categoryId: cgrcCategory.id, name: "Compliance Maintenance", description: "Domain 7: Compliance Maintenance" }
+        { tenantId: 1, categoryId: cgrcCategory.id, name: "Security & Privacy Governance", description: "Domain 1: Security and Privacy Governance, Risk Management, and Compliance Program" },
+        { tenantId: 1, categoryId: cgrcCategory.id, name: "Information System Scope", description: "Domain 2: Scope of the Information System" },
+        { tenantId: 1, categoryId: cgrcCategory.id, name: "Control Selection & Approval", description: "Domain 3: Selection and Approval of Security and Privacy Controls" },
+        { tenantId: 1, categoryId: cgrcCategory.id, name: "Control Implementation", description: "Domain 4: Implementation of Security and Privacy Controls" },
+        { tenantId: 1, categoryId: cgrcCategory.id, name: "Control Assessment & Audit", description: "Domain 5: Assessment/Audit of Security and Privacy Controls" },
+        { tenantId: 1, categoryId: cgrcCategory.id, name: "System Compliance", description: "Domain 6: System Compliance" },
+        { tenantId: 1, categoryId: cgrcCategory.id, name: "Compliance Maintenance", description: "Domain 7: Compliance Maintenance" }
       );
     }
 
@@ -112,7 +145,7 @@ export class DatabaseStorage implements IStorage {
     const cisaCategory = insertedCategories.find(cat => cat.name === "CISA");
     if (cisaCategory) {
       subcategoriesData.push(
-        { categoryId: cisaCategory.id, name: "Information Systems Auditing Process", description: "Domain 1: Information Systems Auditing Process" }
+        { tenantId: 1, categoryId: cisaCategory.id, name: "Information Systems Auditing Process", description: "Domain 1: Information Systems Auditing Process" }
       );
     }
 
@@ -120,10 +153,10 @@ export class DatabaseStorage implements IStorage {
     const cismCategory = insertedCategories.find(cat => cat.name === "CISM");
     if (cismCategory) {
       subcategoriesData.push(
-        { categoryId: cismCategory.id, name: "Information Security Governance", description: "Domain 1: Information Security Governance" },
-        { categoryId: cismCategory.id, name: "Information Security Risk Management", description: "Domain 2: Information Security Risk Management" },
-        { categoryId: cismCategory.id, name: "Information Security Program", description: "Domain 3: Information Security Program" },
-        { categoryId: cismCategory.id, name: "Incident Management & Response", description: "Domain 4: Incident Management and Response" }
+        { tenantId: 1, categoryId: cismCategory.id, name: "Information Security Governance", description: "Domain 1: Information Security Governance" },
+        { tenantId: 1, categoryId: cismCategory.id, name: "Information Security Risk Management", description: "Domain 2: Information Security Risk Management" },
+        { tenantId: 1, categoryId: cismCategory.id, name: "Information Security Program", description: "Domain 3: Information Security Program" },
+        { tenantId: 1, categoryId: cismCategory.id, name: "Incident Management & Response", description: "Domain 4: Incident Management and Response" }
       );
     }
 
@@ -131,14 +164,14 @@ export class DatabaseStorage implements IStorage {
     const cisspCategory = insertedCategories.find(cat => cat.name === "CISSP");
     if (cisspCategory) {
       subcategoriesData.push(
-        { categoryId: cisspCategory.id, name: "Security & Risk Management", description: "Domain 1: Security and Risk Management" },
-        { categoryId: cisspCategory.id, name: "Asset Security", description: "Domain 2: Asset Security" },
-        { categoryId: cisspCategory.id, name: "Security Architecture & Engineering", description: "Domain 3: Security Architecture and Engineering" },
-        { categoryId: cisspCategory.id, name: "Communication & Network Security", description: "Domain 4: Communication and Network Security" },
-        { categoryId: cisspCategory.id, name: "Identity & Access Management", description: "Domain 5: Identity and Access Management" },
-        { categoryId: cisspCategory.id, name: "Security Assessment & Testing", description: "Domain 6: Security Assessment and Testing" },
-        { categoryId: cisspCategory.id, name: "Security Operations", description: "Domain 7: Security Operations" },
-        { categoryId: cisspCategory.id, name: "Software Development Security", description: "Domain 8: Software Development Security" }
+        { tenantId: 1, categoryId: cisspCategory.id, name: "Security & Risk Management", description: "Domain 1: Security and Risk Management" },
+        { tenantId: 1, categoryId: cisspCategory.id, name: "Asset Security", description: "Domain 2: Asset Security" },
+        { tenantId: 1, categoryId: cisspCategory.id, name: "Security Architecture & Engineering", description: "Domain 3: Security Architecture and Engineering" },
+        { tenantId: 1, categoryId: cisspCategory.id, name: "Communication & Network Security", description: "Domain 4: Communication and Network Security" },
+        { tenantId: 1, categoryId: cisspCategory.id, name: "Identity & Access Management", description: "Domain 5: Identity and Access Management" },
+        { tenantId: 1, categoryId: cisspCategory.id, name: "Security Assessment & Testing", description: "Domain 6: Security Assessment and Testing" },
+        { tenantId: 1, categoryId: cisspCategory.id, name: "Security Operations", description: "Domain 7: Security Operations" },
+        { tenantId: 1, categoryId: cisspCategory.id, name: "Software Development Security", description: "Domain 8: Software Development Security" }
       );
     }
 
@@ -146,11 +179,11 @@ export class DatabaseStorage implements IStorage {
     const cloudCategory = insertedCategories.find(cat => cat.name === "Cloud+");
     if (cloudCategory) {
       subcategoriesData.push(
-        { categoryId: cloudCategory.id, name: "Cloud Architecture & Design", description: "Domain 1: Cloud Architecture & Design" },
-        { categoryId: cloudCategory.id, name: "Cloud Security", description: "Domain 2: Cloud Security" },
-        { categoryId: cloudCategory.id, name: "Cloud Deployment", description: "Domain 3: Cloud Deployment" },
-        { categoryId: cloudCategory.id, name: "Operations & Support", description: "Domain 4: Operations and Support" },
-        { categoryId: cloudCategory.id, name: "Troubleshooting", description: "Domain 5: Troubleshooting" }
+        { tenantId: 1, categoryId: cloudCategory.id, name: "Cloud Architecture & Design", description: "Domain 1: Cloud Architecture & Design" },
+        { tenantId: 1, categoryId: cloudCategory.id, name: "Cloud Security", description: "Domain 2: Cloud Security" },
+        { tenantId: 1, categoryId: cloudCategory.id, name: "Cloud Deployment", description: "Domain 3: Cloud Deployment" },
+        { tenantId: 1, categoryId: cloudCategory.id, name: "Operations & Support", description: "Domain 4: Operations and Support" },
+        { tenantId: 1, categoryId: cloudCategory.id, name: "Troubleshooting", description: "Domain 5: Troubleshooting" }
       );
     }
 
@@ -163,12 +196,13 @@ export class DatabaseStorage implements IStorage {
     console.log("Generating comprehensive question database based on authentic dataset structure...");
 
     // Helper function to find subcategory and add questions
-    const addQuestionsForSubcategory = (certName, subcatName, questionsArray) => {
+    const addQuestionsForSubcategory = (certName: string, subcatName: string, questionsArray: any[]) => {
       const subcategory = insertedSubcategories.find(sub => sub.name === subcatName);
       const category = insertedCategories.find(cat => cat.name === certName);
       if (subcategory && category) {
-        questionsArray.forEach(q => {
+        questionsArray.forEach((q: any) => {
           sampleQuestions.push({
+            tenantId: 1,
             categoryId: category.id,
             subcategoryId: subcategory.id,
             ...q
@@ -2804,6 +2838,72 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
       console.error('Failed to create lecture:', error);
       throw error;
     }
+  }
+
+  // Admin/Tenant management methods implementation
+  async getTenants(): Promise<Tenant[]> {
+    return await db.select().from(tenants);
+  }
+
+  async getTenant(id: number): Promise<Tenant | undefined> {
+    const result = await db.select().from(tenants).where(eq(tenants.id, id));
+    return result[0];
+  }
+
+  async createTenant(tenant: InsertTenant): Promise<Tenant> {
+    const result = await db.insert(tenants).values(tenant).returning();
+    return result[0];
+  }
+
+  async updateTenant(id: number, updates: Partial<InsertTenant>): Promise<Tenant> {
+    const result = await db.update(tenants).set(updates).where(eq(tenants.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteTenant(id: number): Promise<void> {
+    await db.delete(tenants).where(eq(tenants.id, id));
+  }
+
+  async getTenantCategories(tenantId: number): Promise<Category[]> {
+    return await db.select().from(categories).where(eq(categories.tenantId, tenantId));
+  }
+
+  async getTenantSubcategories(tenantId: number): Promise<Subcategory[]> {
+    return await db.select().from(subcategories).where(eq(subcategories.tenantId, tenantId));
+  }
+
+  async createTenantCategory(tenantId: number, category: Omit<InsertCategory, "tenantId">): Promise<Category> {
+    const result = await db.insert(categories).values({ ...category, tenantId }).returning();
+    return result[0];
+  }
+
+  async updateTenantCategory(tenantId: number, categoryId: number, updates: Partial<Omit<InsertCategory, "tenantId">>): Promise<Category> {
+    const result = await db.update(categories)
+      .set(updates)
+      .where(and(eq(categories.id, categoryId), eq(categories.tenantId, tenantId)))
+      .returning();
+    return result[0];
+  }
+
+  async deleteTenantCategory(tenantId: number, categoryId: number): Promise<void> {
+    await db.delete(categories).where(and(eq(categories.id, categoryId), eq(categories.tenantId, tenantId)));
+  }
+
+  async createTenantSubcategory(tenantId: number, subcategory: Omit<InsertSubcategory, "tenantId">): Promise<Subcategory> {
+    const result = await db.insert(subcategories).values({ ...subcategory, tenantId }).returning();
+    return result[0];
+  }
+
+  async updateTenantSubcategory(tenantId: number, subcategoryId: number, updates: Partial<Omit<InsertSubcategory, "tenantId">>): Promise<Subcategory> {
+    const result = await db.update(subcategories)
+      .set(updates)
+      .where(and(eq(subcategories.id, subcategoryId), eq(subcategories.tenantId, tenantId)))
+      .returning();
+    return result[0];
+  }
+
+  async deleteTenantSubcategory(tenantId: number, subcategoryId: number): Promise<void> {
+    await db.delete(subcategories).where(and(eq(subcategories.id, subcategoryId), eq(subcategories.tenantId, tenantId)));
   }
 }
 

@@ -2,16 +2,29 @@ import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Tenants table for multi-tenancy support
+export const tenants = pgTable("tenants", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  domain: text("domain").unique(), // Optional custom domain
+  settings: jsonb("settings").default({}), // Tenant-specific configuration
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
+  tenantId: integer("tenant_id").notNull(),
+  username: text("username").notNull(),
+  email: text("email").notNull(),
   password: text("password").notNull(),
+  role: text("role").notNull().default("user"), // "admin", "user"
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
   icon: text("icon"),
@@ -19,6 +32,7 @@ export const categories = pgTable("categories", {
 
 export const subcategories = pgTable("subcategories", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull(),
   categoryId: integer("category_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
@@ -26,6 +40,7 @@ export const subcategories = pgTable("subcategories", {
 
 export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull(),
   categoryId: integer("category_id").notNull(),
   subcategoryId: integer("subcategory_id").notNull(),
   text: text("text").notNull(),
@@ -100,6 +115,11 @@ export const lectures = pgTable("lectures", {
 });
 
 // Insert schemas
+export const insertTenantSchema = createInsertSchema(tenants).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -216,6 +236,8 @@ export const submitAnswerSchema = z.object({
 });
 
 // Types
+export type InsertTenant = z.infer<typeof insertTenantSchema>;
+export type Tenant = typeof tenants.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
