@@ -93,48 +93,48 @@ export default function DashboardHero() {
 
     if (recentQuizzes === 0) {
       return {
-        message: "Welcome to Cert Lab! I'm Helen, your AI learning assistant. Let's begin by running your first diagnostic assessment to design your personalized learning path.",
+        message: "Welcome to Cert Lab! I'm Helen, your AI learning assistant. Let's start with your first assessment to create a personalized study plan.",
         type: "welcome",
-        action: "Start your certification lab experience with an initial assessment."
+        action: "Take your first quiz to get personalized study recommendations."
       };
     }
 
     if (overallMastery >= 85) {
       return {
-        message: "Outstanding lab work! Your experiments show certification-level mastery. I'm configuring final readiness protocols to ensure you're exam-ready.",
+        message: "Excellent progress! You're approaching certification readiness. Focus on maintaining consistency across all domains.",
         type: "excellent",
-        action: "Execute certification simulation protocols to validate your readiness."
+        action: "Take practice exams to simulate the real certification experience."
       };
     }
 
     if (overallMastery >= 70) {
       return {
-        message: "Excellent lab progress! Your knowledge synthesis is accelerating. I'm identifying optimal experimental areas to advance your mastery.",
+        message: "Great momentum! You're building solid foundational knowledge. Keep focusing on your weaker areas to reach mastery.",
         type: "good",
-        action: "Focus lab sessions on domains requiring reinforcement for breakthrough results."
+        action: "Focus study sessions on domains with lower mastery scores."
       };
     }
 
     if (streak >= 7) {
       return {
-        message: "Exceptional lab discipline! Your consistent experimentation protocol is yielding breakthrough results. This systematic approach will ensure certification success.",
+        message: "Amazing dedication! Your consistent daily practice is paying off. This habit will accelerate your certification success.",
         type: "streak",
-        action: "Continue your daily lab sessions - consistent practice optimizes long-term retention."
+        action: "Keep up your daily study routine - consistency is key to retention."
       };
     }
 
     if (averageScore < 60) {
       return {
-        message: "Every certification expert started in the lab as a beginner. I'm designing foundational experiments to build your knowledge base systematically.",
+        message: "Every expert was once a beginner. Focus on study mode first to build understanding, then test with quiz mode.",
         type: "encouragement",
-        action: "Begin with guided study lab sessions before advancing to assessment protocols."
+        action: "Start with study mode sessions to learn concepts before assessments."
       };
     }
 
     return {
-      message: "Your lab work shows steady advancement! I'm calibrating your learning experiments to optimize knowledge synthesis and retention patterns.",
+      message: "You're making steady progress! Regular practice and review will help solidify your knowledge for certification success.",
       type: "progress",
-      action: "Continue balanced lab protocols with both study and assessment modes."
+      action: "Continue balanced practice with both study and quiz modes."
     };
   };
 
