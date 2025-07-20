@@ -134,6 +134,42 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
               
               <Progress value={categoryMastery} className="h-2 mb-3" />
               
+              {/* Domain Progress Visualization */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+                  <span>Domain Progress</span>
+                  <span>{completedDomains}/{categorySubcategories.length} ready</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {categorySubcategories.map((subcategory) => {
+                    const subcategoryMastery = getSubcategoryMastery(category.id, subcategory.id);
+                    const hasData = masteryScores.some(score => 
+                      score.categoryId === category.id && score.subcategoryId === subcategory.id
+                    );
+                    
+                    const getStatusColor = () => {
+                      if (!hasData) return 'bg-gray-200';
+                      if (subcategoryMastery >= 85) return 'bg-green-500';
+                      if (subcategoryMastery >= 70) return 'bg-blue-500';
+                      if (subcategoryMastery >= 50) return 'bg-yellow-500';
+                      return 'bg-red-400';
+                    };
+
+                    return (
+                      <div
+                        key={subcategory.id}
+                        className={`w-6 h-6 rounded ${getStatusColor()} flex items-center justify-center`}
+                        title={`${subcategory.name}: ${hasData ? `${subcategoryMastery}%` : 'No data'}`}
+                      >
+                        {subcategoryMastery >= 85 && hasData && (
+                          <span className="text-white text-xs">✓</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
               <Button
                 variant="ghost"
                 size="sm"
@@ -156,14 +192,33 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
                     );
 
                     return (
-                      <div key={subcategory.id} className="flex items-center justify-between text-sm">
+                      <div key={subcategory.id} className="flex items-center gap-3 text-sm">
+                        <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                          !hasData ? 'bg-gray-200' :
+                          subcategoryMastery >= 85 ? 'bg-green-500' :
+                          subcategoryMastery >= 70 ? 'bg-blue-500' :
+                          subcategoryMastery >= 50 ? 'bg-yellow-500' : 'bg-red-400'
+                        }`}></div>
                         <span className="text-gray-600 truncate flex-1">{subcategory.name}</span>
-                        <span className={`text-xs font-medium ml-2 ${
-                          subcategoryMastery >= 85 ? 'text-green-600' : 
-                          subcategoryMastery >= 70 ? 'text-blue-600' : 'text-gray-500'
-                        }`}>
-                          {hasData ? `${subcategoryMastery}%` : '--'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                            <div 
+                              className={`h-1.5 rounded-full ${
+                                !hasData ? 'bg-gray-300' :
+                                subcategoryMastery >= 85 ? 'bg-green-500' :
+                                subcategoryMastery >= 70 ? 'bg-blue-500' :
+                                subcategoryMastery >= 50 ? 'bg-yellow-500' : 'bg-red-400'
+                              }`}
+                              style={{ width: `${Math.max(subcategoryMastery, 5)}%` }}
+                            ></div>
+                          </div>
+                          <span className={`text-xs font-medium min-w-8 text-right ${
+                            subcategoryMastery >= 85 ? 'text-green-600' : 
+                            subcategoryMastery >= 70 ? 'text-blue-600' : 'text-gray-500'
+                          }`}>
+                            {hasData ? `${subcategoryMastery}%` : '--'}
+                          </span>
+                        </div>
                       </div>
                     );
                   })}
@@ -182,17 +237,53 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
       {filteredCategories.map((category) => {
         const categoryMastery = calculateCategoryMastery(category.id);
         const masteryInfo = getMasteryLevel(categoryMastery);
+        const categorySubcategories = subcategories.filter(sub => sub.categoryId === category.id);
+        const completedDomains = categorySubcategories.filter(sub => 
+          getSubcategoryMastery(category.id, sub.id) >= 85
+        ).length;
 
         return (
-          <Card key={category.id} className="material-shadow border border-gray-100 text-center">
+          <Card key={category.id} className="material-shadow border border-gray-100 text-center hover:border-primary/50 transition-colors">
             <CardContent className="p-4">
               <i className={`${category.icon} text-primary text-2xl mb-3 block`}></i>
               <h3 className="font-medium text-gray-900 text-sm mb-2">{category.name}</h3>
+              
+              {/* Mini domain indicators */}
+              <div className="flex justify-center gap-1 mb-3">
+                {categorySubcategories.slice(0, 6).map((subcategory) => {
+                  const subcategoryMastery = getSubcategoryMastery(category.id, subcategory.id);
+                  const hasData = masteryScores.some(score => 
+                    score.categoryId === category.id && score.subcategoryId === subcategory.id
+                  );
+                  
+                  return (
+                    <div
+                      key={subcategory.id}
+                      className={`w-2 h-2 rounded-full ${
+                        !hasData ? 'bg-gray-200' :
+                        subcategoryMastery >= 85 ? 'bg-green-500' :
+                        subcategoryMastery >= 70 ? 'bg-blue-500' :
+                        subcategoryMastery >= 50 ? 'bg-yellow-500' : 'bg-red-400'
+                      }`}
+                      title={`${subcategory.name}: ${hasData ? `${subcategoryMastery}%` : 'No data'}`}
+                    ></div>
+                  );
+                })}
+                {categorySubcategories.length > 6 && (
+                  <span className="text-xs text-gray-400">+{categorySubcategories.length - 6}</span>
+                )}
+              </div>
+              
               <div className="space-y-2">
                 <Progress value={categoryMastery} className="h-2" />
-                <Badge variant="outline" className={`text-xs ${masteryInfo.textColor}`}>
-                  {categoryMastery}%
-                </Badge>
+                <div className="flex items-center justify-between">
+                  <Badge variant="outline" className={`text-xs ${masteryInfo.textColor}`}>
+                    {categoryMastery}%
+                  </Badge>
+                  <span className="text-xs text-gray-500">
+                    {completedDomains}/{categorySubcategories.length}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -236,11 +327,37 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
       <CardContent className="p-4">
         {viewMode === 'summary' ? <SummaryView /> : <GridView />}
         
-        {/* Quick Info */}
-        <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-          <div className="flex items-center space-x-2 text-sm text-blue-900">
-            <BarChart3 className="h-4 w-4" />
-            <span className="font-medium">Goal: 85%+ mastery in all domains for certification readiness</span>
+        {/* Legend and Info */}
+        <div className="mt-4 space-y-3">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-gray-600">
+            <span className="font-medium">Domain Status:</span>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span>Ready (85%+)</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span>Good (70-84%)</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <span>Fair (50-69%)</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-red-400"></div>
+              <span>Needs Work (&lt;50%)</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-gray-200"></div>
+              <span>No Data</span>
+            </div>
+          </div>
+          
+          <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+            <div className="flex items-center space-x-2 text-sm text-blue-900">
+              <BarChart3 className="h-4 w-4" />
+              <span className="font-medium">Goal: 85%+ mastery in all domains for certification readiness</span>
+            </div>
           </div>
         </div>
       </CardContent>
