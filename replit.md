@@ -117,6 +117,8 @@ Core entities include:
   - ✅ Fixed all text visibility issues by improving color contrast ratios across themes
   - ✅ Updated all components to use theme-aware CSS classes (replaced hardcoded colors)
   - ✅ Ensured WCAG contrast compliance with darker text colors and proper foreground/background combinations
+  - ✅ Reduced yellow and gray tones across all themes for improved visibility and better contrast
+  - ✅ Enhanced muted-foreground colors from 40-47% lightness to 30-35% for better readability
   - ✅ CSS custom properties implementation with Tailwind CSS for consistent theming
   - ✅ Theme persistence across browser sessions with automatic theme restoration
 - **Accessibility Color Contrast Analyzer**: Professional-grade accessibility testing tool for WCAG compliance
