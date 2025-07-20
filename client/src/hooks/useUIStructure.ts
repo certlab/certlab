@@ -40,8 +40,9 @@ export const useUIStructure = () => {
       try {
         setLoading(true);
         
-        // Try to load from generated JSON file
-        const response = await fetch('/src/data/ui-structure.json');
+        // Try to load from generated JSON file with cache-busting
+        const timestamp = Date.now();
+        const response = await fetch(`/src/data/ui-structure.json?v=${timestamp}`);
         
         if (response.ok) {
           const data = await response.json();
