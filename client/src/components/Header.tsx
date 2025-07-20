@@ -60,6 +60,14 @@ export default function Header() {
             >
               Dashboard
             </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => setLocation("/accessibility")}
+              className="text-muted-foreground hover:text-primary"
+            >
+              <i className="fas fa-universal-access mr-2"></i>
+              Accessibility
+            </Button>
           </nav>
 
           <div className="flex items-center space-x-4">

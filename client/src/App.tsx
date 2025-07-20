@@ -12,6 +12,7 @@ import Results from "@/pages/results";
 import Review from "@/pages/review";
 import Lecture from "@/pages/lecture";
 import Achievements from "@/pages/achievements";
+import Accessibility from "@/pages/accessibility";
 import { localStorage } from "@/lib/localStorage";
 
 function Router() {
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/review/:id" component={Review} />
       <Route path="/lecture/:id" component={Lecture} />
       <Route path="/achievements" component={Achievements} />
+      <Route path="/accessibility" component={Accessibility} />
       <Route component={NotFound} />
     </Switch>
   );
