@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2025-07-20T17:46:44.696Z",
+  "lastUpdated": "2025-07-20T17:48:25.766Z",
   "generatedBy": "UIStructureSync",
   "routes": [
     {
@@ -8,7 +8,7 @@
       "route": "/dashboard",
       "type": "route",
       "description": "Main user dashboard with progress tracking and quick actions",
-      "icon": "Home",
+      "icon": "Folder",
       "children": [
         {
           "id": "ashboard",
@@ -16,7 +16,7 @@
           "route": "/dashboard",
           "type": "page",
           "description": "dashboard component with 0 API integrations",
-          "icon": "Home",
+          "icon": "FileText",
           "dependencies": [
             "React Components",
             "UI Libraries"
@@ -31,7 +31,7 @@
           "route": "/dashboard",
           "type": "component",
           "description": "Recent quizzes, mastery scores, and quick actions",
-          "icon": "Activity",
+          "icon": "Puzzle",
           "dependencies": [
             "useToast",
             "useMutation"
@@ -49,7 +49,7 @@
           "route": "/dashboard",
           "type": "component",
           "description": "Progress cards, AI assistant, and performance metrics",
-          "icon": "Layout",
+          "icon": "Puzzle",
           "dependencies": [
             "useToast",
             "useMutation"
@@ -69,7 +69,7 @@
           "route": "/dashboard",
           "type": "component",
           "description": "Certification selection and quiz configuration",
-          "icon": "GraduationCap",
+          "icon": "Puzzle",
           "dependencies": [
             "useToast",
             "useMutation"
@@ -101,7 +101,7 @@
       "route": "/quiz",
       "type": "route",
       "description": "Interactive learning sessions with immediate feedback",
-      "icon": "BookOpen",
+      "icon": "Folder",
       "children": [
         {
           "id": "uiz",
@@ -126,7 +126,7 @@
           "route": "/quiz/:id",
           "type": "component",
           "description": "QuizCreator component with 0 API integrations",
-          "icon": "FileQuestion",
+          "icon": "Puzzle",
           "dependencies": [
             "useToast",
             "useMutation"
@@ -146,7 +146,7 @@
           "route": "/quiz/:id",
           "type": "component",
           "description": "Question display, answer selection, and real-time feedback",
-          "icon": "FileQuestion",
+          "icon": "Puzzle",
           "dependencies": [
             "useToast",
             "useMutation"
@@ -187,7 +187,7 @@
       "route": "/admin",
       "type": "route",
       "description": "Multi-tenant administration and management portal",
-      "icon": "Settings",
+      "icon": "Folder",
       "children": [
         {
           "id": "dmin",
@@ -195,7 +195,7 @@
           "route": "/admin",
           "type": "page",
           "description": "admin component with 0 API integrations",
-          "icon": "Settings",
+          "icon": "FileText",
           "dependencies": [
             "useMutation",
             "useToast"
@@ -219,7 +219,7 @@
       "route": "/achievements",
       "type": "route",
       "description": "Gamification system with badges and progress tracking",
-      "icon": "Trophy",
+      "icon": "Folder",
       "children": [
         {
           "id": "chievements",
@@ -227,7 +227,7 @@
           "route": "/achievement",
           "type": "page",
           "description": "achievements component with 0 API integrations",
-          "icon": "Trophy",
+          "icon": "FileText",
           "dependencies": [
             "React Components",
             "UI Libraries"
@@ -242,7 +242,7 @@
           "route": "/achievement",
           "type": "component",
           "description": "Badge display with progress indicators and categories",
-          "icon": "Award",
+          "icon": "Puzzle",
           "dependencies": [
             "React Components",
             "UI Libraries"
@@ -257,7 +257,7 @@
           "route": "/achievement",
           "type": "component",
           "description": "AchievementNotification component with 0 API integrations",
-          "icon": "Award",
+          "icon": "Puzzle",
           "dependencies": [
             "React Components",
             "UI Libraries"
@@ -275,7 +275,7 @@
           "route": "/achievement",
           "type": "component",
           "description": "AchievementProgress component with 0 API integrations",
-          "icon": "Award",
+          "icon": "Puzzle",
           "dependencies": [
             "React Components",
             "UI Libraries"
@@ -290,7 +290,7 @@
           "route": "/achievement",
           "type": "component",
           "description": "XP tracking, level progression, and motivational display",
-          "icon": "TrendingUp",
+          "icon": "Puzzle",
           "dependencies": [
             "React Components",
             "UI Libraries"
@@ -308,7 +308,7 @@
       "route": "/accessibility",
       "type": "route",
       "description": "WCAG compliance tools and contrast analysis",
-      "icon": "Eye",
+      "icon": "Folder",
       "children": [
         {
           "id": "ccessibility",
@@ -316,7 +316,7 @@
           "route": "/accessibility",
           "type": "page",
           "description": "accessibility component with 0 API integrations",
-          "icon": "Eye",
+          "icon": "FileText",
           "dependencies": [
             "React Components",
             "UI Libraries"
@@ -334,7 +334,7 @@
       "route": "/login",
       "type": "route",
       "description": "User authentication and registration system",
-      "icon": "Shield",
+      "icon": "Folder",
       "children": [
         {
           "id": "ogin",
@@ -342,7 +342,7 @@
           "route": "/login",
           "type": "page",
           "description": "login component with 0 API integrations",
-          "icon": "Shield",
+          "icon": "FileText",
           "dependencies": [
             "useToast",
             "useMutation"

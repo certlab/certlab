@@ -184,12 +184,13 @@ Core entities include:
     - Real-time polling in development mode to detect file changes and update structure
     - Comprehensive component analysis including React hooks, imports, and API integrations
     - Fallback to static data ensures UI structure page always functions regardless of sync status
-  - ✅ **Standardized Icon System**: Consistent visual representation for different node types in navigation tree
-    - Route icons: Home (Dashboard), BookOpen (Quiz), Settings (Admin), Trophy (Achievements), Eye (Accessibility), Shield (Authentication)
-    - Component icons: Activity (Sidebar), Layout (Hero), GraduationCap (Learning), FileQuestion (Quiz), Award (Achievement), etc.
-    - Page icons: FileText (default), BarChart3 (Results), Search (Review), AlertTriangle (Not Found)
-    - Type-based defaults: Folder (routes), Puzzle (components), Layers (providers), Wrench (utilities)
-    - Visual legend in navigation sidebar helps users understand icon meanings
+  - ✅ **Standardized Icon System**: Consistent type-based icons for navigation tree nodes
+    - Fixed icon per node type regardless of component name for visual consistency
+    - Folder icon for all route nodes (Dashboard, Quiz System, Admin, etc.)
+    - FileText icon for all page nodes (dashboard.tsx, quiz.tsx, admin.tsx, etc.)
+    - Puzzle icon for all component nodes (DashboardHero, QuizInterface, ActivitySidebar, etc.)
+    - Layers icon for provider nodes, Wrench for utilities, Layout for layout components
+    - Visual legend in navigation sidebar shows each node type with its corresponding icon
 
 ### Recent Changes (July 20, 2025)
 - **Scalable Navigation System**: Redesigned top navigation for improved organization and future feature growth

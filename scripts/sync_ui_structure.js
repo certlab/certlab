@@ -327,84 +327,18 @@ class UIStructureSync {
   }
 
   inferIcon(name, type = 'component') {
-    // Standardized icon mapping by node type and name
+    // Fixed icons per node type - consistent regardless of component name
     const typeIcons = {
-      'route': {
-        'dashboard': 'Home',
-        'quiz': 'BookOpen', 
-        'admin': 'Settings',
-        'achievements': 'Trophy',
-        'accessibility': 'Eye',
-        'login': 'Shield'
-      },
-      'page': {
-        'dashboard': 'Home',
-        'quiz': 'FileText',
-        'admin': 'Settings',
-        'achievements': 'Trophy',
-        'accessibility': 'Eye',
-        'login': 'Shield',
-        'results': 'BarChart3',
-        'review': 'Search',
-        'lecture': 'BookOpen',
-        'not-found': 'AlertTriangle'
-      },
-      'component': {
-        'Hero': 'Layout',
-        'Activity': 'Activity',
-        'Learning': 'GraduationCap',
-        'Quiz': 'FileQuestion',
-        'Results': 'BarChart3',
-        'Review': 'Search',
-        'Achievement': 'Award',
-        'Badge': 'Medal',
-        'Level': 'TrendingUp',
-        'Progress': 'BarChart2',
-        'Contrast': 'Palette',
-        'Admin': 'Settings',
-        'Tenant': 'Building',
-        'Question': 'HelpCircle',
-        'User': 'User',
-        'Login': 'LogIn',
-        'Header': 'Navigation',
-        'Sidebar': 'PanelLeft',
-        'Interface': 'Monitor',
-        'Creator': 'PlusCircle',
-        'Selector': 'Filter',
-        'Meter': 'Gauge',
-        'Analyzer': 'Search',
-        'Notification': 'Bell'
-      }
-    };
-
-    // First check by type and exact name match
-    const typeMap = typeIcons[type] || typeIcons['component'];
-    const lowerName = name.toLowerCase();
-    
-    // Check exact matches first
-    for (const [key, icon] of Object.entries(typeMap)) {
-      if (lowerName === key.toLowerCase()) {
-        return icon;
-      }
-    }
-    
-    // Then check partial matches
-    for (const [key, icon] of Object.entries(typeMap)) {
-      if (lowerName.includes(key.toLowerCase())) {
-        return icon;
-      }
-    }
-
-    // Default icons by type
-    const defaultIcons = {
       'route': 'Folder',
-      'page': 'FileText',
+      'page': 'FileText', 
       'component': 'Puzzle',
+      'provider': 'Layers',
       'utility': 'Wrench',
-      'provider': 'Layers'
+      'layout': 'Layout',
+      'ui': 'Palette'
     };
 
-    return defaultIcons[type] || 'Component';
+    return typeIcons[type] || 'Puzzle';
   }
 
   // Check if sync is needed

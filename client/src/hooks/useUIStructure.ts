@@ -96,7 +96,7 @@ const getStaticStructureData = (): UIStructureData => ({
       route: '/dashboard',
       type: 'route',
       description: 'Main user dashboard with progress tracking and quick actions',
-      icon: 'Home',
+      icon: 'Folder',
       children: [
         {
           id: 'dashboard-hero',
@@ -104,7 +104,7 @@ const getStaticStructureData = (): UIStructureData => ({
           route: '/dashboard',
           type: 'component',
           description: 'Progress cards, AI assistant, and performance metrics',
-          icon: 'BarChart3',
+          icon: 'Puzzle',
           dependencies: ['User Stats API', 'Progress Tracking', 'Achievement System']
         },
         {
@@ -133,7 +133,7 @@ const getStaticStructureData = (): UIStructureData => ({
       route: '/quiz',
       type: 'route',
       description: 'Interactive learning sessions with immediate feedback',
-      icon: 'BookOpen',
+      icon: 'Folder',
       children: [
         {
           id: 'quiz-interface',
@@ -150,7 +150,7 @@ const getStaticStructureData = (): UIStructureData => ({
           route: '/results/:id',
           type: 'component',
           description: 'Performance analytics, score display, and recommendations',
-          icon: 'BarChart3',
+          icon: 'Puzzle',
           dependencies: ['Quiz Results API', 'Performance Analytics', 'Recommendation Engine']
         },
         {
@@ -170,7 +170,7 @@ const getStaticStructureData = (): UIStructureData => ({
       route: '/admin',
       type: 'route',
       description: 'Multi-tenant administration and management portal',
-      icon: 'Settings',
+      icon: 'Folder',
       children: [
         {
           id: 'tenant-management',
@@ -207,7 +207,7 @@ const getStaticStructureData = (): UIStructureData => ({
       route: '/achievements',
       type: 'route',
       description: 'Gamification system with badges and progress tracking',
-      icon: 'Trophy',
+      icon: 'Folder',
       children: [
         {
           id: 'achievement-badges',
@@ -224,7 +224,7 @@ const getStaticStructureData = (): UIStructureData => ({
           route: '/achievements',
           type: 'component',
           description: 'XP tracking, level progression, and motivational display',
-          icon: 'BarChart3',
+          icon: 'Puzzle',
           dependencies: ['XP System', 'Level Calculation', 'User Stats']
         }
       ]
@@ -235,7 +235,7 @@ const getStaticStructureData = (): UIStructureData => ({
       route: '/accessibility',
       type: 'route',
       description: 'WCAG compliance tools and contrast analysis',
-      icon: 'Eye',
+      icon: 'Folder',
       children: [
         {
           id: 'contrast-analyzer',
@@ -254,7 +254,7 @@ const getStaticStructureData = (): UIStructureData => ({
       route: '/login',
       type: 'route',
       description: 'User authentication and registration system',
-      icon: 'Shield',
+      icon: 'Folder',
       children: [
         {
           id: 'login-form',

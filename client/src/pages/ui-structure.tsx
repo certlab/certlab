@@ -466,10 +466,10 @@ const UIStructurePage = () => {
                   
                   {/* Icon Legend */}
                   <div className="text-xs text-muted-foreground space-y-1 pt-3 mt-3 border-t">
-                    <div className="font-medium text-foreground mb-2">Icon Legend:</div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="font-medium text-foreground mb-2">Node Types:</div>
+                    <div className="space-y-1">
                       <div className="flex items-center space-x-2">
-                        <Home className="w-3 h-3 text-purple-500" />
+                        <Folder className="w-3 h-3 text-purple-500" />
                         <span>Routes</span>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -484,19 +484,13 @@ const UIStructurePage = () => {
                         <Layers className="w-3 h-3 text-cyan-500" />
                         <span>Providers</span>
                       </div>
-                    </div>
-                    <div className="pt-2 text-xs">
                       <div className="flex items-center space-x-2">
-                        <Activity className="w-3 h-3" />
-                        <span>Sidebar components</span>
+                        <Wrench className="w-3 h-3 text-orange-500" />
+                        <span>Utilities</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Layout className="w-3 h-3" />
-                        <span>Layout components</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Award className="w-3 h-3" />
-                        <span>Achievement system</span>
+                        <Layout className="w-3 h-3 text-pink-500" />
+                        <span>Layouts</span>
                       </div>
                     </div>
                   </div>
