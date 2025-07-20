@@ -2880,16 +2880,37 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
   async createLecture(userId: number, quizId: number, topics: string[]): Promise<void> {
     // Basic implementation - create a simple lecture record
     try {
+      console.log('Creating lecture with topics:', topics);
+      
+      if (!topics || topics.length === 0) {
+        console.log('No topics provided for lecture creation');
+        return;
+      }
+      
       const lectureContent = `Study guide for missed topics: ${topics.join(', ')}`;
       const title = `Review Session - Quiz ${quizId}`;
       
-      await db.insert(lectures).values({
+      // Get quiz to find categoryId
+      const quiz = await this.getQuiz(quizId);
+      if (!quiz || !quiz.categoryIds || (quiz.categoryIds as number[]).length === 0) {
+        console.log('Cannot create lecture - quiz has no categories');
+        return;
+      }
+      
+      const lectureData = {
         userId,
         quizId,
         title,
         content: lectureContent,
-        createdAt: new Date()
-      });
+        topics: topics, // This will be stored as JSONB
+        categoryId: (quiz.categoryIds as number[])[0], // Use first category
+        isRead: false
+      };
+      
+      console.log('Inserting lecture data:', lectureData);
+      
+      await db.insert(lectures).values(lectureData);
+      console.log('Lecture created successfully');
     } catch (error) {
       console.error('Failed to create lecture:', error);
       throw error;
