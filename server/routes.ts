@@ -212,11 +212,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Questions retrieved: ${questions.length}`);
       
+      if (questions.length === 0) {
+        console.error('No questions found for quiz', { categoryIds: quiz.categoryIds, subcategoryIds: quiz.subcategoryIds });
+        return res.status(400).json({ message: "No questions found for this quiz" });
+      }
+      
       let correctAnswers = 0;
       const results = answers.map((answer: any) => {
         const question = questions.find(q => q.id === answer.questionId);
+        if (!question) {
+          console.warn(`Question not found: ${answer.questionId}`);
+        }
         const isCorrect = question && question.correctAnswer === answer.answer;
         if (isCorrect) correctAnswers++;
+        console.log(`Question ${answer.questionId}: selected ${answer.answer}, correct ${question?.correctAnswer}, isCorrect: ${isCorrect}`);
         return {
           questionId: answer.questionId,
           answer: answer.answer,
