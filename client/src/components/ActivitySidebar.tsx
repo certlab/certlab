@@ -5,7 +5,7 @@ import { localStorage } from "@/lib/localStorage";
 import { getScoreColor } from "@/lib/questions";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Quiz, UserProgress, Category } from "@shared/schema";
+import type { Quiz, Category } from "@shared/schema";
 
 export default function ActivitySidebar() {
   const currentUser = localStorage.getCurrentUser();
@@ -16,18 +16,8 @@ export default function ActivitySidebar() {
     enabled: !!currentUser,
   });
 
-  const { data: userProgress = [] } = useQuery<UserProgress[]>({
-    queryKey: ['/api/user', currentUser?.id, 'progress'],
-    enabled: !!currentUser,
-  });
-
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
-  });
-
-  const { data: masteryScores = [] } = useQuery<{ categoryId: number; masteryScore: number }[]>({
-    queryKey: ['/api/user', currentUser?.id, 'mastery'],
-    enabled: !!currentUser,
   });
 
   const completedQuizzes = recentQuizzes
@@ -35,7 +25,7 @@ export default function ActivitySidebar() {
     .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())
     .slice(0, 3);
 
-  const formatDate = (date: string) => {
+  const formatDate = (date: string | Date) => {
     const now = new Date();
     const quizDate = new Date(date);
     const diffTime = Math.abs(now.getTime() - quizDate.getTime());
@@ -54,14 +44,7 @@ export default function ActivitySidebar() {
     return names.length > 0 ? names.join(", ") : "Mixed Quiz";
   };
 
-  const getProgressForCategory = (categoryId: number) => {
-    return userProgress.find(p => p.categoryId === categoryId);
-  };
 
-  const getMasteryScoreForCategory = (categoryId: number): number => {
-    const masteryData = masteryScores.find(m => m.categoryId === categoryId);
-    return masteryData?.masteryScore || 0;
-  };
 
   // Mutation for creating quick action quizzes
   const createQuizMutation = useMutation({
@@ -100,10 +83,7 @@ export default function ActivitySidebar() {
 
   // Get lowest performing category for review
   const getLowestPerformingCategory = () => {
-    if (userProgress.length === 0) return categories[0]?.id || 35;
-    return userProgress.reduce((lowest, current) => 
-      current.averageScore < lowest.averageScore ? current : lowest
-    ).categoryId;
+    return categories[0]?.id || 35;
   };
 
   // Quick action handlers
@@ -224,14 +204,9 @@ export default function ActivitySidebar() {
   };
 
   const handleViewAnalytics = () => {
-    // For now, scroll to the progress section
-    const progressSection = document.querySelector('[data-progress-section]');
-    if (progressSection) {
-      progressSection.scrollIntoView({ behavior: 'smooth' });
-    }
     toast({
       title: "Analytics",
-      description: "Detailed analytics coming soon! Check your progress section above.",
+      description: "Detailed analytics coming soon!",
     });
   };
 
@@ -294,40 +269,7 @@ export default function ActivitySidebar() {
         </CardContent>
       </Card>
 
-      {/* Study Progress */}
-      <Card className="material-shadow border border-gray-100 overflow-hidden" data-progress-section>
-        <CardHeader className="p-4 border-b border-gray-100">
-          <CardTitle className="font-medium text-gray-900">Certification Progress</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 space-y-4">
-          {categories.map((category) => {
-            const progress = getProgressForCategory(category.id);
-            const masteryScore = getMasteryScoreForCategory(category.id);
-            
-            return (
-              <div key={category.id}>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-700">{category.name}</span>
-                  <span className="text-sm text-gray-500">{masteryScore}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${
-                      masteryScore >= 90 ? 'bg-secondary' :
-                      masteryScore >= 80 ? 'bg-primary' :
-                      masteryScore >= 70 ? 'bg-accent' : 'bg-gray-400'
-                    }`}
-                    style={{ width: `${Math.min(masteryScore, 100)}%` }}
-                  ></div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {progress?.questionsCompleted || 0}/{progress?.totalQuestions || 0} questions completed
-                </p>
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+
 
 
     </div>
