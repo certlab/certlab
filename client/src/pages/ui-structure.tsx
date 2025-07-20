@@ -1,419 +1,214 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useCallback, useMemo } from "react";
+import ReactFlow, {
+  Node,
+  Edge,
+  Controls,
+  Background,
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  NodeTypes,
+  Handle,
+  Position,
+  ConnectionMode,
+  MarkerType,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
 import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ZoomIn, ZoomOut, RotateCcw, Search, Filter, Download } from "lucide-react";
+import { Search, Filter, Download, RotateCcw, Database, Router, Layout, Component, Zap, Globe, Settings } from "lucide-react";
 
-interface UINode {
-  id: string;
+interface UINodeData {
   label: string;
   type: string;
   level: number;
-  parent?: string;
-  children: string[];
   description?: string;
-  color: string;
-  x: number;
-  y: number;
+  nodeType: string;
 }
 
-interface Connection {
-  from: string;
-  to: string;
-}
+// Custom Node Component
+const CustomNode = ({ data }: { data: UINodeData }) => {
+  const getNodeColor = (type: string) => {
+    const colors = {
+      'app': 'bg-purple-500',
+      'provider': 'bg-cyan-500',
+      'router': 'bg-emerald-500',
+      'page': 'bg-amber-500',
+      'component': 'bg-red-500',
+      'layout': 'bg-blue-500',
+      'ui-element': 'bg-lime-500',
+      'utility': 'bg-gray-500',
+    };
+    return colors[type as keyof typeof colors] || 'bg-gray-500';
+  };
+
+  const getNodeIcon = (type: string) => {
+    const icons = {
+      'app': Globe,
+      'provider': Zap,
+      'router': Router,
+      'page': Layout,
+      'component': Component,
+      'layout': Layout,
+      'ui-element': Component,
+      'utility': Settings,
+    };
+    const IconComponent = icons[type as keyof typeof icons] || Component;
+    return <IconComponent className="w-4 h-4" />;
+  };
+
+  return (
+    <div className={`px-4 py-3 shadow-lg rounded-lg border-2 border-white bg-white min-w-[120px] ${getNodeColor(data.type)} bg-opacity-10`}>
+      <Handle type="target" position={Position.Top} className="w-2 h-2" />
+      
+      <div className="flex items-center space-x-2 mb-1">
+        <div className={`w-6 h-6 rounded-full ${getNodeColor(data.type)} flex items-center justify-center text-white`}>
+          {getNodeIcon(data.type)}
+        </div>
+        <div className="text-sm font-semibold text-gray-800">{data.label}</div>
+      </div>
+      
+      <div className="text-xs text-gray-600">
+        <Badge variant="secondary" className="text-xs">
+          {data.type}
+        </Badge>
+      </div>
+      
+      {data.description && (
+        <div className="text-xs text-gray-500 mt-2 line-clamp-2">
+          {data.description}
+        </div>
+      )}
+      
+      <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
+    </div>
+  );
+};
 
 export default function UIStructurePage() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [nodes, setNodes] = useState<UINode[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [selectedNode, setSelectedNode] = useState<UINode | null>(null);
+  const nodeTypes: NodeTypes = useMemo(() => ({
+    custom: CustomNode,
+  }), []);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [zoom, setZoom] = useState(1);
-  const [panX, setPanX] = useState(0);
-  const [panY, setPanY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // Initialize UI structure data
-  useEffect(() => {
-    const structureData = generateUIStructureData();
-    setNodes(structureData.nodes);
-    setConnections(structureData.connections);
-  }, []);
-
-  // Canvas drawing and interaction
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Set canvas size
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Apply transformations
-    ctx.save();
-    ctx.translate(panX, panY);
-    ctx.scale(zoom, zoom);
-
-    // Draw connections
-    connections.forEach(connection => {
-      const fromNode = nodes.find(n => n.id === connection.from);
-      const toNode = nodes.find(n => n.id === connection.to);
+  // Generate initial nodes and edges
+  const { initialNodes, initialEdges } = useMemo(() => {
+    const nodeData = [
+      // Level 0
+      { id: 'app', label: 'SecuraCert App', type: 'app', level: 0, description: 'Root application container', x: 400, y: 50 },
       
-      if (fromNode && toNode) {
-        drawConnection(ctx, fromNode, toNode);
-      }
-    });
-
-    // Draw nodes
-    const filteredNodes = getFilteredNodes();
-    filteredNodes.forEach(node => {
-      drawNode(ctx, node, node.id === selectedNode?.id);
-    });
-
-    ctx.restore();
-  }, [nodes, connections, selectedNode, searchTerm, filterType, zoom, panX, panY]);
-
-  const generateUIStructureData = () => {
-    const nodeTypes = {
-      'app': '#8B5CF6',           // Purple
-      'provider': '#06B6D4',      // Cyan
-      'router': '#10B981',        // Emerald
-      'page': '#F59E0B',          // Amber
-      'component': '#EF4444',     // Red
-      'layout': '#3B82F6',        // Blue
-      'ui-element': '#84CC16',    // Lime
-      'utility': '#6B7280',       // Gray
-      'data': '#EC4899'           // Pink
-    };
-
-    const rawNodes: Omit<UINode, 'x' | 'y'>[] = [
-      // Root
-      { id: 'app', label: 'SecuraCert App', type: 'app', level: 0, children: ['providers', 'router'], color: nodeTypes.app, description: 'Root application container' },
+      // Level 1
+      { id: 'providers', label: 'Providers', type: 'provider', level: 1, description: 'Application providers', x: 200, y: 200 },
+      { id: 'router', label: 'Router', type: 'router', level: 1, description: 'Wouter routing system', x: 600, y: 200 },
       
-      // Providers
-      { id: 'providers', label: 'Providers', type: 'provider', level: 1, parent: 'app', children: ['query-client', 'theme-provider', 'tooltip-provider'], color: nodeTypes.provider, description: 'Application providers' },
-      { id: 'query-client', label: 'Query Client', type: 'provider', level: 2, parent: 'providers', children: [], color: nodeTypes.provider, description: 'TanStack Query for data fetching' },
-      { id: 'theme-provider', label: 'Theme Provider', type: 'provider', level: 2, parent: 'providers', children: [], color: nodeTypes.provider, description: '7 theme system with localStorage' },
-      { id: 'tooltip-provider', label: 'Tooltip Provider', type: 'provider', level: 2, parent: 'providers', children: [], color: nodeTypes.provider, description: 'Radix UI tooltips' },
+      // Level 2
+      { id: 'query-client', label: 'Query Client', type: 'provider', level: 2, description: 'TanStack Query for data fetching', x: 100, y: 350 },
+      { id: 'theme-provider', label: 'Theme Provider', type: 'provider', level: 2, description: '7 theme system with localStorage', x: 250, y: 350 },
+      { id: 'tooltip-provider', label: 'Tooltip Provider', type: 'provider', level: 2, description: 'Radix UI tooltips', x: 400, y: 350 },
       
-      // Router
-      { id: 'router', label: 'Router', type: 'router', level: 1, parent: 'app', children: ['auth-check', 'routes'], color: nodeTypes.router, description: 'Wouter routing system' },
-      { id: 'auth-check', label: 'Auth Check', type: 'router', level: 2, parent: 'router', children: ['login-page'], color: nodeTypes.router, description: 'Authentication guard' },
-      { id: 'login-page', label: 'Login Page', type: 'page', level: 3, parent: 'auth-check', children: [], color: nodeTypes.page, description: 'User authentication' },
+      { id: 'auth-check', label: 'Auth Check', type: 'router', level: 2, description: 'Authentication guard', x: 550, y: 350 },
+      { id: 'routes', label: 'Protected Routes', type: 'router', level: 2, description: 'Authenticated user routes', x: 700, y: 350 },
       
-      // Main Routes
-      { id: 'routes', label: 'Protected Routes', type: 'router', level: 2, parent: 'router', children: ['dashboard', 'quiz-routes', 'content-routes', 'admin'], color: nodeTypes.router, description: 'Authenticated user routes' },
-      
-      // Dashboard
-      { id: 'dashboard', label: 'Dashboard', type: 'page', level: 3, parent: 'routes', children: ['header', 'dashboard-hero', 'learning-selector', 'activity-sidebar', 'mastery-meter'], color: nodeTypes.page, description: 'Main dashboard page' },
-      { id: 'header', label: 'Header', type: 'layout', level: 4, parent: 'dashboard', children: ['nav-menu', 'user-menu', 'theme-toggle', 'mobile-menu'], color: nodeTypes.layout, description: 'Global navigation header' },
-      { id: 'nav-menu', label: 'Navigation Menu', type: 'component', level: 5, parent: 'header', children: [], color: nodeTypes.component, description: 'Desktop navigation with dropdowns' },
-      { id: 'user-menu', label: 'User Menu', type: 'component', level: 5, parent: 'header', children: [], color: nodeTypes.component, description: 'User account dropdown' },
-      { id: 'theme-toggle', label: 'Theme Toggle', type: 'component', level: 5, parent: 'header', children: [], color: nodeTypes.component, description: '7 theme selector' },
-      { id: 'mobile-menu', label: 'Mobile Menu', type: 'component', level: 5, parent: 'header', children: [], color: nodeTypes.component, description: 'Responsive hamburger menu' },
-      
-      // Dashboard Components
-      { id: 'dashboard-hero', label: 'Dashboard Hero', type: 'component', level: 4, parent: 'dashboard', children: ['ai-insights', 'quick-actions'], color: nodeTypes.component, description: 'Overview cards and AI assistant' },
-      { id: 'ai-insights', label: 'AI Insights', type: 'ui-element', level: 5, parent: 'dashboard-hero', children: [], color: nodeTypes['ui-element'], description: 'HELEN AI recommendations' },
-      { id: 'quick-actions', label: 'Quick Actions', type: 'ui-element', level: 5, parent: 'dashboard-hero', children: [], color: nodeTypes['ui-element'], description: 'Instant quiz creation' },
-      
-      { id: 'learning-selector', label: 'Learning Mode Selector', type: 'component', level: 4, parent: 'dashboard', children: ['mode-cards', 'category-grid', 'session-config'], color: nodeTypes.component, description: 'Quiz configuration interface' },
-      { id: 'mode-cards', label: 'Mode Cards', type: 'ui-element', level: 5, parent: 'learning-selector', children: [], color: nodeTypes['ui-element'], description: 'Study vs Quiz mode selection' },
-      { id: 'category-grid', label: 'Category Grid', type: 'ui-element', level: 5, parent: 'learning-selector', children: [], color: nodeTypes['ui-element'], description: 'Certification category selection' },
-      { id: 'session-config', label: 'Session Config', type: 'ui-element', level: 5, parent: 'learning-selector', children: [], color: nodeTypes['ui-element'], description: 'Question count and time settings' },
-      
-      { id: 'activity-sidebar', label: 'Activity Sidebar', type: 'component', level: 4, parent: 'dashboard', children: ['recent-quizzes', 'study-guide-gen'], color: nodeTypes.component, description: 'Recent activity and actions' },
-      { id: 'recent-quizzes', label: 'Recent Quizzes', type: 'ui-element', level: 5, parent: 'activity-sidebar', children: [], color: nodeTypes['ui-element'], description: 'Last 3 completed quizzes' },
-      { id: 'study-guide-gen', label: 'Study Guide Generator', type: 'ui-element', level: 5, parent: 'activity-sidebar', children: [], color: nodeTypes['ui-element'], description: 'AI-powered study materials' },
-      
-      { id: 'mastery-meter', label: 'Mastery Meter', type: 'component', level: 4, parent: 'dashboard', children: [], color: nodeTypes.component, description: 'Certification mastery progress' },
-      
-      // Quiz Routes
-      { id: 'quiz-routes', label: 'Quiz Routes', type: 'router', level: 3, parent: 'routes', children: ['quiz-page', 'results-page', 'review-page'], color: nodeTypes.router, description: 'Learning session pages' },
-      { id: 'quiz-page', label: 'Quiz Interface', type: 'page', level: 4, parent: 'quiz-routes', children: ['question-display', 'answer-selection', 'progress-bar'], color: nodeTypes.page, description: 'Interactive quiz taking' },
-      { id: 'question-display', label: 'Question Display', type: 'ui-element', level: 5, parent: 'quiz-page', children: [], color: nodeTypes['ui-element'], description: 'Question text and options' },
-      { id: 'answer-selection', label: 'Answer Selection', type: 'ui-element', level: 5, parent: 'quiz-page', children: [], color: nodeTypes['ui-element'], description: 'Interactive answer choices' },
-      { id: 'progress-bar', label: 'Progress Bar', type: 'ui-element', level: 5, parent: 'quiz-page', children: [], color: nodeTypes['ui-element'], description: 'Quiz completion progress' },
-      
-      { id: 'results-page', label: 'Results Page', type: 'page', level: 4, parent: 'quiz-routes', children: ['score-display', 'performance-chart'], color: nodeTypes.page, description: 'Quiz results and analysis' },
-      { id: 'score-display', label: 'Score Display', type: 'ui-element', level: 5, parent: 'results-page', children: [], color: nodeTypes['ui-element'], description: 'Score and pass/fail status' },
-      { id: 'performance-chart', label: 'Performance Chart', type: 'ui-element', level: 5, parent: 'results-page', children: [], color: nodeTypes['ui-element'], description: 'Category breakdown visualization' },
-      
-      { id: 'review-page', label: 'Review Page', type: 'page', level: 4, parent: 'quiz-routes', children: [], color: nodeTypes.page, description: 'Question review and explanations' },
-      
-      // Content Routes
-      { id: 'content-routes', label: 'Content Routes', type: 'router', level: 3, parent: 'routes', children: ['achievements-page', 'accessibility-page', 'lecture-page'], color: nodeTypes.router, description: 'Educational content pages' },
-      { id: 'achievements-page', label: 'Achievements', type: 'page', level: 4, parent: 'content-routes', children: ['badge-system', 'level-progress', 'achievement-tabs'], color: nodeTypes.page, description: 'Gamification center' },
-      { id: 'badge-system', label: 'Badge System', type: 'component', level: 5, parent: 'achievements-page', children: [], color: nodeTypes.component, description: '90+ achievement badges' },
-      { id: 'level-progress', label: 'Level Progress', type: 'component', level: 5, parent: 'achievements-page', children: [], color: nodeTypes.component, description: 'XP and level visualization' },
-      { id: 'achievement-tabs', label: 'Achievement Tabs', type: 'ui-element', level: 5, parent: 'achievements-page', children: [], color: nodeTypes['ui-element'], description: 'Earned vs Progress tabs' },
-      
-      { id: 'accessibility-page', label: 'Accessibility Tools', type: 'page', level: 4, parent: 'content-routes', children: ['contrast-analyzer'], color: nodeTypes.page, description: 'WCAG compliance tools' },
-      { id: 'contrast-analyzer', label: 'Contrast Analyzer', type: 'component', level: 5, parent: 'accessibility-page', children: [], color: nodeTypes.component, description: 'Color contrast testing' },
-      
-      { id: 'lecture-page', label: 'Lecture Page', type: 'page', level: 4, parent: 'content-routes', children: [], color: nodeTypes.page, description: 'AI-generated study content' },
-      
-      // Admin
-      { id: 'admin', label: 'Admin Dashboard', type: 'page', level: 3, parent: 'routes', children: ['tenant-sidebar', 'admin-tabs'], color: nodeTypes.page, description: 'Multi-tenant administration' },
-      { id: 'tenant-sidebar', label: 'Tenant Sidebar', type: 'component', level: 4, parent: 'admin', children: [], color: nodeTypes.component, description: 'Organization selector' },
-      { id: 'admin-tabs', label: 'Admin Tabs', type: 'component', level: 4, parent: 'admin', children: ['overview-tab', 'categories-tab', 'questions-tab', 'users-tab'], color: nodeTypes.component, description: 'Management interface tabs' },
-      { id: 'overview-tab', label: 'Overview', type: 'ui-element', level: 5, parent: 'admin-tabs', children: [], color: nodeTypes['ui-element'], description: 'Tenant statistics' },
-      { id: 'categories-tab', label: 'Categories', type: 'ui-element', level: 5, parent: 'admin-tabs', children: [], color: nodeTypes['ui-element'], description: 'Certification management' },
-      { id: 'questions-tab', label: 'Questions', type: 'ui-element', level: 5, parent: 'admin-tabs', children: [], color: nodeTypes['ui-element'], description: 'Question bank management' },
-      { id: 'users-tab', label: 'Users', type: 'ui-element', level: 5, parent: 'admin-tabs', children: [], color: nodeTypes['ui-element'], description: 'User administration' }
+      // Level 3 (selective key routes)
+      { id: 'login-page', label: 'Login Page', type: 'page', level: 3, description: 'User authentication', x: 450, y: 500 },
+      { id: 'dashboard', label: 'Dashboard', type: 'page', level: 3, description: 'Main dashboard page', x: 600, y: 500 },
+      { id: 'quiz-routes', label: 'Quiz Routes', type: 'router', level: 3, description: 'Learning session pages', x: 750, y: 500 },
+      { id: 'admin', label: 'Admin Dashboard', type: 'page', level: 3, description: 'Multi-tenant administration', x: 900, y: 500 },
     ];
 
-    // Calculate positions using force-directed layout
-    const positionedNodes = calculateNodePositions(rawNodes);
-    
-    // Generate connections (only for nodes within the 3-level limit)
-    const connections: Connection[] = [];
-    const nodeIds = new Set(positionedNodes.map(n => n.id));
-    
-    positionedNodes.forEach(node => {
-      if (node.parent && nodeIds.has(node.parent)) {
-        connections.push({ from: node.parent, to: node.id });
-      }
-    });
-
-    return { nodes: positionedNodes, connections };
-  };
-
-  const calculateNodePositions = (rawNodes: Omit<UINode, 'x' | 'y'>[]): UINode[] => {
-    const canvasWidth = 800;
-    const canvasHeight = 600;
-    const levelSpacing = 180; // Vertical spacing between levels
-    const nodeSpacing = 120; // Horizontal spacing between nodes
-    
-    // Filter to show only first 3 levels
-    const filteredNodes = rawNodes.filter(node => node.level <= 2);
-
-    // Group nodes by level
-    const nodesByLevel: { [level: number]: Omit<UINode, 'x' | 'y'>[] } = {};
-    filteredNodes.forEach(node => {
-      if (!nodesByLevel[node.level]) {
-        nodesByLevel[node.level] = [];
-      }
-      nodesByLevel[node.level].push(node);
-    });
-
-    // Position nodes vertically
-    const positionedNodes: UINode[] = [];
-    
-    Object.keys(nodesByLevel).forEach(levelStr => {
-      const level = parseInt(levelStr);
-      const levelNodes = nodesByLevel[level];
-      const totalWidth = (levelNodes.length - 1) * nodeSpacing;
-      const startX = (canvasWidth - totalWidth) / 2;
-      const y = 80 + (level * levelSpacing); // Start from top with padding
+    const connections = [
+      // Level 0 to 1
+      { from: 'app', to: 'providers' },
+      { from: 'app', to: 'router' },
       
-      levelNodes.forEach((node, index) => {
-        const x = startX + (index * nodeSpacing);
-        
-        positionedNodes.push({
-          ...node,
-          x,
-          y
-        });
-      });
-    });
+      // Level 1 to 2
+      { from: 'providers', to: 'query-client' },
+      { from: 'providers', to: 'theme-provider' },
+      { from: 'providers', to: 'tooltip-provider' },
+      { from: 'router', to: 'auth-check' },
+      { from: 'router', to: 'routes' },
+      
+      // Level 2 to 3
+      { from: 'auth-check', to: 'login-page' },
+      { from: 'routes', to: 'dashboard' },
+      { from: 'routes', to: 'quiz-routes' },
+      { from: 'routes', to: 'admin' },
+    ];
 
-    return positionedNodes;
-  };
+    const nodes: Node<UINodeData>[] = nodeData.map(node => ({
+      id: node.id,
+      type: 'custom',
+      position: { x: node.x, y: node.y },
+      data: {
+        label: node.label,
+        type: node.type,
+        level: node.level,
+        description: node.description,
+        nodeType: node.type,
+      },
+    }));
 
-  const drawNode = (ctx: CanvasRenderingContext2D, node: UINode, isSelected: boolean) => {
-    const radius = getNodeRadius(node.type);
-    
-    // Draw node circle
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
-    ctx.fillStyle = node.color;
-    ctx.fill();
-    
-    // Draw selection ring
-    if (isSelected) {
-      ctx.strokeStyle = '#FFD700';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-    } else {
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-    
-    // Draw label
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '12px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    const words = node.label.split(' ');
-    if (words.length > 1 && radius < 25) {
-      // Multi-line text for smaller nodes
-      words.forEach((word, index) => {
-        ctx.fillText(word, node.x, node.y + (index - words.length/2 + 0.5) * 14);
-      });
-    } else {
-      ctx.fillText(node.label, node.x, node.y);
-    }
-  };
+    const edges: Edge[] = connections.map((conn, index) => ({
+      id: `${conn.from}-${conn.to}`,
+      source: conn.from,
+      target: conn.to,
+      type: 'smoothstep',
+      animated: false,
+      style: {
+        stroke: '#94a3b8',
+        strokeWidth: 2,
+      },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: '#94a3b8',
+      },
+    }));
 
-  const drawConnection = (ctx: CanvasRenderingContext2D, fromNode: UINode, toNode: UINode) => {
-    const fromRadius = getNodeRadius(fromNode.type);
-    const toRadius = getNodeRadius(toNode.type);
-    
-    // Calculate connection points at edge of circles
-    const dx = toNode.x - fromNode.x;
-    const dy = toNode.y - fromNode.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    if (distance === 0) return;
-    
-    const unitX = dx / distance;
-    const unitY = dy / distance;
-    
-    const startX = fromNode.x + unitX * fromRadius;
-    const startY = fromNode.y + unitY * fromRadius;
-    const endX = toNode.x - unitX * toRadius;
-    const endY = toNode.y - unitY * toRadius;
-    
-    // Create curved connection with rounded corners
-    const midY = startY + (endY - startY) * 0.6;
-    const controlOffset = Math.abs(endX - startX) * 0.3;
-    
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    
-    if (Math.abs(endX - startX) > 50) {
-      // Curved path for horizontally separated nodes
-      ctx.bezierCurveTo(
-        startX, startY + controlOffset,
-        endX, midY - controlOffset,
-        endX, endY
-      );
-    } else {
-      // Simple curved line for vertically aligned nodes
-      ctx.quadraticCurveTo(
-        startX + (endX - startX) / 2, 
-        midY,
-        endX, endY
-      );
-    }
-    
-    ctx.strokeStyle = '#D1D5DB';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-    
-    // Add arrow at end
-    drawArrow(ctx, endX, endY, Math.atan2(dy, dx));
-  };
-  
-  const drawArrow = (ctx: CanvasRenderingContext2D, x: number, y: number, angle: number) => {
-    const arrowLength = 8;
-    const arrowAngle = Math.PI / 6;
-    
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(
-      x - arrowLength * Math.cos(angle - arrowAngle),
-      y - arrowLength * Math.sin(angle - arrowAngle)
-    );
-    ctx.moveTo(x, y);
-    ctx.lineTo(
-      x - arrowLength * Math.cos(angle + arrowAngle),
-      y - arrowLength * Math.sin(angle + arrowAngle)
-    );
-    ctx.strokeStyle = '#9CA3AF';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-  };
+    return { initialNodes: nodes, initialEdges: edges };
+  }, []);
 
-  const getNodeRadius = (type: string) => {
-    const radii = {
-      'app': 40,
-      'provider': 25,
-      'router': 30,
-      'page': 35,
-      'component': 25,
-      'layout': 30,
-      'ui-element': 20,
-      'utility': 20,
-      'data': 25
-    };
-    return radii[type as keyof typeof radii] || 20;
-  };
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [selectedNode, setSelectedNode] = useState<Node<UINodeData> | null>(null);
 
-  const getFilteredNodes = () => {
+  const onConnect = useCallback((params: any) => {
+    setEdges((eds) => addEdge(params, eds));
+  }, [setEdges]);
+
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node<UINodeData>) => {
+    setSelectedNode(node);
+  }, []);
+
+  const filteredNodes = useMemo(() => {
     return nodes.filter(node => {
-      const matchesSearch = node.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           node.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterType === 'all' || node.type === filterType;
+      const matchesSearch = node.data.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           node.data.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = filterType === 'all' || node.data.type === filterType;
       return matchesSearch && matchesFilter;
     });
-  };
+  }, [nodes, searchTerm, filterType]);
 
-  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const filteredEdges = useMemo(() => {
+    const visibleNodeIds = new Set(filteredNodes.map(n => n.id));
+    return edges.filter(edge => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target));
+  }, [edges, filteredNodes]);
 
-    const rect = canvas.getBoundingClientRect();
-    const clickX = (event.clientX - rect.left - panX) / zoom;
-    const clickY = (event.clientY - rect.top - panY) / zoom;
-
-    // Find clicked node
-    const clickedNode = nodes.find(node => {
-      const distance = Math.sqrt((clickX - node.x) ** 2 + (clickY - node.y) ** 2);
-      return distance <= getNodeRadius(node.type);
-    });
-
-    setSelectedNode(clickedNode || null);
-  };
-
-  const handleCanvasMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    setIsDragging(true);
-    setDragStart({ x: event.clientX - panX, y: event.clientY - panY });
-  };
-
-  const handleCanvasMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (isDragging) {
-      setPanX(event.clientX - dragStart.x);
-      setPanY(event.clientY - dragStart.y);
-    }
-  };
-
-  const handleCanvasMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const resetView = () => {
-    setZoom(1);
-    setPanX(0);
-    setPanY(0);
+  const resetView = useCallback(() => {
+    setSearchTerm("");
+    setFilterType("all");
     setSelectedNode(null);
-  };
+  }, []);
 
-  const exportImage = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const link = document.createElement('a');
-    link.download = 'ui-structure.png';
-    link.href = canvas.toDataURL();
-    link.click();
-  };
+  const exportImage = useCallback(() => {
+    // This would require additional setup for image export
+    // For now, we'll show a placeholder
+    alert("Export functionality would be implemented with react-flow/export or html2canvas");
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -423,7 +218,7 @@ export default function UIStructurePage() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground mb-2">UI Structure Visualization</h1>
           <p className="text-muted-foreground">
-            Interactive map of the SecuraCert application architecture (showing top 3 levels)
+            Interactive map of the SecuraCert application architecture (React Flow powered)
           </p>
         </div>
 
@@ -453,25 +248,10 @@ export default function UIStructurePage() {
               <SelectItem value="layout">Layout</SelectItem>
               <SelectItem value="ui-element">UI Element</SelectItem>
               <SelectItem value="utility">Utility</SelectItem>
-              <SelectItem value="data">Data</SelectItem>
             </SelectContent>
           </Select>
 
           <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setZoom(zoom * 1.2)}
-            >
-              <ZoomIn className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setZoom(zoom / 1.2)}
-            >
-              <ZoomOut className="w-4 h-4" />
-            </Button>
             <Button variant="outline" size="sm" onClick={resetView}>
               <RotateCcw className="w-4 h-4" />
             </Button>
@@ -482,21 +262,27 @@ export default function UIStructurePage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Canvas */}
+          {/* React Flow Canvas */}
           <div className="lg:col-span-3">
             <Card>
               <CardContent className="p-0">
-                <canvas
-                  ref={canvasRef}
-                  width={800}
-                  height={600}
-                  className="w-full h-[600px] cursor-move border border-border rounded-lg"
-                  onClick={handleCanvasClick}
-                  onMouseDown={handleCanvasMouseDown}
-                  onMouseMove={handleCanvasMouseMove}
-                  onMouseUp={handleCanvasMouseUp}
-                  onMouseLeave={handleCanvasMouseUp}
-                />
+                <div className="w-full h-[600px] rounded-lg overflow-hidden">
+                  <ReactFlow
+                    nodes={filteredNodes}
+                    edges={filteredEdges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    onNodeClick={onNodeClick}
+                    nodeTypes={nodeTypes}
+                    connectionMode={ConnectionMode.Loose}
+                    fitView
+                    attributionPosition="bottom-left"
+                  >
+                    <Controls />
+                    <Background color="#94a3b8" gap={20} />
+                  </ReactFlow>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -510,20 +296,17 @@ export default function UIStructurePage() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {[
-                  { type: 'app', color: '#8B5CF6', label: 'Application' },
-                  { type: 'provider', color: '#06B6D4', label: 'Provider' },
-                  { type: 'router', color: '#10B981', label: 'Router' },
-                  { type: 'page', color: '#F59E0B', label: 'Page' },
-                  { type: 'component', color: '#EF4444', label: 'Component' },
-                  { type: 'layout', color: '#3B82F6', label: 'Layout' },
-                  { type: 'ui-element', color: '#84CC16', label: 'UI Element' },
-                  { type: 'utility', color: '#6B7280', label: 'Utility' }
+                  { type: 'app', color: 'bg-purple-500', label: 'Application' },
+                  { type: 'provider', color: 'bg-cyan-500', label: 'Provider' },
+                  { type: 'router', color: 'bg-emerald-500', label: 'Router' },
+                  { type: 'page', color: 'bg-amber-500', label: 'Page' },
+                  { type: 'component', color: 'bg-red-500', label: 'Component' },
+                  { type: 'layout', color: 'bg-blue-500', label: 'Layout' },
+                  { type: 'ui-element', color: 'bg-lime-500', label: 'UI Element' },
+                  { type: 'utility', color: 'bg-gray-500', label: 'Utility' }
                 ].map(item => (
                   <div key={item.type} className="flex items-center space-x-2">
-                    <div 
-                      className="w-4 h-4 rounded-full" 
-                      style={{ backgroundColor: item.color }}
-                    />
+                    <div className={`w-4 h-4 rounded-full ${item.color}`} />
                     <span className="text-sm text-muted-foreground">{item.label}</span>
                   </div>
                 ))}
@@ -538,24 +321,19 @@ export default function UIStructurePage() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div>
-                    <div className="font-medium">{selectedNode.label}</div>
+                    <div className="font-medium">{selectedNode.data.label}</div>
                     <Badge variant="secondary" className="mt-1">
-                      {selectedNode.type}
+                      {selectedNode.data.type}
                     </Badge>
                   </div>
-                  {selectedNode.description && (
+                  {selectedNode.data.description && (
                     <p className="text-sm text-muted-foreground">
-                      {selectedNode.description}
+                      {selectedNode.data.description}
                     </p>
                   )}
                   <div className="text-xs text-muted-foreground">
-                    Level: {selectedNode.level}
+                    Level: {selectedNode.data.level}
                   </div>
-                  {selectedNode.children.length > 0 && (
-                    <div className="text-xs text-muted-foreground">
-                      Children: {selectedNode.children.length}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             )}
@@ -567,12 +345,11 @@ export default function UIStructurePage() {
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground space-y-1">
                 <p>• Click nodes to view details</p>
-                <p>• Drag to pan the view</p>
-                <p>• Use zoom controls to scale</p>
-                <p>• Search to highlight nodes</p>
+                <p>• Drag nodes to reposition</p>
+                <p>• Use controls to pan and zoom</p>
+                <p>• Search to filter nodes</p>
                 <p>• Filter by node type</p>
-                <p>• Showing top 3 architectural levels</p>
-                <p>• Export as PNG image</p>
+                <p>• Built with React Flow</p>
               </CardContent>
             </Card>
           </div>
