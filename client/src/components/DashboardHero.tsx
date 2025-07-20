@@ -168,66 +168,103 @@ export default function DashboardHero() {
                   <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite" />
                 </ellipse>
                 
-                {/* Hair */}
-                <path 
-                  d="M28 30 Q35 15 50 20 Q65 15 72 30 Q70 25 65 25 Q50 18 35 25 Q30 25 28 30" 
-                  fill="#8B4513" opacity="0.9"
-                >
-                  <animateTransform 
-                    attributeName="transform" 
-                    type="rotate" 
-                    values="0 50 30;1 50 30;-1 50 30;0 50 30" 
-                    dur="4s" 
-                    repeatCount="indefinite" 
-                  />
-                </path>
+                {/* Feminine Hair - Longer, styled */}
+                <g fill="#8B4513" opacity="0.9">
+                  {/* Main hair volume */}
+                  <path d="M25 28 Q30 10 50 15 Q70 10 75 28 Q75 35 70 40 Q65 45 60 48 Q55 50 50 48 Q45 50 40 48 Q35 45 30 40 Q25 35 25 28" />
+                  
+                  {/* Side bangs */}
+                  <path d="M28 30 Q25 25 30 22 Q35 20 40 25 Q38 28 35 30">
+                    <animate attributeName="d" values="M28 30 Q25 25 30 22 Q35 20 40 25 Q38 28 35 30;M28 31 Q26 24 31 21 Q36 19 41 24 Q39 27 36 29;M28 30 Q25 25 30 22 Q35 20 40 25 Q38 28 35 30" dur="3s" repeatCount="indefinite" />
+                  </path>
+                  <path d="M72 30 Q75 25 70 22 Q65 20 60 25 Q62 28 65 30">
+                    <animate attributeName="d" values="M72 30 Q75 25 70 22 Q65 20 60 25 Q62 28 65 30;M72 31 Q74 24 69 21 Q64 19 59 24 Q61 27 64 29;M72 30 Q75 25 70 22 Q65 20 60 25 Q62 28 65 30" dur="3s" repeatCount="indefinite" />
+                  </path>
+                  
+                  {/* Hair flowing behind */}
+                  <ellipse cx="25" cy="35" rx="8" ry="15" transform="rotate(-15 25 35)">
+                    <animateTransform attributeName="transform" type="rotate" values="-15 25 35;-12 25 35;-18 25 35;-15 25 35" dur="4s" repeatCount="indefinite" />
+                  </ellipse>
+                  <ellipse cx="75" cy="35" rx="8" ry="15" transform="rotate(15 75 35)">
+                    <animateTransform attributeName="transform" type="rotate" values="15 75 35;12 75 35;18 75 35;15 75 35" dur="4s" repeatCount="indefinite" />
+                  </ellipse>
+                  
+                  {/* Hair highlights */}
+                  <path d="M35 25 Q45 22 50 25 Q55 22 65 25" stroke="#A0522D" strokeWidth="1" fill="none" opacity="0.6">
+                    <animate attributeName="opacity" values="0.4;0.7;0.4" dur="3s" repeatCount="indefinite" />
+                  </path>
+                </g>
                 
                 {/* Left Eye */}
-                <ellipse cx="42" cy="40" rx="3" ry="4" fill="white">
+                <ellipse cx="42" cy="40" rx="3.5" ry="4" fill="white">
                   <animate attributeName="ry" values="4;0.5;4" dur="3s" repeatCount="indefinite" />
                 </ellipse>
                 <circle cx="43" cy="40" r="2" fill="#333">
                   <animate attributeName="r" values="2;1.5;2" dur="3s" repeatCount="indefinite" />
                 </circle>
+                {/* Left eyelashes */}
+                <g stroke="#333" strokeWidth="0.8" fill="none" opacity="0.7">
+                  <path d="M38 37 Q39 35 40 37" />
+                  <path d="M40 36 Q41 34 42 36" />
+                  <path d="M44 36 Q45 34 46 36" />
+                  <path d="M46 37 Q47 35 48 37" />
+                </g>
                 
                 {/* Right Eye */}
-                <ellipse cx="58" cy="40" rx="3" ry="4" fill="white">
+                <ellipse cx="58" cy="40" rx="3.5" ry="4" fill="white">
                   <animate attributeName="ry" values="4;0.5;4" dur="3s" repeatCount="indefinite" />
                 </ellipse>
                 <circle cx="57" cy="40" r="2" fill="#333">
                   <animate attributeName="r" values="2;1.5;2" dur="3s" repeatCount="indefinite" />
                 </circle>
+                {/* Right eyelashes */}
+                <g stroke="#333" strokeWidth="0.8" fill="none" opacity="0.7">
+                  <path d="M52 37 Q53 35 54 37" />
+                  <path d="M54 36 Q55 34 56 36" />
+                  <path d="M58 36 Q59 34 60 36" />
+                  <path d="M60 37 Q61 35 62 37" />
+                </g>
                 
-                {/* Eyebrows */}
-                <path d="M38 35 Q42 33 46 35" stroke="#8B4513" strokeWidth="1.5" fill="none">
-                  <animate attributeName="d" values="M38 35 Q42 33 46 35;M38 34 Q42 32 46 34;M38 35 Q42 33 46 35" dur="2s" repeatCount="indefinite" />
+                {/* Feminine Eyebrows - More arched */}
+                <path d="M37 34 Q42 31 47 33" stroke="#8B4513" strokeWidth="1.8" fill="none">
+                  <animate attributeName="d" values="M37 34 Q42 31 47 33;M37 33 Q42 30 47 32;M37 34 Q42 31 47 33" dur="2s" repeatCount="indefinite" />
                 </path>
-                <path d="M54 35 Q58 33 62 35" stroke="#8B4513" strokeWidth="1.5" fill="none">
-                  <animate attributeName="d" values="M54 35 Q58 33 62 35;M54 34 Q58 32 62 34;M54 35 Q58 33 62 35" dur="2s" repeatCount="indefinite" />
+                <path d="M53 33 Q58 31 63 34" stroke="#8B4513" strokeWidth="1.8" fill="none">
+                  <animate attributeName="d" values="M53 33 Q58 31 63 34;M53 32 Q58 30 63 33;M53 33 Q58 31 63 34" dur="2s" repeatCount="indefinite" />
                 </path>
                 
                 {/* Nose */}
                 <ellipse cx="50" cy="47" rx="1.5" ry="2" fill="#f4a49a" opacity="0.8" />
                 
-                {/* Mouth - Friendly Smile */}
+                {/* Feminine Lips - Fuller, more defined */}
+                <ellipse cx="50" cy="55" rx="7" ry="3" fill="#e8577a" opacity="0.8">
+                  <animate attributeName="opacity" values="0.7;0.9;0.7" dur="3s" repeatCount="indefinite" />
+                </ellipse>
                 <path 
                   d="M43 55 Q50 62 57 55" 
-                  stroke="#d63384" 
-                  strokeWidth="2" 
+                  stroke="#c91456" 
+                  strokeWidth="1.5" 
                   fill="none" 
                   strokeLinecap="round"
                   opacity="0.9"
                 >
                   <animate attributeName="d" values="M43 55 Q50 62 57 55;M43 56 Q50 61 57 56;M43 55 Q50 62 57 55" dur="4s" repeatCount="indefinite" />
                 </path>
+                {/* Lip gloss highlight */}
+                <ellipse cx="50" cy="53" rx="4" ry="1.5" fill="white" opacity="0.3">
+                  <animate attributeName="opacity" values="0.2;0.4;0.2" dur="2s" repeatCount="indefinite" />
+                </ellipse>
                 
                 {/* Neck */}
                 <rect x="46" y="68" width="8" height="8" fill="#fdbcb4" opacity="0.9" />
                 
-                {/* Shirt/Collar */}
-                <path d="M42 76 L46 76 L50 80 L54 76 L58 76 L58 85 L42 85 Z" fill="#4a90e2" opacity="0.8">
+                {/* Feminine Blouse/Top */}
+                <path d="M42 76 L46 76 L50 80 L54 76 L58 76 L58 85 L42 85 Z" fill="#6a5acd" opacity="0.8">
                   <animate attributeName="opacity" values="0.7;0.9;0.7" dur="3s" repeatCount="indefinite" />
                 </path>
+                {/* Blouse details */}
+                <circle cx="50" cy="77" r="1" fill="white" opacity="0.8" />
+                <circle cx="50" cy="81" r="0.8" fill="white" opacity="0.7" />
                 
                 {/* Thinking bubbles */}
                 <g opacity="0.4">
