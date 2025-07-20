@@ -5,6 +5,7 @@ import { Trophy, Target, Flame, Star, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { localStorage } from "@/lib/localStorage";
+import Header from "@/components/Header";
 
 interface Badge {
   id: number;
@@ -41,7 +42,9 @@ export default function AchievementsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-4 sm:py-8">
+      <Header />
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">
             🏆 Achievements & Badges
@@ -51,82 +54,92 @@ export default function AchievementsPage() {
           </p>
         </div>
 
-        {/* Achievement System Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/20 dark:from-primary/20 dark:to-primary/30 border-0">
-            <CardHeader className="pb-2 sm:pb-3">
-              <CardTitle className="flex items-center gap-2 text-primary text-sm sm:text-base">
-                <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
+        {/* Achievement Categories */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <Card className="shadow-small">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Trophy className="w-4 h-4 text-primary" />
+                </div>
                 Progress
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs sm:text-sm text-primary/80">
-                Earned by completing learning sessions and reaching milestones
+              <p className="text-sm text-muted-foreground">
+                Complete learning sessions and reach milestones
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-accent/10 to-accent/20 dark:from-accent/20 dark:to-accent/30 border-0">
+          <Card className="shadow-small">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-300">
-                <Star className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                  <Star className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
+                </div>
                 Performance
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                Awarded for exceptional scores and consistent high performance
+              <p className="text-sm text-muted-foreground">
+                Achieve exceptional scores and high performance
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20">
+          <Card className="shadow-small">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
-                <Flame className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                  <Flame className="w-4 h-4 text-orange-600 dark:text-orange-500" />
+                </div>
                 Streak
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-orange-600 dark:text-orange-400">
-                Recognize dedication through daily learning consistency
+              <p className="text-sm text-muted-foreground">
+                Maintain daily learning consistency
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20">
+          <Card className="shadow-small">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
-                <Target className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                  <Target className="w-4 h-4 text-purple-600 dark:text-purple-500" />
+                </div>
                 Mastery
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-purple-600 dark:text-purple-400">
-                Celebrate expertise in specific certification areas
+              <p className="text-sm text-muted-foreground">
+                Excel in certification domains
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
+          <Card className="shadow-small">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                <Award className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                  <Award className="w-4 h-4 text-green-600 dark:text-green-500" />
+                </div>
                 Special
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-green-600 dark:text-green-400">
-                Unique accomplishments and feature usage milestones
+              <p className="text-sm text-muted-foreground">
+                Unlock unique achievements
               </p>
             </CardContent>
           </Card>
         </div>
 
         {/* Achievement Tabs */}
-        <Tabs defaultValue="earned" className="space-y-8">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+        <Tabs defaultValue="earned" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="earned" className="flex items-center gap-2">
               <Trophy className="w-4 h-4" />
               Earned Badges
@@ -137,15 +150,15 @@ export default function AchievementsPage() {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="earned" className="space-y-8">
+          <TabsContent value="earned" className="mt-6">
             <AchievementBadges userId={currentUser.id} />
           </TabsContent>
           
-          <TabsContent value="progress" className="space-y-8">
+          <TabsContent value="progress" className="mt-6">
             <AchievementProgress />
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
     </div>
   );
 }
