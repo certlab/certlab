@@ -1,7 +1,8 @@
 import Header from "@/components/Header";
 import StatsCards from "@/components/StatsCards";
-import QuizCreator from "@/components/QuizCreator";
+import LearningModeSelector from "@/components/LearningModeSelector";
 import ActivitySidebar from "@/components/ActivitySidebar";
+import MasteryMeter from "@/components/MasteryMeter";
 
 export default function Dashboard() {
   return (
@@ -13,11 +14,16 @@ export default function Dashboard() {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <QuizCreator />
+            <LearningModeSelector />
           </div>
           <div>
             <ActivitySidebar />
           </div>
+        </div>
+
+        {/* Mastery Progress Section */}
+        <div className="mt-8">
+          <MasteryMeter />
         </div>
       </main>
     </div>

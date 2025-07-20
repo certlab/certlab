@@ -56,6 +56,7 @@ export const quizzes = pgTable("quizzes", {
   difficultyFilter: jsonb("difficulty_filter"), // Array of difficulty levels to include
   isPassing: boolean("is_passing").default(false), // 85%+ threshold
   missedTopics: jsonb("missed_topics"), // Topics that need lecture generation
+  mode: text("mode").notNull().default("study"), // "study" or "quiz" mode
 });
 
 export const userProgress = pgTable("user_progress", {
@@ -204,6 +205,7 @@ export const createQuizSchema = z.object({
   subcategoryIds: z.array(z.number()).optional(),
   questionCount: z.number().min(1).max(100),
   timeLimit: z.number().optional(),
+  mode: z.enum(["study", "quiz"]).default("study"),
 });
 
 // Answer submission schema

@@ -2256,6 +2256,51 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     }
   }
 
+  // Bulk update mastery scores for quiz mode
+  async updateMasteryScoreBulk(userId: number, categoryId: number, subcategoryId: number, correctCount: number, totalCount: number): Promise<void> {
+    // Find existing mastery score record
+    const [existing] = await db.select().from(masteryScores).where(
+      and(
+        eq(masteryScores.userId, userId), 
+        eq(masteryScores.categoryId, categoryId),
+        eq(masteryScores.subcategoryId, subcategoryId)
+      )
+    );
+
+    if (existing) {
+      // Update existing record
+      const newTotalAnswers = existing.totalAnswers + totalCount;
+      const newCorrectAnswers = existing.correctAnswers + correctCount;
+      const newRollingAverage = Math.round((newCorrectAnswers / newTotalAnswers) * 100);
+
+      await db.update(masteryScores)
+        .set({
+          totalAnswers: newTotalAnswers,
+          correctAnswers: newCorrectAnswers,
+          rollingAverage: newRollingAverage,
+          lastUpdated: new Date()
+        })
+        .where(
+          and(
+            eq(masteryScores.userId, userId),
+            eq(masteryScores.categoryId, categoryId),
+            eq(masteryScores.subcategoryId, subcategoryId)
+          )
+        );
+    } else {
+      // Create new record
+      const rollingAverage = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+      await db.insert(masteryScores).values({
+        userId,
+        categoryId,
+        subcategoryId,
+        totalAnswers: totalCount,
+        correctAnswers: correctCount,
+        rollingAverage
+      });
+    }
+  }
+
   async getUserMasteryScores(userId: number): Promise<MasteryScore[]> {
     return await db.select().from(masteryScores).where(eq(masteryScores.userId, userId));
   }

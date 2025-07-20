@@ -185,8 +185,32 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
         <div className="p-6 border-b border-gray-100 bg-gray-50">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-xl font-medium text-gray-900">{quiz.title}</h2>
-              <p className="text-sm text-gray-600">Security Certification Practice</p>
+              <div className="flex items-center space-x-3 mb-1">
+                <h2 className="text-xl font-medium text-gray-900">{quiz.title}</h2>
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  quiz.mode === "quiz" 
+                    ? "bg-green-100 text-green-800" 
+                    : "bg-blue-100 text-blue-800"
+                }`}>
+                  {quiz.mode === "quiz" ? (
+                    <>
+                      <i className="fas fa-clipboard-check mr-1"></i>
+                      Quiz Mode
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-brain mr-1"></i>
+                      Study Mode
+                    </>
+                  )}
+                </div>
+              </div>
+              <p className="text-sm text-gray-600">
+                {quiz.mode === "quiz" 
+                  ? "Graded assessment that updates your mastery progress"
+                  : "Practice session with immediate feedback"
+                }
+              </p>
             </div>
             {timeRemaining !== null && (
               <div className="text-right">

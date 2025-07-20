@@ -113,15 +113,29 @@ export default function Results() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card className="material-shadow border border-gray-100 overflow-hidden">
           {/* Results Header */}
-          <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-secondary to-primary text-white">
+          <div className={`p-6 border-b border-gray-100 text-white ${
+            quiz.mode === "quiz" 
+              ? "bg-gradient-to-r from-green-600 to-green-700" 
+              : "bg-gradient-to-r from-blue-600 to-blue-700"
+          }`}>
             <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                <i className="fas fa-trophy text-2xl"></i>
+                <i className={`fas text-2xl ${
+                  quiz.mode === "quiz" ? "fa-clipboard-check" : "fa-brain"
+                }`}></i>
               </div>
-              <h2 className="text-2xl font-bold mb-2">Quiz Completed!</h2>
-              <p className="text-blue-100">
-                {getCategoryName(quiz.categoryIds as number[])} Practice Quiz
+              <h2 className="text-2xl font-bold mb-2">
+                {quiz.mode === "quiz" ? "Assessment Completed!" : "Study Session Completed!"}
+              </h2>
+              <p className="opacity-90">
+                {getCategoryName(quiz.categoryIds as number[])} - {quiz.mode === "quiz" ? "Quiz Mode" : "Study Mode"}
               </p>
+              {quiz.mode === "quiz" && (
+                <div className="mt-2 text-sm opacity-75">
+                  <i className="fas fa-chart-line mr-1"></i>
+                  Your mastery progress has been updated
+                </div>
+              )}
             </div>
           </div>
 
@@ -164,10 +178,17 @@ export default function Results() {
                   </h3>
                 </div>
                 <p className="text-gray-700 mt-2">
-                  {score >= 90 ? 'Outstanding performance! You have mastered this material.' :
-                   score >= 80 ? 'Well done! You have a strong understanding of the concepts.' :
-                   score >= 70 ? 'Good work! Review the areas you missed to improve further.' :
-                   'More practice needed. Focus on understanding the fundamental concepts.'}
+                  {quiz.mode === "quiz" ? (
+                    score >= 90 ? 'Outstanding! Your mastery score has significantly improved.' :
+                    score >= 80 ? 'Great work! This assessment will boost your certification readiness.' :
+                    score >= 70 ? 'Good progress! Continue taking quizzes to improve your mastery.' :
+                    'Keep practicing! Focus on your weak areas and retake quizzes to improve.'
+                  ) : (
+                    score >= 90 ? 'Excellent! You\'re ready to test this knowledge in quiz mode.' :
+                    score >= 80 ? 'Well done! Consider taking a quiz assessment on this topic.' :
+                    score >= 70 ? 'Good work! Study the missed concepts and try quiz mode when ready.' :
+                    'More study needed. Review the explanations and practice more before quiz mode.'
+                  )}
                 </p>
               </div>
             </div>

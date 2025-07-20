@@ -142,7 +142,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         questionCount: adaptiveQuestionCount,
         subcategoryIds: quizData.subcategoryIds || [],
         isAdaptive,
-        difficultyLevel: 1
+        difficultyLevel: 1,
+        mode: quizData.mode || "study"
       });
       
       res.json(quiz);
@@ -283,6 +284,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           averageScore: categoryScore,
           lastQuizDate: new Date()
         });
+
+        // Update mastery scores for quiz mode
+        if (quiz.mode === "quiz") {
+          // Update mastery scores by subcategory
+          const subcategoriesToProcess = quiz.subcategoryIds && (quiz.subcategoryIds as number[]).length > 0
+            ? quiz.subcategoryIds as number[]
+            : questions.filter(q => q.categoryId === categoryId).map(q => q.subcategoryId);
+          
+          const uniqueSubcategories = [...new Set(subcategoriesToProcess)];
+          
+          for (const subcategoryId of uniqueSubcategories) {
+            const subcategoryQuestions = questions.filter(q => 
+              q.categoryId === categoryId && q.subcategoryId === subcategoryId
+            );
+            const subcategoryResults = results.filter((r: any) => {
+              const question = questions.find(q => q.id === r.questionId);
+              return question?.categoryId === categoryId && question?.subcategoryId === subcategoryId;
+            });
+            
+            if (subcategoryQuestions.length > 0 && subcategoryResults.length > 0) {
+              const subcategoryCorrect = subcategoryResults.filter(r => r.correct).length;
+              await storage.updateMasteryScoreBulk(
+                quiz.userId,
+                categoryId,
+                subcategoryId,
+                subcategoryCorrect,
+                subcategoryResults.length
+              );
+            }
+          }
+        }
 
         // Update adaptive learning metrics (skip if method doesn't exist)
         if (quiz.isAdaptive && typeof storage.updateAdaptiveProgress === 'function') {
