@@ -219,7 +219,7 @@ export default function LearningModeSelector() {
 
         {/* Category Selection */}
         <div className="mb-6">
-          <Label className="text-sm font-medium text-gray-700 mb-3 block">
+          <Label className="text-sm font-medium text-foreground mb-3 block">
             Select Certification{selectedMode === "quiz" ? " (Choose One)" : "s"}
           </Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -229,7 +229,7 @@ export default function LearningModeSelector() {
                 className={`border rounded-lg p-4 cursor-pointer transition-all material-shadow-hover ${
                   selectedCategories.includes(category.id)
                     ? "border-primary bg-primary bg-opacity-5"
-                    : "border-gray-200 hover:border-primary"
+                    : "border-border hover:border-primary"
                 }`}
                 onClick={() => handleCategoryToggle(category.id, !selectedCategories.includes(category.id))}
               >
@@ -237,8 +237,8 @@ export default function LearningModeSelector() {
                   <div className="flex items-center space-x-3">
                     <i className={`${category.icon} text-primary`}></i>
                     <div>
-                      <h3 className="font-medium text-gray-900">{category.name}</h3>
-                      <p className="text-xs text-gray-500">{category.description}</p>
+                      <h3 className="font-medium text-foreground">{category.name}</h3>
+                      <p className="text-xs text-muted-foreground">{category.description}</p>
                     </div>
                   </div>
                   <Checkbox
@@ -254,20 +254,20 @@ export default function LearningModeSelector() {
         {/* Subcategory Selection */}
         {filteredSubcategories.length > 0 && (
           <div className="mb-6">
-            <Label className="text-sm font-medium text-gray-700 mb-3 block">
+            <Label className="text-sm font-medium text-foreground mb-3 block">
               Focus Areas (Optional)
             </Label>
-            <div className="space-y-2 max-h-48 overflow-y-auto bg-gray-50 rounded-lg p-3">
+            <div className="space-y-2 max-h-48 overflow-y-auto bg-muted rounded-lg p-3">
               {filteredSubcategories.map((subcategory) => (
                 <label
                   key={subcategory.id}
-                  className="flex items-center space-x-3 cursor-pointer hover:bg-white rounded p-2 transition-colors"
+                  className="flex items-center space-x-3 cursor-pointer hover:bg-background rounded p-2 transition-colors"
                 >
                   <Checkbox
                     checked={selectedSubcategories.includes(subcategory.id)}
                     onCheckedChange={(checked) => handleSubcategoryToggle(subcategory.id, checked as boolean)}
                   />
-                  <span className="text-sm text-gray-700">{subcategory.name}</span>
+                  <span className="text-sm text-foreground">{subcategory.name}</span>
                 </label>
               ))}
             </div>
@@ -276,7 +276,7 @@ export default function LearningModeSelector() {
 
         {/* Time Limit */}
         <div className="mb-6">
-          <Label className="text-sm font-medium text-gray-700 mb-3 block">
+          <Label className="text-sm font-medium text-foreground mb-3 block">
             Time Limit (Optional)
           </Label>
           <Select value={timeLimit} onValueChange={setTimeLimit}>
@@ -304,10 +304,10 @@ export default function LearningModeSelector() {
           <div className="flex items-center space-x-3 mb-3">
             <i className={`fas ${selectedMode === "study" ? "fa-brain text-blue-600" : "fa-clipboard-check text-green-600"}`}></i>
             <div>
-              <h4 className="font-medium text-gray-900">
+              <h4 className="font-medium text-foreground">
                 {selectedMode === "study" ? "Study Session" : "Quiz Assessment"}
               </h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {selectedMode === "study" 
                   ? "Practice with unlimited questions and immediate feedback"
                   : "Formal assessment that contributes to your mastery progress"
@@ -315,8 +315,8 @@ export default function LearningModeSelector() {
               </p>
             </div>
           </div>
-          <div className="bg-white p-3 rounded border border-blue-100">
-            <ul className="text-sm text-gray-700 space-y-1">
+          <div className="bg-background p-3 rounded border border-border">
+            <ul className="text-sm text-foreground space-y-1">
               {selectedMode === "study" ? (
                 <>
                   <li><i className="fas fa-check text-green-500 mr-2"></i>Unlimited questions from selected areas</li>

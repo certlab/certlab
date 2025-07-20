@@ -119,6 +119,9 @@ Core entities include:
   - ✅ Ensured WCAG contrast compliance with darker text colors and proper foreground/background combinations
   - ✅ Reduced yellow and gray tones across all themes for improved visibility and better contrast
   - ✅ Enhanced muted-foreground colors from 40-47% lightness to 30-35% for better readability
+  - ✅ Fixed hardcoded gray text colors in components to use theme-aware classes (text-foreground, text-muted-foreground)
+  - ✅ Updated LearningModeSelector and Results page to use proper theme colors instead of hardcoded grays
+  - ✅ Improved theme dropdown hover contrast with CSS modifiers for better description text visibility
   - ✅ CSS custom properties implementation with Tailwind CSS for consistent theming
   - ✅ Theme persistence across browser sessions with automatic theme restoration
 - **Accessibility Color Contrast Analyzer**: Professional-grade accessibility testing tool for WCAG compliance

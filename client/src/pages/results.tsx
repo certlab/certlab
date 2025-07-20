@@ -25,7 +25,7 @@ export default function Results() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Header />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center min-h-96">
@@ -38,12 +38,12 @@ export default function Results() {
 
   if (!quiz) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Header />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Results Not Found</h1>
-            <p className="text-gray-600">The quiz you're looking for doesn't exist.</p>
+            <h1 className="text-2xl font-bold text-foreground mb-4">Results Not Found</h1>
+            <p className="text-muted-foreground">The quiz you're looking for doesn't exist.</p>
             <Button 
               onClick={() => setLocation("/")}
               className="mt-4 bg-primary hover:bg-blue-700"
@@ -58,13 +58,13 @@ export default function Results() {
 
   if (!quiz.completedAt) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Header />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Quiz Not Completed</h1>
-            <p className="text-gray-600">This quiz hasn't been completed yet.</p>
-            <div className="mt-4 text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-foreground mb-4">Quiz Not Completed</h1>
+            <p className="text-muted-foreground">This quiz hasn't been completed yet.</p>
+            <div className="mt-4 text-sm text-muted-foreground">
               Debug info: completedAt = {JSON.stringify(quiz.completedAt)}
             </div>
             <div className="flex gap-4 justify-center mt-4">
@@ -107,13 +107,13 @@ export default function Results() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card className="material-shadow border border-gray-100 overflow-hidden">
+        <Card className="material-shadow border border-border overflow-hidden">
           {/* Results Header */}
-          <div className={`p-6 border-b border-gray-100 text-white ${
+          <div className={`p-6 border-b border-border text-white ${
             quiz.mode === "quiz" 
               ? "bg-gradient-to-r from-green-600 to-green-700" 
               : "bg-gradient-to-r from-blue-600 to-blue-700"
