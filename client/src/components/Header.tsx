@@ -5,11 +5,13 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Badge } from "@/components/ui/badge";
 
 export default function Header() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const currentUser = localStorage.getCurrentUser();
   const { toast } = useToast();
+  const isAdminArea = location.startsWith('/admin');
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -53,29 +55,53 @@ export default function Header() {
           </div>
           
           <nav className="hidden md:flex items-center space-x-6">
-            <Button 
-              variant="ghost" 
-              onClick={() => setLocation("/")}
-              className="text-muted-foreground hover:text-primary"
-            >
-              Dashboard
-            </Button>
-            <Button 
-              variant="ghost" 
-              onClick={() => setLocation("/admin")}
-              className="text-muted-foreground hover:text-primary"
-            >
-              <i className="fas fa-cog mr-2"></i>
-              Admin
-            </Button>
-            <Button 
-              variant="ghost" 
-              onClick={() => setLocation("/accessibility")}
-              className="text-muted-foreground hover:text-primary"
-            >
-              <i className="fas fa-universal-access mr-2"></i>
-              Accessibility
-            </Button>
+            {isAdminArea ? (
+              <>
+                <div className="flex items-center space-x-2">
+                  <Badge variant="secondary" className="text-xs">
+                    <i className="fas fa-cog mr-1"></i>
+                    Admin Mode
+                  </Badge>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setLocation("/app")}
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  <i className="fas fa-arrow-left mr-2"></i>
+                  Back to App
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setLocation("/app")}
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  <i className="fas fa-home mr-2"></i>
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setLocation("/admin")}
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  <i className="fas fa-cog mr-2"></i>
+                  Admin
+                </Button>
+              </>
+            )}
+            {!isAdminArea && (
+              <Button 
+                variant="ghost" 
+                onClick={() => setLocation("/accessibility")}
+                className="text-muted-foreground hover:text-primary"
+              >
+                <i className="fas fa-universal-access mr-2"></i>
+                Accessibility
+              </Button>
+            )}
           </nav>
 
           <div className="flex items-center space-x-4">
