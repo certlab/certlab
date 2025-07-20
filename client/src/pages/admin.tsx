@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PlusCircle, Edit, Trash2, Users, FileText, FolderOpen, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Tenant {
   id: number;
@@ -48,6 +49,196 @@ interface Question {
   explanation?: string;
   difficultyLevel: number;
   tags?: string[];
+}
+
+// Question Form Component
+function QuestionForm({ 
+  categories, 
+  tenantId, 
+  onSuccess, 
+  onError 
+}: {
+  categories: Category[];
+  tenantId: number | null;
+  onSuccess: () => void;
+  onError: () => void;
+}) {
+  const createQuestionMutation = useMutation({
+    mutationFn: (data: any) =>
+      apiRequest(`/api/admin/tenants/${tenantId}/questions`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess,
+    onError,
+  });
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    
+    const options = [
+      formData.get("option1") as string,
+      formData.get("option2") as string,
+      formData.get("option3") as string,
+      formData.get("option4") as string,
+    ].filter(Boolean);
+
+    const data = {
+      text: formData.get("text") as string,
+      categoryId: parseInt(formData.get("categoryId") as string),
+      subcategoryId: parseInt(formData.get("subcategoryId") as string) || null,
+      options,
+      correctAnswer: parseInt(formData.get("correctAnswer") as string),
+      explanation: formData.get("explanation") as string,
+      difficultyLevel: parseInt(formData.get("difficultyLevel") as string),
+      tags: (formData.get("tags") as string)?.split(",").map(t => t.trim()).filter(Boolean) || [],
+    };
+
+    createQuestionMutation.mutate(data);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="text">Question Text</Label>
+        <Textarea id="text" name="text" placeholder="Enter the question..." required rows={3} />
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="categoryId">Category</Label>
+          <select id="categoryId" name="categoryId" className="w-full border rounded px-3 py-2" required>
+            <option value="">Select Category</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <Label htmlFor="difficultyLevel">Difficulty Level</Label>
+          <select id="difficultyLevel" name="difficultyLevel" className="w-full border rounded px-3 py-2" required>
+            <option value="1">Level 1 (Basic)</option>
+            <option value="2">Level 2 (Intermediate)</option>
+            <option value="3">Level 3 (Advanced)</option>
+            <option value="4">Level 4 (Expert)</option>
+            <option value="5">Level 5 (Master)</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Answer Options</Label>
+        {[1, 2, 3, 4].map((num) => (
+          <div key={num}>
+            <Input name={`option${num}`} placeholder={`Option ${num}`} required />
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <Label htmlFor="correctAnswer">Correct Answer (1-4)</Label>
+        <select id="correctAnswer" name="correctAnswer" className="w-full border rounded px-3 py-2" required>
+          <option value="1">Option 1</option>
+          <option value="2">Option 2</option>
+          <option value="3">Option 3</option>
+          <option value="4">Option 4</option>
+        </select>
+      </div>
+
+      <div>
+        <Label htmlFor="explanation">Explanation</Label>
+        <Textarea id="explanation" name="explanation" placeholder="Explain why this is the correct answer..." rows={2} />
+      </div>
+
+      <div>
+        <Label htmlFor="tags">Tags (comma-separated)</Label>
+        <Input id="tags" name="tags" placeholder="security, encryption, access control" />
+      </div>
+
+      <DialogFooter>
+        <Button type="submit" disabled={createQuestionMutation.isPending}>
+          {createQuestionMutation.isPending ? "Creating..." : "Create Question"}
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+// User Management Component
+function UserManagement({ selectedTenant }: { selectedTenant: number | null }) {
+  const { data: users = [] } = useQuery({
+    queryKey: ["/api/admin/tenants", selectedTenant, "users"],
+    enabled: !!selectedTenant,
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Users</CardTitle>
+            <CardDescription>{users.length} users belonging to this tenant</CardDescription>
+          </div>
+          <Button>
+            <PlusCircle className="w-4 h-4 mr-2" />
+            Add User
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {users.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Username</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>Last Active</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user: any) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.username}</TableCell>
+                  <TableCell>{user.email || 'No email'}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {user.isAdmin ? 'Admin' : 'User'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-1">
+                      <Button variant="outline" size="sm">
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No users found for this tenant</p>
+            <p className="text-sm">Add users to get started with tenant management</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function AdminDashboard() {
@@ -393,62 +584,142 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <CardTitle>Questions</CardTitle>
-                        <CardDescription>Certification questions for this tenant</CardDescription>
+                        <CardDescription>
+                          {questions.length} certification questions for this tenant
+                        </CardDescription>
                       </div>
-                      <Button>
-                        <PlusCircle className="w-4 h-4 mr-2" />
-                        Add Question
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Dialog open={newQuestionDialog} onOpenChange={setNewQuestionDialog}>
+                          <DialogTrigger asChild>
+                            <Button>
+                              <PlusCircle className="w-4 h-4 mr-2" />
+                              Add Question
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl">
+                            <DialogHeader>
+                              <DialogTitle>Create New Question</DialogTitle>
+                              <DialogDescription>Add a new certification question</DialogDescription>
+                            </DialogHeader>
+                            <QuestionForm 
+                              categories={categories}
+                              tenantId={selectedTenant}
+                              onSuccess={() => {
+                                queryClient.invalidateQueries({ queryKey: ["/api/admin/tenants", selectedTenant, "questions"] });
+                                setNewQuestionDialog(false);
+                                toast({ title: "Question created successfully" });
+                              }}
+                              onError={() => {
+                                toast({ title: "Failed to create question", variant: "destructive" });
+                              }}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                        <Button variant="outline">
+                          <FileText className="w-4 h-4 mr-2" />
+                          Import CSV
+                        </Button>
+                        <Button variant="outline">
+                          <FileText className="w-4 h-4 mr-2" />
+                          Export Data
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
+                    <div className="flex items-center space-x-4 mb-4">
+                      <Input 
+                        placeholder="Search questions..." 
+                        className="max-w-sm"
+                      />
+                      <select className="border rounded px-3 py-2">
+                        <option value="">All Categories</option>
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                      </select>
+                      <select className="border rounded px-3 py-2">
+                        <option value="">All Difficulties</option>
+                        <option value="1">Level 1</option>
+                        <option value="2">Level 2</option>
+                        <option value="3">Level 3</option>
+                        <option value="4">Level 4</option>
+                        <option value="5">Level 5</option>
+                      </select>
+                    </div>
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Question</TableHead>
                           <TableHead>Category</TableHead>
+                          <TableHead>Subcategory</TableHead>
                           <TableHead>Difficulty</TableHead>
+                          <TableHead>Tags</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {questions.slice(0, 10).map((question: Question) => (
-                          <TableRow key={question.id}>
-                            <TableCell className="max-w-md truncate">{question.text}</TableCell>
-                            <TableCell>{question.categoryId}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline">Level {question.difficultyLevel}</Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex space-x-2">
-                                <Button variant="outline" size="sm">
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {questions.slice(0, 20).map((question: Question) => {
+                          const category = categories.find(c => c.id === question.categoryId);
+                          return (
+                            <TableRow key={question.id}>
+                              <TableCell className="max-w-sm">
+                                <div className="truncate" title={question.text}>
+                                  {question.text}
+                                </div>
+                              </TableCell>
+                              <TableCell>{category?.name || 'Unknown'}</TableCell>
+                              <TableCell>{question.subcategoryId}</TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant={question.difficultyLevel >= 4 ? "destructive" : 
+                                    question.difficultyLevel >= 3 ? "default" : "secondary"}
+                                >
+                                  Level {question.difficultyLevel}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-1">
+                                  {question.tags?.slice(0, 2).map((tag, index) => (
+                                    <Badge key={index} variant="outline" className="text-xs">
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                  {question.tags && question.tags.length > 2 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{question.tags.length - 2}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex space-x-1">
+                                  <Button variant="outline" size="sm">
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="outline" size="sm">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
+                    {questions.length > 20 && (
+                      <div className="mt-4 text-center">
+                        <Button variant="outline">
+                          Load More Questions ({questions.length - 20} remaining)
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
 
               <TabsContent value="users">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Users</CardTitle>
-                    <CardDescription>Users belonging to this tenant</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-8 text-muted-foreground">
-                      User management coming soon...
-                    </div>
-                  </CardContent>
-                </Card>
+                <UserManagement selectedTenant={selectedTenant} />
               </TabsContent>
 
               <TabsContent value="settings">

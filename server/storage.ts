@@ -83,6 +83,14 @@ export interface IStorage {
   createTenantSubcategory(tenantId: number, subcategory: Omit<InsertSubcategory, "tenantId">): Promise<Subcategory>;
   updateTenantSubcategory(tenantId: number, subcategoryId: number, updates: Partial<Omit<InsertSubcategory, "tenantId">>): Promise<Subcategory>;
   deleteTenantSubcategory(tenantId: number, subcategoryId: number): Promise<void>;
+  getUsersByTenant(tenantId: number): Promise<User[]>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category>;
+  deleteCategory(id: number): Promise<void>;
+  createSubcategory(subcategory: InsertSubcategory): Promise<Subcategory>;
+  updateSubcategory(id: number, updates: Partial<InsertSubcategory>): Promise<Subcategory>;
+  deleteSubcategory(id: number): Promise<void>;
+  createQuestion(question: InsertQuestion): Promise<Question>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2904,6 +2912,38 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
 
   async deleteTenantSubcategory(tenantId: number, subcategoryId: number): Promise<void> {
     await db.delete(subcategories).where(and(eq(subcategories.id, subcategoryId), eq(subcategories.tenantId, tenantId)));
+  }
+
+  async getUsersByTenant(tenantId: number): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.tenantId, tenantId));
+  }
+
+  async createCategory(category: InsertCategory): Promise<Category> {
+    const result = await db.insert(categories).values(category).returning();
+    return result[0];
+  }
+
+  async updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category> {
+    const result = await db.update(categories).set(updates).where(eq(categories.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    await db.delete(categories).where(eq(categories.id, id));
+  }
+
+  async createSubcategory(subcategory: InsertSubcategory): Promise<Subcategory> {
+    const result = await db.insert(subcategories).values(subcategory).returning();
+    return result[0];
+  }
+
+  async updateSubcategory(id: number, updates: Partial<InsertSubcategory>): Promise<Subcategory> {
+    const result = await db.update(subcategories).set(updates).where(eq(subcategories.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteSubcategory(id: number): Promise<void> {
+    await db.delete(subcategories).where(eq(subcategories.id, id));
   }
 }
 
