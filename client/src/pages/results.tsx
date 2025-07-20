@@ -65,7 +65,10 @@ export default function Results() {
             <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">Quiz Not Completed</h1>
             <p className="text-sm sm:text-base text-muted-foreground">This quiz hasn't been completed yet.</p>
             <div className="mt-4 text-sm text-muted-foreground">
-              Debug info: completedAt = {JSON.stringify(quiz.completedAt)}
+              <div>Debug info: completedAt = {JSON.stringify(quiz.completedAt)}</div>
+              <div>Score: {quiz.score}</div>
+              <div>Correct Answers: {quiz.correctAnswers}</div>
+              <div>Total Questions: {quiz.totalQuestions}</div>
             </div>
             <div className="flex gap-4 justify-center mt-4">
               <Button 
@@ -92,9 +95,9 @@ export default function Results() {
   // Use totalQuestions from quiz, fallback to questionCount if totalQuestions is null
   const totalQuestions = quiz.totalQuestions || quiz.questionCount || 0;
   
-  const formatDuration = (startTime: string, endTime: string) => {
-    const start = new Date(startTime);
-    const end = new Date(endTime);
+  const formatDuration = (startTime: string | Date, endTime: string | Date) => {
+    const start = startTime instanceof Date ? startTime : new Date(startTime);
+    const end = endTime instanceof Date ? endTime : new Date(endTime);
     const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
     return `${Math.floor(diffMinutes / 60)}:${(diffMinutes % 60).toString().padStart(2, '0')}`;
   };
