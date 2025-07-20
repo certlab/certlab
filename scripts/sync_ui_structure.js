@@ -187,7 +187,7 @@ class UIStructureSync {
         route: '/dashboard',
         type: 'route',
         description: 'Main user dashboard with progress tracking and quick actions',
-        icon: this.inferIcon('dashboard', 'route'),
+        icon: 'Folder',
         children: this.getComponentsForRoute('dashboard', components),
         serverEndpoints: serverRoutes.filter(r => r.path.includes('/user') || r.path.includes('/stats'))
       },
@@ -197,7 +197,7 @@ class UIStructureSync {
         route: '/quiz',
         type: 'route',
         description: 'Interactive learning sessions with immediate feedback',
-        icon: this.inferIcon('quiz', 'route'),
+        icon: 'Folder',
         children: this.getComponentsForRoute('quiz', components),
         serverEndpoints: serverRoutes.filter(r => r.path.includes('/quiz') || r.path.includes('/question'))
       },
@@ -207,7 +207,7 @@ class UIStructureSync {
         route: '/admin',
         type: 'route',
         description: 'Multi-tenant administration and management portal',
-        icon: this.inferIcon('admin', 'route'),
+        icon: 'Folder',
         children: this.getComponentsForRoute('admin', components),
         serverEndpoints: serverRoutes.filter(r => r.path.includes('/admin'))
       },
@@ -217,7 +217,7 @@ class UIStructureSync {
         route: '/achievements',
         type: 'route',
         description: 'Gamification system with badges and progress tracking',
-        icon: this.inferIcon('achievements', 'route'),
+        icon: 'Folder',
         children: this.getComponentsForRoute('achievement', components),
         serverEndpoints: serverRoutes.filter(r => r.path.includes('/badge') || r.path.includes('/achievement'))
       },
@@ -227,7 +227,7 @@ class UIStructureSync {
         route: '/accessibility',
         type: 'route',
         description: 'WCAG compliance tools and contrast analysis',
-        icon: this.inferIcon('accessibility', 'route'),
+        icon: 'Folder',
         children: this.getComponentsForRoute('accessibility', components),
         serverEndpoints: []
       },
@@ -237,7 +237,7 @@ class UIStructureSync {
         route: '/login',
         type: 'route',
         description: 'User authentication and registration system',
-        icon: this.inferIcon('login', 'route'),
+        icon: 'Folder',
         children: this.getComponentsForRoute('login', components),
         serverEndpoints: serverRoutes.filter(r => r.path.includes('/auth') || r.path.includes('/login') || r.path.includes('/register'))
       }
@@ -275,7 +275,7 @@ class UIStructureSync {
           route: this.inferRouteFromComponent(name, routePrefix),
           type: data.type,
           description: this.generateDescription(name, data),
-          icon: this.inferIcon(name, data.type),
+          icon: this.inferIcon(name, data.type || 'component'),
           dependencies: this.generateDependencies(data),
           file: data.file,
           hooks: data.hooks,
