@@ -56,7 +56,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     onSuccess: (userData) => {
       setUser(userData);
       queryClient.setQueryData(['/api/auth/me'], userData);
-      queryClient.invalidateQueries();
+      // Only invalidate specific queries, not the auth query we just set
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0] as string;
+          return key !== '/api/auth/me';
+        }
+      });
     },
   });
 
@@ -72,7 +78,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     onSuccess: (userData) => {
       setUser(userData);
       queryClient.setQueryData(['/api/auth/me'], userData);
-      queryClient.invalidateQueries();
+      // Only invalidate specific queries, not the auth query we just set
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0] as string;
+          return key !== '/api/auth/me';
+        }
+      });
     },
   });
 
