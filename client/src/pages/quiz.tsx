@@ -8,12 +8,12 @@ export default function Quiz() {
 
   if (!quizId) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Quiz Not Found</h1>
-            <p className="text-gray-600">The quiz you're looking for doesn't exist.</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">Quiz Not Found</h1>
+            <p className="text-muted-foreground">The quiz you're looking for doesn't exist.</p>
           </div>
         </div>
       </div>
@@ -21,9 +21,9 @@ export default function Quiz() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <QuizInterface quizId={quizId} />
       </main>
     </div>

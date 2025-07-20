@@ -149,24 +149,24 @@ export default function LearningModeSelector() {
 
   return (
     <Card className="shadow-medium border-0 overflow-hidden bg-card/50 backdrop-blur-sm animate-fade-in">
-      <CardHeader className="p-8 border-b border-border/50 gradient-mesh">
-        <CardTitle className="text-2xl font-bold text-foreground mb-2">
+      <CardHeader className="p-4 sm:p-6 lg:p-8 border-b border-border/50 gradient-mesh">
+        <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-2">
           Choose Your Learning Mode
         </CardTitle>
-        <p className="text-foreground/70 text-sm">
+        <p className="text-foreground/70 text-xs sm:text-sm">
           HELEN - Highly Efficient Learning Engine for Next-Gen Certification
         </p>
       </CardHeader>
 
-      <CardContent className="p-8">
+      <CardContent className="p-4 sm:p-6 lg:p-8">
         {/* Mode Selection */}
-        <div className="mb-8">
-          <Label className="text-sm font-bold text-foreground mb-4 block uppercase tracking-wider">
+        <div className="mb-6 sm:mb-8">
+          <Label className="text-xs sm:text-sm font-bold text-foreground mb-3 sm:mb-4 block uppercase tracking-wider">
             Learning Mode
           </Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div
-              className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-300 ${
+              className={`border-2 rounded-xl p-4 sm:p-5 lg:p-6 cursor-pointer transition-all duration-300 ${
                 selectedMode === "study"
                   ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-glow"
                   : "border-border hover:border-primary/50 hover:shadow-medium bg-card"
@@ -206,7 +206,7 @@ export default function LearningModeSelector() {
             </div>
 
             <div
-              className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-300 ${
+              className={`border-2 rounded-xl p-4 sm:p-5 lg:p-6 cursor-pointer transition-all duration-300 ${
                 selectedMode === "quiz"
                   ? "border-secondary bg-gradient-to-br from-secondary/10 to-secondary/5 shadow-glow"
                   : "border-border hover:border-secondary/50 hover:shadow-medium bg-card"
@@ -248,15 +248,15 @@ export default function LearningModeSelector() {
         </div>
 
         {/* Category Selection */}
-        <div className="mb-8">
-          <Label className="text-sm font-bold text-foreground mb-4 block uppercase tracking-wider">
+        <div className="mb-6 sm:mb-8">
+          <Label className="text-xs sm:text-sm font-bold text-foreground mb-3 sm:mb-4 block uppercase tracking-wider">
             Select Certification{selectedMode === "quiz" ? " (Choose One)" : "s"}
           </Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {categories.map((category) => (
               <div
                 key={category.id}
-                className={`border-2 rounded-xl p-5 cursor-pointer transition-all duration-300 ${
+                className={`border-2 rounded-xl p-3 sm:p-4 lg:p-5 cursor-pointer transition-all duration-300 ${
                   selectedCategories.includes(category.id)
                     ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-glow"
                     : "border-border hover:border-primary/50 hover:shadow-medium bg-card"

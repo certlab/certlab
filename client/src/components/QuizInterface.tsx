@@ -180,18 +180,21 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="material-shadow border border-gray-100 overflow-hidden">
+      <Card className="shadow-medium border-0 overflow-hidden bg-card/50 backdrop-blur-sm">
         {/* Quiz Header */}
-        <div className="p-6 border-b border-gray-100 bg-gray-50">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-4 sm:p-6 border-b border-border/50 gradient-mesh">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
             <div>
-              <div className="flex items-center space-x-3 mb-1">
-                <h2 className="text-xl font-medium text-gray-900">{quiz.title}</h2>
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  quiz.mode === "quiz" 
-                    ? "bg-green-100 text-green-800" 
-                    : "bg-blue-100 text-blue-800"
-                }`}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mb-1">
+                <h2 className="text-lg sm:text-xl font-medium text-foreground">{quiz.title}</h2>
+                <Badge 
+                  variant={quiz.mode === "quiz" ? "default" : "secondary"}
+                  className={`text-xs font-medium ${
+                    quiz.mode === "quiz" 
+                      ? "bg-secondary text-white border-0" 
+                      : "bg-primary/20 text-primary border-primary/30"
+                  }`}
+                >
                   {quiz.mode === "quiz" ? (
                     <>
                       <i className="fas fa-clipboard-check mr-1"></i>
@@ -203,9 +206,9 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                       Study Mode
                     </>
                   )}
-                </div>
+                </Badge>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {quiz.mode === "quiz" 
                   ? "Graded assessment that updates your mastery progress"
                   : "Practice session with immediate feedback"
@@ -213,29 +216,29 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
               </p>
             </div>
             {timeRemaining !== null && (
-              <div className="text-right">
-                <div className="text-2xl font-bold text-accent">
+              <div className="text-center sm:text-right">
+                <div className="text-xl sm:text-2xl font-bold text-accent">
                   {formatTime(timeRemaining)}
                 </div>
-                <div className="text-sm text-gray-500">Time Remaining</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Time Remaining</div>
               </div>
             )}
           </div>
           
           {/* Progress Bar */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">
+            <span className="text-xs sm:text-sm text-muted-foreground">
               Question {currentQuestionIndex + 1} of {questions.length}
             </span>
-            <span className="text-sm text-gray-600">{Math.round(progress)}%</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">{Math.round(progress)}%</span>
           </div>
           <Progress value={progress} className="h-2" />
         </div>
 
         {/* Question Content */}
-        <CardContent className="p-6">
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <CardContent className="p-4 sm:p-6">
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-base sm:text-lg font-medium text-foreground mb-3 sm:mb-4">
               {currentQuestion.text}
             </h3>
             
@@ -250,20 +253,20 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                 const isSelectedAnswer = selectedAnswer === index;
                 const isCorrectAnswer = index === currentQuestion.correctAnswer;
                 
-                let optionClassName = "flex items-start space-x-3 p-4 border rounded-lg transition-all";
+                let optionClassName = "flex items-start space-x-3 p-3 sm:p-4 border-2 rounded-lg transition-all";
                 
                 if (showFeedback && isSelectedAnswer) {
                   if (isCorrect) {
-                    optionClassName += " border-green-500 bg-green-50";
+                    optionClassName += " border-success bg-success/10";
                   } else {
-                    optionClassName += " border-red-500 bg-red-50";
+                    optionClassName += " border-destructive bg-destructive/10";
                   }
                 } else if (showFeedback && isCorrectAnswer && !isCorrect) {
-                  optionClassName += " border-green-400 bg-green-25";
+                  optionClassName += " border-success/50 bg-success/5";
                 } else if (isSelectedAnswer && !showFeedback) {
-                  optionClassName += " border-primary bg-primary bg-opacity-5";
+                  optionClassName += " border-primary bg-primary/10";
                 } else {
-                  optionClassName += " border-gray-200 hover:border-primary hover:bg-primary hover:bg-opacity-5";
+                  optionClassName += " border-border hover:border-primary/50 hover:bg-primary/5";
                 }
 
                 return (
@@ -278,25 +281,25 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                     />
                     <Label 
                       htmlFor={`question-${currentQuestion.id}-option-${index}`} 
-                      className="text-gray-700 cursor-pointer flex-1"
+                      className="text-foreground cursor-pointer flex-1 text-sm sm:text-base"
                     >
                       {option.text}
                       {showFeedback && isSelectedAnswer && (
                         <div className="mt-2 flex items-center space-x-2">
                           {isCorrect ? (
-                            <i className="fas fa-check-circle text-green-600"></i>
+                            <i className="fas fa-check-circle text-success"></i>
                           ) : (
-                            <i className="fas fa-times-circle text-red-600"></i>
+                            <i className="fas fa-times-circle text-destructive"></i>
                           )}
-                          <span className={`text-sm font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                          <span className={`text-xs sm:text-sm font-medium ${isCorrect ? 'text-success' : 'text-destructive'}`}>
                             {isCorrect ? 'Correct!' : 'Incorrect'}
                           </span>
                         </div>
                       )}
                       {showFeedback && isCorrectAnswer && !isCorrect && (
                         <div className="mt-2 flex items-center space-x-2">
-                          <i className="fas fa-check-circle text-green-600"></i>
-                          <span className="text-sm font-medium text-green-700">Correct Answer</span>
+                          <i className="fas fa-check-circle text-success"></i>
+                          <span className="text-xs sm:text-sm font-medium text-success">Correct Answer</span>
                         </div>
                       )}
                     </Label>
@@ -307,29 +310,29 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
 
             {/* Immediate Feedback Explanation */}
             {showFeedback && currentQuestion.explanation && (
-              <div className={`mt-6 p-4 rounded-lg border ${
+              <div className={`mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg border-2 ${
                 isCorrect 
-                  ? 'border-green-200 bg-green-50' 
-                  : 'border-red-200 bg-red-50'
+                  ? 'border-success/20 bg-success/5' 
+                  : 'border-destructive/20 bg-destructive/5'
               }`}>
                 <div className="flex items-start space-x-3">
-                  <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-                    isCorrect ? 'bg-green-100' : 'bg-red-100'
+                  <div className={`flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center ${
+                    isCorrect ? 'bg-success/20' : 'bg-destructive/20'
                   }`}>
-                    <i className={`fas text-sm ${
+                    <i className={`fas text-xs sm:text-sm ${
                       isCorrect 
-                        ? 'fa-lightbulb text-green-600' 
-                        : 'fa-info-circle text-red-600'
+                        ? 'fa-lightbulb text-success' 
+                        : 'fa-info-circle text-destructive'
                     }`}></i>
                   </div>
                   <div className="flex-1">
-                    <h5 className={`font-medium mb-2 ${
-                      isCorrect ? 'text-green-800' : 'text-red-800'
+                    <h5 className={`font-medium mb-1 sm:mb-2 text-sm sm:text-base ${
+                      isCorrect ? 'text-success' : 'text-destructive'
                     }`}>
                       {isCorrect ? 'Why this is correct:' : 'Why this is incorrect:'}
                     </h5>
-                    <p className={`text-sm leading-relaxed ${
-                      isCorrect ? 'text-green-700' : 'text-red-700'
+                    <p className={`text-xs sm:text-sm leading-relaxed ${
+                      isCorrect ? 'text-success/80' : 'text-destructive/80'
                     }`}>
                       {currentQuestion.explanation}
                     </p>
@@ -340,35 +343,54 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
           </div>
 
           {/* Question Navigation */}
-          <div className="flex items-center justify-between pt-6 border-t border-gray-100">
-            <Button
-              variant="outline"
-              onClick={handlePreviousQuestion}
-              disabled={currentQuestionIndex === 0}
-            >
-              <i className="fas fa-chevron-left mr-2"></i>Previous
-            </Button>
-            
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:justify-between pt-4 sm:pt-6 border-t border-border">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={handlePreviousQuestion}
+                disabled={currentQuestionIndex === 0}
+                size="sm"
+                className="flex-1 sm:flex-initial"
+              >
+                <i className="fas fa-chevron-left mr-1 sm:mr-2"></i>
+                <span className="hidden sm:inline">Previous</span>
+                <span className="sm:hidden">Prev</span>
+              </Button>
+              
               <Button
                 variant="outline"
                 onClick={handleFlagQuestion}
-                className={flaggedQuestions.has(currentQuestion.id) ? 'bg-accent text-white' : ''}
+                size="sm"
+                className={`flex-1 sm:flex-initial ${
+                  flaggedQuestions.has(currentQuestion.id) 
+                    ? 'bg-accent text-white hover:bg-accent/90' 
+                    : ''
+                }`}
               >
-                <i className="fas fa-flag mr-2"></i>
-                {flaggedQuestions.has(currentQuestion.id) ? 'Unflag' : 'Flag for Review'}
+                <i className="fas fa-flag mr-1 sm:mr-2"></i>
+                <span className="hidden sm:inline">
+                  {flaggedQuestions.has(currentQuestion.id) ? 'Unflag' : 'Flag for Review'}
+                </span>
+                <span className="sm:hidden">
+                  {flaggedQuestions.has(currentQuestion.id) ? 'Unflag' : 'Flag'}
+                </span>
               </Button>
             </div>
             
             <Button
               onClick={handleNextQuestion}
               disabled={submitQuizMutation.isPending}
-              className="bg-primary text-white hover:bg-blue-700"
+              size="sm"
+              className="w-full sm:w-auto bg-primary text-white hover:bg-primary/90"
             >
               {currentQuestionIndex === questions.length - 1 ? (
                 submitQuizMutation.isPending ? 'Submitting...' : 'Submit Quiz'
               ) : (
-                <>Next<i className="fas fa-chevron-right ml-2"></i></>
+                <>
+                  <span className="hidden sm:inline">Next</span>
+                  <span className="sm:hidden">Next</span>
+                  <i className="fas fa-chevron-right ml-1 sm:ml-2"></i>
+                </>
               )}
             </Button>
           </div>
@@ -376,12 +398,12 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
       </Card>
 
       {/* Question Navigator */}
-      <Card className="material-shadow border border-gray-100 p-4">
-        <h4 className="font-medium text-gray-900 mb-3">Question Navigator</h4>
-        <div className="grid grid-cols-10 gap-2">
+      <Card className="shadow-medium border-0 p-3 sm:p-4 bg-card/50 backdrop-blur-sm">
+        <h4 className="font-medium text-foreground mb-3 text-sm sm:text-base">Question Navigator</h4>
+        <div className="grid grid-cols-8 sm:grid-cols-10 gap-1.5 sm:gap-2">
           {questions.map((_, index) => {
             const status = getQuestionStatus(index);
-            let className = "w-8 h-8 rounded text-sm font-medium transition-colors ";
+            let className = "w-full aspect-square rounded text-xs sm:text-sm font-medium transition-colors flex items-center justify-center ";
             
             switch (status) {
               case 'current':
@@ -394,7 +416,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                 className += "bg-accent text-white";
                 break;
               default:
-                className += "bg-gray-200 text-gray-600 hover:bg-gray-300";
+                className += "bg-muted text-muted-foreground hover:bg-muted/80";
             }
             
             return (
@@ -408,22 +430,22 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
             );
           })}
         </div>
-        <div className="flex items-center justify-center space-x-6 mt-4 text-xs">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-primary rounded"></div>
-            <span className="text-gray-600">Current</span>
+        <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-3 sm:gap-x-6 mt-3 sm:mt-4 text-[10px] sm:text-xs">
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-primary rounded"></div>
+            <span className="text-muted-foreground">Current</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-secondary rounded"></div>
-            <span className="text-gray-600">Answered</span>
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-secondary rounded"></div>
+            <span className="text-muted-foreground">Answered</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-accent rounded"></div>
-            <span className="text-gray-600">Flagged</span>
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-accent rounded"></div>
+            <span className="text-muted-foreground">Flagged</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-gray-200 rounded"></div>
-            <span className="text-gray-600">Not Answered</span>
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-muted rounded"></div>
+            <span className="text-muted-foreground">Not Answered</span>
           </div>
         </div>
       </Card>

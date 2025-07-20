@@ -151,9 +151,9 @@ export default function DashboardHero() {
     <div className="mb-8 animate-fade-in">
       <Card className="shadow-medium border-0 overflow-hidden bg-card/50 backdrop-blur-sm">
         {/* HELEN AI Insights Header */}
-        <div className="gradient-mesh border-b border-border/50 p-6">
-          <div className="flex items-start space-x-4">
-            <div className="w-24 h-24 gradient-primary rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden avatar-container group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 shadow-glow">
+        <div className="gradient-mesh border-b border-border/50 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4 text-center sm:text-left">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 gradient-primary rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden avatar-container group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 shadow-glow">
               <svg 
                 width="80" 
                 height="80" 
@@ -267,8 +267,8 @@ export default function DashboardHero() {
               </svg>
             </div>
             <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-3">
-                <h3 className="text-xl font-bold text-foreground">HELEN AI Assistant</h3>
+              <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start space-y-2 sm:space-y-0 sm:space-x-2 mb-3">
+                <h3 className="text-lg sm:text-xl font-bold text-foreground">HELEN AI Assistant</h3>
                 <Badge 
                   variant={insights.type === "excellent" ? "default" : "secondary"} 
                   className={`text-xs font-medium ${
@@ -295,11 +295,11 @@ export default function DashboardHero() {
           </div>
         </div>
 
-        <CardContent className="p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <CardContent className="p-4 sm:p-6 lg:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Quick Actions */}
             <div className="lg:col-span-1">
-              <h4 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider">Quick Actions</h4>
+              <h4 className="text-xs sm:text-sm font-bold text-foreground mb-3 sm:mb-4 uppercase tracking-wider">Quick Actions</h4>
               <div className="space-y-3">
                 {categories.slice(0, 3).map((category) => (
                   <div key={category.id} className="flex space-x-2">
@@ -329,22 +329,22 @@ export default function DashboardHero() {
 
             {/* Progress Metrics */}
             <div className="lg:col-span-2">
-              <h4 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider">Your Progress</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/20 card-hover">
-                  <div className="text-3xl font-bold text-primary">{stats.totalQuizzes}</div>
+              <h4 className="text-xs sm:text-sm font-bold text-foreground mb-3 sm:mb-4 uppercase tracking-wider">Your Progress</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+                <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/20 card-hover">
+                  <div className="text-2xl sm:text-3xl font-bold text-primary">{stats.totalQuizzes}</div>
                   <div className="text-xs font-medium text-primary/80 mt-1">Total Sessions</div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-xl border border-secondary/20 card-hover">
-                  <div className="text-3xl font-bold text-secondary">{stats.averageScore}%</div>
+                <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-xl border border-secondary/20 card-hover">
+                  <div className="text-2xl sm:text-3xl font-bold text-secondary">{stats.averageScore}%</div>
                   <div className="text-xs font-medium text-secondary/80 mt-1">Average Score</div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl border border-accent/20 card-hover">
-                  <div className="text-3xl font-bold text-accent">{overallMastery}%</div>
+                <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl border border-accent/20 card-hover">
+                  <div className="text-2xl sm:text-3xl font-bold text-accent">{overallMastery}%</div>
                   <div className="text-xs font-medium text-accent/80 mt-1">Overall Mastery</div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-br from-muted to-muted/50 rounded-xl border border-border card-hover">
-                  <div className="text-3xl font-bold text-foreground">{stats.currentStreak || 0}</div>
+                <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-muted to-muted/50 rounded-xl border border-border card-hover">
+                  <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.currentStreak || 0}</div>
                   <div className="text-xs font-medium text-muted-foreground mt-1">Day Streak</div>
                 </div>
               </div>

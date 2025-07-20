@@ -58,10 +58,10 @@ export default function Review() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center min-h-96">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="flex items-center justify-center min-h-[24rem]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         </div>
@@ -71,15 +71,15 @@ export default function Review() {
 
   if (!quiz || !quiz.completedAt) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Quiz Not Available for Review</h1>
-            <p className="text-gray-600">This quiz hasn't been completed yet or doesn't exist.</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">Quiz Not Available for Review</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">This quiz hasn't been completed yet or doesn't exist.</p>
             <Button 
               onClick={() => setLocation("/")}
-              className="mt-4 bg-primary hover:bg-blue-700"
+              className="mt-4 bg-primary hover:bg-primary/90"
             >
               Return to Dashboard
             </Button>
@@ -91,15 +91,15 @@ export default function Review() {
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">No Questions Found</h1>
-            <p className="text-gray-600">Unable to load questions for this quiz.</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">No Questions Found</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Unable to load questions for this quiz.</p>
             <Button 
               onClick={() => setLocation("/")}
-              className="mt-4 bg-primary hover:bg-blue-700"
+              className="mt-4 bg-primary hover:bg-primary/90"
             >
               Return to Dashboard
             </Button>

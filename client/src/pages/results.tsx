@@ -27,8 +27,8 @@ export default function Results() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center min-h-96">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="flex items-center justify-center min-h-[24rem]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         </div>
@@ -40,13 +40,13 @@ export default function Results() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-4">Results Not Found</h1>
-            <p className="text-muted-foreground">The quiz you're looking for doesn't exist.</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">Results Not Found</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">The quiz you're looking for doesn't exist.</p>
             <Button 
               onClick={() => setLocation("/")}
-              className="mt-4 bg-primary hover:bg-blue-700"
+              className="mt-4 bg-primary hover:bg-primary/90"
             >
               Return to Dashboard
             </Button>
@@ -60,17 +60,17 @@ export default function Results() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-4">Quiz Not Completed</h1>
-            <p className="text-muted-foreground">This quiz hasn't been completed yet.</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">Quiz Not Completed</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">This quiz hasn't been completed yet.</p>
             <div className="mt-4 text-sm text-muted-foreground">
               Debug info: completedAt = {JSON.stringify(quiz.completedAt)}
             </div>
             <div className="flex gap-4 justify-center mt-4">
               <Button 
                 onClick={() => setLocation(`/quiz/${quizId}`)}
-                className="bg-primary hover:bg-blue-700"
+                className="bg-primary hover:bg-primary/90"
               >
                 Continue Quiz
               </Button>
@@ -110,28 +110,28 @@ export default function Results() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card className="material-shadow border border-border overflow-hidden">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <Card className="shadow-medium border-0 overflow-hidden bg-card/50 backdrop-blur-sm">
           {/* Results Header */}
-          <div className={`p-6 border-b border-border text-white ${
+          <div className={`p-4 sm:p-6 border-b border-border text-white ${
             quiz.mode === "quiz" 
-              ? "bg-gradient-to-r from-green-600 to-green-700" 
-              : "bg-gradient-to-r from-blue-600 to-blue-700"
+              ? "bg-gradient-to-r from-secondary to-secondary/90" 
+              : "bg-gradient-to-r from-primary to-primary/90"
           }`}>
             <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                <i className={`fas text-2xl ${
+              <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-white/20 rounded-full flex items-center justify-center">
+                <i className={`fas text-xl sm:text-2xl ${
                   quiz.mode === "quiz" ? "fa-clipboard-check" : "fa-brain"
                 }`}></i>
               </div>
-              <h2 className="text-2xl font-bold mb-2">
+              <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">
                 {quiz.mode === "quiz" ? "Assessment Completed!" : "Study Session Completed!"}
               </h2>
-              <p className="opacity-90">
+              <p className="text-sm sm:text-base opacity-90">
                 {getCategoryName(quiz.categoryIds as number[])} - {quiz.mode === "quiz" ? "Quiz Mode" : "Study Mode"}
               </p>
               {quiz.mode === "quiz" && (
-                <div className="mt-2 text-sm opacity-75">
+                <div className="mt-2 text-xs sm:text-sm opacity-75">
                   <i className="fas fa-chart-line mr-1"></i>
                   Your mastery progress has been updated
                 </div>
@@ -140,44 +140,49 @@ export default function Results() {
           </div>
 
           {/* Score Summary */}
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="text-center">
-                <div className={`text-4xl font-bold mb-2 ${getScoreColor(score)}`}>
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+              <div className="text-center py-3 sm:py-0">
+                <div className={`text-3xl sm:text-4xl font-bold mb-1 sm:mb-2 ${getScoreColor(score)}`}>
                   {score}%
                 </div>
-                <div className="text-gray-600">Overall Score</div>
+                <div className="text-sm sm:text-base text-muted-foreground">Overall Score</div>
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">
+              <div className="text-center py-3 sm:py-0 border-y sm:border-0 border-border">
+                <div className="text-3xl sm:text-4xl font-bold text-primary mb-1 sm:mb-2">
                   {correctAnswers}/{totalQuestions}
                 </div>
-                <div className="text-gray-600">Correct Answers</div>
+                <div className="text-sm sm:text-base text-muted-foreground">Correct Answers</div>
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-accent mb-2">
+              <div className="text-center py-3 sm:py-0">
+                <div className="text-3xl sm:text-4xl font-bold text-accent mb-1 sm:mb-2">
                   {formatDuration(quiz.startedAt!, quiz.completedAt)}
                 </div>
-                <div className="text-gray-600">Time Taken</div>
+                <div className="text-sm sm:text-base text-muted-foreground">Time Taken</div>
               </div>
             </div>
 
             {/* Performance Feedback */}
-            <div className="mb-8">
-              <div className={`rounded-lg p-4 ${getScoreBgColor(score)}`}>
-                <div className="flex items-center space-x-2">
+            <div className="mb-6 sm:mb-8">
+              <div className={`rounded-lg p-3 sm:p-4 border-2 ${
+                score >= 90 ? 'border-success/20 bg-success/5' :
+                score >= 80 ? 'border-primary/20 bg-primary/5' :
+                score >= 70 ? 'border-accent/20 bg-accent/5' : 
+                'border-destructive/20 bg-destructive/5'
+              }`}>
+                <div className="flex items-center space-x-2 mb-2">
                   <i className={`fas ${
                     score >= 90 ? 'fa-star' :
                     score >= 80 ? 'fa-thumbs-up' :
                     score >= 70 ? 'fa-check-circle' : 'fa-exclamation-triangle'
                   } ${getScoreColor(score)}`}></i>
-                  <h3 className={`font-semibold ${getScoreColor(score)}`}>
+                  <h3 className={`font-semibold text-base sm:text-lg ${getScoreColor(score)}`}>
                     {score >= 90 ? 'Excellent Work!' :
                      score >= 80 ? 'Great Job!' :
                      score >= 70 ? 'Good Effort!' : 'Keep Practicing!'}
                   </h3>
                 </div>
-                <p className="text-gray-700 mt-2">
+                <p className="text-sm sm:text-base text-muted-foreground">
                   {quiz.mode === "quiz" ? (
                     score >= 90 ? 'Outstanding! Your mastery score has significantly improved.' :
                     score >= 80 ? 'Great work! This assessment will boost your certification readiness.' :
@@ -194,9 +199,9 @@ export default function Results() {
             </div>
 
             {/* Category Performance */}
-            <div className="mb-8">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Performance by Category</h3>
-              <div className="space-y-4">
+            <div className="mb-6 sm:mb-8">
+              <h3 className="text-base sm:text-lg font-medium text-foreground mb-3 sm:mb-4">Performance by Category</h3>
+              <div className="space-y-3 sm:space-y-4">
                 {(quiz.categoryIds as number[]).map(categoryId => {
                   const category = categories.find(c => c.id === categoryId);
                   if (!category) return null;
@@ -205,10 +210,10 @@ export default function Results() {
                   const categoryScore = score;
                   
                   return (
-                    <div key={categoryId} className="bg-gray-50 rounded-lg p-4">
+                    <div key={categoryId} className="bg-muted/50 rounded-lg p-3 sm:p-4">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium text-gray-900">{category.name}</span>
-                        <span className="text-sm text-gray-600">{categoryScore}%</span>
+                        <span className="font-medium text-foreground text-sm sm:text-base">{category.name}</span>
+                        <span className="text-xs sm:text-sm text-muted-foreground">{categoryScore}%</span>
                       </div>
                       <Progress value={categoryScore} className="h-2" />
                     </div>
@@ -218,10 +223,11 @@ export default function Results() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button
                 onClick={() => setLocation("/")}
-                className="flex-1 bg-primary text-white hover:bg-blue-700"
+                className="flex-1 bg-primary text-white hover:bg-primary/90"
+                size="sm"
               >
                 <i className="fas fa-home mr-2"></i>
                 Return to Dashboard

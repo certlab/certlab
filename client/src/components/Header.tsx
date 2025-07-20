@@ -6,6 +6,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -21,6 +22,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { 
   Home, 
   Settings, 
@@ -34,7 +42,8 @@ import {
   Shield,
   ArrowLeft,
   ChevronDown,
-  Accessibility
+  Accessibility,
+  X
 } from "lucide-react";
 
 export default function Header() {
@@ -42,6 +51,7 @@ export default function Header() {
   const currentUser = localStorage.getCurrentUser();
   const { toast } = useToast();
   const isAdminArea = location.startsWith('/admin');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -228,64 +238,117 @@ export default function Header() {
           </nav>
 
           {/* Mobile Navigation */}
-          <div className="md:hidden">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+          <div className="md:hidden flex items-center space-x-2">
+            <ThemeToggle />
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <Menu className="h-4 w-4" />
+                  <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                {isAdminArea ? (
-                  <>
-                    <DropdownMenuItem 
-                      onClick={() => setLocation("/app")}
-                      className="cursor-pointer"
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[280px] sm:w-[320px]">
+                <SheetHeader className="pb-6 border-b">
+                  <SheetTitle className="text-left">Navigation</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col space-y-4 mt-6">
+                  {isAdminArea ? (
+                    <>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => {
+                          setLocation("/app");
+                          setMobileMenuOpen(false);
+                        }}
+                        className="justify-start w-full"
+                      >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back to App
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => {
+                          setLocation("/app");
+                          setMobileMenuOpen(false);
+                        }}
+                        className="justify-start w-full"
+                      >
+                        <Home className="w-4 h-4 mr-2" />
+                        Dashboard
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => {
+                          setLocation("/achievements");
+                          setMobileMenuOpen(false);
+                        }}
+                        className="justify-start w-full"
+                      >
+                        <Trophy className="w-4 h-4 mr-2" />
+                        Achievements
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => {
+                          setLocation("/accessibility");
+                          setMobileMenuOpen(false);
+                        }}
+                        className="justify-start w-full"
+                      >
+                        <Accessibility className="w-4 h-4 mr-2" />
+                        Accessibility
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => {
+                          setLocation("/admin");
+                          setMobileMenuOpen(false);
+                        }}
+                        className="justify-start w-full"
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        Admin
+                      </Button>
+                    </>
+                  )}
+                </div>
+                {currentUser && (
+                  <div className="mt-auto pt-6 border-t">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5 mb-4">
+                      <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center shadow-glow">
+                        <span className="text-primary-foreground text-sm font-semibold">
+                          {getInitials(currentUser.username)}
+                        </span>
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="text-sm font-semibold">{currentUser.username}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Certification Student
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      disabled={logoutMutation.isPending}
+                      className="w-full"
                     >
                       <ArrowLeft className="w-4 h-4 mr-2" />
-                      Back to App
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <>
-                    <DropdownMenuItem 
-                      onClick={() => setLocation("/app")}
-                      className="cursor-pointer"
-                    >
-                      <Home className="w-4 h-4 mr-2" />
-                      Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setLocation("/achievements")}
-                      className="cursor-pointer"
-                    >
-                      <Trophy className="w-4 h-4 mr-2" />
-                      Achievements
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => setLocation("/accessibility")}
-                      className="cursor-pointer"
-                    >
-                      <Accessibility className="w-4 h-4 mr-2" />
-                      Accessibility
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => setLocation("/admin")}
-                      className="cursor-pointer"
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Admin
-                    </DropdownMenuItem>
-                  </>
+                      Sign Out
+                    </Button>
+                  </div>
                 )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </SheetContent>
+            </Sheet>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
             
             {/* User Account Section */}

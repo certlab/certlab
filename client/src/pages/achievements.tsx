@@ -32,10 +32,10 @@ export default function AchievementsPage() {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <Card>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="shadow-medium border-0 bg-card/50 backdrop-blur-sm">
           <CardContent className="pt-6">
-            <p className="text-center text-gray-500 dark:text-gray-400">
+            <p className="text-center text-muted-foreground">
               Please log in to view your achievements
             </p>
           </CardContent>
@@ -45,34 +45,34 @@ export default function AchievementsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">
             🏆 Achievements & Badges
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Track your learning progress with gamified milestones and achievements
           </p>
         </div>
 
         {/* Achievement System Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                <Trophy className="w-5 h-5" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/20 dark:from-primary/20 dark:to-primary/30 border-0">
+            <CardHeader className="pb-2 sm:pb-3">
+              <CardTitle className="flex items-center gap-2 text-primary text-sm sm:text-base">
+                <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
                 Progress
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-blue-600 dark:text-blue-400">
+              <p className="text-xs sm:text-sm text-primary/80">
                 Earned by completing learning sessions and reaching milestones
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20">
+          <Card className="bg-gradient-to-br from-accent/10 to-accent/20 dark:from-accent/20 dark:to-accent/30 border-0">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-300">
                 <Star className="w-5 h-5" />
