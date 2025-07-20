@@ -4,51 +4,73 @@
 
 :root {
   --background: hsl(0, 0%, 100%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(210, 40%, 96%);
-  --muted-foreground: hsl(215, 25%, 35%);
+  --foreground: hsl(220, 17%, 11%);
+  --muted: hsl(220, 14%, 96%);
+  --muted-foreground: hsl(220, 13%, 40%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --popover-foreground: hsl(220, 17%, 11%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(214, 32%, 91%);
-  --input: hsl(214, 32%, 91%);
-  --primary: hsl(207, 90%, 54%);
-  --primary-foreground: hsl(210, 40%, 98%);
-  --secondary: hsl(122, 39%, 49%);
-  --secondary-foreground: hsl(210, 40%, 98%);
-  --accent: hsl(210, 80%, 45%);
-  --accent-foreground: hsl(210, 40%, 98%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(210, 40%, 98%);
-  --ring: hsl(207, 90%, 54%);
-  --radius: 0.5rem;
+  --card-foreground: hsl(220, 17%, 11%);
+  --border: hsl(220, 13%, 91%);
+  --input: hsl(220, 13%, 91%);
+  --primary: hsl(217, 91%, 54%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(142, 43%, 49%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(217, 80%, 45%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 72%, 51%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(217, 91%, 54%);
+  --radius: 0.75rem;
   
-  /* Custom colors matching the design */
-  --surface: hsl(0, 0%, 98%);
-  --error: hsl(0, 84%, 60%);
+  /* Custom enhanced colors */
+  --surface: hsl(220, 14%, 99%);
+  --error: hsl(0, 72%, 51%);
+  --success: hsl(142, 71%, 45%);
+  --warning: hsl(38, 92%, 50%);
+  --info: hsl(217, 91%, 60%);
+  
+  /* Enhanced shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark {
-  --background: hsl(222, 84%, 5%);
-  --foreground: hsl(210, 40%, 98%);
-  --muted: hsl(217, 33%, 17%);
+  --background: hsl(222, 47%, 11%);
+  --foreground: hsl(213, 31%, 91%);
+  --muted: hsl(223, 47%, 20%);
   --muted-foreground: hsl(215, 20%, 65%);
-  --popover: hsl(222, 84%, 5%);
-  --popover-foreground: hsl(210, 40%, 98%);
-  --card: hsl(222, 84%, 5%);
-  --card-foreground: hsl(210, 40%, 98%);
-  --border: hsl(217, 33%, 17%);
-  --input: hsl(217, 33%, 17%);
-  --primary: hsl(207, 90%, 54%);
-  --primary-foreground: hsl(222, 84%, 5%);
-  --secondary: hsl(122, 39%, 49%);
-  --secondary-foreground: hsl(222, 84%, 5%);
-  --accent: hsl(210, 80%, 55%);
-  --accent-foreground: hsl(222, 84%, 5%);
-  --destructive: hsl(0, 84%, 60%);
+  --popover: hsl(224, 47%, 16%);
+  --popover-foreground: hsl(213, 31%, 91%);
+  --card: hsl(224, 47%, 16%);
+  --card-foreground: hsl(213, 31%, 91%);
+  --border: hsl(216, 34%, 17%);
+  --input: hsl(216, 34%, 17%);
+  --primary: hsl(217, 91%, 60%);
+  --primary-foreground: hsl(222, 47%, 11%);
+  --secondary: hsl(142, 43%, 55%);
+  --secondary-foreground: hsl(222, 47%, 11%);
+  --accent: hsl(217, 80%, 60%);
+  --accent-foreground: hsl(222, 47%, 11%);
+  --destructive: hsl(0, 63%, 53%);
   --destructive-foreground: hsl(210, 40%, 98%);
-  --ring: hsl(207, 90%, 54%);
+  --ring: hsl(217, 91%, 60%);
+  
+  /* Custom enhanced colors */
+  --surface: hsl(224, 47%, 14%);
+  --error: hsl(0, 63%, 53%);
+  --success: hsl(142, 71%, 50%);
+  --warning: hsl(38, 92%, 55%);
+  --info: hsl(217, 91%, 65%);
 }
 
 .ocean {
@@ -173,36 +195,207 @@
 }
 
 @layer utilities {
-  .material-shadow {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1);
+  /* Modern glassmorphism effects */
+  .glass {
+    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.18);
   }
   
-  .material-shadow-hover {
-    transition: all 0.3s ease;
+  .glass-dark {
+    backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
-  .material-shadow-hover:hover {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15), 0 12px 24px rgba(0,0,0,0.15);
-    transform: translateY(-2px);
+  /* Enhanced shadow system */
+  .shadow-soft {
+    box-shadow: var(--shadow);
   }
   
+  .shadow-medium {
+    box-shadow: var(--shadow-md);
+  }
+  
+  .shadow-hard {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+  }
+  
+  /* Interactive hover effects */
+  .interactive-scale {
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+  }
+  
+  .interactive-scale:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .interactive-lift {
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+  }
+  
+  .interactive-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* Modern gradients */
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(217, 91%, 54%) 0%, hsl(217, 91%, 45%) 100%);
+  }
+  
+  .gradient-secondary {
+    background: linear-gradient(135deg, hsl(142, 43%, 49%) 0%, hsl(142, 43%, 40%) 100%);
+  }
+  
+  .gradient-accent {
+    background: linear-gradient(135deg, hsl(217, 80%, 45%) 0%, hsl(217, 80%, 38%) 100%);
+  }
+  
+  .gradient-mesh {
+    background-image: 
+      radial-gradient(at 40% 20%, hsla(217, 91%, 60%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsla(142, 43%, 55%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsla(217, 80%, 50%, 0.1) 0px, transparent 50%);
+  }
+  
+  /* Text effects */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(217, 91%, 54%) 0%, hsl(217, 91%, 65%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Animation utilities */
   .animate-fade-in {
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn var(--transition-slow) ease-out;
   }
   
   .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
+    animation: slideUp var(--transition-base) ease-out;
+  }
+  
+  .animate-slide-in-left {
+    animation: slideInLeft var(--transition-base) ease-out;
+  }
+  
+  .animate-slide-in-right {
+    animation: slideInRight var(--transition-base) ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn var(--transition-base) ease-out;
+  }
+  
+  /* Loading skeleton animation */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: hsl(var(--muted));
+  }
+  
+  .skeleton::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0.2) 20%,
+      rgba(255, 255, 255, 0.5) 60%,
+      rgba(255, 255, 255, 0)
+    );
+    animation: shimmer 2s infinite;
+    content: '';
+  }
+  
+  /* Modern card styles */
+  .card-hover {
+    transition: all var(--transition-base);
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* Focus styles */
+  .focus-ring {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  
+  .focus-ring:focus-visible {
+    outline-color: hsl(var(--ring));
   }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from { 
+    transform: translateY(20px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes gentle-float {

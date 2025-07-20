@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { localStorage } from "@/lib/localStorage";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { BookOpen, Trophy } from "lucide-react";
 import type { UserStats, Category, MasteryScore } from "@shared/schema";
 
 export default function DashboardHero() {
@@ -147,12 +148,12 @@ export default function DashboardHero() {
   }
 
   return (
-    <div className="mb-8">
-      <Card className="material-shadow border border-gray-100 overflow-hidden">
+    <div className="mb-8 animate-fade-in">
+      <Card className="shadow-medium border-0 overflow-hidden bg-card/50 backdrop-blur-sm">
         {/* HELEN AI Insights Header */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 p-6">
+        <div className="gradient-mesh border-b border-border/50 p-6">
           <div className="flex items-start space-x-4">
-            <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden avatar-container group cursor-pointer transition-all duration-500 hover:shadow-lg hover:scale-105">
+            <div className="w-24 h-24 gradient-primary rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden avatar-container group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 shadow-glow">
               <svg 
                 width="80" 
                 height="80" 
@@ -266,9 +267,18 @@ export default function DashboardHero() {
               </svg>
             </div>
             <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">HELEN AI Assistant</h3>
-                <Badge variant="secondary" className="text-xs">
+              <div className="flex items-center space-x-2 mb-3">
+                <h3 className="text-xl font-bold text-foreground">HELEN AI Assistant</h3>
+                <Badge 
+                  variant={insights.type === "excellent" ? "default" : "secondary"} 
+                  className={`text-xs font-medium ${
+                    insights.type === "excellent" ? "bg-gradient-primary text-white border-0" :
+                    insights.type === "good" ? "bg-secondary/20 text-secondary border-secondary/30" :
+                    insights.type === "streak" ? "bg-accent/20 text-accent border-accent/30" :
+                    insights.type === "welcome" ? "bg-primary/20 text-primary border-primary/30" :
+                    "bg-muted text-muted-foreground"
+                  }`}
+                >
                   {insights.type === "excellent" ? "Expert Level" :
                    insights.type === "good" ? "Advanced" :
                    insights.type === "streak" ? "Consistent" :
@@ -276,18 +286,21 @@ export default function DashboardHero() {
                    "Improving"}
                 </Badge>
               </div>
-              <p className="text-gray-700 mb-2">{insights.message}</p>
-              <p className="text-sm text-blue-700 font-medium">{insights.action}</p>
+              <p className="text-foreground/80 mb-3 leading-relaxed">{insights.message}</p>
+              <p className="text-sm text-primary font-semibold flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                {insights.action}
+              </p>
             </div>
           </div>
         </div>
 
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <CardContent className="p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Quick Actions */}
             <div className="lg:col-span-1">
-              <h4 className="text-sm font-semibold text-foreground mb-3">Quick Actions</h4>
-              <div className="space-y-2">
+              <h4 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider">Quick Actions</h4>
+              <div className="space-y-3">
                 {categories.slice(0, 3).map((category) => (
                   <div key={category.id} className="flex space-x-2">
                     <Button
@@ -295,18 +308,18 @@ export default function DashboardHero() {
                       variant="outline"
                       onClick={() => handleQuickQuiz(category.id, "study")}
                       disabled={isCreatingQuiz}
-                      className="flex-1 text-xs"
+                      className="flex-1 text-xs font-medium hover:bg-accent/10 hover:border-accent transition-all"
                     >
-                      <i className="fas fa-brain mr-1"></i>
+                      <BookOpen className="w-3 h-3 mr-1.5" />
                       Study {category.name}
                     </Button>
                     <Button
                       size="sm"
                       onClick={() => handleQuickQuiz(category.id, "quiz")}
                       disabled={isCreatingQuiz}
-                      className="flex-1 text-xs bg-primary hover:bg-primary/90"
+                      className="flex-1 text-xs font-medium gradient-primary hover:opacity-90 transition-opacity shadow-glow"
                     >
-                      <i className="fas fa-clipboard-check mr-1"></i>
+                      <Trophy className="w-3 h-3 mr-1.5" />
                       Quiz {category.name}
                     </Button>
                   </div>
@@ -316,33 +329,35 @@ export default function DashboardHero() {
 
             {/* Progress Metrics */}
             <div className="lg:col-span-2">
-              <h4 className="text-sm font-semibold text-foreground mb-3">Your Progress</h4>
+              <h4 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider">Your Progress</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-3 bg-primary/10 rounded-lg">
-                  <div className="text-2xl font-bold text-primary">{stats.totalQuizzes}</div>
-                  <div className="text-xs text-primary/80">Total Sessions</div>
+                <div className="text-center p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/20 card-hover">
+                  <div className="text-3xl font-bold text-primary">{stats.totalQuizzes}</div>
+                  <div className="text-xs font-medium text-primary/80 mt-1">Total Sessions</div>
                 </div>
-                <div className="text-center p-3 bg-secondary/10 rounded-lg">
-                  <div className="text-2xl font-bold text-secondary">{stats.averageScore}%</div>
-                  <div className="text-xs text-secondary/80">Average Score</div>
+                <div className="text-center p-4 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-xl border border-secondary/20 card-hover">
+                  <div className="text-3xl font-bold text-secondary">{stats.averageScore}%</div>
+                  <div className="text-xs font-medium text-secondary/80 mt-1">Average Score</div>
                 </div>
-                <div className="text-center p-3 bg-accent/10 rounded-lg">
-                  <div className="text-2xl font-bold text-accent">{overallMastery}%</div>
-                  <div className="text-xs text-accent/80">Overall Mastery</div>
+                <div className="text-center p-4 bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl border border-accent/20 card-hover">
+                  <div className="text-3xl font-bold text-accent">{overallMastery}%</div>
+                  <div className="text-xs font-medium text-accent/80 mt-1">Overall Mastery</div>
                 </div>
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <div className="text-2xl font-bold text-muted-foreground">{stats.currentStreak || 0}</div>
-                  <div className="text-xs text-muted-foreground/80">Day Streak</div>
+                <div className="text-center p-4 bg-gradient-to-br from-muted to-muted/50 rounded-xl border border-border card-hover">
+                  <div className="text-3xl font-bold text-foreground">{stats.currentStreak || 0}</div>
+                  <div className="text-xs font-medium text-muted-foreground mt-1">Day Streak</div>
                 </div>
               </div>
 
               {/* Motivation Message */}
-              <div className="mt-4 p-3 bg-muted/50 rounded-lg border border-border">
-                <div className="flex items-center space-x-2">
-                  <i className="fas fa-lightbulb text-accent"></i>
-                  <span className="text-sm font-medium text-foreground">Today's Focus</span>
+              <div className="mt-5 p-4 bg-gradient-to-r from-accent/5 to-primary/5 rounded-xl border border-accent/20">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
+                    <span className="text-accent text-lg">💡</span>
+                  </div>
+                  <span className="text-sm font-bold text-foreground uppercase tracking-wider">Today's Focus</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-foreground/70 leading-relaxed">
                   {masteryScores.length > 0 ? (
                     `Work on ${masteryScores
                       .sort((a, b) => a.rollingAverage - b.rollingAverage)

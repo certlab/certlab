@@ -74,13 +74,15 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-card shadow-sm border-b border-border sticky top-0 z-50">
+    <header className="bg-card/80 backdrop-blur-md shadow-soft border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <i className="fas fa-shield-alt text-primary text-2xl"></i>
-              <h1 className="text-xl font-medium text-foreground">SecuraCert</h1>
+            <div className="flex items-center space-x-3 group cursor-pointer">
+              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-xl font-semibold text-foreground tracking-tight">SecuraCert</h1>
             </div>
           </div>
           
@@ -118,55 +120,63 @@ export default function Header() {
 
                   {/* Learning Section */}
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger className="text-muted-foreground hover:text-primary">
+                    <NavigationMenuTrigger className="text-muted-foreground hover:text-primary h-10 px-4 py-2 font-medium transition-colors">
                       <BookOpen className="w-4 h-4 mr-2" />
                       Learning
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <div className="grid gap-3 p-4 w-[450px] md:w-[500px]">
+                      <div className="grid gap-3 p-6 w-[450px] md:w-[500px] bg-card/95 backdrop-blur-md">
                         <div className="grid grid-cols-2 gap-3">
                           <NavigationMenuLink 
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
+                            className="block select-none space-y-2 rounded-lg p-4 leading-none no-underline outline-none transition-all hover:bg-accent/10 hover:shadow-soft focus:bg-accent/10 focus:shadow-soft cursor-pointer group"
                             onClick={() => setLocation("/achievements")}
                           >
-                            <div className="flex items-center text-sm font-medium leading-none">
-                              <Trophy className="w-4 h-4 mr-2" />
+                            <div className="flex items-center text-sm font-semibold leading-none text-foreground group-hover:text-primary transition-colors">
+                              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3 group-hover:bg-primary/20 transition-colors">
+                                <Trophy className="w-4 h-4 text-primary" />
+                              </div>
                               Achievements
                             </div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground pl-11">
                               View earned badges and certifications
                             </p>
                           </NavigationMenuLink>
                           <NavigationMenuLink 
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer opacity-60 pointer-events-none"
+                            className="block select-none space-y-2 rounded-lg p-4 leading-none no-underline outline-none transition-all opacity-60 pointer-events-none group"
                           >
-                            <div className="flex items-center text-sm font-medium leading-none">
-                              <BarChart3 className="w-4 h-4 mr-2" />
+                            <div className="flex items-center text-sm font-semibold leading-none text-foreground/60">
+                              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center mr-3">
+                                <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                              </div>
                               Progress Reports
                             </div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground pl-11">
                               Detailed learning analytics (Coming Soon)
                             </p>
                           </NavigationMenuLink>
                           <NavigationMenuLink 
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer opacity-60 pointer-events-none"
+                            className="block select-none space-y-2 rounded-lg p-4 leading-none no-underline outline-none transition-all opacity-60 pointer-events-none group"
                           >
-                            <div className="flex items-center text-sm font-medium leading-none">
-                              <FileText className="w-4 h-4 mr-2" />
+                            <div className="flex items-center text-sm font-semibold leading-none text-foreground/60">
+                              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center mr-3">
+                                <FileText className="w-4 h-4 text-muted-foreground" />
+                              </div>
                               Study Materials
                             </div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground pl-11">
                               Downloadable resources (Coming Soon)
                             </p>
                           </NavigationMenuLink>
                           <NavigationMenuLink 
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer opacity-60 pointer-events-none"
+                            className="block select-none space-y-2 rounded-lg p-4 leading-none no-underline outline-none transition-all opacity-60 pointer-events-none group"
                           >
-                            <div className="flex items-center text-sm font-medium leading-none">
-                              <Users className="w-4 h-4 mr-2" />
+                            <div className="flex items-center text-sm font-semibold leading-none text-foreground/60">
+                              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center mr-3">
+                                <Users className="w-4 h-4 text-muted-foreground" />
+                              </div>
                               Study Groups
                             </div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground pl-11">
                               Collaborative learning (Coming Soon)
                             </p>
                           </NavigationMenuLink>
@@ -177,22 +187,24 @@ export default function Header() {
 
                   {/* Tools Section */}
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger className="text-muted-foreground hover:text-primary">
+                    <NavigationMenuTrigger className="text-muted-foreground hover:text-primary h-10 px-4 py-2 font-medium transition-colors">
                       <Shield className="w-4 h-4 mr-2" />
                       Tools
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <div className="grid gap-3 p-4 w-[300px]">
+                      <div className="grid gap-3 p-6 w-[350px] bg-card/95 backdrop-blur-md">
                         <NavigationMenuLink 
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
+                          className="block select-none space-y-2 rounded-lg p-4 leading-none no-underline outline-none transition-all hover:bg-accent/10 hover:shadow-soft focus:bg-accent/10 focus:shadow-soft cursor-pointer group"
                           onClick={() => setLocation("/accessibility")}
                         >
-                          <div className="flex items-center text-sm font-medium leading-none">
-                            <Accessibility className="w-4 h-4 mr-2" />
+                          <div className="flex items-center text-sm font-semibold leading-none text-foreground group-hover:text-primary transition-colors">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3 group-hover:bg-primary/20 transition-colors">
+                              <Accessibility className="w-4 h-4 text-primary" />
+                            </div>
                             Accessibility
                           </div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Accessibility features and settings
+                          <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground pl-11">
+                            Check color contrast and accessibility features
                           </p>
                         </NavigationMenuLink>
                       </div>
@@ -280,38 +292,43 @@ export default function Header() {
             {currentUser && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 rounded-full">
+                  <Button variant="ghost" className="relative h-10 rounded-full px-2 hover:bg-accent/10 transition-all">
                     <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                        <span className="text-primary-foreground text-sm font-medium">
+                      <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center shadow-glow">
+                        <span className="text-primary-foreground text-sm font-semibold">
                           {getInitials(currentUser.username)}
                         </span>
                       </div>
-                      <span className="hidden md:block text-foreground text-sm">{currentUser.username}</span>
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      <span className="hidden md:block text-foreground text-sm font-medium">{currentUser.username}</span>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{currentUser.username}</p>
+                <DropdownMenuContent className="w-64 p-2" align="end" forceMount>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
+                    <div className="w-12 h-12 gradient-primary rounded-full flex items-center justify-center shadow-glow">
+                      <span className="text-primary-foreground text-lg font-semibold">
+                        {getInitials(currentUser.username)}
+                      </span>
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-semibold">{currentUser.username}</p>
                       <p className="text-xs text-muted-foreground">
-                        Learning Platform User
+                        Certification Student
                       </p>
                     </div>
                   </div>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="my-2" />
                   <DropdownMenuItem 
                     onClick={() => setLocation("/achievements")}
-                    className="cursor-pointer"
+                    className="cursor-pointer rounded-md py-2.5 px-3 focus:bg-accent/10"
                   >
-                    <Trophy className="w-4 h-4 mr-2" />
-                    My Achievements
+                    <Trophy className="w-4 h-4 mr-3 text-primary" />
+                    <span className="font-medium">My Achievements</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     disabled
-                    className="cursor-not-allowed opacity-60"
+                    className="cursor-not-allowed opacity-60 rounded-md py-2.5 px-3"
                   >
                     <Settings className="w-4 h-4 mr-2" />
                     Account Settings (Coming Soon)

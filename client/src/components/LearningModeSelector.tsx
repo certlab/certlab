@@ -148,102 +148,135 @@ export default function LearningModeSelector() {
   );
 
   return (
-    <Card className="material-shadow border border-gray-100 overflow-hidden">
-      <CardHeader className="p-6 border-b border-gray-100">
-        <CardTitle className="text-xl font-medium text-gray-900 mb-2">
+    <Card className="shadow-medium border-0 overflow-hidden bg-card/50 backdrop-blur-sm animate-fade-in">
+      <CardHeader className="p-8 border-b border-border/50 gradient-mesh">
+        <CardTitle className="text-2xl font-bold text-foreground mb-2">
           Choose Your Learning Mode
         </CardTitle>
-        <p className="text-gray-600 text-sm">
+        <p className="text-foreground/70 text-sm">
           HELEN - Highly Efficient Learning Engine for Next-Gen Certification
         </p>
       </CardHeader>
 
-      <CardContent className="p-6">
+      <CardContent className="p-8">
         {/* Mode Selection */}
-        <div className="mb-6">
-          <Label className="text-sm font-medium text-gray-700 mb-3 block">
+        <div className="mb-8">
+          <Label className="text-sm font-bold text-foreground mb-4 block uppercase tracking-wider">
             Learning Mode
           </Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div
-              className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+              className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-300 ${
                 selectedMode === "study"
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 hover:border-blue-300"
+                  ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-glow"
+                  : "border-border hover:border-primary/50 hover:shadow-medium bg-card"
               }`}
               onClick={() => handleModeChange("study")}
             >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium text-gray-900">Study Mode</h3>
-                <Badge variant={selectedMode === "study" ? "default" : "secondary"}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-foreground text-lg">Study Mode</h3>
+                <Badge 
+                  variant={selectedMode === "study" ? "default" : "secondary"}
+                  className={selectedMode === "study" ? "gradient-primary text-white border-0" : ""}
+                >
                   Continuous Learning
                 </Badge>
               </div>
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
                 Practice questions with immediate feedback. No limits, adaptive learning based on performance.
               </p>
-              <ul className="text-xs text-gray-500 space-y-1">
-                <li>• Unlimited questions</li>
-                <li>• Immediate explanations</li>
-                <li>• Multiple certifications</li>
-                <li>• No mastery score impact</li>
+              <ul className="text-xs text-foreground/60 space-y-2">
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                  Unlimited questions
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                  Immediate explanations
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                  Multiple certifications
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                  No mastery score impact
+                </li>
               </ul>
             </div>
 
             <div
-              className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+              className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-300 ${
                 selectedMode === "quiz"
-                  ? "border-green-500 bg-green-50"
-                  : "border-gray-200 hover:border-green-300"
+                  ? "border-secondary bg-gradient-to-br from-secondary/10 to-secondary/5 shadow-glow"
+                  : "border-border hover:border-secondary/50 hover:shadow-medium bg-card"
               }`}
               onClick={() => handleModeChange("quiz")}
             >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium text-gray-900">Quiz Mode</h3>
-                <Badge variant={selectedMode === "quiz" ? "default" : "secondary"}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-foreground text-lg">Quiz Mode</h3>
+                <Badge 
+                  variant={selectedMode === "quiz" ? "default" : "secondary"}
+                  className={selectedMode === "quiz" ? "bg-secondary text-white border-0" : ""}
+                >
                   Graded Assessment
                 </Badge>
               </div>
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
                 Formal assessment that counts toward your mastery score for certification progress.
               </p>
-              <ul className="text-xs text-gray-500 space-y-1">
-                <li>• Fixed question count</li>
-                <li>• Updates mastery meter</li>
-                <li>• Single certification focus</li>
-                <li>• Progress tracking</li>
+              <ul className="text-xs text-foreground/60 space-y-2">
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
+                  Fixed question count
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
+                  Updates mastery meter
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
+                  Single certification focus
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
+                  Progress tracking
+                </li>
               </ul>
             </div>
           </div>
         </div>
 
         {/* Category Selection */}
-        <div className="mb-6">
-          <Label className="text-sm font-medium text-foreground mb-3 block">
+        <div className="mb-8">
+          <Label className="text-sm font-bold text-foreground mb-4 block uppercase tracking-wider">
             Select Certification{selectedMode === "quiz" ? " (Choose One)" : "s"}
           </Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {categories.map((category) => (
               <div
                 key={category.id}
-                className={`border rounded-lg p-4 cursor-pointer transition-all material-shadow-hover ${
+                className={`border-2 rounded-xl p-5 cursor-pointer transition-all duration-300 ${
                   selectedCategories.includes(category.id)
-                    ? "border-primary bg-primary bg-opacity-5"
-                    : "border-border hover:border-primary"
+                    ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-glow"
+                    : "border-border hover:border-primary/50 hover:shadow-medium bg-card"
                 }`}
                 onClick={() => handleCategoryToggle(category.id, !selectedCategories.includes(category.id))}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <i className={`${category.icon} text-primary`}></i>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <i className={`${category.icon} text-primary text-lg`}></i>
+                    </div>
                     <div>
-                      <h3 className="font-medium text-foreground">{category.name}</h3>
-                      <p className="text-xs text-muted-foreground">{category.description}</p>
+                      <h3 className="font-semibold text-foreground">{category.name}</h3>
+                      <p className="text-xs text-foreground/60 mt-0.5">{category.description}</p>
                     </div>
                   </div>
                   <Checkbox
                     checked={selectedCategories.includes(category.id)}
-                    onChange={(checked) => handleCategoryToggle(category.id, checked)}
+                    onCheckedChange={(checked) => handleCategoryToggle(category.id, checked as boolean)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
                 </div>
               </div>
@@ -253,21 +286,22 @@ export default function LearningModeSelector() {
 
         {/* Subcategory Selection */}
         {filteredSubcategories.length > 0 && (
-          <div className="mb-6">
-            <Label className="text-sm font-medium text-foreground mb-3 block">
+          <div className="mb-8">
+            <Label className="text-sm font-bold text-foreground mb-4 block uppercase tracking-wider">
               Focus Areas (Optional)
             </Label>
-            <div className="space-y-2 max-h-48 overflow-y-auto bg-muted rounded-lg p-3">
+            <div className="space-y-2 max-h-48 overflow-y-auto bg-muted/30 rounded-xl p-4 border border-border/50">
               {filteredSubcategories.map((subcategory) => (
                 <label
                   key={subcategory.id}
-                  className="flex items-center space-x-3 cursor-pointer hover:bg-background rounded p-2 transition-colors"
+                  className="flex items-center space-x-3 cursor-pointer hover:bg-background/50 rounded-lg p-3 transition-all duration-200"
                 >
                   <Checkbox
                     checked={selectedSubcategories.includes(subcategory.id)}
                     onCheckedChange={(checked) => handleSubcategoryToggle(subcategory.id, checked as boolean)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
-                  <span className="text-sm text-foreground">{subcategory.name}</span>
+                  <span className="text-sm text-foreground/80 font-medium">{subcategory.name}</span>
                 </label>
               ))}
             </div>
@@ -275,12 +309,12 @@ export default function LearningModeSelector() {
         )}
 
         {/* Time Limit */}
-        <div className="mb-6">
-          <Label className="text-sm font-medium text-foreground mb-3 block">
+        <div className="mb-8">
+          <Label className="text-sm font-bold text-foreground mb-4 block uppercase tracking-wider">
             Time Limit (Optional)
           </Label>
           <Select value={timeLimit} onValueChange={setTimeLimit}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full border-2 hover:border-primary/50 transition-colors">
               <SelectValue placeholder="Select time limit" />
             </SelectTrigger>
             <SelectContent>
@@ -296,18 +330,24 @@ export default function LearningModeSelector() {
         </div>
 
         {/* Session Information */}
-        <div className={`mb-6 p-4 rounded-lg border ${
+        <div className={`mb-8 p-6 rounded-xl border-2 ${
           selectedMode === "study" 
-            ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200"
-            : "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
+            ? "bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20"
+            : "bg-gradient-to-br from-secondary/5 to-secondary/10 border-secondary/20"
         }`}>
-          <div className="flex items-center space-x-3 mb-3">
-            <i className={`fas ${selectedMode === "study" ? "fa-brain text-blue-600" : "fa-clipboard-check text-green-600"}`}></i>
+          <div className="flex items-center space-x-4 mb-4">
+            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+              selectedMode === "study" ? "bg-primary/20" : "bg-secondary/20"
+            }`}>
+              <i className={`fas ${selectedMode === "study" ? "fa-brain" : "fa-clipboard-check"} text-2xl ${
+                selectedMode === "study" ? "text-primary" : "text-secondary"
+              }`}></i>
+            </div>
             <div>
-              <h4 className="font-medium text-foreground">
+              <h4 className="font-bold text-foreground text-lg">
                 {selectedMode === "study" ? "Study Session" : "Quiz Assessment"}
               </h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-foreground/70">
                 {selectedMode === "study" 
                   ? "Practice with unlimited questions and immediate feedback"
                   : "Formal assessment that contributes to your mastery progress"
@@ -315,21 +355,61 @@ export default function LearningModeSelector() {
               </p>
             </div>
           </div>
-          <div className="bg-background p-3 rounded border border-border">
-            <ul className="text-sm text-foreground space-y-1">
+          <div className="bg-background/50 p-4 rounded-lg border border-border/50">
+            <ul className="text-sm space-y-2">
               {selectedMode === "study" ? (
                 <>
-                  <li><i className="fas fa-check text-green-500 mr-2"></i>Unlimited questions from selected areas</li>
-                  <li><i className="fas fa-check text-green-500 mr-2"></i>Immediate feedback with explanations</li>
-                  <li><i className="fas fa-check text-green-500 mr-2"></i>Adaptive difficulty based on performance</li>
-                  <li><i className="fas fa-check text-green-500 mr-2"></i>No impact on certification mastery scores</li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-check text-primary text-xs"></i>
+                    </span>
+                    <span className="text-foreground/80">Unlimited questions from selected areas</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-check text-primary text-xs"></i>
+                    </span>
+                    <span className="text-foreground/80">Immediate feedback with explanations</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-check text-primary text-xs"></i>
+                    </span>
+                    <span className="text-foreground/80">Adaptive difficulty based on performance</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-check text-primary text-xs"></i>
+                    </span>
+                    <span className="text-foreground/80">No impact on certification mastery scores</span>
+                  </li>
                 </>
               ) : (
                 <>
-                  <li><i className="fas fa-check text-green-500 mr-2"></i>Fixed assessment with 25 questions</li>
-                  <li><i className="fas fa-check text-green-500 mr-2"></i>Updates your mastery meter progress</li>
-                  <li><i className="fas fa-check text-green-500 mr-2"></i>Tracks performance per sub-area</li>
-                  <li><i className="fas fa-check text-green-500 mr-2"></i>Contributes to certification readiness</li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-check text-secondary text-xs"></i>
+                    </span>
+                    <span className="text-foreground/80">Fixed assessment with 25 questions</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-check text-secondary text-xs"></i>
+                    </span>
+                    <span className="text-foreground/80">Updates your mastery meter progress</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-check text-secondary text-xs"></i>
+                    </span>
+                    <span className="text-foreground/80">Tracks performance per sub-area</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-check text-secondary text-xs"></i>
+                    </span>
+                    <span className="text-foreground/80">Contributes to certification readiness</span>
+                  </li>
                 </>
               )}
             </ul>
@@ -340,20 +420,20 @@ export default function LearningModeSelector() {
         <Button
           onClick={handleStartSession}
           disabled={createQuizMutation.isPending || selectedCategories.length === 0}
-          className={`w-full py-3 px-6 rounded-lg font-medium transition-colors material-shadow-hover ${
+          className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 shadow-glow ${
             selectedMode === "study"
-              ? "bg-blue-600 hover:bg-blue-700 text-white"
-              : "bg-green-600 hover:bg-green-700 text-white"
-          }`}
+              ? "gradient-primary hover:opacity-90 text-white"
+              : "bg-secondary hover:bg-secondary/90 text-white"
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {createQuizMutation.isPending ? (
-            <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <div className="flex items-center justify-center space-x-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
               <span>Starting {selectedMode === "study" ? "Study" : "Quiz"} Session...</span>
             </div>
           ) : (
-            <div className="flex items-center justify-center space-x-2">
-              <i className={`fas ${selectedMode === "study" ? "fa-brain" : "fa-clipboard-check"}`}></i>
+            <div className="flex items-center justify-center space-x-3">
+              <i className={`fas ${selectedMode === "study" ? "fa-brain" : "fa-clipboard-check"} text-xl`}></i>
               <span>Start {selectedMode === "study" ? "Study" : "Quiz"} Session</span>
             </div>
           )}
