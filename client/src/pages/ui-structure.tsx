@@ -98,10 +98,10 @@ export default function UIStructurePage() {
 
   // Generate initial nodes and edges
   const { initialNodes, initialEdges } = useMemo(() => {
-    const nodeSpacing = 180; // Minimum spacing between nodes
-    const levelSpacing = 160; // Vertical spacing between levels
+    const nodeSpacing = 200; // Increased spacing between nodes
+    const levelSpacing = 180; // Increased vertical spacing between levels
     const nodeWidth = 140; // Approximate node width
-    const startY = 80; // Starting Y position
+    const startY = 100; // Starting Y position
 
     const calculateNodePositions = (nodeData: any[]) => {
       // Group nodes by level
@@ -120,7 +120,7 @@ export default function UIStructurePage() {
         const level = parseInt(levelStr);
         const levelNodes = nodesByLevel[level];
         const totalWidth = (levelNodes.length - 1) * nodeSpacing;
-        const startX = Math.max(100, (800 - totalWidth) / 2); // Center horizontally with minimum margin
+        const startX = Math.max(150, (1000 - totalWidth) / 2); // Center horizontally with more margin
         const y = startY + (level * levelSpacing);
         
         levelNodes.forEach((node, index) => {
@@ -223,6 +223,43 @@ export default function UIStructurePage() {
     setSelectedNode(node);
   }, []);
 
+  // Collision detection function
+  const checkCollision = useCallback((newPosition: { x: number; y: number }, nodeId: string, allNodes: Node<UINodeData>[]) => {
+    const nodeWidth = 160; // Node width + some padding
+    const nodeHeight = 140; // Node height + some padding  
+    const buffer = 20; // Minimum buffer between nodes
+    
+    for (const node of allNodes) {
+      if (node.id === nodeId) continue; // Skip self
+      
+      const dx = Math.abs(newPosition.x - node.position.x);
+      const dy = Math.abs(newPosition.y - node.position.y);
+      
+      // Check if nodes would overlap with buffer
+      if (dx < nodeWidth + buffer && dy < nodeHeight + buffer) {
+        return true; // Collision detected
+      }
+    }
+    return false; // No collision
+  }, []);
+
+  // Override the default onNodesChange to include collision detection
+  const handleNodesChange = useCallback((changes: any[]) => {
+    // Filter out position changes that would cause collisions
+    const validChanges = changes.filter(change => {
+      if (change.type === 'position' && change.position && change.dragging) {
+        const hasCollision = checkCollision(change.position, change.id, nodes);
+        if (hasCollision) {
+          return false; // Reject this change
+        }
+      }
+      return true; // Allow all other changes
+    });
+    
+    // Apply valid changes using the original onNodesChange
+    onNodesChange(validChanges);
+  }, [onNodesChange, nodes, checkCollision]);
+
   const filteredNodes = useMemo(() => {
     return nodes.filter(node => {
       const matchesSearch = node.data.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -309,7 +346,7 @@ export default function UIStructurePage() {
                   <ReactFlow
                     nodes={filteredNodes}
                     edges={filteredEdges}
-                    onNodesChange={onNodesChange}
+                    onNodesChange={handleNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
                     onNodeClick={onNodeClick}
@@ -317,6 +354,10 @@ export default function UIStructurePage() {
                     connectionMode={ConnectionMode.Loose}
                     fitView
                     attributionPosition="bottom-left"
+                    nodesDraggable={true}
+                    nodesConnectable={false}
+                    elementsSelectable={true}
+                    selectNodesOnDrag={false}
                   >
                     <Controls />
                     <Background color="#94a3b8" gap={20} />
