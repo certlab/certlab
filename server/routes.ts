@@ -30,10 +30,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword
       });
       
+      // Initialize user game stats and other data
+      await storage.initializeUserGameStats(user.id);
+      
       // Don't return password
       const { password, ...userResponse } = user;
       res.json(userResponse);
     } catch (error) {
+      console.error('Registration error:', error);
       res.status(400).json({ message: "Invalid user data" });
     }
   });
