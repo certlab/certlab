@@ -4,290 +4,348 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, ChevronRight, ChevronLeft, RotateCcw, Database, Router, Layout, Component, Zap, Globe, Settings } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Search, 
+  ChevronDown, 
+  ChevronRight, 
+  Home,
+  Shield,
+  Trophy,
+  Eye,
+  Settings,
+  Database,
+  BookOpen,
+  BarChart3,
+  Users,
+  FileText,
+  Layout,
+  Component
+} from "lucide-react";
 
-interface UINode {
+interface RouteHierarchy {
   id: string;
   label: string;
-  type: string;
-  level: number;
+  route: string;
+  type: 'route' | 'component' | 'provider' | 'utility';
   description: string;
-  children?: string[];
+  icon: string;
+  children?: RouteHierarchy[];
+  dependencies?: string[];
 }
 
 const UIStructurePage = () => {
-  const [currentNodeId, setCurrentNodeId] = useState<string>('app');
+  const [selectedNodeId, setSelectedNodeId] = useState<string>('dashboard');
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['dashboard', 'quiz', 'admin']));
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
 
-  // Define the complete application hierarchy
-  const applicationNodes: UINode[] = [
-    // Level 0 - Root
-    { 
-      id: 'app', 
-      label: 'SecuraCert App', 
-      type: 'app', 
-      level: 0, 
-      description: 'Root application container with React and TypeScript',
-      children: ['providers', 'router']
+  // Define the route-based UI hierarchy
+  const routeHierarchy: RouteHierarchy[] = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      route: '/dashboard',
+      type: 'route',
+      description: 'Main user dashboard with progress tracking and quick actions',
+      icon: 'Home',
+      children: [
+        {
+          id: 'dashboard-hero',
+          label: 'DashboardHero',
+          route: '/dashboard',
+          type: 'component',
+          description: 'Progress cards, AI assistant, and performance metrics',
+          icon: 'BarChart3',
+          dependencies: ['User Stats API', 'Progress Tracking', 'Achievement System']
+        },
+        {
+          id: 'activity-sidebar',
+          label: 'ActivitySidebar',
+          route: '/dashboard',
+          type: 'component', 
+          description: 'Recent quizzes, mastery scores, and quick actions',
+          icon: 'BookOpen',
+          dependencies: ['Quiz History API', 'Mastery Score API', 'Quick Actions']
+        },
+        {
+          id: 'learning-mode-selector',
+          label: 'LearningModeSelector',
+          route: '/dashboard',
+          type: 'component',
+          description: 'Certification selection and quiz configuration',
+          icon: 'Settings',
+          dependencies: ['Categories API', 'Quiz Creation API']
+        }
+      ]
     },
-    
-    // Level 1 - Main Architecture
-    { 
-      id: 'providers', 
-      label: 'Providers', 
-      type: 'provider', 
-      level: 1, 
-      description: 'Application-wide providers for state and context',
-      children: ['query-client', 'theme-provider', 'tooltip-provider']
+    {
+      id: 'quiz',
+      label: 'Quiz System',
+      route: '/quiz',
+      type: 'route',
+      description: 'Interactive learning sessions with immediate feedback',
+      icon: 'BookOpen',
+      children: [
+        {
+          id: 'quiz-interface',
+          label: 'QuizInterface',
+          route: '/quiz/:id',
+          type: 'component',
+          description: 'Question display, answer selection, and real-time feedback',
+          icon: 'FileText',
+          dependencies: ['Question API', 'Answer Submission', 'Progress Tracking']
+        },
+        {
+          id: 'quiz-results',
+          label: 'Results Page',
+          route: '/results/:id',
+          type: 'component',
+          description: 'Performance analytics, score display, and recommendations',
+          icon: 'BarChart3',
+          dependencies: ['Quiz Results API', 'Performance Analytics', 'Recommendation Engine']
+        },
+        {
+          id: 'review-answers',
+          label: 'Review Page',
+          route: '/review/:id',
+          type: 'component',
+          description: 'Detailed answer review with explanations and navigation',
+          icon: 'Eye',
+          dependencies: ['Quiz History API', 'Answer Explanations']
+        }
+      ]
     },
-    { 
-      id: 'router', 
-      label: 'Router', 
-      type: 'router', 
-      level: 1, 
-      description: 'Wouter routing system for navigation',
-      children: ['auth-check', 'routes']
+    {
+      id: 'admin',
+      label: 'Admin System',
+      route: '/admin',
+      type: 'route',
+      description: 'Multi-tenant administration and management portal',
+      icon: 'Settings',
+      children: [
+        {
+          id: 'tenant-management',
+          label: 'Tenant Management',
+          route: '/admin',
+          type: 'component',
+          description: 'Organization management with statistics and settings',
+          icon: 'Users',
+          dependencies: ['Tenant API', 'Statistics API', 'CRUD Operations']
+        },
+        {
+          id: 'question-admin',
+          label: 'Question Management',
+          route: '/admin',
+          type: 'component',
+          description: 'Question database administration and bulk operations',
+          icon: 'Database',
+          dependencies: ['Question CRUD API', 'CSV Import/Export', 'Search & Filter']
+        },
+        {
+          id: 'user-admin',
+          label: 'User Management',
+          route: '/admin',
+          type: 'component',
+          description: 'User administration and role-based access control',
+          icon: 'Shield',
+          dependencies: ['User API', 'Role Management', 'Access Control']
+        }
+      ]
     },
-    
-    // Level 2 - Providers
-    { 
-      id: 'query-client', 
-      label: 'Query Client', 
-      type: 'provider', 
-      level: 2, 
-      description: 'TanStack Query for server state management and caching',
-      children: []
-    },
-    { 
-      id: 'theme-provider', 
-      label: 'Theme Provider', 
-      type: 'provider', 
-      level: 2, 
-      description: '7 theme system with localStorage persistence',
-      children: []
-    },
-    { 
-      id: 'tooltip-provider', 
-      label: 'Tooltip Provider', 
-      type: 'provider', 
-      level: 2, 
-      description: 'Radix UI tooltips for enhanced UX',
-      children: []
-    },
-    
-    // Level 2 - Router Components
-    { 
-      id: 'auth-check', 
-      label: 'Auth Check', 
-      type: 'router', 
-      level: 2, 
-      description: 'Authentication guard for protected routes',
-      children: []
-    },
-    { 
-      id: 'routes', 
-      label: 'Protected Routes', 
-      type: 'router', 
-      level: 2, 
-      description: 'Authenticated user application routes',
-      children: ['login-page', 'dashboard', 'quiz-routes', 'admin', 'achievements', 'accessibility']
-    },
-    
-    // Level 3 - Main Pages
-    { 
-      id: 'login-page', 
-      label: 'Login Page', 
-      type: 'page', 
-      level: 3, 
-      description: 'User authentication with registration and login forms',
-      children: []
-    },
-    { 
-      id: 'dashboard', 
-      label: 'Dashboard', 
-      type: 'page', 
-      level: 3, 
-      description: 'Main dashboard with progress tracking and quick actions',
-      children: ['dashboard-hero', 'activity-sidebar', 'learning-mode-selector']
-    },
-    { 
-      id: 'quiz-routes', 
-      label: 'Quiz System', 
-      type: 'router', 
-      level: 3, 
-      description: 'Learning session pages and quiz interface',
-      children: ['quiz-page', 'results-page', 'review-page']
-    },
-    { 
-      id: 'admin', 
-      label: 'Admin Dashboard', 
-      type: 'page', 
-      level: 3, 
-      description: 'Multi-tenant administration system',
-      children: ['tenant-management', 'question-management', 'user-management']
-    },
-    { 
-      id: 'achievements', 
-      label: 'Achievements', 
-      type: 'page', 
-      level: 3, 
+    {
+      id: 'achievements',
+      label: 'Achievements',
+      route: '/achievements',
+      type: 'route',
       description: 'Gamification system with badges and progress tracking',
-      children: []
+      icon: 'Trophy',
+      children: [
+        {
+          id: 'achievement-badges',
+          label: 'AchievementBadges',
+          route: '/achievements',
+          type: 'component',
+          description: 'Badge display with progress indicators and categories',
+          icon: 'Trophy',
+          dependencies: ['Badges API', 'Progress Tracking', 'Achievement Engine']
+        },
+        {
+          id: 'level-progress',
+          label: 'LevelProgress',
+          route: '/achievements',
+          type: 'component',
+          description: 'XP tracking, level progression, and motivational display',
+          icon: 'BarChart3',
+          dependencies: ['XP System', 'Level Calculation', 'User Stats']
+        }
+      ]
     },
-    { 
-      id: 'accessibility', 
-      label: 'Accessibility', 
-      type: 'page', 
-      level: 3, 
-      description: 'WCAG compliance checker and contrast analyzer',
-      children: []
+    {
+      id: 'accessibility',
+      label: 'Accessibility',
+      route: '/accessibility',
+      type: 'route',
+      description: 'WCAG compliance tools and contrast analysis',
+      icon: 'Eye',
+      children: [
+        {
+          id: 'contrast-analyzer',
+          label: 'ContrastAnalyzer',
+          route: '/accessibility',
+          type: 'component',
+          description: 'Real-time contrast ratio analysis for theme compliance',
+          icon: 'Eye',
+          dependencies: ['Theme System', 'WCAG Guidelines', 'Color Analysis']
+        }
+      ]
     },
-    
-    // Level 4 - Dashboard Components
-    { 
-      id: 'dashboard-hero', 
-      label: 'Dashboard Hero', 
-      type: 'component', 
-      level: 4, 
-      description: 'Main dashboard cards with progress metrics and AI assistant',
-      children: []
-    },
-    { 
-      id: 'activity-sidebar', 
-      label: 'Activity Sidebar', 
-      type: 'component', 
-      level: 4, 
-      description: 'Recent activity, progress tracking, and quick actions',
-      children: []
-    },
-    { 
-      id: 'learning-mode-selector', 
-      label: 'Learning Mode Selector', 
-      type: 'component', 
-      level: 4, 
-      description: 'Certification selection and quiz configuration',
-      children: []
-    },
-    
-    // Level 4 - Quiz System
-    { 
-      id: 'quiz-page', 
-      label: 'Quiz Interface', 
-      type: 'page', 
-      level: 4, 
-      description: 'Interactive quiz interface with immediate feedback',
-      children: []
-    },
-    { 
-      id: 'results-page', 
-      label: 'Results Page', 
-      type: 'page', 
-      level: 4, 
-      description: 'Quiz results with performance analytics and recommendations',
-      children: []
-    },
-    { 
-      id: 'review-page', 
-      label: 'Review Page', 
-      type: 'page', 
-      level: 4, 
-      description: 'Detailed answer review with explanations',
-      children: []
-    },
-    
-    // Level 4 - Admin Components
-    { 
-      id: 'tenant-management', 
-      label: 'Tenant Management', 
-      type: 'component', 
-      level: 4, 
-      description: 'Multi-organization management with statistics',
-      children: []
-    },
-    { 
-      id: 'question-management', 
-      label: 'Question Management', 
-      type: 'component', 
-      level: 4, 
-      description: 'Comprehensive question database administration',
-      children: []
-    },
-    { 
-      id: 'user-management', 
-      label: 'User Management', 
-      type: 'component', 
-      level: 4, 
-      description: 'User administration and role management',
-      children: []
+    {
+      id: 'login',
+      label: 'Authentication',
+      route: '/login',
+      type: 'route',
+      description: 'User authentication and registration system',
+      icon: 'Shield',
+      children: [
+        {
+          id: 'login-form',
+          label: 'Login Form',
+          route: '/login',
+          type: 'component',
+          description: 'User authentication with validation and error handling',
+          icon: 'Shield',
+          dependencies: ['Auth API', 'Form Validation', 'Session Management']
+        }
+      ]
     }
   ];
 
-  const nodeMap = useMemo(() => {
-    return applicationNodes.reduce((map, node) => {
-      map[node.id] = node;
-      return map;
-    }, {} as Record<string, UINode>);
+  // Flatten hierarchy for easy lookup
+  const allNodes = useMemo(() => {
+    const nodes: Record<string, RouteHierarchy> = {};
+    const addNode = (node: RouteHierarchy) => {
+      nodes[node.id] = node;
+      node.children?.forEach(addNode);
+    };
+    routeHierarchy.forEach(addNode);
+    return nodes;
   }, []);
 
-  const currentNode = nodeMap[currentNodeId];
-  const parentNode = applicationNodes.find(node => node.children?.includes(currentNodeId));
-  const childNodes = currentNode?.children?.map(childId => nodeMap[childId]).filter(Boolean) || [];
+  const selectedNode = allNodes[selectedNodeId];
 
   const getNodeColor = (type: string) => {
     const colors = {
-      'app': 'bg-purple-500',
+      'route': 'bg-purple-500',
+      'component': 'bg-blue-500',
       'provider': 'bg-cyan-500',
-      'router': 'bg-emerald-500',
-      'page': 'bg-amber-500',
-      'component': 'bg-red-500',
-      'layout': 'bg-blue-500',
-      'ui-element': 'bg-lime-500',
       'utility': 'bg-gray-500',
     };
     return colors[type as keyof typeof colors] || 'bg-gray-500';
   };
 
-  const getNodeIcon = (type: string) => {
+  const getNodeIcon = (iconName: string) => {
     const icons = {
-      'app': Globe,
-      'provider': Settings,
-      'router': Router,
-      'page': Layout,
-      'component': Component,
-      'layout': Layout,
-      'ui-element': Zap,
-      'utility': Database,
+      'Home': Home,
+      'BookOpen': BookOpen,
+      'Settings': Settings,
+      'Trophy': Trophy,
+      'Eye': Eye,
+      'Shield': Shield,
+      'BarChart3': BarChart3,
+      'Database': Database,
+      'Users': Users,
+      'FileText': FileText,
+      'Component': Component,
     };
-    const IconComponent = icons[type as keyof typeof icons] || Component;
-    return <IconComponent className="w-5 h-5" />;
+    const IconComponent = icons[iconName as keyof typeof icons] || Component;
+    return <IconComponent className="w-4 h-4" />;
   };
 
-  const filteredNodes = useMemo(() => {
-    const nodesToFilter = [currentNode, ...childNodes].filter(Boolean);
-    return nodesToFilter.filter(node => {
-      const matchesSearch = node.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           node.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterType === 'all' || node.type === filterType;
-      return matchesSearch && matchesFilter;
+  const toggleNodeExpansion = (nodeId: string) => {
+    setExpandedNodes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
+      }
+      return newSet;
     });
-  }, [currentNode, childNodes, searchTerm, filterType]);
-
-  const navigateToNode = (nodeId: string) => {
-    setCurrentNodeId(nodeId);
   };
 
-  const navigateUp = () => {
-    if (parentNode) {
-      setCurrentNodeId(parentNode.id);
-    }
-  };
+  const filteredRoutes = useMemo(() => {
+    if (!searchTerm) return routeHierarchy;
+    
+    return routeHierarchy.filter(route => {
+      const matchesRoute = route.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          route.description.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesChildren = route.children?.some(child =>
+        child.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        child.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      return matchesRoute || matchesChildren;
+    });
+  }, [searchTerm]);
 
-  const resetView = () => {
-    setCurrentNodeId('app');
-    setSearchTerm("");
-    setFilterType("all");
+  // Tree navigation component
+  const TreeNode = ({ node, level = 0 }: { node: RouteHierarchy; level?: number }) => {
+    const isExpanded = expandedNodes.has(node.id);
+    const isSelected = selectedNodeId === node.id;
+    const hasChildren = node.children && node.children.length > 0;
+    
+    return (
+      <div className="space-y-1">
+        <div
+          className={`flex items-center space-x-2 p-2 rounded-md cursor-pointer transition-colors ${
+            isSelected 
+              ? 'bg-primary text-primary-foreground' 
+              : 'hover:bg-muted'
+          }`}
+          style={{ paddingLeft: `${level * 16 + 8}px` }}
+          onClick={() => setSelectedNodeId(node.id)}
+        >
+          {hasChildren && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleNodeExpansion(node.id);
+              }}
+              className="p-0.5 hover:bg-background/20 rounded"
+            >
+              {isExpanded ? (
+                <ChevronDown className="w-3 h-3" />
+              ) : (
+                <ChevronRight className="w-3 h-3" />
+              )}
+            </button>
+          )}
+          {!hasChildren && <div className="w-4" />}
+          
+          <div className={`w-6 h-6 rounded-md ${getNodeColor(node.type)} flex items-center justify-center text-white`}>
+            {getNodeIcon(node.icon)}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium truncate">{node.label}</div>
+            <div className="text-xs text-muted-foreground">{node.route}</div>
+          </div>
+          
+          <Badge variant="secondary" className="text-xs">
+            {node.type}
+          </Badge>
+        </div>
+        
+        {isExpanded && hasChildren && (
+          <div className="space-y-1">
+            {node.children!.map(child => (
+              <TreeNode key={child.id} node={child} level={level + 1} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -298,180 +356,155 @@ const UIStructurePage = () => {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">UI Structure Visualization</h1>
+            <h1 className="text-3xl font-bold tracking-tight">UI Structure Navigation</h1>
             <p className="text-muted-foreground mt-2">
-              Explore the SecuraCert application architecture. Navigate through components and understand the system structure.
+              Explore the SecuraCert application routes, components, and dependencies through an intuitive tree navigation.
             </p>
           </div>
 
-          {/* Navigation Breadcrumb */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={navigateUp}
-                  disabled={!parentNode}
-                >
-                  <ChevronLeft className="w-4 h-4 mr-2" />
-                  Up
-                </Button>
-                
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <span>Level {currentNode?.level}</span>
-                  <ChevronRight className="w-4 h-4" />
-                  <Badge variant="secondary">{currentNode?.type}</Badge>
-                  <span className="font-medium text-foreground">{currentNode?.label}</span>
-                </div>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={resetView}
-                  className="ml-auto"
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Reset
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Controls */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            <div className="lg:col-span-1">
+          {/* Main Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Navigation Tree Sidebar */}
+            <div className="lg:col-span-1 space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Controls</CardTitle>
+                  <CardTitle className="text-lg">Navigation Tree</CardTitle>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      placeholder="Search routes..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Search</label>
-                    <div className="relative mt-1">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        placeholder="Search components..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
+                <CardContent className="p-0">
+                  <ScrollArea className="h-[600px] px-4 pb-4">
+                    <div className="space-y-1">
+                      {filteredRoutes.map(route => (
+                        <TreeNode key={route.id} node={route} />
+                      ))}
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium">Filter by Type</label>
-                    <Select value={filterType} onValueChange={setFilterType}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value="app">App</SelectItem>
-                        <SelectItem value="provider">Provider</SelectItem>
-                        <SelectItem value="router">Router</SelectItem>
-                        <SelectItem value="page">Page</SelectItem>
-                        <SelectItem value="component">Component</SelectItem>
-                        <SelectItem value="layout">Layout</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="pt-4 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Currently viewing: <span className="font-medium">{currentNode?.label}</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {childNodes.length} child components
-                    </p>
-                  </div>
+                  </ScrollArea>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Main Content */}
+            {/* Details Panel */}
             <div className="lg:col-span-3">
-              <div className="space-y-6">
-                {/* Current Node */}
-                <Card className="border-2 border-primary">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-full ${getNodeColor(currentNode?.type || '')} flex items-center justify-center text-white`}>
-                        {getNodeIcon(currentNode?.type || '')}
-                      </div>
-                      <div>
-                        <div className="text-xl">{currentNode?.label}</div>
-                        <div className="text-sm text-muted-foreground font-normal">
-                          Level {currentNode?.level} • {currentNode?.type}
+              {selectedNode ? (
+                <div className="space-y-6">
+                  {/* Selected Node Details */}
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center space-x-4">
+                        <div className={`w-12 h-12 rounded-lg ${getNodeColor(selectedNode.type)} flex items-center justify-center text-white`}>
+                          {getNodeIcon(selectedNode.icon)}
+                        </div>
+                        <div className="flex-1">
+                          <CardTitle className="text-2xl">{selectedNode.label}</CardTitle>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Badge variant="outline">{selectedNode.type}</Badge>
+                            <code className="text-sm bg-muted px-2 py-1 rounded">{selectedNode.route}</code>
+                          </div>
                         </div>
                       </div>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">{currentNode?.description}</p>
-                  </CardContent>
-                </Card>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground text-lg">{selectedNode.description}</p>
+                    </CardContent>
+                  </Card>
 
-                {/* Child Nodes */}
-                {childNodes.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Child Components ({childNodes.length})</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {filteredNodes.slice(1).map((node) => (
-                        <Card 
-                          key={node.id} 
-                          className="cursor-pointer hover:shadow-md transition-shadow"
-                          onClick={() => navigateToNode(node.id)}
-                        >
-                          <CardContent className="pt-6">
-                            <div className="flex items-start space-x-3">
-                              <div className={`w-8 h-8 rounded-full ${getNodeColor(node.type)} flex items-center justify-center text-white flex-shrink-0`}>
-                                {getNodeIcon(node.type)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium truncate">{node.label}</div>
-                                <Badge variant="secondary" className="text-xs mt-1">
-                                  {node.type}
-                                </Badge>
-                                <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                                  {node.description}
-                                </p>
-                                <div className="flex items-center justify-between mt-3">
-                                  <span className="text-xs text-muted-foreground">
-                                    Level {node.level}
-                                  </span>
-                                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  {/* Dependencies */}
+                  {selectedNode.dependencies && selectedNode.dependencies.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Dependencies</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {selectedNode.dependencies.map((dep, index) => (
+                            <div 
+                              key={index}
+                              className="flex items-center space-x-2 p-3 bg-muted rounded-lg"
+                            >
+                              <Database className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                              <span className="text-sm font-medium">{dep}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Child Components */}
+                  {selectedNode.children && selectedNode.children.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          Components ({selectedNode.children.length})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {selectedNode.children.map((child) => (
+                            <div 
+                              key={child.id}
+                              className="p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                              onClick={() => setSelectedNodeId(child.id)}
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div className={`w-8 h-8 rounded-md ${getNodeColor(child.type)} flex items-center justify-center text-white flex-shrink-0`}>
+                                  {getNodeIcon(child.icon)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium">{child.label}</div>
+                                  <div className="text-sm text-muted-foreground mt-1">{child.description}</div>
+                                  <div className="flex items-center justify-between mt-2">
+                                    <Badge variant="secondary" className="text-xs">
+                                      {child.type}
+                                    </Badge>
+                                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
-                {/* No Children Message */}
-                {childNodes.length === 0 && (
-                  <Card>
-                    <CardContent className="pt-6 text-center">
-                      <p className="text-muted-foreground">
-                        This component has no child components.
-                      </p>
-                      {parentNode && (
-                        <Button 
-                          variant="outline" 
-                          onClick={navigateUp}
-                          className="mt-4"
-                        >
-                          <ChevronLeft className="w-4 h-4 mr-2" />
-                          Back to {parentNode.label}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+                  {/* Empty State for Leaf Nodes */}
+                  {(!selectedNode.children || selectedNode.children.length === 0) && selectedNode.type === 'component' && (
+                    <Card>
+                      <CardContent className="pt-6 text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                          <Component className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-medium mb-2">Component Details</h3>
+                        <p className="text-muted-foreground">
+                          This is a leaf component with no child components. 
+                          Check the dependencies above to understand its integrations.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="pt-6 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                      <Layout className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-2">Select a Route</h3>
+                    <p className="text-muted-foreground">
+                      Choose a route from the navigation tree to explore its components and dependencies.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>

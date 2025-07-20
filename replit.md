@@ -170,12 +170,13 @@ Core entities include:
     - Smooth curved connectors with arrow markers and proper edge handling
     - Built-in pan, zoom, and drag-and-drop interactions
     - Performance optimized with virtualization for large datasets
-  - ✅ **Simplified Hierarchical Navigation**: Clean parent-child node navigation without complex backgrounds
-    - Level-based navigation showing current node and immediate children
-    - Interactive breadcrumb navigation with up/down traversal
-    - Card-based layout with clear visual hierarchy and node relationships
-    - Search and filter functionality for focused component exploration
-    - Clickable child nodes for seamless navigation through application structure
+  - ✅ **Tree-Based Route Navigation**: Intuitive UI hierarchy explorer focused on routes, components, and dependencies
+    - Interactive tree navigation with expand/collapse functionality for routes and child components
+    - Route-focused architecture showing Dashboard, Quiz System, Admin System, Achievements, Accessibility, and Authentication
+    - Component dependency tracking with API endpoints, service integrations, and data flow visualization
+    - Search functionality across routes and components with real-time filtering
+    - Detailed component cards showing descriptions, dependencies, and navigation paths
+    - Clean sidebar + details panel layout for easy exploration of application structure
 
 ### Recent Changes (July 20, 2025)
 - **Scalable Navigation System**: Redesigned top navigation for improved organization and future feature growth
