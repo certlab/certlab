@@ -177,6 +177,13 @@ Core entities include:
     - Search functionality across routes and components with real-time filtering
     - Detailed component cards showing descriptions, dependencies, and navigation paths
     - Clean sidebar + details panel layout for easy exploration of application structure
+  - ✅ **Dynamic Synchronization System**: Automated UI structure updates that keep documentation in sync with codebase changes
+    - Intelligent codebase scanning script that extracts component hierarchy, API calls, and dependencies
+    - Automatic JSON generation with route mapping, component relationships, and server endpoint discovery
+    - Development API endpoint `/api/dev/sync-ui-structure` for manual sync triggers
+    - Real-time polling in development mode to detect file changes and update structure
+    - Comprehensive component analysis including React hooks, imports, and API integrations
+    - Fallback to static data ensures UI structure page always functions regardless of sync status
 
 ### Recent Changes (July 20, 2025)
 - **Scalable Navigation System**: Redesigned top navigation for improved organization and future feature growth

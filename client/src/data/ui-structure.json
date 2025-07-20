@@ -1,0 +1,851 @@
+{
+  "lastUpdated": "2025-07-20T17:44:24.636Z",
+  "generatedBy": "UIStructureSync",
+  "routes": [
+    {
+      "id": "dashboard",
+      "label": "Dashboard",
+      "route": "/dashboard",
+      "type": "route",
+      "description": "Main user dashboard with progress tracking and quick actions",
+      "icon": "Home",
+      "children": [
+        {
+          "id": "ashboard",
+          "label": "dashboard",
+          "route": "/dashboard",
+          "type": "component",
+          "description": "dashboard component with 0 API integrations",
+          "icon": "Component",
+          "dependencies": [
+            "React Components",
+            "UI Libraries"
+          ],
+          "file": "pages/dashboard.tsx",
+          "hooks": [],
+          "apiCalls": []
+        },
+        {
+          "id": "ctivitysidebar",
+          "label": "ActivitySidebar",
+          "route": "/dashboard",
+          "type": "component",
+          "description": "Recent quizzes, mastery scores, and quick actions",
+          "icon": "BookOpen",
+          "dependencies": [
+            "useToast",
+            "useMutation"
+          ],
+          "file": "components/ActivitySidebar.tsx",
+          "hooks": [
+            "useToast",
+            "useMutation"
+          ],
+          "apiCalls": []
+        },
+        {
+          "id": "ashboardhero",
+          "label": "DashboardHero",
+          "route": "/dashboard",
+          "type": "component",
+          "description": "Progress cards, AI assistant, and performance metrics",
+          "icon": "BarChart3",
+          "dependencies": [
+            "useToast",
+            "useMutation"
+          ],
+          "file": "components/DashboardHero.tsx",
+          "hooks": [
+            "useLocation",
+            "useToast",
+            "useState",
+            "useMutation"
+          ],
+          "apiCalls": []
+        },
+        {
+          "id": "earningmodeselector",
+          "label": "LearningModeSelector",
+          "route": "/dashboard",
+          "type": "component",
+          "description": "Certification selection and quiz configuration",
+          "icon": "Settings",
+          "dependencies": [
+            "useToast",
+            "useMutation"
+          ],
+          "file": "components/LearningModeSelector.tsx",
+          "hooks": [
+            "useLocation",
+            "useToast",
+            "useState",
+            "useMutation"
+          ],
+          "apiCalls": []
+        }
+      ],
+      "serverEndpoints": [
+        {
+          "method": "GET",
+          "path": "/tenants/:tenantId/users"
+        },
+        {
+          "method": "GET",
+          "path": "/tenants/:tenantId/stats"
+        }
+      ]
+    },
+    {
+      "id": "quiz",
+      "label": "Quiz System",
+      "route": "/quiz",
+      "type": "route",
+      "description": "Interactive learning sessions with immediate feedback",
+      "icon": "BookOpen",
+      "children": [
+        {
+          "id": "uiz",
+          "label": "quiz",
+          "route": "/quiz/:id",
+          "type": "component",
+          "description": "quiz component with 0 API integrations",
+          "icon": "Component",
+          "dependencies": [
+            "React Components",
+            "UI Libraries"
+          ],
+          "file": "pages/quiz.tsx",
+          "hooks": [
+            "useRoute"
+          ],
+          "apiCalls": []
+        },
+        {
+          "id": "uizcreator",
+          "label": "QuizCreator",
+          "route": "/quiz/:id",
+          "type": "component",
+          "description": "QuizCreator component with 0 API integrations",
+          "icon": "FileText",
+          "dependencies": [
+            "useToast",
+            "useMutation"
+          ],
+          "file": "components/QuizCreator.tsx",
+          "hooks": [
+            "useLocation",
+            "useToast",
+            "useState",
+            "useMutation"
+          ],
+          "apiCalls": []
+        },
+        {
+          "id": "uizinterface",
+          "label": "QuizInterface",
+          "route": "/quiz/:id",
+          "type": "component",
+          "description": "Question display, answer selection, and real-time feedback",
+          "icon": "FileText",
+          "dependencies": [
+            "useToast",
+            "useMutation"
+          ],
+          "file": "components/QuizInterface.tsx",
+          "hooks": [
+            "useLocation",
+            "useToast",
+            "useState",
+            "useMutation",
+            "useEffect"
+          ],
+          "apiCalls": []
+        }
+      ],
+      "serverEndpoints": [
+        {
+          "method": "GET",
+          "path": "/tenants/:tenantId/questions"
+        },
+        {
+          "method": "POST",
+          "path": "/tenants/:tenantId/questions"
+        },
+        {
+          "method": "PUT",
+          "path": "/questions/:id"
+        },
+        {
+          "method": "DELETE",
+          "path": "/questions/:id"
+        }
+      ]
+    },
+    {
+      "id": "admin",
+      "label": "Admin System",
+      "route": "/admin",
+      "type": "route",
+      "description": "Multi-tenant administration and management portal",
+      "icon": "Settings",
+      "children": [
+        {
+          "id": "dmin",
+          "label": "admin",
+          "route": "/admin",
+          "type": "component",
+          "description": "admin component with 0 API integrations",
+          "icon": "Component",
+          "dependencies": [
+            "useMutation",
+            "useToast"
+          ],
+          "file": "pages/admin.tsx",
+          "hooks": [
+            "useMutation",
+            "useLocation",
+            "useState",
+            "useToast",
+            "useQueryClient"
+          ],
+          "apiCalls": []
+        }
+      ],
+      "serverEndpoints": []
+    },
+    {
+      "id": "achievements",
+      "label": "Achievements",
+      "route": "/achievements",
+      "type": "route",
+      "description": "Gamification system with badges and progress tracking",
+      "icon": "Trophy",
+      "children": [
+        {
+          "id": "chievements",
+          "label": "achievements",
+          "route": "/achievement",
+          "type": "component",
+          "description": "achievements component with 0 API integrations",
+          "icon": "Component",
+          "dependencies": [
+            "React Components",
+            "UI Libraries"
+          ],
+          "file": "pages/achievements.tsx",
+          "hooks": [],
+          "apiCalls": []
+        },
+        {
+          "id": "chievementbadges",
+          "label": "AchievementBadges",
+          "route": "/achievement",
+          "type": "component",
+          "description": "Badge display with progress indicators and categories",
+          "icon": "Trophy",
+          "dependencies": [
+            "React Components",
+            "UI Libraries"
+          ],
+          "file": "components/AchievementBadges.tsx",
+          "hooks": [],
+          "apiCalls": []
+        },
+        {
+          "id": "chievementnotification",
+          "label": "AchievementNotification",
+          "route": "/achievement",
+          "type": "component",
+          "description": "AchievementNotification component with 0 API integrations",
+          "icon": "Trophy",
+          "dependencies": [
+            "React Components",
+            "UI Libraries"
+          ],
+          "file": "components/AchievementNotification.tsx",
+          "hooks": [
+            "useState",
+            "useEffect"
+          ],
+          "apiCalls": []
+        },
+        {
+          "id": "chievementprogress",
+          "label": "AchievementProgress",
+          "route": "/achievement",
+          "type": "component",
+          "description": "AchievementProgress component with 0 API integrations",
+          "icon": "Trophy",
+          "dependencies": [
+            "React Components",
+            "UI Libraries"
+          ],
+          "file": "components/AchievementProgress.tsx",
+          "hooks": [],
+          "apiCalls": []
+        },
+        {
+          "id": "evelprogress",
+          "label": "LevelProgress",
+          "route": "/achievement",
+          "type": "component",
+          "description": "XP tracking, level progression, and motivational display",
+          "icon": "BarChart3",
+          "dependencies": [
+            "React Components",
+            "UI Libraries"
+          ],
+          "file": "components/LevelProgress.tsx",
+          "hooks": [],
+          "apiCalls": []
+        }
+      ],
+      "serverEndpoints": []
+    },
+    {
+      "id": "accessibility",
+      "label": "Accessibility",
+      "route": "/accessibility",
+      "type": "route",
+      "description": "WCAG compliance tools and contrast analysis",
+      "icon": "Eye",
+      "children": [
+        {
+          "id": "ccessibility",
+          "label": "accessibility",
+          "route": "/accessibility",
+          "type": "component",
+          "description": "accessibility component with 0 API integrations",
+          "icon": "Component",
+          "dependencies": [
+            "React Components",
+            "UI Libraries"
+          ],
+          "file": "pages/accessibility.tsx",
+          "hooks": [],
+          "apiCalls": []
+        }
+      ],
+      "serverEndpoints": []
+    },
+    {
+      "id": "login",
+      "label": "Authentication",
+      "route": "/login",
+      "type": "route",
+      "description": "User authentication and registration system",
+      "icon": "Shield",
+      "children": [
+        {
+          "id": "ogin",
+          "label": "login",
+          "route": "/login",
+          "type": "component",
+          "description": "login component with 0 API integrations",
+          "icon": "Component",
+          "dependencies": [
+            "useToast",
+            "useMutation"
+          ],
+          "file": "pages/login.tsx",
+          "hooks": [
+            "useState",
+            "useToast",
+            "useMutation"
+          ],
+          "apiCalls": []
+        }
+      ],
+      "serverEndpoints": []
+    }
+  ],
+  "allComponents": [
+    {
+      "name": "accessibility",
+      "type": "page",
+      "file": "pages/accessibility.tsx",
+      "imports": [
+        "@/components/Header",
+        "@/components/ContrastAnalyzer"
+      ],
+      "apiCalls": [],
+      "hooks": []
+    },
+    {
+      "name": "achievements",
+      "type": "page",
+      "file": "pages/achievements.tsx",
+      "imports": [
+        "@/components/AchievementBadges",
+        "@/components/AchievementProgress",
+        "@/components/ui/card",
+        "@/components/ui/tabs",
+        "@/lib/localStorage",
+        "@/components/Header"
+      ],
+      "apiCalls": [],
+      "hooks": []
+    },
+    {
+      "name": "admin",
+      "type": "page",
+      "file": "pages/admin.tsx",
+      "imports": [
+        "@/lib/queryClient",
+        "@/components/ui/card",
+        "@/components/ui/button",
+        "@/components/ui/input",
+        "@/components/ui/label",
+        "@/components/ui/badge",
+        "@/components/ui/tabs",
+        "@/components/ui/dialog",
+        "@/components/ui/table",
+        "@/hooks/use-toast",
+        "@/components/ui/textarea"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useMutation",
+        "useLocation",
+        "useState",
+        "useToast",
+        "useQueryClient"
+      ]
+    },
+    {
+      "name": "dashboard",
+      "type": "page",
+      "file": "pages/dashboard.tsx",
+      "imports": [
+        "@/components/Header",
+        "@/components/DashboardHero",
+        "@/components/LearningModeSelector",
+        "@/components/ActivitySidebar",
+        "@/components/MasteryMeter"
+      ],
+      "apiCalls": [],
+      "hooks": []
+    },
+    {
+      "name": "lecture",
+      "type": "page",
+      "file": "pages/lecture.tsx",
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/button"
+      ],
+      "apiCalls": [
+        {
+          "type": "fetch",
+          "endpoint": "/api/lecture/${id}"
+        },
+        {
+          "type": "useQuery",
+          "endpoint": "/api/lecture"
+        }
+      ],
+      "hooks": [
+        "useQuery"
+      ]
+    },
+    {
+      "name": "login",
+      "type": "page",
+      "file": "pages/login.tsx",
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/button",
+        "@/components/ui/input",
+        "@/components/ui/label",
+        "@/components/ui/tabs",
+        "@/lib/localStorage",
+        "@/lib/queryClient",
+        "@/hooks/use-toast"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useState",
+        "useToast",
+        "useMutation"
+      ]
+    },
+    {
+      "name": "not-found",
+      "type": "page",
+      "file": "pages/not-found.tsx",
+      "imports": [
+        "@/components/ui/card"
+      ],
+      "apiCalls": [],
+      "hooks": []
+    },
+    {
+      "name": "quiz",
+      "type": "page",
+      "file": "pages/quiz.tsx",
+      "imports": [
+        "@/components/Header",
+        "@/components/QuizInterface"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useRoute"
+      ]
+    },
+    {
+      "name": "results",
+      "type": "page",
+      "file": "pages/results.tsx",
+      "imports": [
+        "@/components/Header",
+        "@/components/ui/card",
+        "@/components/ui/button",
+        "@/components/ui/progress",
+        "@/lib/questions"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useRoute",
+        "useLocation"
+      ]
+    },
+    {
+      "name": "review",
+      "type": "page",
+      "file": "pages/review.tsx",
+      "imports": [
+        "@/components/Header",
+        "@/components/ui/card",
+        "@/components/ui/button",
+        "@/components/ui/badge",
+        "@/components/ui/progress"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useRoute",
+        "useLocation",
+        "useState"
+      ]
+    },
+    {
+      "name": "ui-structure",
+      "type": "page",
+      "file": "pages/ui-structure.tsx",
+      "imports": [
+        "@/components/Header",
+        "@/components/ui/card",
+        "@/components/ui/button",
+        "@/components/ui/badge",
+        "@/components/ui/input",
+        "@/components/ui/scroll-area",
+        "@/hooks/useUIStructure",
+        "@/hooks/useDevUISync"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useState",
+        "useUIStructure",
+        "useDevUISync",
+        "useMemo"
+      ]
+    },
+    {
+      "name": "AchievementBadges",
+      "type": "component",
+      "file": "components/AchievementBadges.tsx",
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/badge",
+        "@/components/LevelProgress"
+      ],
+      "apiCalls": [],
+      "hooks": []
+    },
+    {
+      "name": "AchievementNotification",
+      "type": "component",
+      "file": "components/AchievementNotification.tsx",
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/badge",
+        "@/components/ui/button"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useState",
+        "useEffect"
+      ]
+    },
+    {
+      "name": "AchievementProgress",
+      "type": "component",
+      "file": "components/AchievementProgress.tsx",
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/progress",
+        "@/components/ui/badge",
+        "@/lib/localStorage"
+      ],
+      "apiCalls": [],
+      "hooks": []
+    },
+    {
+      "name": "ActivitySidebar",
+      "type": "component",
+      "file": "components/ActivitySidebar.tsx",
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/button",
+        "@/lib/localStorage",
+        "@/lib/questions",
+        "@/lib/queryClient",
+        "@/hooks/use-toast"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useToast",
+        "useMutation"
+      ]
+    },
+    {
+      "name": "ContrastAnalyzer",
+      "type": "component",
+      "file": "components/ContrastAnalyzer.tsx",
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/button",
+        "@/components/ui/badge",
+        "@/components/ui/separator",
+        "@/lib/theme-provider"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useTheme",
+        "useEffect"
+      ]
+    },
+    {
+      "name": "DashboardHero",
+      "type": "component",
+      "file": "components/DashboardHero.tsx",
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/button",
+        "@/components/ui/badge",
+        "@/lib/localStorage",
+        "@/lib/queryClient",
+        "@/hooks/use-toast"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useLocation",
+        "useToast",
+        "useState",
+        "useMutation"
+      ]
+    },
+    {
+      "name": "Header",
+      "type": "component",
+      "file": "components/Header.tsx",
+      "imports": [
+        "@/lib/localStorage",
+        "@/components/ui/button",
+        "@/lib/queryClient",
+        "@/hooks/use-toast",
+        "@/components/ThemeToggle",
+        "@/components/ui/badge"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useLocation",
+        "useToast",
+        "useState",
+        "useMutation"
+      ]
+    },
+    {
+      "name": "LearningModeSelector",
+      "type": "component",
+      "file": "components/LearningModeSelector.tsx",
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/button",
+        "@/components/ui/checkbox",
+        "@/components/ui/select",
+        "@/components/ui/label",
+        "@/components/ui/badge",
+        "@/lib/localStorage",
+        "@/lib/queryClient",
+        "@/hooks/use-toast"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useLocation",
+        "useToast",
+        "useState",
+        "useMutation"
+      ]
+    },
+    {
+      "name": "LevelProgress",
+      "type": "component",
+      "file": "components/LevelProgress.tsx",
+      "imports": [
+        "@/components/ui/progress",
+        "@/components/ui/card",
+        "@/components/ui/badge"
+      ],
+      "apiCalls": [],
+      "hooks": []
+    },
+    {
+      "name": "MasteryMeter",
+      "type": "component",
+      "file": "components/MasteryMeter.tsx",
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/progress",
+        "@/components/ui/badge",
+        "@/components/ui/button",
+        "@/components/ui/tabs",
+        "@/components/ui/collapsible",
+        "@/lib/localStorage"
+      ],
+      "apiCalls": [],
+      "hooks": []
+    },
+    {
+      "name": "QuizCreator",
+      "type": "component",
+      "file": "components/QuizCreator.tsx",
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/button",
+        "@/components/ui/checkbox",
+        "@/components/ui/select",
+        "@/components/ui/label",
+        "@/lib/localStorage",
+        "@/lib/queryClient",
+        "@/hooks/use-toast"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useLocation",
+        "useToast",
+        "useState",
+        "useMutation"
+      ]
+    },
+    {
+      "name": "QuizInterface",
+      "type": "component",
+      "file": "components/QuizInterface.tsx",
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/button",
+        "@/components/ui/radio-group",
+        "@/components/ui/label",
+        "@/components/ui/progress",
+        "@/lib/queryClient",
+        "@/lib/questions",
+        "@/hooks/use-toast"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useLocation",
+        "useToast",
+        "useState",
+        "useMutation",
+        "useEffect"
+      ]
+    },
+    {
+      "name": "ThemeToggle",
+      "type": "component",
+      "file": "components/ThemeToggle.tsx",
+      "imports": [
+        "@/components/ui/button",
+        "@/lib/theme-provider"
+      ],
+      "apiCalls": [],
+      "hooks": [
+        "useTheme"
+      ]
+    }
+  ],
+  "serverRoutes": [
+    {
+      "method": "GET",
+      "path": "/tenants"
+    },
+    {
+      "method": "POST",
+      "path": "/tenants"
+    },
+    {
+      "method": "PUT",
+      "path": "/tenants/:id"
+    },
+    {
+      "method": "DELETE",
+      "path": "/tenants/:id"
+    },
+    {
+      "method": "GET",
+      "path": "/tenants/:tenantId/categories"
+    },
+    {
+      "method": "POST",
+      "path": "/tenants/:tenantId/categories"
+    },
+    {
+      "method": "PUT",
+      "path": "/categories/:id"
+    },
+    {
+      "method": "DELETE",
+      "path": "/categories/:id"
+    },
+    {
+      "method": "GET",
+      "path": "/categories/:categoryId/subcategories"
+    },
+    {
+      "method": "POST",
+      "path": "/categories/:categoryId/subcategories"
+    },
+    {
+      "method": "PUT",
+      "path": "/subcategories/:id"
+    },
+    {
+      "method": "DELETE",
+      "path": "/subcategories/:id"
+    },
+    {
+      "method": "GET",
+      "path": "/tenants/:tenantId/questions"
+    },
+    {
+      "method": "POST",
+      "path": "/tenants/:tenantId/questions"
+    },
+    {
+      "method": "PUT",
+      "path": "/questions/:id"
+    },
+    {
+      "method": "DELETE",
+      "path": "/questions/:id"
+    },
+    {
+      "method": "GET",
+      "path": "/tenants/:tenantId/users"
+    },
+    {
+      "method": "GET",
+      "path": "/tenants/:tenantId/stats"
+    }
+  ]
+}

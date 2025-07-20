@@ -691,6 +691,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Development endpoint to sync UI structure
+  if (process.env.NODE_ENV === 'development') {
+    app.post('/api/dev/sync-ui-structure', async (req, res) => {
+      try {
+        const { execSync } = await import('child_process');
+        execSync('node scripts/sync_ui_structure.js', { cwd: process.cwd() });
+        res.json({ success: true, message: 'UI structure synced' });
+      } catch (error: any) {
+        console.error('UI sync error:', error);
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+  }
+
   // Mount admin routes
   app.use("/api/admin", adminRoutes);
 

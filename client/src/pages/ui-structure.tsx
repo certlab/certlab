@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useUIStructure } from "@/hooks/useUIStructure";
+import { useDevUISync } from "@/hooks/useDevUISync";
 import { 
   Search, 
   ChevronDown, 
@@ -20,7 +22,9 @@ import {
   Users,
   FileText,
   Layout,
-  Component
+  Component,
+  RefreshCw,
+  Clock
 } from "lucide-react";
 
 interface RouteHierarchy {
@@ -38,9 +42,15 @@ const UIStructurePage = () => {
   const [selectedNodeId, setSelectedNodeId] = useState<string>('dashboard');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['dashboard', 'quiz', 'admin']));
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Define the route-based UI hierarchy
-  const routeHierarchy: RouteHierarchy[] = [
+  
+  // Load dynamic UI structure data
+  const { structureData, loading, error } = useUIStructure();
+  
+  // Enable automatic syncing in development
+  useDevUISync();
+  
+  // Use dynamic data or fallback to static
+  const routeHierarchy: RouteHierarchy[] = structureData?.routes || [
     {
       id: 'dashboard',
       label: 'Dashboard',
@@ -355,12 +365,36 @@ const UIStructurePage = () => {
       <main className="container mx-auto py-8 px-4">
         <div className="space-y-6">
           {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">UI Structure Navigation</h1>
-            <p className="text-muted-foreground mt-2">
-              Explore the SecuraCert application routes, components, and dependencies through an intuitive tree navigation.
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">UI Structure Navigation</h1>
+              <p className="text-muted-foreground mt-2">
+                Explore the SecuraCert application routes, components, and dependencies through an intuitive tree navigation.
+              </p>
+            </div>
+            
+            {structureData && (
+              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-4 h-4" />
+                  <span>Last updated: {new Date(structureData.lastUpdated).toLocaleString()}</span>
+                </div>
+                <Badge variant="outline" className="flex items-center space-x-1">
+                  <RefreshCw className="w-3 h-3" />
+                  <span>{structureData.generatedBy}</span>
+                </Badge>
+              </div>
+            )}
           </div>
+
+          {loading && (
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <RefreshCw className="w-8 h-8 mx-auto animate-spin text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">Loading UI structure...</p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Main Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
