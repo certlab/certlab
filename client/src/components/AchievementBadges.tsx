@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge, Trophy, Star, Target, Flame, BookOpen, Award, RotateCcw, Medal } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge as BadgeUI } from "@/components/ui/badge";
+import { LevelProgress } from "@/components/LevelProgress";
 
 interface BadgeData {
   id: number;
@@ -130,66 +131,15 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
 
   return (
     <div className="space-y-6">
-      {/* Gamification Stats Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Medal className="w-5 h-5" />
-            Learning Progress
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {gameStats.level}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Level</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {gameStats.totalPoints}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Points</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                {gameStats.currentStreak}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Current Streak</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {gameStats.longestStreak}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Best Streak</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {gameStats.totalBadgesEarned}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Badges</div>
-            </div>
-          </div>
-          
-          {/* Level Progress Bar */}
-          <div className="mt-4">
-            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-              <span>Level {gameStats.level}</span>
-              <span>Level {gameStats.level + 1}</span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div 
-                className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${currentLevelProgress}%` }}
-              ></div>
-            </div>
-            <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {Math.round(currentLevelProgress)}% to next level
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Level Progress Component */}
+      <LevelProgress
+        level={gameStats.level || 1}
+        totalPoints={gameStats.totalPoints || 0}
+        nextLevelPoints={gameStats.nextLevelPoints || 100}
+        currentStreak={gameStats.currentStreak || 0}
+        longestStreak={gameStats.longestStreak || 0}
+        totalBadgesEarned={gameStats.totalBadgesEarned || 0}
+      />
 
       {/* Achievement Badges */}
       {Object.keys(badgesByCategory).length === 0 ? (

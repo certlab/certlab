@@ -91,6 +91,21 @@ export interface IStorage {
   updateSubcategory(id: number, updates: Partial<InsertSubcategory>): Promise<Subcategory>;
   deleteSubcategory(id: number): Promise<void>;
   createQuestion(question: InsertQuestion): Promise<Question>;
+  updateQuestion(id: number, updates: Partial<InsertQuestion>): Promise<Question>;
+  deleteQuestion(id: number): Promise<void>;
+  getQuestionsByTenant(tenantId: number): Promise<Question[]>;
+  
+  // Achievement system methods
+  initializeUserGameStats(userId: number): Promise<UserGameStats>;
+  getUserGameStats(userId: number): Promise<UserGameStats | undefined>;
+  updateUserGameStats(userId: number, updates: Partial<UserGameStats>): Promise<UserGameStats>;
+  getUserBadges(userId: number): Promise<UserBadge[]>;
+  awardBadge(userId: number, badgeId: number, progress?: number): Promise<UserBadge>;
+  getBadge(badgeId: number): Promise<Badge | undefined>;
+  getAllBadges(): Promise<Badge[]>;
+  checkAndAwardAchievements(userId: number): Promise<UserBadge[]>;
+  updateUserBadgeNotification(userId: number, badgeId: number, isNotified: boolean): Promise<void>;
+  updateUserActivity(userId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2434,6 +2449,31 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
           }
         }
 
+        // Calculate quiz score and award points
+        const totalQuestions = quizQuestions.length;
+        const correctAnswers = (updates.answers as any[]).filter(a => a.correct === true).length;
+        const scorePercentage = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+        
+        // Award points based on performance
+        let pointsEarned = 10; // Base points for completion
+        if (scorePercentage >= 80) pointsEarned += 15; // Excellence bonus
+        else if (scorePercentage >= 60) pointsEarned += 10; // Good performance bonus
+        else if (scorePercentage >= 40) pointsEarned += 5; // Effort bonus
+        
+        // Update game stats with points
+        const currentStats = await this.getUserGameStats(quiz.userId);
+        if (currentStats) {
+          const newTotalPoints = (currentStats.totalPoints || 0) + pointsEarned;
+          const newLevel = this.calculateLevel(newTotalPoints);
+          const nextLevelPoints = this.calculatePointsForLevel(newLevel + 1);
+          
+          await this.updateUserGameStats(quiz.userId, {
+            totalPoints: newTotalPoints,
+            level: newLevel,
+            nextLevelPoints: nextLevelPoints
+          });
+        }
+        
         // Check for new achievements after quiz completion
         await this.checkAndAwardAchievements(quiz.userId);
         
@@ -2462,17 +2502,17 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
       const daysDiff = Math.floor((today.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
       if (daysDiff === 1) {
         // Consecutive day - increment streak
-        newCurrentStreak = gameStats.currentStreak + 1;
+        newCurrentStreak = (gameStats.currentStreak || 0) + 1;
       } else if (daysDiff === 0) {
         // Same day - keep current streak
-        newCurrentStreak = gameStats.currentStreak;
+        newCurrentStreak = gameStats.currentStreak || 0;
       }
       // daysDiff > 1 means streak is broken, reset to 1
     }
 
     await this.updateUserGameStats(userId, {
       currentStreak: newCurrentStreak,
-      longestStreak: Math.max(gameStats.longestStreak, newCurrentStreak),
+      longestStreak: Math.max(gameStats.longestStreak || 0, newCurrentStreak),
       lastActivityDate: today
     });
   }
@@ -2549,9 +2589,17 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     const currentStats = await this.getUserGameStats(userId);
     if (currentStats) {
       const badge = await this.getBadge(badgeId);
+      const newTotalPoints = (currentStats.totalPoints || 0) + (badge?.points || 10);
+      
+      // Calculate new level based on points
+      const newLevel = this.calculateLevel(newTotalPoints);
+      const nextLevelPoints = this.calculatePointsForLevel(newLevel + 1);
+      
       await this.updateUserGameStats(userId, {
-        totalPoints: currentStats.totalPoints + (badge?.points || 10),
-        totalBadgesEarned: currentStats.totalBadgesEarned + 1
+        totalPoints: newTotalPoints,
+        totalBadgesEarned: (currentStats.totalBadgesEarned || 0) + 1,
+        level: newLevel,
+        nextLevelPoints: nextLevelPoints
       });
     }
     
@@ -2944,6 +2992,54 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
 
   async deleteSubcategory(id: number): Promise<void> {
     await db.delete(subcategories).where(eq(subcategories.id, id));
+  }
+
+  async createQuestion(question: InsertQuestion): Promise<Question> {
+    const result = await db.insert(questions).values(question).returning();
+    return result[0];
+  }
+
+  async updateQuestion(id: number, updates: Partial<InsertQuestion>): Promise<Question> {
+    const result = await db.update(questions).set(updates).where(eq(questions.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteQuestion(id: number): Promise<void> {
+    await db.delete(questions).where(eq(questions.id, id));
+  }
+
+  async getQuestionsByTenant(tenantId: number): Promise<Question[]> {
+    return await db.select().from(questions).where(eq(questions.tenantId, tenantId));
+  }
+
+  // Helper methods for level calculation
+  private calculateLevel(totalPoints: number): number {
+    // Progressive level system: each level requires more points
+    // Level 1: 0-99 points
+    // Level 2: 100-299 points 
+    // Level 3: 300-599 points
+    // And so on with increasing requirements
+    
+    let level = 1;
+    let pointsRequired = 100;
+    let totalRequired = 0;
+    
+    while (totalPoints >= totalRequired + pointsRequired) {
+      totalRequired += pointsRequired;
+      level++;
+      pointsRequired = level * 100; // Each level requires level * 100 more points
+    }
+    
+    return level;
+  }
+
+  private calculatePointsForLevel(level: number): number {
+    // Calculate total points needed to reach a specific level
+    let totalPoints = 0;
+    for (let i = 1; i < level; i++) {
+      totalPoints += i * 100;
+    }
+    return totalPoints;
   }
 }
 

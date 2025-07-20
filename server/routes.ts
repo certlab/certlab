@@ -583,6 +583,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/user/:userId/badges/:badgeId/notify', async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const badgeId = parseInt(req.params.badgeId);
+      
+      await storage.updateUserBadgeNotification(userId, badgeId, true);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error updating badge notification:', error);
+      res.status(500).json({ error: 'Failed to update notification' });
+    }
+  });
+
+  app.get('/api/user/:userId/achievement-progress', async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Get all badges and user's earned badges
+      const allBadges = await storage.getAllBadges();
+      const userBadges = await storage.getUserBadges(userId);
+      const earnedBadgeIds = userBadges.map(ub => ub.badgeId);
+      
+      // Get user stats for progress calculation
+      const userStats = await storage.getUserStats(userId);
+      const userQuizzes = await storage.getUserQuizzes(userId);
+      const completedQuizzes = userQuizzes.filter(q => q.completedAt);
+      const gameStats = await storage.getUserGameStats(userId);
+      const masteryScores = await storage.getUserMasteryScores(userId);
+      
+      // Calculate progress for each badge
+      const progressData = allBadges.map(badge => {
+        const earned = earnedBadgeIds.includes(badge.id);
+        const req = badge.requirement as any;
+        let progress = 0;
+        let progressText = "";
+        
+        switch (req.type) {
+          case "quiz_completed":
+            progress = Math.min((completedQuizzes.length / req.count) * 100, 100);
+            progressText = `${completedQuizzes.length}/${req.count} quizzes completed`;
+            break;
+            
+          case "perfect_score":
+            const perfectScores = completedQuizzes.filter(q => q.score === 100);
+            progress = Math.min((perfectScores.length / req.count) * 100, 100);
+            progressText = `${perfectScores.length}/${req.count} perfect scores`;
+            break;
+            
+          case "high_score":
+            const highScores = completedQuizzes.filter(q => (q.score || 0) >= req.threshold);
+            progress = Math.min((highScores.length / req.count) * 100, 100);
+            progressText = `${highScores.length}/${req.count} scores above ${req.threshold}%`;
+            break;
+            
+          case "avg_score":
+            if (completedQuizzes.length > 0) {
+              const avgScore = completedQuizzes.reduce((sum, q) => sum + (q.score || 0), 0) / completedQuizzes.length;
+              progress = Math.min((avgScore / req.threshold) * 100, 100);
+              progressText = `Average score: ${Math.round(avgScore)}%/${req.threshold}%`;
+            }
+            break;
+            
+          case "daily_streak":
+            const currentStreak = gameStats?.currentStreak || 0;
+            progress = Math.min((currentStreak / req.count) * 100, 100);
+            progressText = `${currentStreak}/${req.count} day streak`;
+            break;
+            
+          case "mastery_score":
+            const highMastery = masteryScores.filter(m => m.rollingAverage >= req.threshold);
+            progress = highMastery.length > 0 ? 100 : 0;
+            progressText = progress === 100 ? "Achieved!" : `Need ${req.threshold}% mastery`;
+            break;
+            
+          case "multi_mastery":
+            const qualifyingAreas = masteryScores.filter(m => m.rollingAverage >= req.threshold);
+            progress = Math.min((qualifyingAreas.length / req.areas) * 100, 100);
+            progressText = `${qualifyingAreas.length}/${req.areas} areas at ${req.threshold}%+`;
+            break;
+        }
+        
+        return {
+          badge,
+          earned,
+          progress: earned ? 100 : progress,
+          progressText: earned ? "Completed!" : progressText
+        };
+      });
+      
+      res.json({
+        unlockedBadges: earnedBadgeIds,
+        progressData
+      });
+    } catch (error) {
+      console.error('Error fetching achievement progress:', error);
+      res.status(500).json({ error: 'Failed to fetch achievement progress' });
+    }
+  });
+
   // Mount admin routes
   app.use("/api/admin", adminRoutes);
 

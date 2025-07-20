@@ -1,7 +1,9 @@
 import { AchievementBadges } from "@/components/AchievementBadges";
+import { AchievementProgress } from "@/components/AchievementProgress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Target, Flame, Star, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Get current user from localStorage
 const getCurrentUser = () => {
@@ -127,45 +129,27 @@ export default function AchievementsPage() {
           </Card>
         </div>
 
-        {/* User Achievements */}
-        <AchievementBadges userId={currentUser.id} />
-
-        {/* Available Badges Guide */}
-        {allBadges && allBadges.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              📋 All Available Badges
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {allBadges.map((badge) => (
-                <Card key={badge.id} className="opacity-60 hover:opacity-80 transition-opacity">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <span className="text-xl">{badge.icon}</span>
-                      {badge.name}
-                    </CardTitle>
-                    <CardDescription className="text-sm">
-                      {badge.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="font-medium text-gray-500 dark:text-gray-400">
-                        {badge.category.toUpperCase()}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <Star className="w-3 h-3 text-yellow-500" />
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {badge.points} pts
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Achievement Tabs */}
+        <Tabs defaultValue="earned" className="space-y-8">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="earned" className="flex items-center gap-2">
+              <Trophy className="w-4 h-4" />
+              Earned Badges
+            </TabsTrigger>
+            <TabsTrigger value="progress" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              Progress
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="earned" className="space-y-8">
+            <AchievementBadges userId={currentUser.id} />
+          </TabsContent>
+          
+          <TabsContent value="progress" className="space-y-8">
+            <AchievementProgress />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
