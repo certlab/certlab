@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { localStorage } from "@/lib/localStorage";
+import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Category, Subcategory } from "@shared/schema";
@@ -17,7 +17,7 @@ type LearningMode = "study" | "quiz";
 export default function LearningModeSelector() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const currentUser = localStorage.getCurrentUser();
+  const { user: currentUser } = useAuth();
   
   const [selectedMode, setSelectedMode] = useState<LearningMode>("study");
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);

@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { AuthProvider, useAuth } from "@/lib/auth";
 import { AchievementNotification } from "@/components/AchievementNotification";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
@@ -16,12 +17,19 @@ import Achievements from "@/pages/achievements";
 import Accessibility from "@/pages/accessibility";
 import AdminDashboard from "@/pages/admin";
 import UIStructurePage from "@/pages/ui-structure";
-import { localStorage } from "@/lib/localStorage";
 
 function Router() {
-  const isLoggedIn = localStorage.isLoggedIn();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  if (!isLoggedIn) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return <Login />;
   }
 
@@ -49,20 +57,29 @@ function Router() {
   );
 }
 
-function App() {
-  const isLoggedIn = localStorage.isLoggedIn();
-  const currentUser = localStorage.getCurrentUser();
+function AppContent() {
+  const { user, isAuthenticated } = useAuth();
 
+  return (
+    <>
+      <Router />
+      {isAuthenticated && user && (
+        <AchievementNotification userId={user.id} />
+      )}
+    </>
+  );
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-          {isLoggedIn && currentUser && (
-            <AchievementNotification userId={currentUser.id} />
-          )}
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <AppContent />
+          </TooltipProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

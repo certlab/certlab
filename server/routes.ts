@@ -34,6 +34,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Initialize user game stats and other data
       await storage.initializeUserGameStats(user.id);
       
+      // Store user in session
+      (req as any).session.userId = user.id;
+      
       // Don't return password
       const { password, ...userResponse } = user;
       res.json(userResponse);
@@ -58,6 +61,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
+      // Store user in session
+      (req as any).session.userId = user.id;
+      
       // Don't return password
       const { password: _, ...userResponse } = user;
       res.json(userResponse);
@@ -66,8 +72,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user (for session validation)
+  app.get("/api/auth/me", async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      // Don't return password
+      const { password, ...userResponse } = user;
+      res.json(userResponse);
+    } catch (error) {
+      res.status(401).json({ message: "Not authenticated" });
+    }
+  });
+
   // User logout
   app.post("/api/logout", async (req, res) => {
+    (req as any).session.destroy();
     res.json({ message: "Logged out successfully" });
   });
 

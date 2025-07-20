@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { localStorage } from "@/lib/localStorage";
+import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { BookOpen, Trophy } from "lucide-react";
@@ -14,7 +14,7 @@ export default function DashboardHero() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isCreatingQuiz, setIsCreatingQuiz] = useState(false);
-  const currentUser = localStorage.getCurrentUser();
+  const { user: currentUser } = useAuth();
 
   const { data: stats } = useQuery<UserStats>({
     queryKey: ['/api/user', currentUser?.id, 'stats'],

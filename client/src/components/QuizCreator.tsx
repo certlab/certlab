@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { localStorage } from "@/lib/localStorage";
+import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Category, Subcategory } from "@shared/schema";
@@ -14,7 +14,7 @@ import type { Category, Subcategory } from "@shared/schema";
 export default function QuizCreator() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const currentUser = localStorage.getCurrentUser();
+  const { user: currentUser } = useAuth();
   
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [selectedSubcategories, setSelectedSubcategories] = useState<number[]>([]);
@@ -151,7 +151,7 @@ export default function QuizCreator() {
                   </div>
                   <Checkbox
                     checked={selectedCategories.includes(category.id)}
-                    onChange={(checked) => handleCategoryToggle(category.id, checked)}
+                    onCheckedChange={(checked) => handleCategoryToggle(category.id, checked as boolean)}
                   />
                 </div>
               </div>

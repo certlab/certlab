@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { localStorage } from "@/lib/localStorage";
+import { useAuth } from "@/lib/auth";
 import { ChevronDown, ChevronUp, Grid, List, BarChart3 } from "lucide-react";
 import type { Category, Subcategory, MasteryScore } from "@shared/schema";
 import { useState } from "react";
@@ -15,7 +15,7 @@ interface MasteryMeterProps {
 }
 
 export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) {
-  const currentUser = localStorage.getCurrentUser();
+  const { user: currentUser } = useAuth();
   const [viewMode, setViewMode] = useState<'summary' | 'grid' | 'detailed'>('summary');
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
 

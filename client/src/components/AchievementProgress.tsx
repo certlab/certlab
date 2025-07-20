@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge as BadgeUI } from "@/components/ui/badge";
 import { Trophy, Star, Target, Flame, Award, Lock, CheckCircle } from "lucide-react";
-import { localStorage } from "@/lib/localStorage";
+import { useAuth } from "@/lib/auth";
 
 interface BadgeProgress {
   badge: {
@@ -53,7 +53,7 @@ const getBadgeColor = (color: string, earned: boolean) => {
     silver: "border-gray-400 bg-gray-50 dark:bg-gray-800/20",
     rainbow: "border-gradient-to-r from-purple-500 to-blue-500 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20"
   };
-  return colors[color] || colors.blue;
+  return colors[color as keyof typeof colors] || colors.blue;
 };
 
 const getRarityColor = (rarity: string) => {
@@ -63,11 +63,11 @@ const getRarityColor = (rarity: string) => {
     rare: "bg-blue-500 text-white",
     legendary: "bg-purple-500 text-white"
   };
-  return colors[rarity] || colors.common;
+  return colors[rarity as keyof typeof colors] || colors.common;
 };
 
 export function AchievementProgress() {
-  const currentUser = localStorage.getCurrentUser();
+  const { user: currentUser } = useAuth();
   
   const { data: progressData, isLoading } = useQuery<AchievementProgressData>({
     queryKey: ["/api/user", currentUser?.id, "achievement-progress"],
@@ -115,7 +115,7 @@ export function AchievementProgress() {
             <div className="flex items-center gap-2 mb-4">
               {getCategoryIcon(category)}
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                {categoryNames[category]}
+                {categoryNames[category as keyof typeof categoryNames]}
               </h2>
               <span className="text-sm text-gray-500 dark:text-gray-400">
                 ({categoryBadges.filter(b => b.earned).length}/{categoryBadges.length})

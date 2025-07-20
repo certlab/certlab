@@ -1,8 +1,6 @@
-import { localStorage } from "@/lib/localStorage";
+import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
@@ -48,36 +46,30 @@ import {
 
 export default function Header() {
   const [location, setLocation] = useLocation();
-  const currentUser = localStorage.getCurrentUser();
+  const { user: currentUser, logout } = useAuth();
   const { toast } = useToast();
   const isAdminArea = location.startsWith('/admin');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest({
-        method: "POST",
-        endpoint: "/api/logout",
-      });
-    },
-    onSuccess: () => {
-      localStorage.clearCurrentUser();
+  const handleLogout = async () => {
+    try {
+      await logout();
       toast({
         title: "Signed out successfully",
         description: "You have been logged out of your account.",
       });
       setLocation("/");
-    },
-    onError: () => {
+    } catch (error) {
       // Even if the API call fails, we should still log out locally
-      localStorage.clearCurrentUser();
+      toast({
+        title: "Signed out",
+        description: "You have been logged out of your account.",
+      });
       setLocation("/");
     }
-  });
-
-  const handleLogout = () => {
-    logoutMutation.mutate();
   };
+
+
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -361,7 +353,6 @@ export default function Header() {
                         handleLogout();
                         setMobileMenuOpen(false);
                       }}
-                      disabled={logoutMutation.isPending}
                       className="w-full"
                     >
                       <ArrowLeft className="w-4 h-4 mr-2" />
@@ -424,7 +415,6 @@ export default function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={handleLogout}
-                    disabled={logoutMutation.isPending}
                     className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,8 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { localStorage } from "@/lib/localStorage";
-import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
@@ -28,7 +26,9 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function Login() {
   const [activeTab, setActiveTab] = useState("login");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { login, register } = useAuth();
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -47,52 +47,38 @@ export default function Login() {
     },
   });
 
-  const loginMutation = useMutation({
-    mutationFn: async (data: LoginForm) => {
-      const response = await apiRequest({ method: "POST", endpoint: "/api/login", data });
-      return response.json();
-    },
-    onSuccess: (user) => {
-      localStorage.setCurrentUser(user);
-      window.location.reload();
-    },
-    onError: () => {
+  const onLogin = async (data: LoginForm) => {
+    setIsLoading(true);
+    try {
+      await login(data.email, data.password);
+    } catch (error) {
       toast({
         title: "Login Failed",
         description: "Invalid email or password. Please try again.",
         variant: "destructive",
       });
-    },
-  });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const registerMutation = useMutation({
-    mutationFn: async (data: RegisterForm) => {
-      const response = await apiRequest({ method: "POST", endpoint: "/api/register", data });
-      return response.json();
-    },
-    onSuccess: (user) => {
-      localStorage.setCurrentUser(user);
+  const onRegister = async (data: RegisterForm) => {
+    setIsLoading(true);
+    try {
+      await register(data.username, data.email, data.password);
       toast({
         title: "Account Created",
         description: "Welcome to SecuraCert! Your account has been created successfully.",
       });
-      window.location.reload();
-    },
-    onError: () => {
+    } catch (error) {
       toast({
         title: "Registration Failed",
         description: "Failed to create account. Email may already be in use.",
         variant: "destructive",
       });
-    },
-  });
-
-  const onLogin = (data: LoginForm) => {
-    loginMutation.mutate(data);
-  };
-
-  const onRegister = (data: RegisterForm) => {
-    registerMutation.mutate(data);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -150,9 +136,9 @@ export default function Login() {
                 <Button
                   type="submit"
                   className="w-full bg-primary hover:bg-blue-700"
-                  disabled={loginMutation.isPending}
+                  disabled={isLoading}
                 >
-                  {loginMutation.isPending ? "Signing In..." : "Sign In"}
+                  {isLoading ? "Signing In..." : "Sign In"}
                 </Button>
               </form>
             </TabsContent>
@@ -204,9 +190,9 @@ export default function Login() {
                 <Button
                   type="submit"
                   className="w-full bg-primary hover:bg-blue-700"
-                  disabled={registerMutation.isPending}
+                  disabled={isLoading}
                 >
-                  {registerMutation.isPending ? "Creating Account..." : "Create Account"}
+                  {isLoading ? "Creating Account..." : "Create Account"}
                 </Button>
               </form>
             </TabsContent>

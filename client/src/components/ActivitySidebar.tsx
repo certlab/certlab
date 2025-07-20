@@ -1,14 +1,14 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { localStorage } from "@/lib/localStorage";
+import { useAuth } from "@/lib/auth";
 import { getScoreColor } from "@/lib/questions";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Quiz, Category } from "@shared/schema";
 
 export default function ActivitySidebar() {
-  const currentUser = localStorage.getCurrentUser();
+  const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
   const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
