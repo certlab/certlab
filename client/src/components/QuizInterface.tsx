@@ -101,10 +101,14 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
     setSelectedAnswer(answerValue);
     
     if (currentQuestion) {
-      setAnswers(prev => ({
-        ...prev,
+      const newAnswers = {
+        ...answers,
         [currentQuestion.id]: answerValue
-      }));
+      };
+      setAnswers(newAnswers);
+      
+      console.log('Answer selected:', { questionId: currentQuestion.id, answer: answerValue });
+      console.log('Updated answers state:', newAnswers);
 
       // Show immediate feedback
       const correct = answerValue === currentQuestion.correctAnswer;
@@ -147,6 +151,8 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
       answer: answers[question.id] || 0,
     }));
 
+    console.log('Submitting quiz answers:', quizAnswers);
+    console.log('Current answers state:', answers);
     submitQuizMutation.mutate(quizAnswers);
   };
 

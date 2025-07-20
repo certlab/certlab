@@ -194,16 +194,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quizId = parseInt(req.params.id);
       const { answers } = req.body;
       
+      console.log(`Quiz submission for quiz ${quizId}:`, { answers, answersCount: answers?.length });
+      
       const quiz = await storage.getQuiz(quizId);
       if (!quiz) {
+        console.error(`Quiz ${quizId} not found`);
         return res.status(404).json({ message: "Quiz not found" });
       }
+      
+      console.log(`Quiz found:`, { id: quiz.id, categoryIds: quiz.categoryIds, questionCount: quiz.questionCount });
       
       // Get questions to calculate score
       const questions = await storage.getQuestionsByCategories(
         quiz.categoryIds as number[],
         quiz.subcategoryIds as number[]
       );
+      
+      console.log(`Questions retrieved: ${questions.length}`);
       
       let correctAnswers = 0;
       const results = answers.map((answer: any) => {
@@ -264,9 +271,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastQuizDate: new Date()
         });
 
-        // Update adaptive learning metrics
-        if (quiz.isAdaptive) {
-          await storage.updateAdaptiveProgress(quiz.userId, categoryId, categoryResults);
+        // Update adaptive learning metrics (skip if method doesn't exist)
+        if (quiz.isAdaptive && typeof storage.updateAdaptiveProgress === 'function') {
+          try {
+            await storage.updateAdaptiveProgress(quiz.userId, categoryId, categoryResults);
+          } catch (error) {
+            console.log('Adaptive progress update not available');
+          }
         }
       }
 
@@ -290,10 +301,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         results,
         score,
         correctAnswers,
-        totalQuestions: quiz.questionCount
+        totalQuestions: quiz.questionCount,
+        passed: isPassing,
+        passingThreshold: 85
       });
     } catch (error) {
-      res.status(400).json({ message: "Failed to submit quiz" });
+      console.error('Quiz submission error:', error);
+      res.status(500).json({ 
+        message: "Failed to submit quiz",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 

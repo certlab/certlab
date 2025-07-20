@@ -2692,6 +2692,32 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
       .set({ isNotified })
       .where(and(eq(userBadges.userId, userId), eq(userBadges.badgeId, badgeId)));
   }
+
+  // Placeholder for adaptive progress (not implemented yet)
+  async updateAdaptiveProgress(userId: number, categoryId: number, categoryResults: any[]): Promise<void> {
+    // This method is not fully implemented yet - just log for now
+    console.log(`Adaptive progress update for user ${userId}, category ${categoryId}`);
+  }
+
+  // Create lecture from missed topics
+  async createLecture(userId: number, quizId: number, topics: string[]): Promise<void> {
+    // Basic implementation - create a simple lecture record
+    try {
+      const lectureContent = `Study guide for missed topics: ${topics.join(', ')}`;
+      const title = `Review Session - Quiz ${quizId}`;
+      
+      await db.insert(lectures).values({
+        userId,
+        quizId,
+        title,
+        content: lectureContent,
+        createdAt: new Date()
+      });
+    } catch (error) {
+      console.error('Failed to create lecture:', error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
