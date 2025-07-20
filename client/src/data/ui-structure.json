@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2025-07-20T18:01:11.915Z",
+  "lastUpdated": "2025-07-20T23:01:55.737Z",
   "generatedBy": "UIStructureSync",
   "routes": [
     {
@@ -38,6 +38,7 @@
               ],
               "file": "components/ActivitySidebar.tsx",
               "hooks": [
+                "useAuth",
                 "useToast",
                 "useMutation"
               ],
@@ -59,6 +60,7 @@
                 "useLocation",
                 "useToast",
                 "useState",
+                "useAuth",
                 "useMutation"
               ],
               "apiCalls": []
@@ -78,6 +80,7 @@
               "hooks": [
                 "useLocation",
                 "useToast",
+                "useAuth",
                 "useState",
                 "useMutation"
               ],
@@ -137,6 +140,7 @@
               "hooks": [
                 "useLocation",
                 "useToast",
+                "useAuth",
                 "useState",
                 "useMutation"
               ],
@@ -238,7 +242,9 @@
             "UI Libraries"
           ],
           "file": "pages/achievements.tsx",
-          "hooks": [],
+          "hooks": [
+            "useAuth"
+          ],
           "apiCalls": [],
           "children": [
             {
@@ -261,18 +267,22 @@
               "label": "AchievementNotification",
               "route": "/achievement",
               "type": "component",
-              "description": "AchievementNotification component with 0 API integrations",
+              "description": "AchievementNotification component with 1 API integrations",
               "icon": "Puzzle",
               "dependencies": [
-                "React Components",
-                "UI Libraries"
+                "FETCH: /api/user/${userId}/badges/${achievement.badgeId}/notify"
               ],
               "file": "components/AchievementNotification.tsx",
               "hooks": [
                 "useState",
                 "useEffect"
               ],
-              "apiCalls": []
+              "apiCalls": [
+                {
+                  "type": "fetch",
+                  "endpoint": "/api/user/${userId}/badges/${achievement.badgeId}/notify"
+                }
+              ]
             },
             {
               "id": "chievementprogress",
@@ -286,7 +296,9 @@
                 "UI Libraries"
               ],
               "file": "components/AchievementProgress.tsx",
-              "hooks": [],
+              "hooks": [
+                "useAuth"
+              ],
               "apiCalls": []
             },
             {
@@ -359,7 +371,7 @@
           "hooks": [
             "useState",
             "useToast",
-            "useMutation"
+            "useAuth"
           ],
           "apiCalls": [],
           "children": []
@@ -389,11 +401,13 @@
         "@/components/AchievementProgress",
         "@/components/ui/card",
         "@/components/ui/tabs",
-        "@/lib/localStorage",
+        "@/lib/auth",
         "@/components/Header"
       ],
       "apiCalls": [],
-      "hooks": []
+      "hooks": [
+        "useAuth"
+      ]
     },
     {
       "name": "admin",
@@ -467,15 +481,14 @@
         "@/components/ui/input",
         "@/components/ui/label",
         "@/components/ui/tabs",
-        "@/lib/localStorage",
-        "@/lib/queryClient",
+        "@/lib/auth",
         "@/hooks/use-toast"
       ],
       "apiCalls": [],
       "hooks": [
         "useState",
         "useToast",
-        "useMutation"
+        "useAuth"
       ]
     },
     {
@@ -527,13 +540,20 @@
         "@/components/ui/card",
         "@/components/ui/button",
         "@/components/ui/badge",
-        "@/components/ui/progress"
+        "@/components/ui/progress",
+        "@/components/ui/dialog",
+        "@/components/ui/textarea",
+        "@/hooks/use-toast",
+        "@/lib/queryClient"
       ],
       "apiCalls": [],
       "hooks": [
         "useRoute",
         "useLocation",
-        "useState"
+        "useState",
+        "useToast",
+        "useQueryClient",
+        "useMutation"
       ]
     },
     {
@@ -579,7 +599,12 @@
         "@/components/ui/badge",
         "@/components/ui/button"
       ],
-      "apiCalls": [],
+      "apiCalls": [
+        {
+          "type": "fetch",
+          "endpoint": "/api/user/${userId}/badges/${achievement.badgeId}/notify"
+        }
+      ],
       "hooks": [
         "useState",
         "useEffect"
@@ -593,10 +618,12 @@
         "@/components/ui/card",
         "@/components/ui/progress",
         "@/components/ui/badge",
-        "@/lib/localStorage"
+        "@/lib/auth"
       ],
       "apiCalls": [],
-      "hooks": []
+      "hooks": [
+        "useAuth"
+      ]
     },
     {
       "name": "ActivitySidebar",
@@ -605,13 +632,14 @@
       "imports": [
         "@/components/ui/card",
         "@/components/ui/button",
-        "@/lib/localStorage",
+        "@/lib/auth",
         "@/lib/questions",
         "@/lib/queryClient",
         "@/hooks/use-toast"
       ],
       "apiCalls": [],
       "hooks": [
+        "useAuth",
         "useToast",
         "useMutation"
       ]
@@ -641,7 +669,7 @@
         "@/components/ui/card",
         "@/components/ui/button",
         "@/components/ui/badge",
-        "@/lib/localStorage",
+        "@/lib/auth",
         "@/lib/queryClient",
         "@/hooks/use-toast"
       ],
@@ -650,6 +678,7 @@
         "useLocation",
         "useToast",
         "useState",
+        "useAuth",
         "useMutation"
       ]
     },
@@ -658,9 +687,8 @@
       "type": "component",
       "file": "components/Header.tsx",
       "imports": [
-        "@/lib/localStorage",
+        "@/lib/auth",
         "@/components/ui/button",
-        "@/lib/queryClient",
         "@/hooks/use-toast",
         "@/components/ThemeToggle",
         "@/components/ui/badge"
@@ -668,9 +696,9 @@
       "apiCalls": [],
       "hooks": [
         "useLocation",
+        "useAuth",
         "useToast",
-        "useState",
-        "useMutation"
+        "useState"
       ]
     },
     {
@@ -684,7 +712,7 @@
         "@/components/ui/select",
         "@/components/ui/label",
         "@/components/ui/badge",
-        "@/lib/localStorage",
+        "@/lib/auth",
         "@/lib/queryClient",
         "@/hooks/use-toast"
       ],
@@ -692,6 +720,7 @@
       "hooks": [
         "useLocation",
         "useToast",
+        "useAuth",
         "useState",
         "useMutation"
       ]
@@ -719,10 +748,12 @@
         "@/components/ui/button",
         "@/components/ui/tabs",
         "@/components/ui/collapsible",
-        "@/lib/localStorage"
+        "@/lib/auth"
       ],
       "apiCalls": [],
-      "hooks": []
+      "hooks": [
+        "useAuth"
+      ]
     },
     {
       "name": "QuizCreator",
@@ -734,7 +765,7 @@
         "@/components/ui/checkbox",
         "@/components/ui/select",
         "@/components/ui/label",
-        "@/lib/localStorage",
+        "@/lib/auth",
         "@/lib/queryClient",
         "@/hooks/use-toast"
       ],
@@ -742,6 +773,7 @@
       "hooks": [
         "useLocation",
         "useToast",
+        "useAuth",
         "useState",
         "useMutation"
       ]
@@ -753,6 +785,7 @@
       "imports": [
         "@/components/ui/card",
         "@/components/ui/button",
+        "@/components/ui/badge",
         "@/components/ui/radio-group",
         "@/components/ui/label",
         "@/components/ui/progress",
