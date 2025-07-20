@@ -24,7 +24,32 @@ import {
   Layout,
   Component,
   RefreshCw,
-  Clock
+  Clock,
+  // Standardized icon set
+  Folder,
+  Puzzle,
+  Activity,
+  GraduationCap,
+  FileQuestion,
+  Award,
+  Medal,
+  TrendingUp,
+  BarChart2,
+  Palette,
+  Building,
+  HelpCircle,
+  User,
+  LogIn,
+  Navigation,
+  PanelLeft,
+  Monitor,
+  PlusCircle,
+  Filter,
+  Gauge,
+  Bell,
+  Wrench,
+  Layers,
+  AlertTriangle
 } from "lucide-react";
 
 interface RouteHierarchy {
@@ -266,6 +291,32 @@ const UIStructurePage = () => {
       'Users': Users,
       'FileText': FileText,
       'Component': Component,
+      'Folder': Folder,
+      'Puzzle': Puzzle,
+      'Activity': Activity,
+      'GraduationCap': GraduationCap,
+      'FileQuestion': FileQuestion,
+      'Award': Award,
+      'Medal': Medal,
+      'TrendingUp': TrendingUp,
+      'BarChart2': BarChart2,
+      'Palette': Palette,
+      'Building': Building,
+      'HelpCircle': HelpCircle,
+      'User': User,
+      'LogIn': LogIn,
+      'Navigation': Navigation,
+      'PanelLeft': PanelLeft,
+      'Monitor': Monitor,
+      'PlusCircle': PlusCircle,
+      'Filter': Filter,
+      'Gauge': Gauge,
+      'Bell': Bell,
+      'Wrench': Wrench,
+      'Layers': Layers,
+      'AlertTriangle': AlertTriangle,
+      'Search': Search,
+      'Layout': Layout
     };
     const IconComponent = icons[iconName as keyof typeof icons] || Component;
     return <IconComponent className="w-4 h-4" />;
@@ -411,6 +462,43 @@ const UIStructurePage = () => {
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
                     />
+                  </div>
+                  
+                  {/* Icon Legend */}
+                  <div className="text-xs text-muted-foreground space-y-1 pt-3 mt-3 border-t">
+                    <div className="font-medium text-foreground mb-2">Icon Legend:</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center space-x-2">
+                        <Home className="w-3 h-3 text-purple-500" />
+                        <span>Routes</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <FileText className="w-3 h-3 text-blue-500" />
+                        <span>Pages</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Puzzle className="w-3 h-3 text-green-500" />
+                        <span>Components</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Layers className="w-3 h-3 text-cyan-500" />
+                        <span>Providers</span>
+                      </div>
+                    </div>
+                    <div className="pt-2 text-xs">
+                      <div className="flex items-center space-x-2">
+                        <Activity className="w-3 h-3" />
+                        <span>Sidebar components</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Layout className="w-3 h-3" />
+                        <span>Layout components</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Award className="w-3 h-3" />
+                        <span>Achievement system</span>
+                      </div>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">

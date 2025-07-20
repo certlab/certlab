@@ -187,7 +187,7 @@ class UIStructureSync {
         route: '/dashboard',
         type: 'route',
         description: 'Main user dashboard with progress tracking and quick actions',
-        icon: 'Home',
+        icon: this.inferIcon('dashboard', 'route'),
         children: this.getComponentsForRoute('dashboard', components),
         serverEndpoints: serverRoutes.filter(r => r.path.includes('/user') || r.path.includes('/stats'))
       },
@@ -197,7 +197,7 @@ class UIStructureSync {
         route: '/quiz',
         type: 'route',
         description: 'Interactive learning sessions with immediate feedback',
-        icon: 'BookOpen',
+        icon: this.inferIcon('quiz', 'route'),
         children: this.getComponentsForRoute('quiz', components),
         serverEndpoints: serverRoutes.filter(r => r.path.includes('/quiz') || r.path.includes('/question'))
       },
@@ -207,7 +207,7 @@ class UIStructureSync {
         route: '/admin',
         type: 'route',
         description: 'Multi-tenant administration and management portal',
-        icon: 'Settings',
+        icon: this.inferIcon('admin', 'route'),
         children: this.getComponentsForRoute('admin', components),
         serverEndpoints: serverRoutes.filter(r => r.path.includes('/admin'))
       },
@@ -217,7 +217,7 @@ class UIStructureSync {
         route: '/achievements',
         type: 'route',
         description: 'Gamification system with badges and progress tracking',
-        icon: 'Trophy',
+        icon: this.inferIcon('achievements', 'route'),
         children: this.getComponentsForRoute('achievement', components),
         serverEndpoints: serverRoutes.filter(r => r.path.includes('/badge') || r.path.includes('/achievement'))
       },
@@ -227,7 +227,7 @@ class UIStructureSync {
         route: '/accessibility',
         type: 'route',
         description: 'WCAG compliance tools and contrast analysis',
-        icon: 'Eye',
+        icon: this.inferIcon('accessibility', 'route'),
         children: this.getComponentsForRoute('accessibility', components),
         serverEndpoints: []
       },
@@ -237,7 +237,7 @@ class UIStructureSync {
         route: '/login',
         type: 'route',
         description: 'User authentication and registration system',
-        icon: 'Shield',
+        icon: this.inferIcon('login', 'route'),
         children: this.getComponentsForRoute('login', components),
         serverEndpoints: serverRoutes.filter(r => r.path.includes('/auth') || r.path.includes('/login') || r.path.includes('/register'))
       }
@@ -273,9 +273,9 @@ class UIStructureSync {
           id: name.toLowerCase().replace(/([A-Z])/g, '-$1').slice(1),
           label: name,
           route: this.inferRouteFromComponent(name, routePrefix),
-          type: 'component',
+          type: data.type,
           description: this.generateDescription(name, data),
-          icon: this.inferIcon(name),
+          icon: this.inferIcon(name, data.type),
           dependencies: this.generateDependencies(data),
           file: data.file,
           hooks: data.hooks,
@@ -326,31 +326,85 @@ class UIStructureSync {
     return deps.length > 0 ? deps : ['React Components', 'UI Libraries'];
   }
 
-  inferIcon(name) {
-    const iconMap = {
-      'Dashboard': 'BarChart3',
-      'Hero': 'BarChart3',
-      'Activity': 'BookOpen',
-      'Learning': 'Settings',
-      'Quiz': 'FileText',
-      'Results': 'BarChart3',
-      'Review': 'Eye',
-      'Achievement': 'Trophy',
-      'Level': 'BarChart3',
-      'Progress': 'BarChart3',
-      'Contrast': 'Eye',
-      'Admin': 'Settings',
-      'Tenant': 'Users',
-      'Question': 'Database',
-      'User': 'Shield',
-      'Login': 'Shield'
+  inferIcon(name, type = 'component') {
+    // Standardized icon mapping by node type and name
+    const typeIcons = {
+      'route': {
+        'dashboard': 'Home',
+        'quiz': 'BookOpen', 
+        'admin': 'Settings',
+        'achievements': 'Trophy',
+        'accessibility': 'Eye',
+        'login': 'Shield'
+      },
+      'page': {
+        'dashboard': 'Home',
+        'quiz': 'FileText',
+        'admin': 'Settings',
+        'achievements': 'Trophy',
+        'accessibility': 'Eye',
+        'login': 'Shield',
+        'results': 'BarChart3',
+        'review': 'Search',
+        'lecture': 'BookOpen',
+        'not-found': 'AlertTriangle'
+      },
+      'component': {
+        'Hero': 'Layout',
+        'Activity': 'Activity',
+        'Learning': 'GraduationCap',
+        'Quiz': 'FileQuestion',
+        'Results': 'BarChart3',
+        'Review': 'Search',
+        'Achievement': 'Award',
+        'Badge': 'Medal',
+        'Level': 'TrendingUp',
+        'Progress': 'BarChart2',
+        'Contrast': 'Palette',
+        'Admin': 'Settings',
+        'Tenant': 'Building',
+        'Question': 'HelpCircle',
+        'User': 'User',
+        'Login': 'LogIn',
+        'Header': 'Navigation',
+        'Sidebar': 'PanelLeft',
+        'Interface': 'Monitor',
+        'Creator': 'PlusCircle',
+        'Selector': 'Filter',
+        'Meter': 'Gauge',
+        'Analyzer': 'Search',
+        'Notification': 'Bell'
+      }
     };
 
-    for (const [key, icon] of Object.entries(iconMap)) {
-      if (name.includes(key)) return icon;
+    // First check by type and exact name match
+    const typeMap = typeIcons[type] || typeIcons['component'];
+    const lowerName = name.toLowerCase();
+    
+    // Check exact matches first
+    for (const [key, icon] of Object.entries(typeMap)) {
+      if (lowerName === key.toLowerCase()) {
+        return icon;
+      }
+    }
+    
+    // Then check partial matches
+    for (const [key, icon] of Object.entries(typeMap)) {
+      if (lowerName.includes(key.toLowerCase())) {
+        return icon;
+      }
     }
 
-    return 'Component';
+    // Default icons by type
+    const defaultIcons = {
+      'route': 'Folder',
+      'page': 'FileText',
+      'component': 'Puzzle',
+      'utility': 'Wrench',
+      'provider': 'Layers'
+    };
+
+    return defaultIcons[type] || 'Component';
   }
 
   // Check if sync is needed
