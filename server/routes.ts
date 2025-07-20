@@ -752,9 +752,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const quizId = parseInt(req.params.quizId);
       
+      console.log('Generate lecture - Cookie header:', req.headers.cookie);
+      console.log('Generate lecture - Session object:', (req as any).session);
+      console.log('Generate lecture - Session ID:', (req as any).session?.id);
+      
       const userId = (req as any).session?.userId;
+      console.log('Generate lecture - User ID from session:', userId);
       
       if (!userId) {
+        console.log('Generate lecture - No user ID, authentication failed');
         return res.status(401).json({ message: "Authentication required" });
       }
 

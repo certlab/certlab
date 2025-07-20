@@ -64,6 +64,9 @@ export default function Review() {
   // Mutation for generating lecture notes
   const generateLectureMutation = useMutation({
     mutationFn: async () => {
+      console.log('Frontend: Making generate lecture request');
+      console.log('Frontend: Cookies available:', document.cookie);
+      
       const response = await apiRequest({
         method: 'POST',
         endpoint: `/api/quiz/${quizId}/generate-lecture`

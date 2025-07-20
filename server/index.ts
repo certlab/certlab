@@ -15,10 +15,11 @@ app.use(session({
   name: 'connect.sid',
   cookie: {
     secure: false, // Set to true in production with HTTPS
-    httpOnly: true,
+    httpOnly: false, // Temporarily set to false for debugging (allows JS access)
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax', // Allow cross-site requests
-    path: '/'
+    path: '/',
+    domain: undefined // Use default domain
   },
 }));
 
