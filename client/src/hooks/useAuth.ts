@@ -1,14 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+// This file is deprecated - use @/lib/auth-provider instead
+// Keeping for backward compatibility
 
-export function useAuth() {
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["/api/auth/user"],
-    retry: false,
-  });
-
-  return {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-  };
-}
+export { useAuth } from '@/lib/auth-provider';
