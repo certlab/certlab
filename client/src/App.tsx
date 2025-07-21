@@ -15,6 +15,7 @@ import Review from "@/pages/review";
 import Lecture from "@/pages/lecture";
 import Achievements from "@/pages/achievements";
 import Accessibility from "@/pages/accessibility";
+import StudyGroups from "@/pages/study-groups";
 import AdminDashboard from "@/pages/admin";
 import UIStructurePage from "@/pages/ui-structure";
 
@@ -43,6 +44,7 @@ function Router() {
       <Route path="/app/lecture/:id" component={Lecture} />
       <Route path="/app/achievements" component={Achievements} />
       <Route path="/app/accessibility" component={Accessibility} />
+      <Route path="/app/study-groups" component={StudyGroups} />
       <Route path="/app/ui-structure" component={UIStructurePage} />
       <Route path="/quiz/:id" component={Quiz} />
       <Route path="/results/:id" component={Results} />
@@ -50,6 +52,7 @@ function Router() {
       <Route path="/lecture/:id" component={Lecture} />
       <Route path="/achievements" component={Achievements} />
       <Route path="/accessibility" component={Accessibility} />
+      <Route path="/study-groups" component={StudyGroups} />
       <Route path="/ui-structure" component={UIStructurePage} />
       <Route path="/admin" component={AdminDashboard} />
       <Route component={NotFound} />

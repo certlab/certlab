@@ -4,6 +4,8 @@ import Header from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DetailedResultsAnalysis from "@/components/DetailedResultsAnalysis";
 import { getScoreColor, getScoreBgColor } from "@/lib/questions";
 import type { Quiz, Category } from "@shared/schema";
 
@@ -226,6 +228,29 @@ export default function Results() {
                 })}
               </div>
             </div>
+
+            {/* Enhanced Results with Tabs */}
+            <Tabs defaultValue="summary" className="mb-6">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="summary">Quick Summary</TabsTrigger>
+                <TabsTrigger value="analysis">Detailed Analysis</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="summary" className="mt-6">
+                <div className="text-center space-y-4">
+                  <p className="text-muted-foreground">
+                    {quiz.mode === "quiz" ? 
+                      "Your performance has been recorded and contributes to your certification mastery progress." :
+                      "Great study session! Review the explanations and consider taking a quiz when ready."
+                    }
+                  </p>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="analysis" className="mt-6">
+                <DetailedResultsAnalysis quizId={quizId} />
+              </TabsContent>
+            </Tabs>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">

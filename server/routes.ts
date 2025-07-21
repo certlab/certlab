@@ -747,6 +747,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get personalized study plan
+  app.get('/api/user/:userId/study-plan', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const sessionUserId = (req as any).session?.userId;
+      
+      if (!sessionUserId || sessionUserId !== userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Get user's mastery scores and quiz history
+      const masteryScores = await storage.getUserMasteryScores(userId);
+      const userQuizzes = await storage.getUserQuizzes(userId);
+      const completedQuizzes = userQuizzes.filter(q => q.completedAt);
+      const categories = await storage.getCategories();
+
+      // Calculate study recommendations
+      let studyPlan: any = {
+        priority: "Get Started",
+        recommendation: "Take your first assessment to create a personalized study plan",
+        focusAreas: [],
+        estimatedTime: "30 minutes",
+        nextSession: {
+          type: "assessment",
+          categories: categories.slice(0, 2).map(cat => cat.id),
+          questionCount: 20
+        },
+        weeklyGoal: {
+          sessions: 5,
+          hoursPerWeek: 3
+        }
+      };
+
+      if (masteryScores.length > 0) {
+        // Find areas that need improvement
+        const weakestAreas = masteryScores
+          .filter(score => score.rollingAverage < 70)
+          .sort((a, b) => a.rollingAverage - b.rollingAverage)
+          .slice(0, 3);
+
+        const strongAreas = masteryScores
+          .filter(score => score.rollingAverage >= 80)
+          .length;
+
+        if (weakestAreas.length === 0) {
+          // All areas are strong
+          studyPlan = {
+            priority: "Maintain Excellence",
+            recommendation: "All areas show strong mastery. Focus on practice exams and maintaining readiness",
+            focusAreas: masteryScores.slice(0, 2),
+            estimatedTime: "45 minutes",
+            nextSession: {
+              type: "practice-exam",
+              categories: categories.map(cat => cat.id),
+              questionCount: 50
+            },
+            weeklyGoal: {
+              sessions: 3,
+              hoursPerWeek: 2
+            }
+          };
+        } else {
+          // Focus on weak areas
+          studyPlan = {
+            priority: "Focus Study",
+            recommendation: `Concentrate on ${weakestAreas.length} areas needing improvement`,
+            focusAreas: weakestAreas,
+            estimatedTime: `${weakestAreas.length * 20} minutes`,
+            nextSession: {
+              type: "focused-study",
+              categories: weakestAreas.map(area => area.categoryId),
+              questionCount: 15
+            },
+            weeklyGoal: {
+              sessions: 5,
+              hoursPerWeek: 4
+            }
+          };
+        }
+      }
+
+      // Add recent performance insights
+      const recentQuizzes = completedQuizzes
+        .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())
+        .slice(0, 5);
+
+      const recentAverageScore = recentQuizzes.length > 0
+        ? Math.round(recentQuizzes.reduce((sum, quiz) => sum + (quiz.score || 0), 0) / recentQuizzes.length)
+        : 0;
+
+      studyPlan = {
+        ...studyPlan,
+        insights: {
+          recentPerformance: recentAverageScore,
+          totalSessions: completedQuizzes.length,
+          strongAreas: masteryScores.filter(s => s.rollingAverage >= 80).length,
+          improvementAreas: masteryScores.filter(s => s.rollingAverage < 70).length
+        }
+      };
+
+      res.json(studyPlan);
+    } catch (error) {
+      console.error('Error generating study plan:', error);
+      res.status(500).json({ error: 'Failed to generate study plan' });
+    }
+  });
+
   // Generate lecture notes from quiz review
   app.post('/api/quiz/:quizId/generate-lecture', async (req, res) => {
     try {
