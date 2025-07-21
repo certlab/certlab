@@ -1883,7 +1883,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Adaptive Learning Methods
-  async updateAdaptiveProgress(userId: number, categoryId: number, quizResults: any[]): Promise<void> {
+  async updateAdaptiveProgress(userId: string, categoryId: number, quizResults: any[]): Promise<void> {
     const [existingProgress] = await db
       .select()
       .from(userProgress)
@@ -1954,7 +1954,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userProgress.id, existingProgress.id));
   }
 
-  async getAdaptiveQuestionCount(userId: number, baseCount: number, categoryIds: number[]): Promise<number> {
+  async getAdaptiveQuestionCount(userId: string, baseCount: number, categoryIds: number[]): Promise<number> {
     const userProgresses = await db
       .select()
       .from(userProgress)
@@ -1985,7 +1985,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Lecture generation methods
-  async createLecture(userId: number, quizId: number, missedTopics: string[]): Promise<any> {
+  async createLecture(userId: string, quizId: number, missedTopics: string[]): Promise<any> {
     // Get quiz details for context
     const quiz = await this.getQuiz(quizId);
     if (!quiz) return null;
@@ -2022,7 +2022,7 @@ export class DatabaseStorage implements IStorage {
     return lecture;
   }
 
-  async createLectureFromQuiz(userId: number, quizId: number, title: string, content: string, topics: string[], categoryId: number): Promise<any> {
+  async createLectureFromQuiz(userId: string, quizId: number, title: string, content: string, topics: string[], categoryId: number): Promise<any> {
     const [lecture] = await db.insert(lectures).values({
       userId,
       quizId,
@@ -2087,7 +2087,7 @@ ${missedTopics.map((topic, index) => `
   }
 
   // Performance-based lecture generation
-  async generatePerformanceLecture(userId: number): Promise<any> {
+  async generatePerformanceLecture(userId: string): Promise<any> {
     // Get user's completed quizzes
     const userQuizzes = await this.getUserQuizzes(userId);
     const completedQuizzes = userQuizzes.filter(quiz => quiz.completedAt && quiz.answers);
@@ -2129,7 +2129,7 @@ ${missedTopics.map((topic, index) => `
     return lecture;
   }
 
-  private async analyzeUserPerformance(userId: number, completedQuizzes: any[]): Promise<{
+  private async analyzeUserPerformance(userId: string, completedQuizzes: any[]): Promise<{
     weakestAreas: any[];
     overallStats: any;
     focusTopics: string[];
