@@ -7,21 +7,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
-  resave: false,
-  saveUninitialized: false,
-  name: 'connect.sid',
-  cookie: {
-    secure: false, // Set to true in production with HTTPS
-    httpOnly: false, // Temporarily set to false for debugging (allows JS access)
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: 'lax', // Allow cross-site requests
-    path: '/',
-    domain: undefined // Use default domain
-  },
-}));
+// Session configuration is handled in replitAuth.ts
 
 app.use((req, res, next) => {
   const start = Date.now();

@@ -27,7 +27,7 @@ export function getSession() {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
+    createTableIfMissing: true,
     ttl: sessionTtl,
     tableName: "sessions",
   });
@@ -38,7 +38,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production', // Only secure cookies in production
       maxAge: sessionTtl,
     },
   });
@@ -74,7 +74,13 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  const config = await getOidcConfig();
+  let config;
+  try {
+    config = await getOidcConfig();
+  } catch (error) {
+    console.error("Failed to initialize OIDC config:", error);
+    throw error;
+  }
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
@@ -86,8 +92,11 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
+  const domains = process.env.REPLIT_DOMAINS!.split(",");
+  console.log("Setting up auth for domains:", domains);
+  
+  for (const domain of domains) {
+    console.log(`Registering strategy for domain: ${domain}`);
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,
@@ -99,19 +108,40 @@ export async function setupAuth(app: Express) {
     );
     passport.use(strategy);
   }
+  
+  console.log("Registered strategies:", Object.keys((passport as any)._strategies || {}));
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    const hostname = req.hostname;
+    console.log(`Login attempt for hostname: ${hostname}`);
+    console.log(`Available strategies:`, (passport as any)._strategies ? Object.keys((passport as any)._strategies) : 'None');
+    
+    // Map localhost to the Replit domain for development
+    let authDomain = hostname;
+    if (hostname === 'localhost' || hostname.includes('127.0.0.1')) {
+      authDomain = domains[0]; // Use the first Replit domain
+      console.log(`Mapping localhost to Replit domain: ${authDomain}`);
+    }
+    
+    passport.authenticate(`replitauth:${authDomain}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    const hostname = req.hostname;
+    
+    // Map localhost to the Replit domain for development
+    let authDomain = hostname;
+    if (hostname === 'localhost' || hostname.includes('127.0.0.1')) {
+      authDomain = domains[0]; // Use the first Replit domain
+    }
+    
+    passport.authenticate(`replitauth:${authDomain}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
@@ -130,30 +160,32 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const user = req.user as any;
-
-  if (!req.isAuthenticated() || !user.expires_at) {
+  // Check if user is authenticated via passport
+  if (!req.isAuthenticated() || !req.user) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
-    return next();
+  const user = req.user as any;
+
+  // Check if token has expired
+  if (user.expires_at) {
+    const now = Math.floor(Date.now() / 1000);
+    if (now > user.expires_at) {
+      const refreshToken = user.refresh_token;
+      if (!refreshToken) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      try {
+        const config = await getOidcConfig();
+        const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
+        updateUserSession(user, tokenResponse);
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
   }
 
-  const refreshToken = user.refresh_token;
-  if (!refreshToken) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-
-  try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
-    updateUserSession(user, tokenResponse);
-    return next();
-  } catch (error) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
+  return next();
 };
