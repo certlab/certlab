@@ -1,7 +1,7 @@
 import { 
   tenants, users, categories, subcategories, questions, quizzes, userProgress, lectures, masteryScores,
   badges, userBadges, userGameStats,
-  type Tenant, type InsertTenant, type User, type InsertUser, type Category, type InsertCategory,
+  type Tenant, type InsertTenant, type User, type InsertUser, type UpsertUser, type Category, type InsertCategory,
   type Subcategory, type InsertSubcategory, type Question, type InsertQuestion,
   type Quiz, type InsertQuiz, type UserProgress, type InsertUserProgress,
   type MasteryScore, type InsertMasteryScore, type Badge, type UserBadge, type UserGameStats
@@ -17,9 +17,10 @@ export interface IStorage {
   updateTenant(id: number, updates: Partial<InsertTenant>): Promise<Tenant>;
   deleteTenant(id: number): Promise<void>;
   
-  // User management
-  getUser(id: number): Promise<User | undefined>;
+  // User management (updated for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: InsertUser): Promise<User>;
   getUsersByTenant(tenantId: number): Promise<User[]>;
   
@@ -44,13 +45,13 @@ export interface IStorage {
   // Quizzes
   createQuiz(quiz: InsertQuiz): Promise<Quiz>;
   getQuiz(id: number): Promise<Quiz | undefined>;
-  getUserQuizzes(userId: number): Promise<Quiz[]>;
+  getUserQuizzes(userId: string): Promise<Quiz[]>;
   updateQuiz(id: number, updates: Partial<Quiz>): Promise<Quiz>;
   
   // User progress
-  getUserProgress(userId: number): Promise<UserProgress[]>;
-  updateUserProgress(userId: number, categoryId: number, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
-  getUserStats(userId: number): Promise<{
+  getUserProgress(userId: string): Promise<UserProgress[]>;
+  updateUserProgress(userId: string, categoryId: number, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
+  getUserStats(userId: string): Promise<{
     totalQuizzes: number;
     averageScore: number;
     studyStreak: number;
@@ -60,16 +61,16 @@ export interface IStorage {
   }>;
   
   // Lectures
-  createLecture(userId: number, quizId: number, missedTopics: string[]): Promise<any>;
-  getUserLectures(userId: number): Promise<any[]>;
+  createLecture(userId: string, quizId: number, missedTopics: string[]): Promise<any>;
+  getUserLectures(userId: string): Promise<any[]>;
   getLecture(id: number): Promise<any>;
-  createLectureFromQuiz(userId: number, quizId: number, title: string, content: string, topics: string[], categoryId: number): Promise<any>;
+  createLectureFromQuiz(userId: string, quizId: number, title: string, content: string, topics: string[], categoryId: number): Promise<any>;
   
   // Mastery scores
-  updateMasteryScore(userId: number, categoryId: number, subcategoryId: number, isCorrect: boolean): Promise<void>;
-  getUserMasteryScores(userId: number): Promise<MasteryScore[]>;
-  calculateOverallMasteryScore(userId: number): Promise<number>;
-  getCertificationMasteryScores(userId: number): Promise<{ categoryId: number; masteryScore: number }[]>;
+  updateMasteryScore(userId: string, categoryId: number, subcategoryId: number, isCorrect: boolean): Promise<void>;
+  getUserMasteryScores(userId: string): Promise<MasteryScore[]>;
+  calculateOverallMasteryScore(userId: string): Promise<number>;
+  getCertificationMasteryScores(userId: string): Promise<{ categoryId: number; masteryScore: number }[]>;
   
   // Admin/Tenant management methods
   getTenants(): Promise<Tenant[]>;
@@ -98,16 +99,16 @@ export interface IStorage {
   getQuestionsByTenant(tenantId: number): Promise<Question[]>;
   
   // Achievement system methods
-  initializeUserGameStats(userId: number): Promise<UserGameStats>;
-  getUserGameStats(userId: number): Promise<UserGameStats | undefined>;
-  updateUserGameStats(userId: number, updates: Partial<UserGameStats>): Promise<UserGameStats>;
-  getUserBadges(userId: number): Promise<UserBadge[]>;
-  awardBadge(userId: number, badgeId: number, progress?: number): Promise<UserBadge>;
+  initializeUserGameStats(userId: string): Promise<UserGameStats>;
+  getUserGameStats(userId: string): Promise<UserGameStats | undefined>;
+  updateUserGameStats(userId: string, updates: Partial<UserGameStats>): Promise<UserGameStats>;
+  getUserBadges(userId: string): Promise<UserBadge[]>;
+  awardBadge(userId: string, badgeId: number, progress?: number): Promise<UserBadge>;
   getBadge(badgeId: number): Promise<Badge | undefined>;
   getAllBadges(): Promise<Badge[]>;
-  checkAndAwardAchievements(userId: number): Promise<UserBadge[]>;
-  updateUserBadgeNotification(userId: number, badgeId: number, isNotified: boolean): Promise<void>;
-  updateUserActivity(userId: number): Promise<void>;
+  checkAndAwardAchievements(userId: string): Promise<UserBadge[]>;
+  updateUserBadgeNotification(userId: string, badgeId: number, isNotified: boolean): Promise<void>;
+  updateUserActivity(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1686,7 +1687,7 @@ export class DatabaseStorage implements IStorage {
     await db.insert(questions).values(sampleQuestions);
   }
 
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
@@ -1694,6 +1695,25 @@ export class DatabaseStorage implements IStorage {
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user || undefined;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        tenantId: 1, // Default tenant
+        role: 'user', // Default role
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -1744,7 +1764,7 @@ export class DatabaseStorage implements IStorage {
     return quiz || undefined;
   }
 
-  async getUserQuizzes(userId: number): Promise<Quiz[]> {
+  async getUserQuizzes(userId: string): Promise<Quiz[]> {
     return await db.select().from(quizzes).where(eq(quizzes.userId, userId)).orderBy(desc(quizzes.startedAt));
   }
 
@@ -1754,11 +1774,11 @@ export class DatabaseStorage implements IStorage {
     return quiz;
   }
 
-  async getUserProgress(userId: number): Promise<UserProgress[]> {
+  async getUserProgress(userId: string): Promise<UserProgress[]> {
     return await db.select().from(userProgress).where(eq(userProgress.userId, userId));
   }
 
-  async updateUserProgress(userId: number, categoryId: number, progressData: Partial<InsertUserProgress>): Promise<UserProgress> {
+  async updateUserProgress(userId: string, categoryId: number, progressData: Partial<InsertUserProgress>): Promise<UserProgress> {
     const [existing] = await db.select().from(userProgress).where(
       and(eq(userProgress.userId, userId), eq(userProgress.categoryId, categoryId))
     );
@@ -1783,7 +1803,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUserStats(userId: number): Promise<{
+  async getUserStats(userId: string): Promise<{
     totalQuizzes: number;
     averageScore: number;
     studyStreak: number;
@@ -1990,7 +2010,7 @@ export class DatabaseStorage implements IStorage {
     return lecture;
   }
 
-  async getUserLectures(userId: number): Promise<any[]> {
+  async getUserLectures(userId: string): Promise<any[]> {
     return await db.select().from(lectures)
       .where(eq(lectures.userId, userId))
       .orderBy(desc(lectures.createdAt));
@@ -2285,7 +2305,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
   }
 
   // Mastery Score Methods - Rolling average across all certification areas
-  async updateMasteryScore(userId: number, categoryId: number, subcategoryId: number, isCorrect: boolean): Promise<void> {
+  async updateMasteryScore(userId: string, categoryId: number, subcategoryId: number, isCorrect: boolean): Promise<void> {
     // Find existing mastery score record
     const [existing] = await db.select().from(masteryScores).where(
       and(
@@ -2330,7 +2350,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
   }
 
   // Bulk update mastery scores for quiz mode
-  async updateMasteryScoreBulk(userId: number, categoryId: number, subcategoryId: number, correctCount: number, totalCount: number): Promise<void> {
+  async updateMasteryScoreBulk(userId: string, categoryId: number, subcategoryId: number, correctCount: number, totalCount: number): Promise<void> {
     // Find existing mastery score record
     const [existing] = await db.select().from(masteryScores).where(
       and(
@@ -2374,11 +2394,11 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     }
   }
 
-  async getUserMasteryScores(userId: number): Promise<MasteryScore[]> {
+  async getUserMasteryScores(userId: string): Promise<MasteryScore[]> {
     return await db.select().from(masteryScores).where(eq(masteryScores.userId, userId));
   }
 
-  async calculateOverallMasteryScore(userId: number): Promise<number> {
+  async calculateOverallMasteryScore(userId: string): Promise<number> {
     const masteryScoreRecords = await this.getUserMasteryScores(userId);
     
     if (masteryScoreRecords.length === 0) {
@@ -2398,7 +2418,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     return totalWeight > 0 ? Math.round(totalWeightedScore / totalWeight) : 0;
   }
 
-  async getCertificationMasteryScores(userId: number): Promise<{ categoryId: number; masteryScore: number }[]> {
+  async getCertificationMasteryScores(userId: string): Promise<{ categoryId: number; masteryScore: number }[]> {
     const masteryScoreRecords = await this.getUserMasteryScores(userId);
     
     if (masteryScoreRecords.length === 0) {
@@ -2436,7 +2456,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
 
 
   // Update user activity for streak tracking
-  async updateUserActivity(userId: number): Promise<void> {
+  async updateUserActivity(userId: string): Promise<void> {
     const gameStats = await this.getUserGameStats(userId);
     if (!gameStats) {
       await this.initializeUserGameStats(userId);
@@ -2468,7 +2488,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
   }
 
   // Achievement System Methods
-  async initializeUserGameStats(userId: number): Promise<UserGameStats> {
+  async initializeUserGameStats(userId: string): Promise<UserGameStats> {
     // Check if stats already exist
     const [existingStats] = await db.select().from(userGameStats)
       .where(eq(userGameStats.userId, userId));
@@ -2492,13 +2512,13 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     return newStats;
   }
 
-  async getUserGameStats(userId: number): Promise<UserGameStats | undefined> {
+  async getUserGameStats(userId: string): Promise<UserGameStats | undefined> {
     const [stats] = await db.select().from(userGameStats)
       .where(eq(userGameStats.userId, userId));
     return stats;
   }
 
-  async updateUserGameStats(userId: number, updates: Partial<UserGameStats>): Promise<UserGameStats> {
+  async updateUserGameStats(userId: string, updates: Partial<UserGameStats>): Promise<UserGameStats> {
     const [updated] = await db.update(userGameStats)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(userGameStats.userId, userId))
@@ -2506,14 +2526,14 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     return updated;
   }
 
-  async getUserBadges(userId: number): Promise<UserBadge[]> {
+  async getUserBadges(userId: string): Promise<UserBadge[]> {
     return await db.select()
       .from(userBadges)
       .where(eq(userBadges.userId, userId))
       .orderBy(desc(userBadges.earnedAt));
   }
 
-  async awardBadge(userId: number, badgeId: number, progress: number = 100): Promise<UserBadge> {
+  async awardBadge(userId: string, badgeId: number, progress: number = 100): Promise<UserBadge> {
     // Check if user already has this badge
     const [existing] = await db.select().from(userBadges)
       .where(and(eq(userBadges.userId, userId), eq(userBadges.badgeId, badgeId)));
@@ -2731,7 +2751,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     console.log(`Created ${systemBadges.length} achievement badges`);
   }
 
-  async checkAndAwardAchievements(userId: number): Promise<UserBadge[]> {
+  async checkAndAwardAchievements(userId: string): Promise<UserBadge[]> {
     const newBadges: UserBadge[] = [];
     
     // Get user statistics
@@ -2814,7 +2834,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     return newBadges;
   }
 
-  async updateUserBadgeNotification(userId: number, badgeId: number, isNotified: boolean): Promise<void> {
+  async updateUserBadgeNotification(userId: string, badgeId: number, isNotified: boolean): Promise<void> {
     await db.update(userBadges)
       .set({ isNotified })
       .where(and(eq(userBadges.userId, userId), eq(userBadges.badgeId, badgeId)));

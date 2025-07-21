@@ -2,138 +2,48 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import adminRoutes from "./admin-routes";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertUserSchema, 
-  loginSchema, 
   createQuizSchema, 
   submitAnswerSchema 
 } from "@shared/schema";
-import bcrypt from "bcrypt";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
-  // User registration
-  app.post("/api/register", async (req, res) => {
+  // Auth middleware
+  await setupAuth(app);
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      // Add default tenantId to request body before validation
-      const requestData = { ...req.body, tenantId: 1 };
-      const userData = insertUserSchema.parse(requestData);
-      
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(userData.email);
-      if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
-      }
-      
-      // Hash password
-      const hashedPassword = await bcrypt.hash(userData.password, 10);
-      
-      const user = await storage.createUser({
-        username: userData.username,
-        email: userData.email,
-        password: hashedPassword,
-        role: userData.role || 'user',
-        tenantId: userData.tenantId
-      });
-      
-      // Initialize user game stats and other data
-      await storage.initializeUserGameStats(user.id);
-      
-      // Store user in session
-      (req as any).session.userId = user.id;
-      
-      // Don't return password
-      const { password, ...userResponse } = user;
-      res.json(userResponse);
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(400).json({ message: "Invalid user data" });
-    }
-  });
-
-  // User login
-  app.post("/api/login", async (req, res) => {
-    try {
-      const { email, password } = loginSchema.parse(req.body);
-      
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      const validPassword = await bcrypt.compare(password, user.password);
-      if (!validPassword) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      // Store user in session
-      (req as any).session.userId = user.id;
-      
-      // Save session explicitly
-      (req as any).session.save((err: any) => {
-        if (err) {
-          console.error('Session save error:', err);
-          return res.status(500).json({ message: "Session error" });
-        }
-        
-        // Don't return password
-        const { password: _, ...userResponse } = user;
-        res.json(userResponse);
-      });
-    } catch (error) {
-      res.status(400).json({ message: "Invalid login data" });
-    }
-  });
-
-  // Get current user (for session validation)
-  app.get("/api/auth/me", async (req, res) => {
-    try {
-      const userId = (req as any).session?.userId;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
+      const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(401).json({ message: "User not found" });
-      }
-      
-      // Don't return password
-      const { password, ...userResponse } = user;
-      res.json(userResponse);
+      res.json(user);
     } catch (error) {
-      res.status(401).json({ message: "Not authenticated" });
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
-  // User logout
-  app.post("/api/logout", async (req, res) => {
-    (req as any).session.destroy();
-    res.json({ message: "Logged out successfully" });
-  });
-
-  // Get user profile
-  app.get("/api/user/:id", async (req, res) => {
+  // Get user profile (protected)
+  app.get("/api/user/:id", isAuthenticated, async (req, res) => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = req.params.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const { password, ...userResponse } = user;
-      res.json(userResponse);
+      res.json(user);
     } catch (error) {
       res.status(400).json({ message: "Invalid user ID" });
     }
   });
 
-  // Get user stats
-  app.get("/api/user/:id/stats", async (req, res) => {
+  // Get user stats (protected)
+  app.get("/api/user/:id/stats", isAuthenticated, async (req, res) => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = req.params.id;
       const stats = await storage.getUserStats(userId);
       res.json(stats);
     } catch (error) {
@@ -162,16 +72,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create quiz with adaptive learning
-  app.post("/api/quiz", async (req, res) => {
+  // Create quiz with adaptive learning (protected)
+  app.post("/api/quiz", isAuthenticated, async (req: any, res) => {
     try {
       const quizData = createQuizSchema.parse(req.body);
-      const userId = parseInt(req.body.userId);
+      const userId = req.user.claims.sub; // Get userId from authenticated user
       const isAdaptive = req.body.isAdaptive || false;
-      
-      if (!userId) {
-        return res.status(400).json({ message: "User ID required" });
-      }
       
       // Check available questions for the selected categories
       const availableQuestions = await storage.getQuestionsByCategories(
@@ -212,8 +118,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get quiz
-  app.get("/api/quiz/:id", async (req, res) => {
+  // Get quiz (protected)
+  app.get("/api/quiz/:id", isAuthenticated, async (req, res) => {
     try {
       const quizId = parseInt(req.params.id);
       const quiz = await storage.getQuiz(quizId);
@@ -228,8 +134,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get quiz questions
-  app.get("/api/quiz/:id/questions", async (req, res) => {
+  // Get quiz questions (protected)
+  app.get("/api/quiz/:id/questions", isAuthenticated, async (req, res) => {
     try {
       const quizId = parseInt(req.params.id);
       const quiz = await storage.getQuiz(quizId);
@@ -253,11 +159,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Submit quiz answers
-  app.post("/api/quiz/:id/submit", async (req, res) => {
+  // Submit quiz answers (protected)
+  app.post("/api/quiz/:id/submit", isAuthenticated, async (req: any, res) => {
     try {
       const quizId = parseInt(req.params.id);
       const { answers } = req.body;
+      const userId = req.user.claims.sub;
       
       console.log(`Quiz submission for quiz ${quizId}:`, { answers, answersCount: answers?.length });
       
@@ -429,10 +336,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user quizzes
-  app.get("/api/user/:id/quizzes", async (req, res) => {
+  // Get user quizzes (protected)
+  app.get("/api/user/:id/quizzes", isAuthenticated, async (req, res) => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = req.params.id;
       const quizzes = await storage.getUserQuizzes(userId);
       res.json(quizzes);
     } catch (error) {
@@ -440,10 +347,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user progress
-  app.get("/api/user/:id/progress", async (req, res) => {
+  // Get user progress (protected)
+  app.get("/api/user/:id/progress", isAuthenticated, async (req, res) => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = req.params.id;
       const progress = await storage.getUserProgress(userId);
       res.json(progress);
     } catch (error) {
@@ -451,10 +358,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get certification mastery scores
-  app.get("/api/user/:id/mastery", async (req, res) => {
+  // Get certification mastery scores (protected)
+  app.get("/api/user/:id/mastery", isAuthenticated, async (req, res) => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = req.params.id;
       const masteryScores = await storage.getCertificationMasteryScores(userId);
       res.json(masteryScores);
     } catch (error) {
@@ -462,14 +369,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create adaptive quiz - enhanced version of regular quiz
-  app.post("/api/quiz/adaptive", async (req, res) => {
+  // Create adaptive quiz - enhanced version of regular quiz (protected)
+  app.post("/api/quiz/adaptive", isAuthenticated, async (req: any, res) => {
     try {
-      const { title, categoryIds, subcategoryIds, questionCount, timeLimit, userId } = req.body;
-      
-      if (!userId) {
-        return res.status(400).json({ message: "User ID required" });
-      }
+      const { title, categoryIds, subcategoryIds, questionCount, timeLimit } = req.body;
+      const userId = req.user.claims.sub;
 
       // Always calculate adaptive question count for this endpoint
       const adaptiveQuestionCount = await storage.getAdaptiveQuestionCount(userId, questionCount, categoryIds);
@@ -498,10 +402,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user lectures
-  app.get("/api/user/:id/lectures", async (req, res) => {
+  // Get user lectures (protected)
+  app.get("/api/user/:id/lectures", isAuthenticated, async (req, res) => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = req.params.id;
       const lectures = await storage.getUserLectures(userId);
       res.json(lectures);
     } catch (error) {
@@ -525,10 +429,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate personalized lecture based on user performance
-  app.post("/api/user/:userId/generate-lecture", async (req, res) => {
+  // Generate personalized lecture based on user performance (protected)
+  app.post("/api/user/:userId/generate-lecture", isAuthenticated, async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       
       // Analyze user performance to identify weak areas
       const userQuizzes = await storage.getUserQuizzes(userId);
@@ -549,14 +453,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create quiz with difficulty filtering
-  app.post("/api/quiz/filtered", async (req, res) => {
+  // Create quiz with difficulty filtering (protected)
+  app.post("/api/quiz/filtered", isAuthenticated, async (req: any, res) => {
     try {
-      const { title, categoryIds, subcategoryIds, questionCount, timeLimit, userId, difficultyLevels } = req.body;
-      
-      if (!userId) {
-        return res.status(400).json({ message: "User ID required" });
-      }
+      const { title, categoryIds, subcategoryIds, questionCount, timeLimit, difficultyLevels } = req.body;
+      const userId = req.user.claims.sub;
 
       // Get questions with difficulty filter
       const filteredQuestions = await storage.getQuestionsByCategories(
@@ -589,10 +490,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Achievement system endpoints
-  app.get('/api/user/:userId/achievements', async (req: Request, res: Response) => {
+  // Achievement system endpoints (protected)
+  app.get('/api/user/:userId/achievements', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       
       // Initialize game stats if they don't exist
       await storage.initializeUserGameStats(userId);
@@ -637,9 +538,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/user/:userId/achievements/check', async (req: Request, res: Response) => {
+  app.post('/api/user/:userId/achievements/check', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       const newBadges = await storage.checkAndAwardAchievements(userId);
       
       res.json({
@@ -652,9 +553,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/user/:userId/badges/:badgeId/notify', async (req: Request, res: Response) => {
+  app.post('/api/user/:userId/badges/:badgeId/notify', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       const badgeId = parseInt(req.params.badgeId);
       
       await storage.updateUserBadgeNotification(userId, badgeId, true);
@@ -666,9 +567,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/user/:userId/achievement-progress', async (req: Request, res: Response) => {
+  app.get('/api/user/:userId/achievement-progress', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       
       // Get all badges and user's earned badges
       const allBadges = await storage.getAllBadges();
@@ -752,14 +653,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get personalized study plan
-  app.get('/api/user/:userId/study-plan', async (req, res) => {
+  // Get personalized study plan (protected)
+  app.get('/api/user/:userId/study-plan', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = parseInt(req.params.userId);
-      const sessionUserId = (req as any).session?.userId;
+      const userId = req.params.userId;
+      const authenticatedUserId = req.user.claims.sub;
       
-      if (!sessionUserId || sessionUserId !== userId) {
-        return res.status(401).json({ message: "Authentication required" });
+      // Allow access if requesting own data or if admin
+      if (userId !== authenticatedUserId) {
+        return res.status(403).json({ message: "Access denied" });
       }
 
       // Get user's mastery scores and quiz history

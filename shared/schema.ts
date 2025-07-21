@@ -1,6 +1,17 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
 
 // Tenants table for multi-tenancy support
 export const tenants = pgTable("tenants", {
@@ -12,14 +23,17 @@ export const tenants = pgTable("tenants", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// User storage table for Replit Auth
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  tenantId: integer("tenant_id").notNull(),
-  username: text("username").notNull(),
-  email: text("email").notNull(),
-  password: text("password").notNull(),
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
   role: text("role").notNull().default("user"), // "admin", "user"
+  tenantId: integer("tenant_id").notNull().default(1),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const categories = pgTable("categories", {
@@ -53,7 +67,7 @@ export const questions = pgTable("questions", {
 
 export const quizzes = pgTable("quizzes", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull(),
   title: text("title").notNull(),
   categoryIds: jsonb("category_ids").notNull(), // Array of category IDs
   subcategoryIds: jsonb("subcategory_ids").notNull(), // Array of subcategory IDs
@@ -76,7 +90,7 @@ export const quizzes = pgTable("quizzes", {
 
 export const userProgress = pgTable("user_progress", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull(),
   categoryId: integer("category_id").notNull(),
   questionsCompleted: integer("questions_completed").notNull().default(0),
   totalQuestions: integer("total_questions").notNull().default(0),
@@ -91,7 +105,7 @@ export const userProgress = pgTable("user_progress", {
 // Mastery tracking for rolling average across all certification areas
 export const masteryScores = pgTable("mastery_scores", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull(),
   categoryId: integer("category_id").notNull(),
   subcategoryId: integer("subcategory_id").notNull(),
   correctAnswers: integer("correct_answers").notNull().default(0),
@@ -103,7 +117,7 @@ export const masteryScores = pgTable("mastery_scores", {
 // Lectures table for AI-generated content based on missed topics
 export const lectures = pgTable("lectures", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull(),
   quizId: integer("quiz_id"),
   title: text("title").notNull(),
   content: text("content").notNull(), // Generated lecture content
@@ -121,8 +135,8 @@ export const insertTenantSchema = createInsertSchema(tenants).omit({
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export const insertCategorySchema = createInsertSchema(categories).omit({
@@ -173,7 +187,7 @@ export const badges = pgTable("badges", {
 // User badges - tracks which badges users have earned
 export const userBadges = pgTable("user_badges", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull(),
   badgeId: integer("badge_id").notNull(),
   earnedAt: timestamp("earned_at").defaultNow(),
   progress: integer("progress").default(0), // For progressive badges
@@ -183,7 +197,7 @@ export const userBadges = pgTable("user_badges", {
 // User statistics for gamification
 export const userGameStats = pgTable("user_game_stats", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull(),
   totalPoints: integer("total_points").default(0),
   currentStreak: integer("current_streak").default(0),
   longestStreak: integer("longest_streak").default(0),
@@ -212,10 +226,13 @@ export const insertUserGameStatsSchema = createInsertSchema(userGameStats).omit(
   updatedAt: true,
 });
 
-// Login schema
-export const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+// Upsert user schema for Replit Auth
+export const upsertUserSchema = z.object({
+  id: z.string(),
+  email: z.string().email().nullable(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  profileImageUrl: z.string().nullable(),
 });
 
 // Quiz creation schema
@@ -250,7 +267,7 @@ export type InsertQuiz = z.infer<typeof insertQuizSchema>;
 export type Quiz = typeof quizzes.$inferSelect;
 export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
 export type UserProgress = typeof userProgress.$inferSelect;
-export type LoginData = z.infer<typeof loginSchema>;
+export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type CreateQuizData = z.infer<typeof createQuizSchema>;
 export type SubmitAnswerData = z.infer<typeof submitAnswerSchema>;
 export type InsertMasteryScore = z.infer<typeof insertMasteryScoreSchema>;

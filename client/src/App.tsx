@@ -4,11 +4,11 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
-import { AuthProvider, useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { AchievementNotification } from "@/components/AchievementNotification";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
-import Login from "@/pages/login";
+import Landing from "@/pages/landing";
 import Quiz from "@/pages/quiz";
 import Results from "@/pages/results";
 import Review from "@/pages/review";
@@ -30,31 +30,33 @@ function Router() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Login />;
-  }
-
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/app" component={Dashboard} />
-      <Route path="/app/quiz/:id" component={Quiz} />
-      <Route path="/app/results/:id" component={Results} />
-      <Route path="/app/review/:id" component={Review} />
-      <Route path="/app/lecture/:id" component={Lecture} />
-      <Route path="/app/achievements" component={Achievements} />
-      <Route path="/app/accessibility" component={Accessibility} />
-      <Route path="/app/study-groups" component={StudyGroups} />
-      <Route path="/app/ui-structure" component={UIStructurePage} />
-      <Route path="/quiz/:id" component={Quiz} />
-      <Route path="/results/:id" component={Results} />
-      <Route path="/review/:id" component={Review} />
-      <Route path="/lecture/:id" component={Lecture} />
-      <Route path="/achievements" component={Achievements} />
-      <Route path="/accessibility" component={Accessibility} />
-      <Route path="/study-groups" component={StudyGroups} />
-      <Route path="/ui-structure" component={UIStructurePage} />
-      <Route path="/admin" component={AdminDashboard} />
+      {isLoading || !isAuthenticated ? (
+        <Route path="/" component={Landing} />
+      ) : (
+        <>
+          <Route path="/" component={Dashboard} />
+          <Route path="/app" component={Dashboard} />
+          <Route path="/app/quiz/:id" component={Quiz} />
+          <Route path="/app/results/:id" component={Results} />
+          <Route path="/app/review/:id" component={Review} />
+          <Route path="/app/lecture/:id" component={Lecture} />
+          <Route path="/app/achievements" component={Achievements} />
+          <Route path="/app/accessibility" component={Accessibility} />
+          <Route path="/app/study-groups" component={StudyGroups} />
+          <Route path="/app/ui-structure" component={UIStructurePage} />
+          <Route path="/quiz/:id" component={Quiz} />
+          <Route path="/results/:id" component={Results} />
+          <Route path="/review/:id" component={Review} />
+          <Route path="/lecture/:id" component={Lecture} />
+          <Route path="/achievements" component={Achievements} />
+          <Route path="/accessibility" component={Accessibility} />
+          <Route path="/study-groups" component={StudyGroups} />
+          <Route path="/ui-structure" component={UIStructurePage} />
+          <Route path="/admin" component={AdminDashboard} />
+        </>
+      )}
       <Route component={NotFound} />
     </Switch>
   );
@@ -77,12 +79,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <AppContent />
-          </TooltipProvider>
-        </AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <AppContent />
+        </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
