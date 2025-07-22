@@ -71,8 +71,21 @@ export default function Header() {
 
 
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (!firstName && !lastName) return '?';
+    const first = firstName?.[0] || '';
+    const last = lastName?.[0] || '';
+    return (first + last).toUpperCase() || '?';
+  };
+
+  const getUserDisplayName = (user: any) => {
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    if (user.firstName) return user.firstName;
+    if (user.lastName) return user.lastName;
+    if (user.email) return user.email.split('@')[0];
+    return 'User';
   };
 
   return (
@@ -338,11 +351,11 @@ export default function Header() {
                     <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5 mb-4">
                       <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center shadow-glow">
                         <span className="text-primary-foreground text-sm font-semibold">
-                          {getInitials(currentUser.username)}
+                          {getInitials(currentUser.firstName, currentUser.lastName)}
                         </span>
                       </div>
                       <div className="flex flex-col">
-                        <p className="text-sm font-semibold">{currentUser.username}</p>
+                        <p className="text-sm font-semibold">{getUserDisplayName(currentUser)}</p>
                         <p className="text-xs text-muted-foreground">
                           Certification Student
                         </p>
@@ -376,10 +389,10 @@ export default function Header() {
                     <div className="flex items-center space-x-2">
                       <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center shadow-glow">
                         <span className="text-primary-foreground text-sm font-semibold">
-                          {getInitials(currentUser.username)}
+                          {getInitials(currentUser.firstName, currentUser.lastName)}
                         </span>
                       </div>
-                      <span className="hidden md:block text-foreground text-sm font-medium">{currentUser.username}</span>
+                      <span className="hidden md:block text-foreground text-sm font-medium">{getUserDisplayName(currentUser)}</span>
                       <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
                     </div>
                   </Button>
@@ -388,11 +401,11 @@ export default function Header() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
                     <div className="w-12 h-12 gradient-primary rounded-full flex items-center justify-center shadow-glow">
                       <span className="text-primary-foreground text-lg font-semibold">
-                        {getInitials(currentUser.username)}
+                        {getInitials(currentUser.firstName, currentUser.lastName)}
                       </span>
                     </div>
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-semibold">{currentUser.username}</p>
+                      <p className="text-sm font-semibold">{getUserDisplayName(currentUser)}</p>
                       <p className="text-xs text-muted-foreground">
                         Certification Student
                       </p>

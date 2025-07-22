@@ -14,6 +14,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,10 +26,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  const logout = async () => {
+    try {
+      await fetch('/api/logout', { method: 'GET' });
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/';
+    }
+  };
+
   const contextValue: AuthContextType = {
     user: user && typeof user === 'object' && 'id' in user ? user as User : null,
     isLoading,
     isAuthenticated: !!user && !error && typeof user === 'object' && 'id' in user,
+    logout,
   };
 
   return (
