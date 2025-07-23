@@ -17,23 +17,31 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <DashboardHero />
         
-        {/* Enhanced Study Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 layout-container">
-          {/* Main Study Area */}
-          <div className="lg:col-span-2 order-3 lg:order-1 grid-item">
+        {/* Enhanced Study Dashboard Layout */}
+        <div className="space-y-6 sm:space-y-8">
+          {/* Main Learning Mode Selector */}
+          <div className="grid-item">
             <LearningModeSelector />
           </div>
           
-          {/* Study Planning Sidebar */}
-          <div className="lg:col-span-1 order-1 lg:order-2 space-y-4 grid-item">
-            <StudyPlanCard />
-            <QuickActionsCard />
+          {/* Helen's Study Plan and This Week's Progress */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid-item">
+              <StudyPlanCard />
+            </div>
+            <div className="grid-item">
+              <WeeklyProgress />
+            </div>
           </div>
           
-          {/* Activity & Progress Sidebar */}
-          <div className="lg:col-span-1 order-2 lg:order-3 space-y-4 grid-item">
-            <WeeklyProgress />
-            <ActivitySidebar />
+          {/* Other Action Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid-item">
+              <QuickActionsCard />
+            </div>
+            <div className="grid-item">
+              <ActivitySidebar />
+            </div>
           </div>
         </div>
 
