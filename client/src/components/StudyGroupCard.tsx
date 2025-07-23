@@ -173,7 +173,7 @@ export default function StudyGroupCard() {
   };
 
   return (
-    <Card className="h-full">
+    <Card className="h-full relative z-10 bg-card overflow-hidden force-stacking">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">

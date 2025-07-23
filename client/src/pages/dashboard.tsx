@@ -37,11 +37,18 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Section Separator */}
+        <div className="section-separator mt-8 sm:mt-10 lg:mt-12"></div>
+
         {/* Advanced Features Section */}
-        <div className="mt-8 sm:mt-10 lg:mt-12 space-y-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <StudyGroupCard />
-            <PracticeTestMode />
+        <div className="mt-8 sm:mt-10 lg:mt-12 space-y-6 section-separator">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 layout-container">
+            <div className="grid-item">
+              <StudyGroupCard />
+            </div>
+            <div className="grid-item">
+              <PracticeTestMode />
+            </div>
           </div>
         </div>
 
