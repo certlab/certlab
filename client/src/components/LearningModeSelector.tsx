@@ -175,9 +175,9 @@ export default function LearningModeSelector() {
             value={selectedMode} 
             onValueChange={(value) => handleModeChange(value as LearningMode)}
             orientation="vertical"
-            className="flex gap-6"
+            className="w-full flex gap-6"
           >
-            <TabsList className="flex-col h-auto w-48 bg-muted/30 p-2">
+            <TabsList className="flex-col h-auto w-56 bg-muted/30 p-2 flex-shrink-0">
               <TabsTrigger 
                 value="study" 
                 className="w-full justify-start data-[state=active]:bg-primary data-[state=active]:text-primary-foreground p-3 mb-2"
@@ -207,7 +207,7 @@ export default function LearningModeSelector() {
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <TabsContent value="study" className="mt-0">
                 <div className="border-2 border-primary rounded-xl p-4 sm:p-5 lg:p-6 bg-gradient-to-br from-primary/10 to-primary/5 shadow-glow">
                   <div className="flex items-center justify-between mb-3">
