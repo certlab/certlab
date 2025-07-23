@@ -3106,13 +3106,37 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
   }
 
   async startChallengeAttempt(userId: string, challengeId: number): Promise<ChallengeAttempt> {
+    // First get the challenge details
+    const [challenge] = await db.select()
+      .from(challenges)
+      .where(eq(challenges.id, challengeId));
+    
+    if (!challenge) {
+      throw new Error('Challenge not found');
+    }
+
+    // Create a quiz for this challenge
+    const quiz = await this.createQuiz({
+      title: challenge.title,
+      categoryIds: [challenge.categoryId],
+      subcategoryIds: challenge.subcategoryId ? [challenge.subcategoryId] : [],
+      questionCount: challenge.questionsCount || 5,
+      timeLimit: challenge.timeLimit || 10,
+      userId,
+      isAdaptive: false,
+      difficultyLevel: challenge.difficulty || 1
+    });
+
+    // Create the challenge attempt with the quiz ID
     const [attempt] = await db.insert(challengeAttempts).values({
       userId,
       challengeId,
+      quizId: quiz.id,
       isCompleted: false,
       isPassed: false,
       pointsEarned: 0,
     }).returning();
+    
     return attempt;
   }
 
