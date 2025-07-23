@@ -160,6 +160,52 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  // Auto-authenticate test user in development environment
+  if (process.env.NODE_ENV === 'development') {
+    const testUserId = 'test-user-dev';
+    
+    // Ensure test user exists in database
+    let testUser = await storage.getUser(testUserId);
+    if (!testUser) {
+      try {
+        await storage.upsertUser({
+          id: testUserId,
+          email: 'test@example.com',
+          firstName: 'Test',
+          lastName: 'User',
+          profileImageUrl: null,
+        });
+        testUser = await storage.getUser(testUserId);
+        console.log('Development: Created test user for automatic authentication');
+      } catch (error) {
+        console.error('Failed to create test user:', error);
+      }
+    }
+
+    // Mock user session for development
+    if (testUser) {
+      (req as any).user = {
+        claims: {
+          sub: testUserId,
+          email: 'test@example.com',
+          first_name: 'Test',
+          last_name: 'User',
+          exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+        },
+        access_token: 'dev-mock-token',
+        refresh_token: 'dev-mock-refresh-token',
+        expires_at: Math.floor(Date.now() / 1000) + 3600
+      };
+      
+      // Mock isAuthenticated function
+      (req as any).isAuthenticated = () => true;
+      
+      console.log('Development: Auto-authenticated test user');
+      return next();
+    }
+  }
+
+  // Production authentication logic
   // Check if user is authenticated via passport
   if (!req.isAuthenticated() || !req.user) {
     return res.status(401).json({ message: "Unauthorized" });
