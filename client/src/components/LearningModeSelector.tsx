@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -165,132 +166,145 @@ export default function LearningModeSelector() {
       </CardHeader>
 
       <CardContent className="p-4 sm:p-6 lg:p-8">
-        {/* Mode Selection */}
+        {/* Mode Selection with Vertical Tabs */}
         <div className="mb-6 sm:mb-8">
           <Label className="text-xs sm:text-sm font-bold text-foreground mb-3 sm:mb-4 block uppercase tracking-wider">
             Learning Mode
           </Label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-            <div
-              className={`border-2 rounded-xl p-4 sm:p-5 lg:p-6 cursor-pointer transition-all duration-300 ${
-                selectedMode === "study"
-                  ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-glow"
-                  : "border-border hover:border-primary/50 hover:shadow-medium bg-card"
-              }`}
-              onClick={() => handleModeChange("study")}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-foreground text-lg">Study Mode</h3>
-                <Badge 
-                  variant={selectedMode === "study" ? "default" : "secondary"}
-                  className={selectedMode === "study" ? "gradient-primary text-white border-0" : ""}
-                >
-                  Continuous Learning
-                </Badge>
-              </div>
-              <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
-                Practice questions with immediate feedback. No limits, adaptive learning based on performance.
-              </p>
-              <ul className="text-xs text-foreground/60 space-y-2">
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-                  Unlimited questions
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-                  Immediate explanations
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-                  Multiple certifications
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-                  No mastery score impact
-                </li>
-              </ul>
-            </div>
+          <Tabs 
+            value={selectedMode} 
+            onValueChange={(value) => handleModeChange(value as LearningMode)}
+            orientation="vertical"
+            className="flex gap-6"
+          >
+            <TabsList className="flex-col h-auto w-48 bg-muted/30 p-2">
+              <TabsTrigger 
+                value="study" 
+                className="w-full justify-start data-[state=active]:bg-primary data-[state=active]:text-primary-foreground p-3 mb-2"
+              >
+                <div className="flex items-center gap-3">
+                  <i className="fas fa-brain text-lg"></i>
+                  <span className="font-semibold">Study Mode</span>
+                </div>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="quiz" 
+                className="w-full justify-start data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground p-3 mb-2"
+              >
+                <div className="flex items-center gap-3">
+                  <i className="fas fa-clipboard-check text-lg"></i>
+                  <span className="font-semibold">Quiz Mode</span>
+                </div>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="challenge" 
+                className="w-full justify-start data-[state=active]:bg-orange-500 data-[state=active]:text-white p-3"
+              >
+                <div className="flex items-center gap-3">
+                  <i className="fas fa-trophy text-lg"></i>
+                  <span className="font-semibold">Challenge Mode</span>
+                </div>
+              </TabsTrigger>
+            </TabsList>
 
-            <div
-              className={`border-2 rounded-xl p-4 sm:p-5 lg:p-6 cursor-pointer transition-all duration-300 ${
-                selectedMode === "quiz"
-                  ? "border-secondary bg-gradient-to-br from-secondary/10 to-secondary/5 shadow-glow"
-                  : "border-border hover:border-secondary/50 hover:shadow-medium bg-card"
-              }`}
-              onClick={() => handleModeChange("quiz")}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-foreground text-lg">Quiz Mode</h3>
-                <Badge 
-                  variant={selectedMode === "quiz" ? "default" : "secondary"}
-                  className={selectedMode === "quiz" ? "bg-secondary text-white border-0" : ""}
-                >
-                  Graded Assessment
-                </Badge>
-              </div>
-              <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
-                Formal assessment that counts toward your mastery score for certification progress.
-              </p>
-              <ul className="text-xs text-foreground/60 space-y-2">
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
-                  Fixed question count
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
-                  Updates mastery meter
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
-                  Single certification focus
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
-                  Progress tracking
-                </li>
-              </ul>
-            </div>
+            <div className="flex-1">
+              <TabsContent value="study" className="mt-0">
+                <div className="border-2 border-primary rounded-xl p-4 sm:p-5 lg:p-6 bg-gradient-to-br from-primary/10 to-primary/5 shadow-glow">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-foreground text-lg">Study Mode</h3>
+                    <Badge className="gradient-primary text-white border-0">
+                      Continuous Learning
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
+                    Practice questions with immediate feedback. No limits, adaptive learning based on performance.
+                  </p>
+                  <ul className="text-xs text-foreground/60 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                      Unlimited questions
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                      Immediate explanations
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                      Multiple certifications
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                      No mastery score impact
+                    </li>
+                  </ul>
+                </div>
+              </TabsContent>
 
-            <div
-              className={`border-2 rounded-xl p-4 sm:p-5 lg:p-6 cursor-pointer transition-all duration-300 ${
-                selectedMode === "challenge"
-                  ? "border-orange-500 bg-gradient-to-br from-orange-500/10 to-orange-500/5 shadow-glow"
-                  : "border-border hover:border-orange-500/50 hover:shadow-medium bg-card"
-              }`}
-              onClick={() => handleModeChange("challenge")}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-foreground text-lg">Challenge Mode</h3>
-                <Badge 
-                  variant={selectedMode === "challenge" ? "default" : "secondary"}
-                  className={selectedMode === "challenge" ? "bg-orange-500 text-white border-0" : ""}
-                >
-                  Micro-Learning
-                </Badge>
-              </div>
-              <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
-                Short 5-10 minute focused challenges with streak rewards and daily goals.
-              </p>
-              <ul className="text-xs text-foreground/60 space-y-2">
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-                  Quick 5-7 questions
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-                  Daily challenges
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-                  Streak multipliers
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-                  Bonus points
-                </li>
-              </ul>
+              <TabsContent value="quiz" className="mt-0">
+                <div className="border-2 border-secondary rounded-xl p-4 sm:p-5 lg:p-6 bg-gradient-to-br from-secondary/10 to-secondary/5 shadow-glow">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-foreground text-lg">Quiz Mode</h3>
+                    <Badge className="bg-secondary text-white border-0">
+                      Graded Assessment
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
+                    Formal assessment that counts toward your mastery score for certification progress.
+                  </p>
+                  <ul className="text-xs text-foreground/60 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
+                      Fixed question count
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
+                      Updates mastery meter
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
+                      Single certification focus
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
+                      Progress tracking
+                    </li>
+                  </ul>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="challenge" className="mt-0">
+                <div className="border-2 border-orange-500 rounded-xl p-4 sm:p-5 lg:p-6 bg-gradient-to-br from-orange-500/10 to-orange-500/5 shadow-glow">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-foreground text-lg">Challenge Mode</h3>
+                    <Badge className="bg-orange-500 text-white border-0">
+                      Micro-Learning
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
+                    Short 5-10 minute focused challenges with streak rewards and daily goals.
+                  </p>
+                  <ul className="text-xs text-foreground/60 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                      Quick 5-7 questions
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                      Daily challenges
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                      Streak multipliers
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                      Bonus points
+                    </li>
+                  </ul>
+                </div>
+              </TabsContent>
             </div>
-          </div>
+          </Tabs>
         </div>
 
         {/* Category Selection */}
