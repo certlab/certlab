@@ -12,7 +12,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Category, Subcategory } from "@shared/schema";
 
-type LearningMode = "study" | "quiz";
+type LearningMode = "study" | "quiz" | "challenge";
 
 export default function LearningModeSelector() {
   const [, setLocation] = useLocation();
@@ -123,6 +123,12 @@ export default function LearningModeSelector() {
       return;
     }
 
+    // Handle challenge mode differently
+    if (selectedMode === "challenge") {
+      setLocation("/challenges");
+      return;
+    }
+
     const selectedCertNames = categories
       .filter(c => selectedCategories.includes(c.id))
       .map(c => c.name)
@@ -164,7 +170,7 @@ export default function LearningModeSelector() {
           <Label className="text-xs sm:text-sm font-bold text-foreground mb-3 sm:mb-4 block uppercase tracking-wider">
             Learning Mode
           </Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             <div
               className={`border-2 rounded-xl p-4 sm:p-5 lg:p-6 cursor-pointer transition-all duration-300 ${
                 selectedMode === "study"
@@ -241,6 +247,46 @@ export default function LearningModeSelector() {
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
                   Progress tracking
+                </li>
+              </ul>
+            </div>
+
+            <div
+              className={`border-2 rounded-xl p-4 sm:p-5 lg:p-6 cursor-pointer transition-all duration-300 ${
+                selectedMode === "challenge"
+                  ? "border-orange-500 bg-gradient-to-br from-orange-500/10 to-orange-500/5 shadow-glow"
+                  : "border-border hover:border-orange-500/50 hover:shadow-medium bg-card"
+              }`}
+              onClick={() => handleModeChange("challenge")}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-foreground text-lg">Challenge Mode</h3>
+                <Badge 
+                  variant={selectedMode === "challenge" ? "default" : "secondary"}
+                  className={selectedMode === "challenge" ? "bg-orange-500 text-white border-0" : ""}
+                >
+                  Micro-Learning
+                </Badge>
+              </div>
+              <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
+                Short 5-10 minute focused challenges with streak rewards and daily goals.
+              </p>
+              <ul className="text-xs text-foreground/60 space-y-2">
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                  Quick 5-7 questions
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                  Daily challenges
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                  Streak multipliers
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                  Bonus points
                 </li>
               </ul>
             </div>

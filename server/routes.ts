@@ -955,6 +955,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Challenge System Routes
+  // Get user's available challenges
+  app.get("/api/user/:id/challenges", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const challenges = await storage.getAvailableChallenges(userId);
+      res.json(challenges);
+    } catch (error) {
+      console.error("Error getting challenges:", error);
+      res.status(500).json({ message: "Failed to get challenges" });
+    }
+  });
+
+  // Get user's challenge history
+  app.get("/api/user/:id/challenge-attempts", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const attempts = await storage.getUserChallengeAttempts(userId);
+      res.json(attempts);
+    } catch (error) {
+      console.error("Error getting challenge attempts:", error);
+      res.status(500).json({ message: "Failed to get challenge attempts" });
+    }
+  });
+
+  // Generate daily challenges for user
+  app.post("/api/user/:id/generate-daily-challenges", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const challenges = await storage.generateDailyChallenges(userId);
+      res.json(challenges);
+    } catch (error) {
+      console.error("Error generating daily challenges:", error);
+      res.status(500).json({ message: "Failed to generate daily challenges" });
+    }
+  });
+
+  // Start a challenge attempt
+  app.post("/api/challenge/:id/start", isAuthenticated, async (req, res) => {
+    try {
+      const challengeId = parseInt(req.params.id);
+      const { userId } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      const attempt = await storage.startChallengeAttempt(userId, challengeId);
+      res.json(attempt);
+    } catch (error) {
+      console.error("Error starting challenge:", error);
+      res.status(500).json({ message: "Failed to start challenge" });
+    }
+  });
+
+  // Complete a challenge attempt
+  app.post("/api/challenge-attempt/:id/complete", isAuthenticated, async (req, res) => {
+    try {
+      const attemptId = parseInt(req.params.id);
+      const { score, answers, timeSpent } = req.body;
+
+      if (typeof score !== 'number' || !Array.isArray(answers) || typeof timeSpent !== 'number') {
+        return res.status(400).json({ message: "Invalid completion data" });
+      }
+
+      const completedAttempt = await storage.completeChallengeAttempt(attemptId, score, answers, timeSpent);
+      res.json(completedAttempt);
+    } catch (error) {
+      console.error("Error completing challenge:", error);
+      res.status(500).json({ message: "Failed to complete challenge" });
+    }
+  });
+
+  // Get challenge details
+  app.get("/api/challenge/:id", isAuthenticated, async (req, res) => {
+    try {
+      const challengeId = parseInt(req.params.id);
+      const challenge = await storage.getChallenge(challengeId);
+      
+      if (!challenge) {
+        return res.status(404).json({ message: "Challenge not found" });
+      }
+
+      res.json(challenge);
+    } catch (error) {
+      console.error("Error getting challenge:", error);
+      res.status(500).json({ message: "Failed to get challenge" });
+    }
+  });
+
+  // Create a custom challenge (for quick challenges)
+  app.post("/api/challenge/create", isAuthenticated, async (req, res) => {
+    try {
+      const challengeData = req.body;
+      const challenge = await storage.createChallenge(challengeData);
+      res.json(challenge);
+    } catch (error) {
+      console.error("Error creating challenge:", error);
+      res.status(500).json({ message: "Failed to create challenge" });
+    }
+  });
+
   // Development endpoint to sync UI structure
   if (process.env.NODE_ENV === 'development') {
     app.post('/api/dev/sync-ui-structure', async (req, res) => {

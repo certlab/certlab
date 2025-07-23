@@ -85,7 +85,44 @@ export const quizzes = pgTable("quizzes", {
   difficultyFilter: jsonb("difficulty_filter"), // Array of difficulty levels to include
   isPassing: boolean("is_passing").default(false), // 85%+ threshold
   missedTopics: jsonb("missed_topics"), // Topics that need lecture generation
-  mode: text("mode").notNull().default("study"), // "study" or "quiz" mode
+  mode: text("mode").notNull().default("study"), // "study", "quiz", or "challenge" mode
+});
+
+// Micro-learning challenges table
+export const challenges = pgTable("challenges", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  type: text("type").notNull(), // "daily", "quick", "streak", "focus"
+  title: text("title").notNull(),
+  description: text("description"),
+  categoryId: integer("category_id"),
+  subcategoryId: integer("subcategory_id"),
+  targetScore: integer("target_score").default(80), // Target percentage
+  questionsCount: integer("questions_count").default(5), // 3-7 questions typically
+  timeLimit: integer("time_limit").default(5), // 5-15 minutes
+  difficulty: integer("difficulty").default(1), // 1-3 for challenges (easier than full quizzes)
+  streakMultiplier: integer("streak_multiplier").default(1), // Bonus points for streaks
+  pointsReward: integer("points_reward").default(50), // Base points for completion
+  isActive: boolean("is_active").default(true),
+  availableAt: timestamp("available_at").defaultNow(),
+  expiresAt: timestamp("expires_at"), // Some challenges expire (like daily challenges)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User challenge attempts and progress
+export const challengeAttempts = pgTable("challenge_attempts", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  challengeId: integer("challenge_id").notNull(),
+  quizId: integer("quiz_id"), // Links to the actual quiz attempt
+  score: integer("score"), // Percentage score
+  pointsEarned: integer("points_earned").default(0),
+  timeSpent: integer("time_spent"), // in seconds
+  isCompleted: boolean("is_completed").default(false),
+  isPassed: boolean("is_passed").default(false), // Met the target score
+  answers: jsonb("answers"), // User answers for quick reference
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
 });
 
 export const userProgress = pgTable("user_progress", {
@@ -278,6 +315,23 @@ export type InsertUserBadge = z.infer<typeof insertUserBadgeSchema>;
 export type UserBadge = typeof userBadges.$inferSelect;
 export type InsertUserGameStats = z.infer<typeof insertUserGameStatsSchema>;
 export type UserGameStats = typeof userGameStats.$inferSelect;
+
+// Challenge schemas and types
+export const insertChallengeSchema = createInsertSchema(challenges).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertChallengeAttemptSchema = createInsertSchema(challengeAttempts).omit({
+  id: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+export type Challenge = typeof challenges.$inferSelect;
+export type InsertChallengeAttempt = z.infer<typeof insertChallengeAttemptSchema>;
+export type ChallengeAttempt = typeof challengeAttempts.$inferSelect;
 
 // User statistics type for dashboard
 export type UserStats = {

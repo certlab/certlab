@@ -1,13 +1,14 @@
 import { 
   tenants, users, categories, subcategories, questions, quizzes, userProgress, lectures, masteryScores,
-  badges, userBadges, userGameStats,
+  badges, userBadges, userGameStats, challenges, challengeAttempts,
   type Tenant, type InsertTenant, type User, type InsertUser, type UpsertUser, type Category, type InsertCategory,
   type Subcategory, type InsertSubcategory, type Question, type InsertQuestion,
   type Quiz, type InsertQuiz, type UserProgress, type InsertUserProgress,
-  type MasteryScore, type InsertMasteryScore, type Badge, type UserBadge, type UserGameStats
+  type MasteryScore, type InsertMasteryScore, type Badge, type UserBadge, type UserGameStats,
+  type Challenge, type InsertChallenge, type ChallengeAttempt, type InsertChallengeAttempt
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, inArray, desc, gte, lte } from "drizzle-orm";
+import { eq, and, inArray, desc, gte, lte, or } from "drizzle-orm";
 
 export interface IStorage {
   // Tenant management
@@ -109,6 +110,17 @@ export interface IStorage {
   checkAndAwardAchievements(userId: string): Promise<UserBadge[]>;
   updateUserBadgeNotification(userId: string, badgeId: number, isNotified: boolean): Promise<void>;
   updateUserActivity(userId: string): Promise<void>;
+  
+  // Challenge system methods
+  getAvailableChallenges(userId: string): Promise<Challenge[]>;
+  getUserChallenges(userId: string): Promise<Challenge[]>;
+  createChallenge(challenge: InsertChallenge): Promise<Challenge>;
+  getChallenge(id: number): Promise<Challenge | undefined>;
+  generateDailyChallenges(userId: string): Promise<Challenge[]>;
+  startChallengeAttempt(userId: string, challengeId: number): Promise<ChallengeAttempt>;
+  completeChallengeAttempt(attemptId: number, score: number, answers: any[], timeSpent: number): Promise<ChallengeAttempt>;
+  getUserChallengeAttempts(userId: string): Promise<ChallengeAttempt[]>;
+  getChallengeAttempt(id: number): Promise<ChallengeAttempt | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2986,6 +2998,152 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
       totalPoints += i * 100;
     }
     return totalPoints;
+  }
+
+  // Challenge System Implementation
+  async getAvailableChallenges(userId: string): Promise<Challenge[]> {
+    const now = new Date();
+    return await db.select()
+      .from(challenges)
+      .where(and(
+        eq(challenges.userId, userId),
+        eq(challenges.isActive, true),
+        gte(challenges.availableAt, now),
+        or(
+          eq(challenges.expiresAt, null),
+          lte(challenges.expiresAt, now)
+        )
+      ))
+      .orderBy(desc(challenges.createdAt));
+  }
+
+  async getUserChallenges(userId: string): Promise<Challenge[]> {
+    return await db.select()
+      .from(challenges)
+      .where(eq(challenges.userId, userId))
+      .orderBy(desc(challenges.createdAt));
+  }
+
+  async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
+    const [newChallenge] = await db.insert(challenges).values(challenge).returning();
+    return newChallenge;
+  }
+
+  async getChallenge(id: number): Promise<Challenge | undefined> {
+    const [challenge] = await db.select()
+      .from(challenges)
+      .where(eq(challenges.id, id));
+    return challenge;
+  }
+
+  async generateDailyChallenges(userId: string): Promise<Challenge[]> {
+    // Get user's weakest areas for targeted challenges
+    const userProgress = await db.select()
+      .from(masteryScores)
+      .where(eq(masteryScores.userId, userId))
+      .orderBy(masteryScores.rollingAverage)
+      .limit(3);
+
+    const dailyChallenges: InsertChallenge[] = [];
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+
+    // Generate 3 daily challenges based on weak areas
+    for (let i = 0; i < Math.min(3, userProgress.length); i++) {
+      const area = userProgress[i];
+      dailyChallenges.push({
+        userId,
+        type: 'daily',
+        title: `Daily Challenge: ${await this.getCategoryName(area.categoryId)}`,
+        description: `Quick 5-question challenge to improve your mastery`,
+        categoryId: area.categoryId,
+        subcategoryId: area.subcategoryId,
+        targetScore: 80,
+        questionsCount: 5,
+        timeLimit: 10,
+        difficulty: 1,
+        pointsReward: 75,
+        availableAt: tomorrow,
+        expiresAt: new Date(tomorrow.getTime() + 24 * 60 * 60 * 1000), // 24 hours
+        isActive: true,
+      });
+    }
+
+    if (dailyChallenges.length > 0) {
+      return await db.insert(challenges).values(dailyChallenges).returning();
+    }
+
+    return [];
+  }
+
+  async startChallengeAttempt(userId: string, challengeId: number): Promise<ChallengeAttempt> {
+    const [attempt] = await db.insert(challengeAttempts).values({
+      userId,
+      challengeId,
+      isCompleted: false,
+      isPassed: false,
+      pointsEarned: 0,
+    }).returning();
+    return attempt;
+  }
+
+  async completeChallengeAttempt(attemptId: number, score: number, answers: any[], timeSpent: number): Promise<ChallengeAttempt> {
+    const attempt = await this.getChallengeAttempt(attemptId);
+    if (!attempt) throw new Error('Challenge attempt not found');
+
+    const challenge = await this.getChallenge(attempt.challengeId);
+    if (!challenge) throw new Error('Challenge not found');
+
+    const isPassed = score >= challenge.targetScore;
+    const pointsEarned = isPassed ? challenge.pointsReward * challenge.streakMultiplier : 0;
+
+    const [updatedAttempt] = await db.update(challengeAttempts)
+      .set({
+        score,
+        answers,
+        timeSpent,
+        isCompleted: true,
+        isPassed,
+        pointsEarned,
+        completedAt: new Date(),
+      })
+      .where(eq(challengeAttempts.id, attemptId))
+      .returning();
+
+    // Update user game stats if challenge passed
+    if (isPassed) {
+      const gameStats = await this.getUserGameStats(attempt.userId);
+      if (gameStats) {
+        await this.updateUserGameStats(attempt.userId, {
+          totalPoints: gameStats.totalPoints + pointsEarned,
+          level: this.calculateLevel(gameStats.totalPoints + pointsEarned),
+        });
+      }
+    }
+
+    return updatedAttempt;
+  }
+
+  async getUserChallengeAttempts(userId: string): Promise<ChallengeAttempt[]> {
+    return await db.select()
+      .from(challengeAttempts)
+      .where(eq(challengeAttempts.userId, userId))
+      .orderBy(desc(challengeAttempts.startedAt));
+  }
+
+  async getChallengeAttempt(id: number): Promise<ChallengeAttempt | undefined> {
+    const [attempt] = await db.select()
+      .from(challengeAttempts)
+      .where(eq(challengeAttempts.id, id));
+    return attempt;
+  }
+
+  private async getCategoryName(categoryId: number): Promise<string> {
+    const [category] = await db.select()
+      .from(categories)
+      .where(eq(categories.id, categoryId));
+    return category?.name || 'Unknown';
   }
 }
 
