@@ -38,14 +38,12 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   });
 
   const submitQuizMutation = useMutation({
-    mutationFn: async (quizAnswers: any[]) => {
-      const response = await apiRequest({ method: "POST", endpoint: `/api/quiz/${quizId}/submit`, data: { 
-        answers: quizAnswers 
-      } });
-      return response.json();
-    },
+    mutationFn: async (quizAnswers: any[]) => 
+      apiRequest(`/api/quiz/${quizId}/submit`, {
+        method: "POST",
+        body: { answers: quizAnswers }
+      }),
     onSuccess: () => {
-      // Invalidate all user-related queries and the specific quiz query
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/quiz', quizId] });
       setLocation(`/results/${quizId}`);
@@ -149,15 +147,12 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   const handleSubmitQuiz = () => {
     const quizAnswers = questions.map(question => {
       const answer = answers[question.id];
-      console.log(`Question ${question.id}: answer in state = ${answer}, using = ${answer !== undefined ? answer : 0}`);
       return {
         questionId: question.id,
         answer: answer !== undefined ? answer : 0,
       };
     });
 
-    console.log('Submitting quiz answers:', quizAnswers);
-    console.log('Current answers state:', answers);
     submitQuizMutation.mutate(quizAnswers);
   };
 
@@ -260,11 +255,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                 const isSelectedAnswer = selectedAnswer === optionId;
                 const isCorrectAnswer = optionId === currentQuestion.correctAnswer;
                 
-                // Debug logging
-                if (index === 0) {
-                  console.log(`Question ${currentQuestion.id} options:`, currentQuestion.options);
-                  console.log(`Selected answer: ${selectedAnswer}, Correct answer: ${currentQuestion.correctAnswer}`);
-                }
+
                 
                 let optionClassName = "flex items-start space-x-3 p-3 sm:p-4 border-2 rounded-lg transition-all";
                 

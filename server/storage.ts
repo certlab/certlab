@@ -8,7 +8,7 @@ import {
   type Challenge, type InsertChallenge, type ChallengeAttempt, type InsertChallengeAttempt
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, inArray, desc, gte, lte, or } from "drizzle-orm";
+import { eq, and, inArray, desc, gte, lte, or, isNull } from "drizzle-orm";
 
 export interface IStorage {
   // Tenant management
@@ -3008,10 +3008,10 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
       .where(and(
         eq(challenges.userId, userId),
         eq(challenges.isActive, true),
-        gte(challenges.availableAt, now),
+        lte(challenges.availableAt, now),
         or(
-          eq(challenges.expiresAt, null),
-          lte(challenges.expiresAt, now)
+          isNull(challenges.expiresAt),
+          gte(challenges.expiresAt, now)
         )
       ))
       .orderBy(desc(challenges.createdAt));
@@ -3045,29 +3045,57 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
       .limit(3);
 
     const dailyChallenges: InsertChallenge[] = [];
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
+    const now = new Date();
+    
+    // Set challenges to be available immediately
+    const availableTime = new Date(now.getTime() + 1000); // 1 second from now
+    const expirationTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
 
-    // Generate 3 daily challenges based on weak areas
-    for (let i = 0; i < Math.min(3, userProgress.length); i++) {
-      const area = userProgress[i];
-      dailyChallenges.push({
-        userId,
-        type: 'daily',
-        title: `Daily Challenge: ${await this.getCategoryName(area.categoryId)}`,
-        description: `Quick 5-question challenge to improve your mastery`,
-        categoryId: area.categoryId,
-        subcategoryId: area.subcategoryId,
-        targetScore: 80,
-        questionsCount: 5,
-        timeLimit: 10,
-        difficulty: 1,
-        pointsReward: 75,
-        availableAt: tomorrow,
-        expiresAt: new Date(tomorrow.getTime() + 24 * 60 * 60 * 1000), // 24 hours
-        isActive: true,
-      });
+    if (userProgress.length > 0) {
+      // Generate challenges based on weak areas
+      for (let i = 0; i < Math.min(3, userProgress.length); i++) {
+        const area = userProgress[i];
+        dailyChallenges.push({
+          userId,
+          type: 'daily',
+          title: `Daily Challenge: ${await this.getCategoryName(area.categoryId)}`,
+          description: `Quick 5-question challenge to improve your mastery`,
+          categoryId: area.categoryId,
+          subcategoryId: area.subcategoryId,
+          targetScore: 80,
+          questionsCount: 5,
+          timeLimit: 10,
+          difficulty: 1,
+          pointsReward: 75,
+          availableAt: availableTime,
+          expiresAt: expirationTime,
+          isActive: true,
+        });
+      }
+    } else {
+      // Generate general challenges for new users across different categories
+      const categories = await this.getCategories();
+      const availableCategories = categories.slice(0, 3); // First 3 categories
+
+      for (let i = 0; i < availableCategories.length; i++) {
+        const category = availableCategories[i];
+        dailyChallenges.push({
+          userId,
+          type: 'daily',
+          title: `Daily Challenge: ${category.name}`,
+          description: `Get started with a quick 5-question challenge`,
+          categoryId: category.id,
+          subcategoryId: null,
+          targetScore: 80,
+          questionsCount: 5,
+          timeLimit: 10,
+          difficulty: 1,
+          pointsReward: 75,
+          availableAt: availableTime,
+          expiresAt: expirationTime,
+          isActive: true,
+        });
+      }
     }
 
     if (dailyChallenges.length > 0) {
@@ -3095,8 +3123,8 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     const challenge = await this.getChallenge(attempt.challengeId);
     if (!challenge) throw new Error('Challenge not found');
 
-    const isPassed = score >= challenge.targetScore;
-    const pointsEarned = isPassed ? challenge.pointsReward * challenge.streakMultiplier : 0;
+    const isPassed = score >= (challenge.targetScore || 80);
+    const pointsEarned = isPassed ? (challenge.pointsReward || 50) * (challenge.streakMultiplier || 1) : 0;
 
     const [updatedAttempt] = await db.update(challengeAttempts)
       .set({
@@ -3116,8 +3144,8 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
       const gameStats = await this.getUserGameStats(attempt.userId);
       if (gameStats) {
         await this.updateUserGameStats(attempt.userId, {
-          totalPoints: gameStats.totalPoints + pointsEarned,
-          level: this.calculateLevel(gameStats.totalPoints + pointsEarned),
+          totalPoints: (gameStats.totalPoints || 0) + pointsEarned,
+          level: this.calculateLevel((gameStats.totalPoints || 0) + pointsEarned),
         });
       }
     }

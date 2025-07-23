@@ -984,11 +984,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/user/:id/generate-daily-challenges", isAuthenticated, async (req, res) => {
     try {
       const userId = req.params.id;
+      console.log("Generating daily challenges for user:", userId);
       const challenges = await storage.generateDailyChallenges(userId);
+      console.log("Generated challenges:", challenges.length);
       res.json(challenges);
     } catch (error) {
       console.error("Error generating daily challenges:", error);
-      res.status(500).json({ message: "Failed to generate daily challenges" });
+      res.status(400).json({ message: "Failed to generate daily challenges: " + (error instanceof Error ? error.message : String(error)) });
     }
   });
 
