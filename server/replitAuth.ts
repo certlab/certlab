@@ -162,7 +162,7 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   // Auto-authenticate test user in development environment
   if (process.env.NODE_ENV === 'development') {
-    const testUserId = 'test-user-dev';
+    const testUserId = '999999'; // Use numeric string ID for compatibility
     
     // Ensure test user exists in database
     let testUser = await storage.getUser(testUserId);
