@@ -9,6 +9,7 @@ interface BadgeData {
   id: number;
   badgeId: number;
   earnedAt: string;
+  isNotified?: boolean;
   badge: {
     name: string;
     description: string;
@@ -26,7 +27,7 @@ interface AchievementData {
 }
 
 interface AchievementNotificationProps {
-  userId: number;
+  userId: string;
   onClose?: () => void;
 }
 
