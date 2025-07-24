@@ -122,7 +122,7 @@ export function AchievementNotification({ userId, onClose }: AchievementNotifica
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-      <Card className="w-full max-w-md mx-4 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-purple-200 dark:border-purple-700 shadow-2xl animate-in zoom-in slide-in-from-bottom-4 duration-500">
+      <Card className="w-full max-w-md mx-4 backdrop-blur-sm bg-card/80 border-border/50 shadow-2xl animate-in zoom-in slide-in-from-bottom-4 duration-500">
         <CardContent className="p-6">
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-2">

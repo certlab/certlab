@@ -57,7 +57,7 @@ export default function WeeklyProgress() {
   };
 
   return (
-    <Card className="h-full">
+    <Card className="h-full backdrop-blur-sm bg-card/80 border-border/50 card-hover">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />

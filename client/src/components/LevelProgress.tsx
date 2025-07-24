@@ -49,7 +49,7 @@ export function LevelProgress({
   const pointsNeeded = pointsNeededForLevel - pointsInCurrentLevel;
 
   return (
-    <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-slate-200 dark:border-slate-700">
+    <Card className="backdrop-blur-sm bg-card/80 border-border/50 card-hover">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-2xl font-bold">Level Progress</CardTitle>

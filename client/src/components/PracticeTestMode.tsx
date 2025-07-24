@@ -162,7 +162,7 @@ export default function PracticeTestMode() {
   };
 
   return (
-    <Card className="relative z-10 bg-card overflow-hidden force-stacking">
+    <Card className="h-full backdrop-blur-sm bg-card/80 border-border/50 card-hover overflow-hidden">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
