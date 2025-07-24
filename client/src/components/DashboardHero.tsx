@@ -154,9 +154,13 @@ export default function DashboardHero() {
   return (
     <div className="animate-fade-in">
         {/* Helen AI Insights Header */}
-        <div className="gradient-mesh border-b border-border/50 p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4 text-center sm:text-left">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 gradient-primary rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden avatar-container group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 shadow-glow">
+        <div className="section-header mb-6">
+          <h2 className="text-xl font-semibold text-foreground">Helen AI Assistant</h2>
+          <p className="text-sm text-muted-foreground">Your personalized AI learning companion and study guidance</p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4 text-center sm:text-left mb-6">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 gradient-primary rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden avatar-container group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 shadow-glow">
               <svg 
                 width="80" 
                 height="80" 
@@ -271,7 +275,6 @@ export default function DashboardHero() {
             </div>
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start space-y-2 sm:space-y-0 sm:space-x-2 mb-3">
-                <h3 className="text-lg sm:text-xl font-bold text-foreground">Helen AI Assistant</h3>
                 <Badge 
                   variant={insights.type === "excellent" ? "default" : "secondary"} 
                   className={`text-xs font-medium ${
@@ -296,8 +299,7 @@ export default function DashboardHero() {
               </p>
             </div>
           </div>
-        </div>
-
+        
         <div className="p-4 sm:p-6 lg:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Quick Actions */}
@@ -376,6 +378,6 @@ export default function DashboardHero() {
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
+    </div>
+  );
+}

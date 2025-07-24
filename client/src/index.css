@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(220, 14%, 95%);
+  --background: hsl(220, 14%, 92%);
   --foreground: hsl(220, 17%, 11%);
-  --muted: hsl(220, 14%, 91%);
+  --muted: hsl(220, 14%, 88%);
   --muted-foreground: hsl(220, 13%, 40%);
   --popover: hsl(220, 14%, 99%);
   --popover-foreground: hsl(220, 17%, 11%);
@@ -45,9 +45,9 @@
 }
 
 .dark {
-  --background: hsl(222, 47%, 8%);
+  --background: hsl(222, 47%, 6%);
   --foreground: hsl(213, 31%, 91%);
-  --muted: hsl(223, 47%, 17%);
+  --muted: hsl(223, 47%, 15%);
   --muted-foreground: hsl(215, 20%, 65%);
   --popover: hsl(224, 47%, 16%);
   --popover-foreground: hsl(213, 31%, 91%);
@@ -74,9 +74,9 @@
 }
 
 .ocean {
-  --background: hsl(200, 100%, 94%);
+  --background: hsl(200, 100%, 91%);
   --foreground: hsl(200, 80%, 10%);
-  --muted: hsl(200, 50%, 87%);
+  --muted: hsl(200, 50%, 84%);
   --muted-foreground: hsl(200, 50%, 30%);
   --popover: hsl(200, 100%, 97%);
   --popover-foreground: hsl(200, 80%, 10%);
@@ -96,9 +96,9 @@
 }
 
 .forest {
-  --background: hsl(120, 25%, 94%);
+  --background: hsl(120, 25%, 91%);
   --foreground: hsl(120, 60%, 10%);
-  --muted: hsl(120, 20%, 87%);
+  --muted: hsl(120, 20%, 84%);
   --muted-foreground: hsl(120, 45%, 30%);
   --popover: hsl(120, 25%, 97%);
   --popover-foreground: hsl(120, 60%, 10%);
@@ -118,9 +118,9 @@
 }
 
 .sunset {
-  --background: hsl(30, 40%, 95%);
+  --background: hsl(30, 40%, 92%);
   --foreground: hsl(20, 80%, 10%);
-  --muted: hsl(30, 30%, 89%);
+  --muted: hsl(30, 30%, 86%);
   --muted-foreground: hsl(25, 60%, 30%);
   --popover: hsl(30, 40%, 98%);
   --popover-foreground: hsl(20, 80%, 10%);
@@ -140,9 +140,9 @@
 }
 
 .purple {
-  --background: hsl(270, 30%, 95%);
+  --background: hsl(270, 30%, 92%);
   --foreground: hsl(270, 80%, 10%);
-  --muted: hsl(270, 20%, 89%);
+  --muted: hsl(270, 20%, 86%);
   --muted-foreground: hsl(270, 50%, 30%);
   --popover: hsl(270, 30%, 98%);
   --popover-foreground: hsl(270, 80%, 10%);
