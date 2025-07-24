@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { TrendingUp, Calendar, Award, BookOpen } from "lucide-react";
+import { TrendingUp, Calendar, Award, BookOpen, Brain, ClipboardCheck } from "lucide-react";
 import type { UserStats, Category, MasteryScore } from "@shared/schema";
 
 export default function DashboardHero() {
@@ -106,30 +106,92 @@ export default function DashboardHero() {
 
   return (
     <div className="animate-fade-in">
-      {/* Welcome Header with Key Stats */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Welcome back, {currentUser?.firstName || 'Student'}!
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Ready to continue your certification journey
-          </p>
-        </div>
+      {/* Enhanced Welcome Hero with Beautiful Background */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-background to-secondary/5 border border-border/50 p-8 mb-8">
+        {/* Background Decorative Elements */}
+        <div className="absolute inset-0 gradient-mesh opacity-30"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-primary/20 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-secondary/20 to-transparent rounded-full blur-2xl"></div>
         
-        {/* Quick Stats */}
-        <div className="flex gap-6 mt-4 lg:mt-0">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary">{stats?.totalQuizzes || 0}</div>
-            <div className="text-sm text-muted-foreground">Sessions</div>
+        <div className="relative z-10">
+          {/* Welcome Header with Key Stats */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                    {currentUser?.firstName?.[0] || 'S'}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-background shadow-sm"></div>
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent mb-1">
+                    Welcome back, {currentUser?.firstName || 'Student'}!
+                  </h1>
+                  <p className="text-lg text-muted-foreground flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" />
+                    Ready to continue your certification journey
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Enhanced Quick Stats */}
+            <div className="flex gap-4 mt-6 lg:mt-0">
+              <div className="stat-card bg-card/80 backdrop-blur-sm border-primary/20 text-center p-4 rounded-xl min-w-[100px] interactive-scale">
+                <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
+                <div className="text-2xl font-bold text-primary">{stats?.totalQuizzes || 0}</div>
+                <div className="text-sm text-muted-foreground font-medium">Sessions</div>
+              </div>
+              
+              <div className="stat-card bg-card/80 backdrop-blur-sm border-accent/20 text-center p-4 rounded-xl min-w-[100px] interactive-scale">
+                <Calendar className="w-6 h-6 text-accent mx-auto mb-2" />
+                <div className="text-2xl font-bold text-accent">{stats?.currentStreak || 0}</div>
+                <div className="text-sm text-muted-foreground font-medium">Day Streak</div>
+              </div>
+              
+              <div className="stat-card bg-card/80 backdrop-blur-sm border-secondary/20 text-center p-4 rounded-xl min-w-[100px] interactive-scale">
+                <Award className="w-6 h-6 text-secondary mx-auto mb-2" />
+                <div className="text-2xl font-bold text-secondary">{Math.round(stats?.averageScore || 0)}%</div>
+                <div className="text-sm text-muted-foreground font-medium">Avg Score</div>
+              </div>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary">{stats?.currentStreak || 0}</div>
-            <div className="text-sm text-muted-foreground">Day Streak</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary">{Math.round(stats?.averageScore || 0)}%</div>
-            <div className="text-sm text-muted-foreground">Avg Score</div>
+        </div>
+
+        {/* AI Insights Section with Beautiful Design */}
+        <div className="mt-8 p-6 rounded-xl bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-lg">
+              <Brain className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+                AI Learning Assistant
+                <Badge variant="secondary" className="text-xs">Personalized</Badge>
+              </h3>
+              <p className="text-muted-foreground mb-3">{insights.message}</p>
+              <p className="text-sm text-primary font-medium">{insights.action}</p>
+              <div className="mt-4 flex gap-2">
+                <Button 
+                  size="sm" 
+                  onClick={() => handleQuickQuiz('AI Recommended')}
+                  className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
+                >
+                  <Brain className="w-4 h-4 mr-2" />
+                  Start AI Session
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleQuickQuiz('Quick Practice')}
+                  className="border-primary/20 hover:bg-primary/5"
+                >
+                  <ClipboardCheck className="w-4 h-4 mr-2" />
+                  Quick Practice
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -198,20 +198,35 @@ export default function LearningModeWizard() {
   const progressPercentage = ((currentStep - 1) / 3) * 100;
 
   return (
-    <Card className="shadow-medium border-0 overflow-hidden bg-card/80 backdrop-blur-sm animate-fade-in">
-      <CardHeader className="p-4 sm:p-6 lg:p-8 border-b border-border/50 gradient-mesh">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-2">
-              Start Learning Session
-            </CardTitle>
-            <p className="text-foreground/70 text-xs sm:text-sm">
-              Configure your personalized learning experience
-            </p>
+    <Card className="shadow-hard border-primary/20 overflow-hidden bg-gradient-to-br from-card/95 to-primary/5 backdrop-blur-md animate-fade-in interactive-scale">
+      <CardHeader className="relative p-4 sm:p-6 lg:p-8 border-b border-border/50">
+        {/* Beautiful background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5"></div>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-2xl"></div>
+        
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
+              <Settings className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent mb-1">
+                Start Learning Session
+              </CardTitle>
+              <p className="text-muted-foreground text-xs sm:text-sm flex items-center gap-2">
+                <Target className="w-4 h-4" />
+                Configure your personalized learning experience
+              </p>
+            </div>
           </div>
           <div className="text-right">
-            <div className="text-xs text-muted-foreground mb-1">Step {currentStep} of 3</div>
-            <Progress value={progressPercentage} className="w-24 h-2" />
+            <div className="text-xs text-muted-foreground mb-2 font-medium">Step {currentStep} of 3</div>
+            <div className="w-24 bg-muted rounded-full h-2 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 ease-out"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -222,33 +237,42 @@ export default function LearningModeWizard() {
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-foreground mb-4">Choose Your Learning Mode</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {(["study", "quiz", "challenge"] as LearningMode[]).map((mode) => (
                 <Card 
                   key={mode}
-                  className={`cursor-pointer transition-all duration-300 hover:shadow-medium ${
-                    sessionConfig.mode === mode ? getModeColor(mode) : "hover:border-primary/50"
+                  className={`group cursor-pointer transition-all duration-500 hover:shadow-glow hover:-translate-y-2 border-2 ${
+                    sessionConfig.mode === mode 
+                      ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-glow" 
+                      : "border-border/50 hover:border-primary/50 bg-card/60"
                   }`}
                   onClick={() => handleModeSelect(mode)}
                 >
                   <CardContent className="p-6 text-center space-y-4">
                     <div className="flex justify-center">
-                      <div className="p-3 rounded-lg bg-background/50">
+                      <div className={`p-4 rounded-2xl transition-all duration-300 ${
+                        sessionConfig.mode === mode
+                          ? "bg-gradient-to-br from-primary to-primary/70 text-white shadow-lg scale-110"
+                          : "bg-gradient-to-br from-muted to-muted/70 text-muted-foreground group-hover:from-primary/20 group-hover:to-primary/10 group-hover:text-primary"
+                      }`}>
                         {getModeIcon(mode)}
                       </div>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-foreground capitalize">{mode} Mode</h4>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {mode === "study" && "Continuous learning with immediate feedback"}
-                        {mode === "quiz" && "Formal assessment for mastery tracking"}
-                        {mode === "challenge" && "Quick 5-7 question challenges"}
+                      <h4 className="font-bold text-lg text-foreground capitalize mb-2">{mode} Mode</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {mode === "study" && "Continuous learning with immediate feedback and explanations"}
+                        {mode === "quiz" && "Formal assessment for comprehensive mastery tracking"}
+                        {mode === "challenge" && "Quick 5-7 question micro-learning challenges"}
                       </p>
                     </div>
-                    <Badge variant={mode === "study" ? "default" : mode === "quiz" ? "secondary" : "destructive"}>
-                      {mode === "study" && "Unlimited Questions"}
-                      {mode === "quiz" && "Graded Assessment"}
-                      {mode === "challenge" && "Micro-Learning"}
+                    <Badge 
+                      variant={mode === "study" ? "default" : mode === "quiz" ? "secondary" : "destructive"}
+                      className="text-xs font-medium px-3 py-1"
+                    >
+                      {mode === "study" && "💡 Unlimited Questions"}
+                      {mode === "quiz" && "📊 Graded Assessment"}
+                      {mode === "challenge" && "⚡ Micro-Learning"}
                     </Badge>
                   </CardContent>
                 </Card>
