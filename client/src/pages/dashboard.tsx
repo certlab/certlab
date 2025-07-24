@@ -4,7 +4,6 @@ import DashboardStats from "@/components/DashboardStats";
 import LearningModeWizard from "@/components/LearningModeWizard";
 import ActivitySidebar from "@/components/ActivitySidebar";
 import MasteryMeter from "@/components/MasteryMeter";
-import StudyPlanCard from "@/components/StudyPlanCard";
 import QuickActionsCard from "@/components/QuickActionsCard";
 import StudyGroupCard from "@/components/StudyGroupCard";
 import PracticeTestMode from "@/components/PracticeTestMode";
@@ -38,9 +37,6 @@ export default function Dashboard() {
           <MasteryMeter />
           <ActivitySidebar />
         </div>
-
-        {/* AI Assistant & Study Plan */}
-        <StudyPlanCard />
       </main>
     </div>
   );
