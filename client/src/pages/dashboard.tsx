@@ -9,7 +9,7 @@ import LearningStreak from "@/components/LearningStreak";
 import HelensIntroduction from "@/components/HelensIntroduction";
 import GoalSettingWizard from "@/components/GoalSettingWizard";
 import NewFeatureBadge from "@/components/NewFeatureBadge";
-import CollapsibleSection from "@/components/CollapsibleSection";
+
 
 import PersonalizedInsights from "@/components/PersonalizedInsights";
 import ContextualQuickActions from "@/components/ContextualQuickActions";
@@ -96,36 +96,22 @@ export default function Dashboard() {
       />
 
       <main className="relative z-10">
-        {/* Section 1: Welcome & Overview */}
-        <CollapsibleSection
-          id="welcome-overview"
-          title="Welcome to Your Learning Dashboard"
-          description="Track your progress, view achievements, and see personalized insights from Helen, your AI learning assistant."
-          defaultExpanded={true}
-          showToggle={true}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in">
-            {/* Personalized Insights */}
-            {personalizedInsights && personalizedInsights.length > 0 && (
-              <PersonalizedInsights insights={personalizedInsights} />
-            )}
-            
-            {/* Learning Streak */}
-            <LearningStreak />
-            
-            {/* Dashboard Hero */}
-            <DashboardHero />
-          </div>
-        </CollapsibleSection>
+        {/* Welcome & Overview Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
+          {/* Personalized Insights */}
+          {personalizedInsights && personalizedInsights.length > 0 && (
+            <PersonalizedInsights insights={personalizedInsights} />
+          )}
+          
+          {/* Learning Streak */}
+          <LearningStreak />
+          
+          {/* Dashboard Hero */}
+          <DashboardHero />
+        </div>
 
-        {/* Section 2: Learning Configuration (Alternating Background) */}
-        <CollapsibleSection
-          id="learning-session"
-          title="Start Your Learning Session"
-          description="Configure your study session with Helen's intelligent recommendations and personalized settings."
-          defaultExpanded={true}
-          className="section-alt-bg"
-        >
+        {/* Learning Configuration Section */}
+        <div className="section-alt-bg py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-slide-up">
               <div className="lg:col-span-2">
@@ -151,15 +137,10 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </CollapsibleSection>
+        </div>
 
-        {/* Section 3: Progress & Activity */}
-        <CollapsibleSection
-          id="progress-activity"
-          title="Progress & Learning Activity"
-          description="Monitor your mastery levels, recent quiz activity, and track your certification journey."
-          defaultExpanded={false}
-        >
+        {/* Progress & Activity Section */}
+        <div className="py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div
               className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-slide-up"
@@ -169,7 +150,7 @@ export default function Dashboard() {
               <ActivitySidebar />
             </div>
           </div>
-        </CollapsibleSection>
+        </div>
       </main>
     </div>
   );
