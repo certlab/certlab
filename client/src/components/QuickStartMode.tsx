@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+
 import { Badge } from "@/components/ui/badge";
 import { Zap, Settings, History, Brain, Clock } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -150,31 +150,6 @@ export default function QuickStartMode({ stats, onToggleMode, isQuickMode }: Qui
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5" />
-            Quick Start
-          </CardTitle>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground">
-              Quick Mode
-            </span>
-            <Switch
-              id="quick-mode"
-              checked={isQuickMode}
-              onCheckedChange={onToggleMode}
-            />
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {isQuickMode 
-            ? "Fast setup with smart defaults"
-            : "Switch to quick mode for instant learning sessions"
-          }
-        </p>
-      </CardHeader>
-      
       {isQuickMode && (
         <CardContent className="space-y-3">
           {quickOptions.map((option) => (
