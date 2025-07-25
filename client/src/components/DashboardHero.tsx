@@ -119,37 +119,42 @@ export default function DashboardHero() {
               <div className="flex items-start gap-6 mb-8">
                 {/* Helen's Avatar - Much Larger */}
                 <div className="relative flex-shrink-0">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 p-1 shadow-xl">
-                    <div className="w-full h-full rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900 dark:to-blue-900 flex items-center justify-center relative overflow-hidden">
-                      {/* Brain-shaped Helen with Face */}
+                  <div className="w-24 h-24 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 p-1 shadow-xl rounded-3xl">
+                    <div className="w-full h-full bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900 dark:to-blue-900 flex items-center justify-center relative overflow-hidden rounded-2xl">
+                      {/* Helen's Geometric AI Face */}
                       <div className="relative w-16 h-16">
-                        {/* Brain outline/shape */}
-                        <div className="absolute inset-0 rounded-full bg-purple-600/20 dark:bg-purple-400/20"></div>
-                        
-                        {/* Brain fold lines */}
-                        <div className="absolute top-2 left-2 w-6 h-0.5 bg-purple-600/40 dark:bg-purple-400/40 rounded-full transform rotate-12"></div>
-                        <div className="absolute top-4 right-3 w-4 h-0.5 bg-purple-600/40 dark:bg-purple-400/40 rounded-full transform -rotate-12"></div>
-                        <div className="absolute bottom-4 left-3 w-5 h-0.5 bg-purple-600/40 dark:bg-purple-400/40 rounded-full transform rotate-6"></div>
-                        <div className="absolute top-6 left-4 w-3 h-0.5 bg-purple-600/40 dark:bg-purple-400/40 rounded-full transform -rotate-6"></div>
-                        
-                        {/* Central brain division */}
-                        <div className="absolute top-1 bottom-1 left-1/2 w-0.5 bg-purple-600/30 dark:bg-purple-400/30 transform -translate-x-1/2"></div>
-                        
-                        {/* Eyes */}
-                        <div className="absolute top-5 left-4 w-2.5 h-2.5 bg-purple-700 dark:bg-purple-300 rounded-full"></div>
-                        <div className="absolute top-5 right-4 w-2.5 h-2.5 bg-purple-700 dark:bg-purple-300 rounded-full"></div>
-                        
-                        {/* Eye sparkles */}
-                        <div className="absolute top-5.5 left-4.5 w-1 h-1 bg-white rounded-full"></div>
-                        <div className="absolute top-5.5 right-4.5 w-1 h-1 bg-white rounded-full"></div>
-                        
-                        {/* Smile */}
-                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                          <div className="w-6 h-3 border-b-2 border-purple-700 dark:border-purple-300 rounded-full"></div>
+                        {/* Main face shape - hexagon */}
+                        <div className="absolute inset-2 bg-gradient-to-br from-purple-400 to-pink-400 dark:from-purple-300 dark:to-pink-300" 
+                             style={{clipPath: 'polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%)'}}>
                         </div>
                         
-                        {/* Pulsing AI indicator */}
-                        <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full animate-pulse"></div>
+                        {/* Circuit pattern overlay */}
+                        <div className="absolute top-3 left-6 w-4 h-0.5 bg-white/60 rounded-full"></div>
+                        <div className="absolute top-4 left-4 w-0.5 h-3 bg-white/60 rounded-full"></div>
+                        <div className="absolute top-3 right-6 w-4 h-0.5 bg-white/60 rounded-full"></div>
+                        <div className="absolute top-4 right-4 w-0.5 h-3 bg-white/60 rounded-full"></div>
+                        <div className="absolute bottom-3 left-5 w-6 h-0.5 bg-white/60 rounded-full"></div>
+                        
+                        {/* Glowing eyes */}
+                        <div className="absolute top-6 left-5 w-2 h-2 bg-cyan-400 rounded-full shadow-lg shadow-cyan-400/50 animate-pulse"></div>
+                        <div className="absolute top-6 right-5 w-2 h-2 bg-cyan-400 rounded-full shadow-lg shadow-cyan-400/50 animate-pulse"></div>
+                        
+                        {/* Eye highlights */}
+                        <div className="absolute top-6.5 left-5.5 w-0.5 h-0.5 bg-white rounded-full"></div>
+                        <div className="absolute top-6.5 right-5.5 w-0.5 h-0.5 bg-white rounded-full"></div>
+                        
+                        {/* Smile - LED style */}
+                        <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 flex gap-0.5">
+                          <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
+                          <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
+                          <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
+                          <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
+                          <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
+                        </div>
+                        
+                        {/* AI core indicator */}
+                        <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full animate-ping"></div>
+                        <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full"></div>
                       </div>
                     </div>
                   </div>
@@ -246,22 +251,24 @@ export default function DashboardHero() {
         {/* Helen's Additional Insights */}
         <div className="mt-8 p-6 rounded-md bg-gradient-to-r from-purple-50/50 to-blue-50/50 dark:from-purple-950/20 dark:to-blue-950/20 border border-purple-200/50 dark:border-purple-800/50">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-lg relative overflow-hidden">
-              {/* Smaller brain Helen for insights section */}
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-lg rounded-xl relative overflow-hidden">
+              {/* Smaller geometric Helen for insights */}
               <div className="relative w-6 h-6">
-                {/* Mini brain outline */}
-                <div className="absolute inset-0 rounded-full bg-white/20"></div>
-                {/* Brain fold lines */}
-                <div className="absolute top-1 left-1 w-2 h-0.5 bg-white/40 rounded-full transform rotate-12"></div>
-                <div className="absolute bottom-1 right-1 w-1.5 h-0.5 bg-white/40 rounded-full transform -rotate-12"></div>
-                {/* Central division */}
-                <div className="absolute top-0.5 bottom-0.5 left-1/2 w-0.5 bg-white/30 transform -translate-x-1/2"></div>
-                {/* Eyes */}
-                <div className="absolute top-1.5 left-1.5 w-1 h-1 bg-white rounded-full"></div>
-                <div className="absolute top-1.5 right-1.5 w-1 h-1 bg-white rounded-full"></div>
-                {/* Smile */}
-                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
-                  <div className="w-2 h-1 border-b border-white rounded-full"></div>
+                {/* Mini hexagon face */}
+                <div className="absolute inset-0.5 bg-white/80"
+                     style={{clipPath: 'polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%)'}}>
+                </div>
+                {/* Mini circuit lines */}
+                <div className="absolute top-1 left-1.5 w-1.5 h-0.5 bg-purple-500 rounded-full"></div>
+                <div className="absolute bottom-1 right-1.5 w-1.5 h-0.5 bg-purple-500 rounded-full"></div>
+                {/* Glowing eyes */}
+                <div className="absolute top-1.5 left-1.5 w-0.5 h-0.5 bg-cyan-400 rounded-full"></div>
+                <div className="absolute top-1.5 right-1.5 w-0.5 h-0.5 bg-cyan-400 rounded-full"></div>
+                {/* LED smile */}
+                <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 flex gap-0.5">
+                  <div className="w-0.5 h-0.5 bg-cyan-400 rounded-full"></div>
+                  <div className="w-0.5 h-0.5 bg-cyan-400 rounded-full"></div>
+                  <div className="w-0.5 h-0.5 bg-cyan-400 rounded-full"></div>
                 </div>
               </div>
             </div>
