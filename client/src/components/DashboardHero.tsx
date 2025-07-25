@@ -108,7 +108,7 @@ export default function DashboardHero() {
     <div className="animate-fade-in">
       {/* Enhanced Welcome Hero with Clean Background */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-background to-secondary/3 border border-border/50 p-8 mb-8">
-        {/* Subtle background accent */}
+        {/* Clean background accent */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/8 to-transparent rounded-full"></div>
         
         <div className="relative z-10">

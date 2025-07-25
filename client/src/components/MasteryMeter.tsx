@@ -83,7 +83,7 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
 
   if (filteredCategories.length === 0) {
     return (
-      <Card className="backdrop-blur-sm bg-card/80 border-border/50 card-hover">
+      <Card className="bg-card border-border/50 card-hover">
         <CardHeader className="p-6 border-b border-gray-100">
           <CardTitle className="text-xl font-medium text-gray-900">
             Mastery Meter
@@ -110,7 +110,7 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
         ).length;
 
         return (
-          <Card key={category.id} className="backdrop-blur-sm bg-card/80 border-border/50 card-hover transition-colors">
+          <Card key={category.id} className="bg-card border-border/50 card-hover transition-colors">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">

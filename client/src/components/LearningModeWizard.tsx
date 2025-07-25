@@ -198,7 +198,7 @@ export default function LearningModeWizard() {
   const progressPercentage = ((currentStep - 1) / 3) * 100;
 
   return (
-    <Card className="shadow-hard border-primary/20 overflow-hidden bg-gradient-to-br from-card to-primary/3 animate-fade-in interactive-scale">
+    <Card className="shadow-lg border-primary/20 overflow-hidden bg-gradient-to-br from-card to-primary/3 animate-fade-in interactive-scale">
       <CardHeader className="relative p-4 sm:p-6 lg:p-8 border-b border-border/50">
         {/* Clean background accent */}
         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/6 to-transparent rounded-full"></div>

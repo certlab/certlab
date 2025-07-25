@@ -89,7 +89,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-card/80 backdrop-blur-md shadow-soft border-b border-border sticky top-0 z-50">
+    <header className="bg-card shadow-sm border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
@@ -140,7 +140,7 @@ export default function Header() {
                       Tools & Features
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <div className="grid gap-6 p-6 w-[600px] md:w-[700px] bg-card/95 backdrop-blur-md">
+                      <div className="grid gap-6 p-6 w-[600px] md:w-[700px] bg-card">
                         {/* Learning Section */}
                         <div>
                           <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">

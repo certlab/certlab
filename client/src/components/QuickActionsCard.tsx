@@ -200,7 +200,7 @@ export default function QuickActionsCard() {
   ];
 
   return (
-    <Card className="h-full shadow-hard border-accent/20 overflow-hidden bg-gradient-to-br from-card to-accent/3 interactive-lift">
+    <Card className="h-full shadow-lg border-accent/20 overflow-hidden bg-gradient-to-br from-card to-accent/3 interactive-lift">
       <CardHeader className="relative pb-4">
         {/* Clean background accent */}
         <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-accent/8 to-transparent rounded-full"></div>

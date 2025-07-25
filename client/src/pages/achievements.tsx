@@ -29,7 +29,7 @@ export default function AchievementsPage() {
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="shadow-medium border-0 bg-card/50 backdrop-blur-sm">
+        <Card className="shadow-md border-0 bg-card">
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">
               Please log in to view your achievements
