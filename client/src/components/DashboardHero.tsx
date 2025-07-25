@@ -112,23 +112,80 @@ export default function DashboardHero() {
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/8 to-transparent rounded-md"></div>
         
         <div className="relative z-10">
-          {/* Welcome Header with Key Stats */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+          {/* Helen's Welcome Conversation */}
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             <div className="flex-1">
-              <div className="flex items-center gap-4 mb-4">
+              {/* Helen's Chat Interface */}
+              <div className="flex items-start gap-4 mb-6">
+                {/* Helen's Avatar */}
+                <div className="relative flex-shrink-0">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 p-0.5 shadow-lg">
+                    <div className="w-full h-full rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900 dark:to-blue-900 flex items-center justify-center">
+                      <Brain className="w-8 h-8 text-purple-600 dark:text-purple-300" />
+                    </div>
+                  </div>
+                  {/* AI Status Indicator */}
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-background shadow-sm flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  </div>
+                </div>
+                
+                {/* Helen's Chat Bubble */}
+                <div className="flex-1 relative">
+                  {/* Chat Bubble Tail */}
+                  <div className="absolute left-0 top-4 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-12 border-r-card -translate-x-3"></div>
+                  
+                  {/* Chat Content */}
+                  <div className="card-raised p-5 rounded-md bg-gradient-to-br from-card to-purple-50/30 dark:to-purple-950/30 border border-purple-200/30 dark:border-purple-800/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-semibold text-purple-700 dark:text-purple-300 text-lg">Helen</h3>
+                      <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200">AI Assistant</Badge>
+                    </div>
+                    <p className="text-foreground mb-2 text-lg font-medium">
+                      Welcome back, {currentUser?.firstName || 'Student'}! 👋
+                    </p>
+                    <p className="text-muted-foreground mb-4">
+                      Are you ready to continue your certification journey? I've been analyzing your progress and have some personalized recommendations just for you!
+                    </p>
+                    
+                    {/* Quick Action Buttons in Chat */}
+                    <div className="flex flex-wrap gap-2">
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleQuickQuiz('AI Recommended')}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md"
+                      >
+                        <Brain className="w-4 h-4 mr-2" />
+                        Smart Study
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleQuickQuiz('Quick Practice')}
+                        className="border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-950/50"
+                      >
+                        <BookOpen className="w-4 h-4 mr-2" />
+                        Quick Practice
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* User Avatar & Stats Row */}
+              <div className="flex items-center gap-4">
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-md bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                  <div className="w-12 h-12 rounded-md bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-lg font-bold shadow-lg">
                     {currentUser?.firstName?.[0] || 'S'}
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-sm border-2 border-background shadow-sm"></div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-sm border-2 border-background shadow-sm"></div>
                 </div>
                 <div>
-                  <h1 className="text-4xl font-bold text-foreground mb-1">
-                    Welcome back, {currentUser?.firstName || 'Student'}!
-                  </h1>
-                  <p className="text-lg text-muted-foreground flex items-center gap-2">
-                    <BookOpen className="w-5 h-5" />
-                    Are you ready to continue your certification journey?
+                  <h2 className="text-xl font-semibold text-foreground">
+                    {currentUser?.firstName || 'Student'}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Active Learner
                   </p>
                 </div>
               </div>
@@ -157,38 +214,21 @@ export default function DashboardHero() {
           </div>
         </div>
 
-        {/* AI Insights Section with Beautiful Design */}
-        <div className="mt-8 p-6 rounded-md bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10">
+        {/* Helen's Additional Insights */}
+        <div className="mt-8 p-6 rounded-md bg-gradient-to-r from-purple-50/50 to-blue-50/50 dark:from-purple-950/20 dark:to-blue-950/20 border border-purple-200/50 dark:border-purple-800/50">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-md bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-lg">
-              <Brain className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+              <Brain className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
-                AI Learning Assistant
-                <Badge variant="secondary" className="text-xs">Personalized</Badge>
+                Helen's Smart Insights
+                <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200">
+                  Personalized
+                </Badge>
               </h3>
               <p className="text-muted-foreground mb-3">{insights.message}</p>
-              <p className="text-sm text-primary font-medium">{insights.action}</p>
-              <div className="mt-4 flex gap-2">
-                <Button 
-                  size="sm" 
-                  onClick={() => handleQuickQuiz('AI Recommended')}
-                  className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
-                >
-                  <Brain className="w-4 h-4 mr-2" />
-                  Start AI Session
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => handleQuickQuiz('Quick Practice')}
-                  className="border-primary/20 hover:bg-primary/5"
-                >
-                  <ClipboardCheck className="w-4 h-4 mr-2" />
-                  Quick Practice
-                </Button>
-              </div>
+              <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">{insights.action}</p>
             </div>
           </div>
         </div>

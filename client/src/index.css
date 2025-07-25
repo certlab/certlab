@@ -245,6 +245,11 @@
     transition: transform var(--transition-base), box-shadow var(--transition-base);
   }
   
+  /* Chat bubble tail utilities */
+  .border-r-12 {
+    border-right-width: 12px;
+  }
+  
   .interactive-scale:hover {
     transform: scale(1.02);
     box-shadow: var(--shadow-lg);
