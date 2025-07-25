@@ -90,7 +90,7 @@ export default function StudyPlanCard() {
   };
 
   return (
-    <Card className="h-full stat-card">
+    <Card className="h-full card-raised">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <Bot className="h-5 w-5 text-primary" />

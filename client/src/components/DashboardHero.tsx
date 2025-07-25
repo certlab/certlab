@@ -136,19 +136,19 @@ export default function DashboardHero() {
             
             {/* Enhanced Quick Stats */}
             <div className="flex gap-4 mt-6 lg:mt-0">
-              <div className="stat-card bg-card border-primary/20 text-center p-4 rounded-md min-w-[100px] interactive-scale">
+              <div className="card-inset text-center p-4 rounded-md min-w-[100px] interactive-scale border-primary/10">
                 <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
                 <div className="text-2xl font-bold text-primary">{stats?.totalQuizzes || 0}</div>
                 <div className="text-sm text-muted-foreground font-medium">Sessions</div>
               </div>
               
-              <div className="stat-card bg-card border-accent/20 text-center p-4 rounded-md min-w-[100px] interactive-scale">
+              <div className="card-inset text-center p-4 rounded-md min-w-[100px] interactive-scale border-accent/10">
                 <Calendar className="w-6 h-6 text-accent mx-auto mb-2" />
                 <div className="text-2xl font-bold text-accent">{stats?.currentStreak || 0}</div>
                 <div className="text-sm text-muted-foreground font-medium">Day Streak</div>
               </div>
               
-              <div className="stat-card bg-card border-secondary/20 text-center p-4 rounded-md min-w-[100px] interactive-scale">
+              <div className="card-inset text-center p-4 rounded-md min-w-[100px] interactive-scale border-secondary/10">
                 <Award className="w-6 h-6 text-secondary mx-auto mb-2" />
                 <div className="text-2xl font-bold text-secondary">{Math.round(stats?.averageScore || 0)}%</div>
                 <div className="text-sm text-muted-foreground font-medium">Avg Score</div>

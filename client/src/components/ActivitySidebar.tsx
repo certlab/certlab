@@ -219,20 +219,20 @@ export default function ActivitySidebar() {
   return (
     <div className="space-y-6">
       {/* Recent Quiz Results */}
-      <Card className="bg-card border-border/50 overflow-hidden">
-        <CardHeader className="p-4 border-b border-gray-100">
-          <CardTitle className="font-medium text-gray-900">Recent Quiz Results</CardTitle>
+      <Card className="card-raised overflow-hidden">
+        <CardHeader className="p-4 border-b border-border">
+          <CardTitle className="font-medium text-foreground">Recent Quiz Results</CardTitle>
         </CardHeader>
         <CardContent className="p-4 space-y-3">
           {completedQuizzes.length > 0 ? (
             completedQuizzes.map((quiz) => (
-              <div key={quiz.id} className="p-3 bg-gray-50 rounded-lg">
+              <div key={quiz.id} className="p-3 bg-muted/50 rounded-md">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex-1">
-                    <h4 className="text-sm font-medium text-gray-900">
+                    <h4 className="text-sm font-medium text-foreground">
                       {getCategoryName(quiz.categoryIds as number[])}
                     </h4>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {formatDate(quiz.completedAt!)}
                     </p>
                   </div>
@@ -240,7 +240,7 @@ export default function ActivitySidebar() {
                     <div className={`text-lg font-bold ${getScoreColor(quiz.score || 0)}`}>
                       {quiz.score}%
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-muted-foreground">
                       {quiz.correctAnswers}/{quiz.totalQuestions || quiz.questionCount}
                     </div>
                   </div>

@@ -200,13 +200,13 @@ export default function QuickActionsCard() {
   ];
 
   return (
-    <Card className="h-full shadow-lg border-accent/20 overflow-hidden bg-gradient-to-br from-card to-accent/3 interactive-lift">
+    <Card className="h-full card-raised overflow-hidden">
       <CardHeader className="relative pb-4">
         {/* Clean background accent */}
         <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-accent/8 to-transparent rounded-full"></div>
         
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center shadow-md">
+          <div className="w-10 h-10 rounded-md bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center shadow-md">
             <Zap className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -222,7 +222,7 @@ export default function QuickActionsCard() {
           <Button
             key={action.id}
             variant="ghost"
-            className={`w-full justify-start h-auto p-4 rounded-xl transition-all duration-300 hover:shadow-md hover:-translate-y-1 ${
+            className={`w-full justify-start h-auto p-4 rounded-md transition-all duration-300 hover:shadow-md hover:-translate-y-1 ${
               action.id === 'weakest' ? 'bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950/50 dark:to-red-900/50 text-red-700 dark:text-red-300 hover:from-red-100 hover:to-red-200 dark:hover:from-red-900/70 dark:hover:to-red-800/70' :
               action.id === 'random' ? 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 text-blue-700 dark:text-blue-300 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-900/70 dark:hover:to-blue-800/70' :
               action.id === 'review' ? 'bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 text-green-700 dark:text-green-300 hover:from-green-100 hover:to-green-200 dark:hover:from-green-900/70 dark:hover:to-green-800/70' :
@@ -232,7 +232,7 @@ export default function QuickActionsCard() {
             disabled={isCreating || action.disabled}
           >
             <div className="flex items-center gap-4 w-full">
-              <div className="w-8 h-8 rounded-lg bg-white/50 dark:bg-black/20 flex items-center justify-center shadow-sm">
+            <div className="w-8 h-8 rounded-sm bg-white/50 dark:bg-black/20 flex items-center justify-center shadow-sm">
                 <action.icon className="h-4 w-4" />
               </div>
               <div className="text-left flex-1">
