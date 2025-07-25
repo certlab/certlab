@@ -89,6 +89,11 @@ export default function Header() {
             </div>
           </div>
           
+          {/* Mobile Navigation */}
+          <div className="md:hidden">
+            <MobileNavigationEnhanced />
+          </div>
+
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center">
             {isAdminArea ? (

@@ -5,6 +5,8 @@ import { useAuth } from "@/lib/auth";
 import { getScoreColor } from "@/lib/questions";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import ImprovedCardSpacing from "@/components/ImprovedCardSpacing";
+import { BarChart3 } from "lucide-react";
 import type { Quiz, Category } from "@shared/schema";
 
 export default function ActivitySidebar() {
@@ -219,12 +221,14 @@ export default function ActivitySidebar() {
   return (
     <div className="space-y-6">
       {/* Recent Quiz Results */}
-      <Card className="card-enhanced overflow-hidden">
-        <CardHeader className="card-spacious border-b border-border">
-          <CardTitle className="font-medium text-foreground text-comfortable">Recent Quiz Results</CardTitle>
-        </CardHeader>
-        <CardContent className="card-spacious">
-          <div className="list-breathable">
+      <ImprovedCardSpacing
+        title="Recent Quiz Results"
+        description="Your recent learning session performance"
+        variant="default"
+        icon={<BarChart3 className="w-5 h-5" />}
+        className="section-rhythm"
+      >
+        <div className="list-breathable">
             {completedQuizzes.length > 0 ? (
               completedQuizzes.map((quiz) => (
                 <div key={quiz.id} className="p-3 bg-muted/50 rounded-md">
@@ -274,8 +278,7 @@ export default function ActivitySidebar() {
             </p>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </ImprovedCardSpacing>
     </div>
   );
 }

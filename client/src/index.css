@@ -492,7 +492,8 @@
   }
 
   .visual-priority-medium {
-    @apply text-base font-medium text-foreground/90;
+    @apply text-base font-medium;
+    color: hsl(var(--foreground) / 0.9);
   }
 
   .visual-priority-low {
