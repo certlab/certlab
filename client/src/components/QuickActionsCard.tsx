@@ -210,7 +210,7 @@ export default function QuickActionsCard() {
             <Zap className="w-5 h-5 text-white" />
           </div>
           <div>
-            <CardTitle className="text-lg font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            <CardTitle className="text-lg font-bold text-foreground">
               Quick Actions
             </CardTitle>
             <p className="text-sm text-muted-foreground">Jump into learning with one click</p>

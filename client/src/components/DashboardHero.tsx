@@ -123,7 +123,7 @@ export default function DashboardHero() {
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-background shadow-sm"></div>
                 </div>
                 <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent mb-1">
+                  <h1 className="text-4xl font-bold text-foreground mb-1">
                     Welcome back, {currentUser?.firstName || 'Student'}!
                   </h1>
                   <p className="text-lg text-muted-foreground flex items-center gap-2">

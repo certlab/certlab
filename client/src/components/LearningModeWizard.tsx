@@ -209,7 +209,7 @@ export default function LearningModeWizard() {
               <Settings className="w-6 h-6 text-white" />
             </div>
             <div>
-              <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent mb-1">
+              <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-1">
                 Start Learning Session
               </CardTitle>
               <p className="text-muted-foreground text-xs sm:text-sm flex items-center gap-2">
