@@ -294,13 +294,13 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
 
   return (
     <Card className="bg-card border-border/50 card-hover">
-      <CardHeader className="p-4 border-b border-gray-100">
+      <CardHeader className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-medium text-gray-900">
+            <CardTitle className="text-lg font-medium text-foreground">
               Certification Progress
             </CardTitle>
-            <p className="text-gray-600 text-sm">
+            <p className="text-muted-foreground text-sm">
               Track your readiness across certifications
             </p>
           </div>
@@ -329,7 +329,7 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
         
         {/* Legend and Info */}
         <div className="mt-4 space-y-3">
-          <div className="flex flex-wrap items-center gap-4 text-xs text-gray-600">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
             <span className="font-medium">Domain Status:</span>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-full bg-green-500"></div>
@@ -353,8 +353,8 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
             </div>
           </div>
           
-          <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-            <div className="flex items-center space-x-2 text-sm text-blue-900">
+          <div className="p-3 bg-muted/50 rounded-lg border border-border">
+            <div className="flex items-center space-x-2 text-sm text-foreground">
               <BarChart3 className="h-4 w-4" />
               <span className="font-medium">Goal: 85%+ mastery in all domains for certification readiness</span>
             </div>
