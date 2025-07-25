@@ -10,12 +10,12 @@ import HelensIntroduction from "@/components/HelensIntroduction";
 import GoalSettingWizard from "@/components/GoalSettingWizard";
 import NewFeatureBadge from "@/components/NewFeatureBadge";
 import CollapsibleSection from "@/components/CollapsibleSection";
-import QuickViewToggle from "@/components/QuickViewToggle";
+
 import PersonalizedInsights from "@/components/PersonalizedInsights";
 import ContextualQuickActions from "@/components/ContextualQuickActions";
 import QuickStartMode from "@/components/QuickStartMode";
 import { shouldShowHelenIntro, shouldShowGoalWizard, markGoalSettingCompleted } from "@/lib/onboarding";
-import { calculateContentPriorities, getContentOrder, shouldShowInQuickView, getPersonalizedInsights } from "@/lib/content-prioritization";
+import { calculateContentPriorities, getContentOrder, getPersonalizedInsights } from "@/lib/content-prioritization";
 import { useAuth } from "@/lib/auth";
 import { checkAndUnlockFeatures, isFeatureUnlocked } from "@/lib/feature-discovery";
 import type { UserStats } from "@shared/schema";
@@ -24,7 +24,7 @@ export default function Dashboard() {
   const { user: currentUser } = useAuth();
   const [showHelenIntro, setShowHelenIntro] = useState(false);
   const [showGoalWizard, setShowGoalWizard] = useState(false);
-  const [isQuickView, setIsQuickView] = useState(false);
+
   const [isQuickStartMode, setIsQuickStartMode] = useState(false);
 
   // Get user stats for feature discovery
@@ -78,20 +78,10 @@ export default function Dashboard() {
     markGoalSettingCompleted();
   };
 
-  const handleQuickViewToggle = (quickView: boolean) => {
-    setIsQuickView(quickView);
-  };
+
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Personalized Quick View Toggle */}
-      {contentPriorities && (
-        <QuickViewToggle 
-          isQuickView={isQuickView}
-          onToggle={setIsQuickView}
-          insights={personalizedInsights}
-        />
-      )}
       
       {/* Helen's Introduction Modal */}
       <HelensIntroduction 
@@ -112,7 +102,7 @@ export default function Dashboard() {
           title="Welcome to Your Learning Dashboard"
           description="Track your progress, view achievements, and see personalized insights from Helen, your AI learning assistant."
           defaultExpanded={true}
-          showToggle={!isQuickView}
+          showToggle={true}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in">
             {/* Personalized Insights */}
@@ -120,10 +110,8 @@ export default function Dashboard() {
               <PersonalizedInsights insights={personalizedInsights} />
             )}
             
-            {/* Learning Streak - Priority based display */}
-            {(!isQuickView || shouldShowInQuickView('learningStreak', contentPriorities)) && (
-              <LearningStreak />
-            )}
+            {/* Learning Streak */}
+            <LearningStreak />
             
             {/* Dashboard Hero */}
             <DashboardHero />
@@ -166,24 +154,22 @@ export default function Dashboard() {
         </CollapsibleSection>
 
         {/* Section 3: Progress & Activity */}
-        {!isQuickView && (
-          <CollapsibleSection
-            id="progress-activity"
-            title="Progress & Learning Activity"
-            description="Monitor your mastery levels, recent quiz activity, and track your certification journey."
-            defaultExpanded={false}
-          >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div
-                className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-slide-up"
-                style={{ animationDelay: "200ms" }}
-              >
-                <MasteryMeter />
-                <ActivitySidebar />
-              </div>
+        <CollapsibleSection
+          id="progress-activity"
+          title="Progress & Learning Activity"
+          description="Monitor your mastery levels, recent quiz activity, and track your certification journey."
+          defaultExpanded={false}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div
+              className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-slide-up"
+              style={{ animationDelay: "200ms" }}
+            >
+              <MasteryMeter />
+              <ActivitySidebar />
             </div>
-          </CollapsibleSection>
-        )}
+          </div>
+        </CollapsibleSection>
       </main>
     </div>
   );
