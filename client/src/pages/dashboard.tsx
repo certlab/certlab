@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import Header from "@/components/Header";
 import DashboardHero from "@/components/DashboardHero";
 import LearningModeWizard from "@/components/LearningModeWizard";
 import ActivitySidebar from "@/components/ActivitySidebar";
@@ -85,10 +84,14 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
-      {/* Quick View Toggle */}
-      <QuickViewToggle onToggle={handleQuickViewToggle} />
+      {/* Personalized Quick View Toggle */}
+      {contentPriorities && (
+        <QuickViewToggle 
+          isQuickView={isQuickView}
+          onToggle={setIsQuickView}
+          insights={personalizedInsights}
+        />
+      )}
       
       {/* Helen's Introduction Modal */}
       <HelensIntroduction 
