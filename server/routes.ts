@@ -51,6 +51,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user goals (protected)
+  app.post("/api/user/:id/goals", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const { certificationGoals, studyPreferences, skillsAssessment } = req.body;
+      
+      // Validate required fields
+      if (!certificationGoals || !Array.isArray(certificationGoals)) {
+        return res.status(400).json({ message: "Invalid certification goals" });
+      }
+      
+      const updatedUser = await storage.updateUserGoals(userId, {
+        certificationGoals,
+        studyPreferences: studyPreferences || {},
+        skillsAssessment: skillsAssessment || {},
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Error updating user goals:', error);
+      res.status(500).json({ message: "Failed to update user goals" });
+    }
+  });
+
   // Get categories
   app.get("/api/categories", async (req, res) => {
     try {

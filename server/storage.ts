@@ -23,6 +23,11 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: InsertUser): Promise<User>;
+  updateUserGoals(id: string, goals: {
+    certificationGoals: string[];
+    studyPreferences: any;
+    skillsAssessment: any;
+  }): Promise<User | null>;
   getUsersByTenant(tenantId: number): Promise<User[]>;
   
   // Categories and subcategories
@@ -1731,6 +1736,29 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+
+  async updateUserGoals(id: string, goals: {
+    certificationGoals: string[];
+    studyPreferences: any;
+    skillsAssessment: any;
+  }): Promise<User | null> {
+    try {
+      const [user] = await db
+        .update(users)
+        .set({
+          certificationGoals: goals.certificationGoals,
+          studyPreferences: goals.studyPreferences,
+          skillsAssessment: goals.skillsAssessment,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, id))
+        .returning();
+      return user || null;
+    } catch (error) {
+      console.error('Error updating user goals:', error);
+      return null;
+    }
   }
 
   async getCategories(): Promise<Category[]> {

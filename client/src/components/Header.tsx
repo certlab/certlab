@@ -13,6 +13,8 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import NewFeatureBadge from "@/components/NewFeatureBadge";
+import { isFeatureUnlocked } from "@/lib/feature-discovery";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -148,10 +150,11 @@ export default function Header() {
                             Learning Features
                           </h3>
                           <div className="grid grid-cols-2 gap-3">
-                            <NavigationMenuLink 
-                              className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 hover:shadow-soft focus:bg-accent/10 focus:shadow-soft cursor-pointer group"
-                              onClick={() => setLocation("/achievements")}
-                            >
+                            <NewFeatureBadge featureId="achievements">
+                              <NavigationMenuLink 
+                                className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 hover:shadow-soft focus:bg-accent/10 focus:shadow-soft cursor-pointer group"
+                                onClick={() => setLocation("/achievements")}
+                              >
                               <div className="flex items-center text-sm font-medium leading-none text-foreground group-hover:text-primary transition-colors">
                                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2 group-hover:bg-primary/20 transition-colors">
                                   <Trophy className="w-3 h-3 text-primary" />
@@ -161,11 +164,13 @@ export default function Header() {
                               <p className="text-xs leading-relaxed text-muted-foreground pl-8">
                                 View earned badges and certifications
                               </p>
-                            </NavigationMenuLink>
-                            <NavigationMenuLink 
-                              className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 hover:shadow-soft focus:bg-accent/10 focus:shadow-soft cursor-pointer group"
-                              onClick={() => setLocation("/study-groups")}
-                            >
+                              </NavigationMenuLink>
+                            </NewFeatureBadge>
+                            <NewFeatureBadge featureId="study-groups">
+                              <NavigationMenuLink 
+                                className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 hover:shadow-soft focus:bg-accent/10 focus:shadow-soft cursor-pointer group"
+                                onClick={() => setLocation("/study-groups")}
+                              >
                               <div className="flex items-center text-sm font-medium leading-none text-foreground group-hover:text-primary transition-colors">
                                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2 group-hover:bg-primary/20 transition-colors">
                                   <Users className="w-3 h-3 text-primary" />
@@ -175,7 +180,8 @@ export default function Header() {
                               <p className="text-xs leading-relaxed text-muted-foreground pl-8">
                                 Collaborate with other learners
                               </p>
-                            </NavigationMenuLink>
+                              </NavigationMenuLink>
+                            </NewFeatureBadge>
                           </div>
                         </div>
 

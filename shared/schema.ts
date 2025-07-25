@@ -32,6 +32,21 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   role: text("role").notNull().default("user"), // "admin", "user"
   tenantId: integer("tenant_id").notNull().default(1),
+  certificationGoals: jsonb("certification_goals").$type<string[]>(),
+  studyPreferences: jsonb("study_preferences").$type<{
+    dailyTimeMinutes?: number;
+    preferredDifficulty?: 'beginner' | 'intermediate' | 'advanced';
+    focusAreas?: string[];
+    studyDays?: string[];
+    reminderTime?: string;
+  }>(),
+  skillsAssessment: jsonb("skills_assessment").$type<{
+    experienceLevel?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+    relevantExperience?: string[];
+    learningStyle?: 'visual' | 'auditory' | 'kinesthetic' | 'reading';
+    completedCertifications?: string[];
+    motivations?: string[];
+  }>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
