@@ -120,8 +120,25 @@ export default function DashboardHero() {
                 {/* Helen's Avatar - Much Larger */}
                 <div className="relative flex-shrink-0">
                   <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 p-1 shadow-xl">
-                    <div className="w-full h-full rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900 dark:to-blue-900 flex items-center justify-center">
-                      <Brain className="w-12 h-12 text-purple-600 dark:text-purple-300" />
+                    <div className="w-full h-full rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900 dark:to-blue-900 flex items-center justify-center relative overflow-hidden">
+                      {/* Helen's Face */}
+                      <div className="relative w-16 h-16">
+                        {/* Eyes */}
+                        <div className="absolute top-4 left-3 w-2.5 h-2.5 bg-purple-700 dark:bg-purple-300 rounded-full"></div>
+                        <div className="absolute top-4 right-3 w-2.5 h-2.5 bg-purple-700 dark:bg-purple-300 rounded-full"></div>
+                        
+                        {/* Eye sparkles */}
+                        <div className="absolute top-4.5 left-3.5 w-1 h-1 bg-white rounded-full"></div>
+                        <div className="absolute top-4.5 right-3.5 w-1 h-1 bg-white rounded-full"></div>
+                        
+                        {/* Smile */}
+                        <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2">
+                          <div className="w-6 h-3 border-b-2 border-purple-700 dark:border-purple-300 rounded-full"></div>
+                        </div>
+                        
+                        {/* Small AI indicator dot on forehead */}
+                        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full animate-pulse"></div>
+                      </div>
                     </div>
                   </div>
                   {/* AI Status Indicator */}
@@ -217,8 +234,17 @@ export default function DashboardHero() {
         {/* Helen's Additional Insights */}
         <div className="mt-8 p-6 rounded-md bg-gradient-to-r from-purple-50/50 to-blue-50/50 dark:from-purple-950/20 dark:to-blue-950/20 border border-purple-200/50 dark:border-purple-800/50">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-lg">
-              <Brain className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-lg relative overflow-hidden">
+              {/* Smaller Helen face for insights section */}
+              <div className="relative w-6 h-6">
+                {/* Eyes */}
+                <div className="absolute top-1 left-1 w-1 h-1 bg-white rounded-full"></div>
+                <div className="absolute top-1 right-1 w-1 h-1 bg-white rounded-full"></div>
+                {/* Smile */}
+                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
+                  <div className="w-2 h-1 border-b border-white rounded-full"></div>
+                </div>
+              </div>
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
