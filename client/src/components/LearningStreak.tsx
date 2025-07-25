@@ -95,6 +95,43 @@ export default function LearningStreak() {
           </div>
         </div>
 
+        {/* Fire icons representing each day of the streak */}
+        {streak > 0 && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+              <span>Daily streak visualization</span>
+              <span>
+                {streak === 1 ? "1 day" : `${streak} days`}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1 items-center">
+              {Array.from({ length: Math.min(streak, 30) }, (_, index) => (
+                <span
+                  key={index}
+                  className={`text-lg transition-all duration-200 hover:scale-125 ${
+                    index < streak ? 
+                      (index < 7 ? "animate-pulse" : index < 14 ? "animate-bounce" : "") : 
+                      ""
+                  }`}
+                  style={{
+                    animationDelay: `${index * 100}ms`,
+                    filter: index >= streak ? "grayscale(100%)" : "none"
+                  }}
+                >
+                  🔥
+                </span>
+              ))}
+              {streak > 30 && (
+                <div className="flex items-center gap-1 ml-2">
+                  <span className="text-sm text-muted-foreground">...</span>
+                  <span className="text-lg animate-pulse">🔥</span>
+                  <span className="text-xs text-muted-foreground">+{streak - 30}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Progress indicator for next milestone */}
         {streak > 0 && streak < 30 && (
           <div className="mt-4">
