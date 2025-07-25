@@ -250,6 +250,22 @@
     border-right-width: 12px;
   }
   
+  .border-r-16 {
+    border-right-width: 16px;
+  }
+  
+  .border-t-12 {
+    border-top-width: 12px;
+  }
+  
+  .border-b-12 {
+    border-bottom-width: 12px;
+  }
+  
+  .border-3 {
+    border-width: 3px;
+  }
+  
   .interactive-scale:hover {
     transform: scale(1.02);
     box-shadow: var(--shadow-lg);

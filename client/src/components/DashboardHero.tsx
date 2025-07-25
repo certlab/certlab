@@ -115,56 +115,56 @@ export default function DashboardHero() {
           {/* Helen's Welcome Conversation */}
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             <div className="flex-1">
-              {/* Helen's Chat Interface */}
-              <div className="flex items-start gap-4 mb-6">
-                {/* Helen's Avatar */}
+              {/* Helen's Chat Interface - Large & Prominent */}
+              <div className="flex items-start gap-6 mb-8">
+                {/* Helen's Avatar - Much Larger */}
                 <div className="relative flex-shrink-0">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 p-0.5 shadow-lg">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 p-1 shadow-xl">
                     <div className="w-full h-full rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900 dark:to-blue-900 flex items-center justify-center">
-                      <Brain className="w-8 h-8 text-purple-600 dark:text-purple-300" />
+                      <Brain className="w-12 h-12 text-purple-600 dark:text-purple-300" />
                     </div>
                   </div>
                   {/* AI Status Indicator */}
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-background shadow-sm flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  <div className="absolute -bottom-2 -right-2 w-7 h-7 bg-green-500 rounded-full border-3 border-background shadow-lg flex items-center justify-center">
+                    <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
                   </div>
                 </div>
                 
-                {/* Helen's Chat Bubble */}
+                {/* Helen's Chat Bubble - Much Larger */}
                 <div className="flex-1 relative">
                   {/* Chat Bubble Tail */}
-                  <div className="absolute left-0 top-4 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-12 border-r-card -translate-x-3"></div>
+                  <div className="absolute left-0 top-6 w-0 h-0 border-t-12 border-t-transparent border-b-12 border-b-transparent border-r-16 border-r-card -translate-x-4"></div>
                   
                   {/* Chat Content */}
-                  <div className="card-raised p-5 rounded-md bg-gradient-to-br from-card to-purple-50/30 dark:to-purple-950/30 border border-purple-200/30 dark:border-purple-800/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-purple-700 dark:text-purple-300 text-lg">Helen</h3>
-                      <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200">AI Assistant</Badge>
+                  <div className="card-raised p-8 rounded-lg bg-gradient-to-br from-card to-purple-50/30 dark:to-purple-950/30 border border-purple-200/30 dark:border-purple-800/30 shadow-xl">
+                    <div className="flex items-center gap-3 mb-4">
+                      <h3 className="font-bold text-purple-700 dark:text-purple-300 text-2xl">Helen</h3>
+                      <Badge variant="secondary" className="text-sm bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200 px-3 py-1">AI Assistant</Badge>
                     </div>
-                    <p className="text-foreground mb-2 text-lg font-medium">
+                    <p className="text-foreground mb-3 text-2xl font-semibold">
                       Welcome back, {currentUser?.firstName || 'Student'}! 👋
                     </p>
-                    <p className="text-muted-foreground mb-4">
+                    <p className="text-muted-foreground mb-6 text-lg leading-relaxed">
                       Are you ready to continue your certification journey? I've been analyzing your progress and have some personalized recommendations just for you!
                     </p>
                     
-                    {/* Quick Action Buttons in Chat */}
-                    <div className="flex flex-wrap gap-2">
+                    {/* Quick Action Buttons in Chat - Larger */}
+                    <div className="flex flex-wrap gap-3">
                       <Button 
-                        size="sm" 
+                        size="lg" 
                         onClick={() => handleQuickQuiz('AI Recommended')}
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md"
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg text-base px-6 py-3"
                       >
-                        <Brain className="w-4 h-4 mr-2" />
+                        <Brain className="w-5 h-5 mr-3" />
                         Smart Study
                       </Button>
                       <Button 
-                        size="sm" 
+                        size="lg" 
                         variant="outline"
                         onClick={() => handleQuickQuiz('Quick Practice')}
-                        className="border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-950/50"
+                        className="border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-950/50 text-base px-6 py-3"
                       >
-                        <BookOpen className="w-4 h-4 mr-2" />
+                        <BookOpen className="w-5 h-5 mr-3" />
                         Quick Practice
                       </Button>
                     </div>
