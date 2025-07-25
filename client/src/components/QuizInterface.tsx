@@ -180,7 +180,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="shadow-medium border-0 overflow-hidden bg-card/50 backdrop-blur-sm">
+      <Card className="shadow-lg border-0 overflow-hidden bg-card">
         {/* Quiz Header */}
         <div className="p-4 sm:p-6 border-b border-border/50 gradient-mesh">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
@@ -402,7 +402,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
       </Card>
 
       {/* Question Navigator */}
-      <Card className="shadow-medium border-0 p-3 sm:p-4 bg-card/50 backdrop-blur-sm">
+      <Card className="shadow-lg border-0 p-3 sm:p-4 bg-card">
         <h4 className="font-medium text-foreground mb-3 text-sm sm:text-base">Question Navigator</h4>
         <div className="grid grid-cols-8 sm:grid-cols-10 gap-1.5 sm:gap-2">
           {questions.map((_, index) => {

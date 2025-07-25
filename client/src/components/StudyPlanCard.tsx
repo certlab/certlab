@@ -149,7 +149,7 @@ export default function StudyPlanCard() {
 
             {/* Study Streak */}
             {stats && stats.currentStreak > 0 && (
-              <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg backdrop-blur-sm">
+              <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
                 <TrendingUp className="h-4 w-4 text-green-600" />
                 <span className="text-sm">
                   {stats.currentStreak} day study streak!
@@ -235,7 +235,7 @@ export default function StudyPlanCard() {
 
             {/* Streak Info */}
             {weeklyData.filter(day => day.quizCount > 0).length >= 3 && (
-              <div className="flex items-center gap-2 p-2 bg-green-50/50 dark:bg-green-900/20 rounded-lg backdrop-blur-sm">
+              <div className="flex items-center gap-2 p-2 bg-green-50/50 dark:bg-green-900/20 rounded-lg">
                 <TrendingUp className="h-4 w-4 text-green-600" />
                 <span className="text-sm text-green-700 dark:text-green-300">
                   Strong weekly momentum!

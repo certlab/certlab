@@ -155,7 +155,7 @@ export default function LearningModeSelector() {
   );
 
   return (
-    <Card className="shadow-medium border-0 overflow-hidden bg-card/50 backdrop-blur-sm animate-fade-in">
+    <Card className="shadow-lg border-0 overflow-hidden bg-card animate-fade-in">
       <CardHeader className="p-4 sm:p-6 lg:p-8 border-b border-border/50 gradient-mesh">
         <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-2">
           Choose Your Learning Mode

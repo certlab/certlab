@@ -118,7 +118,7 @@ export default function Results() {
       <Header />
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <Card className="shadow-medium border-0 overflow-hidden bg-card/50 backdrop-blur-sm">
+        <Card className="shadow-lg border-0 overflow-hidden bg-card">
           {/* Results Header */}
           <div className={`p-4 sm:p-6 border-b border-border text-white ${
             quiz.mode === "quiz" 

@@ -293,7 +293,7 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
   );
 
   return (
-    <Card className="backdrop-blur-sm bg-card/80 border-border/50 card-hover">
+    <Card className="bg-card border-border/50 card-hover">
       <CardHeader className="p-4 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div>

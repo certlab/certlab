@@ -219,7 +219,7 @@ export default function ActivitySidebar() {
   return (
     <div className="space-y-6">
       {/* Recent Quiz Results */}
-      <Card className="backdrop-blur-sm bg-card/80 border-border/50 overflow-hidden">
+      <Card className="bg-card border-border/50 overflow-hidden">
         <CardHeader className="p-4 border-b border-gray-100">
           <CardTitle className="font-medium text-gray-900">Recent Quiz Results</CardTitle>
         </CardHeader>
