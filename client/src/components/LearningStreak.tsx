@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { Flame, TrendingUp, Calendar } from "lucide-react";
@@ -45,8 +45,7 @@ export default function LearningStreak() {
   };
 
   return (
-    <Card className={`bg-gradient-to-r ${getStreakBgColor(streak)} border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}>
-      <CardContent className="p-6">
+    <Card className={`bg-gradient-to-r ${getStreakBgColor(streak)} border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-6`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -155,7 +154,6 @@ export default function LearningStreak() {
             </div>
           </div>
         )}
-      </CardContent>
     </Card>
   );
 }
