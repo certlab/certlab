@@ -108,6 +108,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub; // Get userId from authenticated user
       const isAdaptive = req.body.isAdaptive || false;
       
+      // Check subscription limits
+      const user = await storage.getUserById(userId);
+      if (user) {
+        // Check and reset daily quiz count if needed
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const lastReset = user.lastQuizResetDate ? new Date(user.lastQuizResetDate) : null;
+        
+        if (!lastReset || lastReset < today) {
+          // Reset the daily quiz count
+          await storage.updateUser(userId, {
+            dailyQuizCount: 0,
+            lastQuizResetDate: today,
+          });
+          user.dailyQuizCount = 0;
+        }
+        
+        // Get subscription plan limits
+        const plan = user.subscriptionPlan || 'free';
+        const limits = {
+          free: { quizzesPerDay: 5 },
+          pro: { quizzesPerDay: -1 }, // Unlimited
+          enterprise: { quizzesPerDay: -1 }
+        };
+        
+        const quizLimit = limits[plan as keyof typeof limits]?.quizzesPerDay || 5;
+        
+        // Check if user has reached their daily limit
+        if (quizLimit > 0 && (user.dailyQuizCount || 0) >= quizLimit) {
+          return res.status(403).json({ 
+            error: "Daily quiz limit reached",
+            message: `You have reached your daily limit of ${quizLimit} quizzes. Upgrade to Pro for unlimited quizzes!`,
+            upgradeUrl: "/subscription/plans",
+            currentCount: user.dailyQuizCount || 0,
+            limit: quizLimit,
+          });
+        }
+      }
+      
       // Check available questions for the selected categories
       const availableQuestions = await storage.getQuestionsByCategories(
         quizData.categoryIds,
@@ -140,6 +180,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         difficultyLevel: 1,
         mode: quizData.mode || "study"
       });
+      
+      // Increment daily quiz count after successful creation
+      if (user) {
+        await storage.updateUser(userId, {
+          dailyQuizCount: (user.dailyQuizCount || 0) + 1,
+        });
+      }
       
       res.json(quiz);
     } catch (error) {
