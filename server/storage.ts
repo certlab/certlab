@@ -20,9 +20,11 @@ export interface IStorage {
   
   // User management (updated for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User | null>;
   updateUserGoals(id: string, goals: {
     certificationGoals: string[];
     studyPreferences: any;
@@ -1709,9 +1711,30 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getUserById(id: string): Promise<User | undefined> {
+    return this.getUser(id);
+  }
+
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user || undefined;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | null> {
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          ...updates,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, id))
+        .returning();
+      return updatedUser || null;
+    } catch (error) {
+      console.error("Error updating user:", error);
+      return null;
+    }
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
