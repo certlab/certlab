@@ -14,6 +14,7 @@ import CollapsibleSection from "@/components/CollapsibleSection";
 import PersonalizedInsights from "@/components/PersonalizedInsights";
 import ContextualQuickActions from "@/components/ContextualQuickActions";
 import QuickStartMode from "@/components/QuickStartMode";
+import SubscriptionStatus from "@/components/SubscriptionStatus";
 import { shouldShowHelenIntro, shouldShowGoalWizard, markGoalSettingCompleted } from "@/lib/onboarding";
 import { calculateContentPriorities, getContentOrder, getPersonalizedInsights } from "@/lib/content-prioritization";
 import { useAuth } from "@/lib/auth";
@@ -162,10 +163,11 @@ export default function Dashboard() {
         <div className="py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-slide-up"
+              className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-slide-up"
               style={{ animationDelay: "200ms" }}
             >
               <MasteryMeter />
+              <SubscriptionStatus />
               <ActivitySidebar />
             </div>
           </div>
