@@ -32,7 +32,8 @@ if (typeof window !== 'undefined') {
 }
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   if (isLoading) {
     return (
@@ -74,8 +75,8 @@ function Router() {
           <Route path="/accessibility" component={Accessibility} />
           <Route path="/study-groups" component={StudyGroups} />
           <Route path="/challenges" component={ChallengesPage} />
-          <Route path="/ui-structure" component={UIStructurePage} />
-          <Route path="/admin" component={AdminDashboard} />
+          {isAdmin && <Route path="/ui-structure" component={UIStructurePage} />}
+          {isAdmin && <Route path="/admin" component={AdminDashboard} />}
         </>
       )}
       <Route component={NotFound} />

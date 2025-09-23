@@ -1096,10 +1096,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Development endpoint to sync UI structure
+  // Development endpoint to sync UI structure (admin only)
   if (process.env.NODE_ENV === 'development') {
-    app.post('/api/dev/sync-ui-structure', async (req, res) => {
+    app.post('/api/dev/sync-ui-structure', isAuthenticated, async (req: any, res) => {
       try {
+        // Check if user is admin
+        const userId = req.user?.id || req.user?.claims?.sub;
+        if (userId) {
+          const user = await storage.getUser(userId);
+          if (!user || user.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Admin access required' });
+          }
+        }
+        
         const { execSync } = await import('child_process');
         execSync('node scripts/sync_ui_structure.js', { cwd: process.cwd() });
         res.json({ success: true, message: 'UI structure synced' });

@@ -40,6 +40,7 @@ export default function Header() {
   const { user: currentUser, logout } = useAuth();
   const { toast } = useToast();
   const isAdminArea = location.startsWith('/admin');
+  const isAdmin = currentUser?.role === 'admin';
 
   const handleSignOut = async () => {
     try {
@@ -171,54 +172,57 @@ export default function Header() {
                           </div>
                         </div>
 
-                        {/* Tools Section */}
-                        <div>
-                          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                            <Shield className="w-4 h-4" />
-                            Developer Tools
-                          </h3>
-                          <div className="grid grid-cols-2 gap-3">
-                            <NavigationMenuLink 
-                              className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                              onClick={() => setLocation("/accessibility")}
-                            >
-                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                  <Accessibility className="w-3 h-3 text-primary" />
+                        {/* Tools Section - Only for Admin */}
+                        {isAdmin && (
+                          <div>
+                            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                              <Shield className="w-4 h-4" />
+                              Developer Tools
+                            </h3>
+                            <div className="grid grid-cols-2 gap-3">
+                              <NavigationMenuLink 
+                                className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
+                                onClick={() => setLocation("/accessibility")}
+                              >
+                                <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                  <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                    <Accessibility className="w-3 h-3 text-primary" />
+                                  </div>
+                                  Accessibility
                                 </div>
-                                Accessibility
-                              </div>
-                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                                Check color contrast and accessibility
-                              </p>
-                            </NavigationMenuLink>
-                            <NavigationMenuLink 
-                              className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                              onClick={() => setLocation("/ui-structure")}
-                            >
-                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                  <Database className="w-3 h-3 text-primary" />
+                                <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                  Check color contrast and accessibility
+                                </p>
+                              </NavigationMenuLink>
+                              <NavigationMenuLink 
+                                className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
+                                onClick={() => setLocation("/ui-structure")}
+                              >
+                                <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                  <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                    <Database className="w-3 h-3 text-primary" />
+                                  </div>
+                                  UI Structure
                                 </div>
-                                UI Structure
-                              </div>
-                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                                Interactive application architecture
-                              </p>
-                            </NavigationMenuLink>
+                                <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                  Interactive application architecture
+                                </p>
+                              </NavigationMenuLink>
+                            </div>
                           </div>
-                        </div>
+                        )}
 
-                        {/* Admin Section */}
-                        <div>
-                          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                            <Settings className="w-4 h-4" />
-                            Administration
-                          </h3>
-                          <NavigationMenuLink 
-                            className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                            onClick={() => setLocation("/admin")}
-                          >
+                        {/* Admin Section - Only for Admin */}
+                        {isAdmin && (
+                          <div>
+                            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                              <Settings className="w-4 h-4" />
+                              Administration
+                            </h3>
+                            <NavigationMenuLink 
+                              className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
+                              onClick={() => setLocation("/admin")}
+                            >
                             <div className="flex items-center text-sm font-medium leading-none text-foreground">
                               <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
                                 <Settings className="w-3 h-3 text-primary" />
@@ -229,7 +233,8 @@ export default function Header() {
                               Manage users, content, and system settings
                             </p>
                           </NavigationMenuLink>
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </NavigationMenuContent>
                   </NavigationMenuItem>
