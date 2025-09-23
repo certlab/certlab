@@ -66,7 +66,7 @@ function Router() {
           <Route path="/app/accessibility" component={Accessibility} />
           <Route path="/app/study-groups" component={StudyGroups} />
           <Route path="/app/challenges" component={ChallengesPage} />
-          <Route path="/app/ui-structure" component={UIStructurePage} />
+          {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
           <Route path="/quiz/:id" component={Quiz} />
           <Route path="/results/:id" component={Results} />
           <Route path="/review/:id" component={Review} />
