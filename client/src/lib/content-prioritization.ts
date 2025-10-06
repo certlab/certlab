@@ -113,19 +113,43 @@ export function shouldShowInQuickView(contentId: string, priorities: ContentPrio
 /**
  * Get personalized insights based on content priorities
  */
-export function getPersonalizedInsights(priorities: ContentPriorities): string[] {
-  const insights: string[] = [];
+export function getPersonalizedInsights(priorities: ContentPriorities): any[] {
+  const insights: any[] = [];
   
   if (priorities.learningStreak.priority === 'high') {
-    insights.push("Start your learning streak today! Daily practice builds lasting knowledge.");
+    insights.push({
+      id: 'streak-insight',
+      type: 'recommendation',
+      title: 'Build Your Streak',
+      message: "Start your learning streak today! Daily practice builds lasting knowledge.",
+      priority: 'high',
+      actionText: 'Start Quiz',
+      actionUrl: '/quiz'
+    });
   }
   
   if (priorities.quickActions.priority === 'high' && priorities.quickActions.reason.includes('focused practice')) {
-    insights.push("Focus on your weaker areas to improve your overall performance.");
+    insights.push({
+      id: 'focus-insight',
+      type: 'weakness',
+      title: 'Focus Areas',
+      message: "Focus on your weaker areas to improve your overall performance.",
+      priority: priorities.quickActions.priority,
+      actionText: 'View Progress',
+      actionUrl: '/progress'
+    });
   }
   
   if (priorities.learningWizard.priority === 'high' && priorities.learningWizard.reason.includes('goals')) {
-    insights.push("Set your certification goals to get personalized study recommendations.");
+    insights.push({
+      id: 'goals-insight',
+      type: 'recommendation',
+      title: 'Set Your Goals',
+      message: "Set your certification goals to get personalized study recommendations.",
+      priority: 'high',
+      actionText: 'Set Goals',
+      actionUrl: '/profile/settings'
+    });
   }
   
   return insights;
