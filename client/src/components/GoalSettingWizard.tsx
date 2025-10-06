@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Target,
@@ -487,11 +488,14 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
 
   return (
     <Dialog open={isOpen} onOpenChange={onComplete}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" aria-describedby="goal-wizard-description">
         <DialogHeader>
           <DialogTitle className="text-center">
             Set Your Learning Goals
           </DialogTitle>
+          <DialogDescription id="goal-wizard-description" className="sr-only">
+            Set your certification goals and learning preferences to get personalized study recommendations
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">

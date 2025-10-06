@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Brain,
@@ -171,11 +172,14 @@ export default function HelensIntroduction({ isOpen, onComplete }: HelensIntrodu
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-md mx-auto">
+      <DialogContent className="max-w-md mx-auto" aria-describedby="helen-intro-description">
         <DialogHeader>
           <DialogTitle className="text-center">
             Welcome to Cert Lab
           </DialogTitle>
+          <DialogDescription id="helen-intro-description" className="sr-only">
+            Introduction tour to help you get started with Cert Lab and meet Helen, your AI learning assistant
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">
