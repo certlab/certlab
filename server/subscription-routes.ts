@@ -35,7 +35,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
   };
 
   // Get current subscription status
-  app.get("/api/subscription/status", async (req: Request, res: Response) => {
+  app.get("/api/subscription/status", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = req.user as User;
       if (!user) {
@@ -126,7 +126,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
   });
 
   // Create checkout session for subscription
-  app.post("/api/subscription/checkout", async (req: Request, res: Response) => {
+  app.post("/api/subscription/checkout", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = req.user as User;
       if (!user) {
@@ -215,7 +215,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
   });
 
   // Handle successful checkout (callback from Polar)
-  app.get("/api/subscription/success", async (req: Request, res: Response) => {
+  app.get("/api/subscription/success", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { session_id } = req.query;
       
@@ -271,7 +271,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
   });
 
   // Cancel subscription
-  app.post("/api/subscription/cancel", async (req: Request, res: Response) => {
+  app.post("/api/subscription/cancel", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = req.user as User;
       if (!user) {
@@ -331,7 +331,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
   });
 
   // Resume canceled subscription
-  app.post("/api/subscription/resume", async (req: Request, res: Response) => {
+  app.post("/api/subscription/resume", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = req.user as User;
       if (!user) {
