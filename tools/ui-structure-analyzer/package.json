@@ -1,0 +1,33 @@
+{
+  "name": "@ui-structure/analyzer",
+  "version": "1.0.0",
+  "description": "Automatic UI structure analyzer for React applications",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "analyze": "tsx run.ts",
+    "analyze:watch": "tsx run.ts --watch"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./vite": "./plugins/vite-plugin.ts"
+  },
+  "keywords": [
+    "react",
+    "ui",
+    "structure",
+    "analyzer",
+    "documentation",
+    "ast"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "@typescript-eslint/parser": "^8.0.0",
+    "@typescript-eslint/typescript-estree": "^8.0.0",
+    "chokidar": "^3.0.0 || ^4.0.0",
+    "glob": "^10.0.0 || ^11.0.0",
+    "js-yaml": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
