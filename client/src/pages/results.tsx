@@ -1,6 +1,5 @@
 import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import Header from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -28,7 +27,6 @@ export default function Results() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="flex items-center justify-center min-h-[24rem]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -41,7 +39,6 @@ export default function Results() {
   if (!quiz) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="text-center">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">Results Not Found</h1>
@@ -61,7 +58,6 @@ export default function Results() {
   if (!quiz.completedAt) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="text-center">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">Quiz Not Completed</h1>
@@ -115,8 +111,6 @@ export default function Results() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <Card className="shadow-lg border-0 overflow-hidden bg-card">
           {/* Results Header */}

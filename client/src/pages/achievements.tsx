@@ -5,7 +5,6 @@ import { Trophy, Target, Flame, Star, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
-import Header from "@/components/Header";
 
 interface Badge {
   id: number;
@@ -42,8 +41,6 @@ export default function AchievementsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">

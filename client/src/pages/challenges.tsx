@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Header from "@/components/Header";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -128,7 +127,6 @@ export default function ChallengesPage() {
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <main className="max-w-4xl mx-auto px-4 py-8">
           <Card>
             <CardContent className="p-8 text-center">
@@ -148,8 +146,6 @@ export default function ChallengesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Challenge Dashboard Header */}
         <div className="mb-8">

@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -234,8 +233,6 @@ const UIStructurePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
       <main className="container mx-auto py-8 px-4">
         <div className="space-y-6">
           {/* Header */}

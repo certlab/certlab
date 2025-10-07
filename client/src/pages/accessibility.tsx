@@ -1,11 +1,8 @@
-import Header from "@/components/Header";
 import ContrastAnalyzer from "@/components/ContrastAnalyzer";
 
 export default function Accessibility() {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           <div>
