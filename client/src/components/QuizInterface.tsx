@@ -47,7 +47,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/quiz', quizId] });
-      setLocation(`/results/${quizId}`);
+      setLocation(`/app/results/${quizId}`);
     },
     onError: () => {
       toast({
