@@ -61,7 +61,7 @@ export default function ChallengesPage() {
     },
     onSuccess: (attempt: ChallengeAttempt) => {
       // Redirect to quiz interface with challenge mode
-      setLocation(`/quiz/${attempt.quizId || 'challenge'}`);
+      setLocation(`/app/quiz/${attempt.quizId || 'challenge'}`);
     },
     onError: () => {
       toast({

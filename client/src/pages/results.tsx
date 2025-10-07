@@ -70,7 +70,7 @@ export default function Results() {
             </div>
             <div className="flex gap-4 justify-center mt-4">
               <Button 
-                onClick={() => setLocation(`/quiz/${quizId}`)}
+                onClick={() => setLocation(`/app/quiz/${quizId}`)}
                 className="bg-primary hover:bg-primary/90"
               >
                 Continue Quiz

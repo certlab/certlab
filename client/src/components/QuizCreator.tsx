@@ -46,7 +46,7 @@ export default function QuizCreator() {
         });
       }
       
-      setLocation(`/quiz/${quiz.id}`);
+      setLocation(`/app/quiz/${quiz.id}`);
     },
     onError: () => {
       toast({

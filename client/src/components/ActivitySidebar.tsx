@@ -2,6 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { useLocation } from "wouter";
 import { getScoreColor } from "@/lib/questions";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +13,7 @@ import type { Quiz, Category } from "@shared/schema";
 export default function ActivitySidebar() {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
     queryKey: ['/api/user', currentUser?.id, 'quizzes'],
@@ -60,7 +62,7 @@ export default function ActivitySidebar() {
     },
     onSuccess: (quiz) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      window.location.href = `/quiz/${quiz.id}`;
+      setLocation(`/app/quiz/${quiz.id}`);
     },
     onError: () => {
       toast({
@@ -127,7 +129,7 @@ export default function ActivitySidebar() {
           });
         }
         
-        window.location.href = `/quiz/${quiz.id}`;
+        setLocation(`/app/quiz/${quiz.id}`);
       },
       onError: () => {
         toast({
@@ -252,7 +254,7 @@ export default function ActivitySidebar() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.location.href = `/review/${quiz.id}`}
+                    onClick={() => setLocation(`/app/review/${quiz.id}`)}
                     className="flex-1 text-xs"
                   >
                     <i className="fas fa-eye mr-1"></i>
@@ -261,7 +263,7 @@ export default function ActivitySidebar() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.location.href = `/results/${quiz.id}`}
+                    onClick={() => setLocation(`/app/results/${quiz.id}`)}
                     className="flex-1 text-xs"
                   >
                     <i className="fas fa-chart-bar mr-1"></i>

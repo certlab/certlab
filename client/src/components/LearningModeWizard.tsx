@@ -79,7 +79,7 @@ export default function LearningModeWizard() {
         });
       }
       
-      setLocation(`/quiz/${quiz.id}`);
+      setLocation(`/app/quiz/${quiz.id}`);
     },
     onError: () => {
       toast({

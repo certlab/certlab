@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
+import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -22,6 +23,7 @@ interface QuickStartModeProps {
 export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
     queryKey: ['/api/user', currentUser?.id, 'quizzes'],
@@ -48,7 +50,7 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
     },
     onSuccess: (quiz) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      window.location.href = `/app/quiz/${quiz.id}`;
+      setLocation(`/app/quiz/${quiz.id}`);
     },
     onError: () => {
       toast({

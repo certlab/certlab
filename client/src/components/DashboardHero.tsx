@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
@@ -18,6 +18,7 @@ import type { UserStats, Category, MasteryScore } from "@shared/schema";
 export default function DashboardHero() {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const { data: stats } = useQuery<UserStats>({
     queryKey: [`/api/user/${currentUser?.id}/stats`],
@@ -52,7 +53,7 @@ export default function DashboardHero() {
 
       const quiz = await response.json();
       if (quiz?.id) {
-        window.location.href = `/app/quiz/${quiz.id}`;
+        setLocation(`/app/quiz/${quiz.id}`);
       }
     } catch (error: any) {
       toast({
