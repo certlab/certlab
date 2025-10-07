@@ -91,7 +91,17 @@ export default function ContextualQuickActions() {
         icon: <Target className="w-4 h-4" />,
         variant: 'outline' as const,
         badge: (stats?.totalQuizzes || 0) > 0 ? 'Smart' : undefined,
-        onClick: () => setLocation('/app/quiz?mode=review')
+        onClick: () => {
+          if (currentUser?.id) {
+            // Create a quiz focused on review/weak areas
+            createQuizMutation.mutate({
+              categoryIds: categories.length > 0 ? [categories[0].id] : [35],
+              questionCount: 20,
+              title: `Review Session - ${new Date().toLocaleDateString()}`,
+              mode: 'study' // Study mode for reviewing weak areas
+            });
+          }
+        }
       });
 
       actions.push({
@@ -132,7 +142,16 @@ export default function ContextualQuickActions() {
         description: 'Start learning to unlock achievements',
         icon: <BookOpen className="w-4 h-4" />,
         variant: 'outline' as const,
-        onClick: () => setLocation('/app/quiz')
+        onClick: () => {
+          if (currentUser?.id) {
+            // Create a quiz for badge earning
+            createQuizMutation.mutate({
+              categoryIds: categories.length > 0 ? [categories[0].id] : [35],
+              questionCount: 15,
+              title: `Badge Quest - ${new Date().toLocaleDateString()}`,
+            });
+          }
+        }
       });
 
       if (recentQuizzes.length > 0) {
@@ -166,7 +185,16 @@ export default function ContextualQuickActions() {
         description: 'Individual learning session',
         icon: <BookOpen className="w-4 h-4" />,
         variant: 'outline' as const,
-        onClick: () => setLocation('/app/quiz')
+        onClick: () => {
+          if (currentUser?.id) {
+            // Create a solo practice quiz
+            createQuizMutation.mutate({
+              categoryIds: categories.length > 0 ? [categories[0].id] : [35],
+              questionCount: 15,
+              title: `Solo Practice - ${new Date().toLocaleDateString()}`,
+            });
+          }
+        }
       });
 
       actions.push({

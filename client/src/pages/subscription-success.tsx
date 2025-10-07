@@ -150,7 +150,7 @@ export default function SubscriptionSuccess() {
                 Go to Dashboard
               </Button>
             </Link>
-            <Link href="/quiz/categories">
+            <Link href="/app">
               <Button variant="outline" size="lg" data-testid="start-learning-button">
                 Start Learning
               </Button>
