@@ -71,19 +71,10 @@ function Router() {
           <Route path="/app/study-groups" component={StudyGroups} />
           <Route path="/app/challenges" component={ChallengesPage} />
           {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
-          <Route path="/quiz/:id" component={Quiz} />
-          <Route path="/results/:id" component={Results} />
-          <Route path="/review/:id" component={Review} />
-          <Route path="/lecture/:id" component={Lecture} />
-          <Route path="/achievements" component={Achievements} />
-          <Route path="/accessibility" component={Accessibility} />
-          <Route path="/study-groups" component={StudyGroups} />
-          <Route path="/challenges" component={ChallengesPage} />
           <Route path="/subscription/plans" component={SubscriptionPlansPage} />
           <Route path="/subscription/manage" component={SubscriptionManagePage} />
           <Route path="/subscription/success" component={SubscriptionSuccessPage} />
           <Route path="/subscription/cancel" component={SubscriptionCancelPage} />
-          {isAdmin && <Route path="/ui-structure" component={UIStructurePage} />}
           {isAdmin && <Route path="/admin" component={AdminDashboard} />}
         </>
       )}

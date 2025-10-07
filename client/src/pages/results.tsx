@@ -9,7 +9,7 @@ import { getScoreColor, getScoreBgColor } from "@/lib/questions";
 import type { Quiz, Category } from "@shared/schema";
 
 export default function Results() {
-  const [, params] = useRoute("/results/:id");
+  const [, params] = useRoute("/app/results/:id");
   const [, setLocation] = useLocation();
   const quizId = parseInt(params?.id || "0");
 

@@ -2,7 +2,7 @@ import { useRoute } from "wouter";
 import QuizInterface from "@/components/QuizInterface";
 
 export default function Quiz() {
-  const [, params] = useRoute("/quiz/:id");
+  const [, params] = useRoute("/app/quiz/:id");
   const quizId = params?.id ? parseInt(params.id) : 0;
 
   if (!quizId || isNaN(quizId)) {

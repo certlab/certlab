@@ -38,7 +38,7 @@ interface Question {
 }
 
 export default function Review() {
-  const [, params] = useRoute("/review/:id");
+  const [, params] = useRoute("/app/review/:id");
   const [, setLocation] = useLocation();
   const [showLectureDialog, setShowLectureDialog] = useState(false);
   const [generatedLecture, setGeneratedLecture] = useState<string>("");
