@@ -37,15 +37,23 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
   // Get current subscription status
   app.get("/api/subscription/status", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const user = req.user as User;
-      if (!user) {
+      const sessionUser = req.user as any;
+      if (!sessionUser) {
         return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      // Fetch fresh user data from database to get updated email
+      const userId = sessionUser.claims?.sub || sessionUser.id;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(401).json({ error: "User not found" });
       }
 
       // Check and reset daily quiz count if needed
       await checkAndResetDailyQuizCount(user.id);
 
-      // Get updated user data
+      // Get updated user data for quiz count
       const updatedUser = await storage.getUserById(user.id);
 
       // Check if Polar is configured
@@ -128,9 +136,17 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
   // Create checkout session for subscription
   app.post("/api/subscription/checkout", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const user = req.user as User;
-      if (!user) {
+      const sessionUser = req.user as any;
+      if (!sessionUser) {
         return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      // Fetch fresh user data from database to get updated email
+      const userId = sessionUser.claims?.sub || sessionUser.id;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(401).json({ error: "User not found" });
       }
 
       if (!user.email) {
@@ -223,9 +239,17 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         return res.status(400).json({ error: "Missing session ID" });
       }
 
-      const user = req.user as User;
-      if (!user) {
+      const sessionUser = req.user as any;
+      if (!sessionUser) {
         return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      // Fetch fresh user data from database to get updated email
+      const userId = sessionUser.claims?.sub || sessionUser.id;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(401).json({ error: "User not found" });
       }
 
       // Verify the checkout session
