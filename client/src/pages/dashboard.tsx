@@ -1,175 +1,325 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import DashboardHero from "@/components/DashboardHero";
-import LearningModeWizard from "@/components/LearningModeWizard";
-import ActivitySidebar from "@/components/ActivitySidebar";
-import MasteryMeter from "@/components/MasteryMeter";
-import QuickActionsCard from "@/components/QuickActionsCard";
-import LearningStreak from "@/components/LearningStreak";
-import HelensIntroduction from "@/components/HelensIntroduction";
-import GoalSettingWizard from "@/components/GoalSettingWizard";
-import NewFeatureBadge from "@/components/NewFeatureBadge";
-import BreadcrumbNavigation from "@/components/BreadcrumbNavigation";
-import CollapsibleSection from "@/components/CollapsibleSection";
-import PersonalizedInsights from "@/components/PersonalizedInsights";
-import ContextualQuickActions from "@/components/ContextualQuickActions";
-import QuickStartMode from "@/components/QuickStartMode";
-import SubscriptionStatus from "@/components/SubscriptionStatus";
-import { shouldShowHelenIntro, shouldShowGoalWizard, markGoalSettingCompleted } from "@/lib/onboarding";
-import { calculateContentPriorities, getContentOrder, getPersonalizedInsights } from "@/lib/content-prioritization";
+import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
-import { checkAndUnlockFeatures, isFeatureUnlocked } from "@/lib/feature-discovery";
-import { Target, BookOpen } from "lucide-react";
-import type { UserStats } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { 
+  BookOpen, 
+  PlayCircle, 
+  TrendingUp, 
+  Clock,
+  Trophy,
+  Target,
+  Calendar,
+  History,
+  ChartBar
+} from "lucide-react";
+import type { UserStats, Quiz } from "@shared/schema";
 
 export default function Dashboard() {
   const { user: currentUser } = useAuth();
-  const [showHelenIntro, setShowHelenIntro] = useState(false);
-  const [showGoalWizard, setShowGoalWizard] = useState(false);
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
-  const [isQuickStartMode, setIsQuickStartMode] = useState(false);
+  // Motivational messages
+  const motivationalMessages = [
+    "Every question answered brings you closer to your certification goals!",
+    "Consistency is key - keep up your daily practice!",
+    "Your dedication today shapes your success tomorrow.",
+    "Small steps daily lead to big achievements.",
+    "Focus on progress, not perfection.",
+    "Learning is a journey - enjoy every step!",
+    "Stay curious, stay motivated, stay successful.",
+    "Your effort today is an investment in your future.",
+  ];
 
-  // Get user stats for feature discovery
+  const getRandomMotivationalMessage = () => {
+    const index = Math.floor(Math.random() * motivationalMessages.length);
+    return motivationalMessages[index];
+  };
+
+  // Set motivational message once on mount to prevent it from changing on re-renders
+  const [motivationalMessage] = useState(() => getRandomMotivationalMessage());
+
+  // Get user stats
   const { data: stats } = useQuery<UserStats>({
     queryKey: [`/api/user/${currentUser?.id}/stats`],
     enabled: !!currentUser?.id,
   });
 
-  // Calculate content priorities based on user stats  
-  const contentPriorities = calculateContentPriorities(stats, (currentUser as any)?.certificationGoals);
-  const contentOrder = getContentOrder(contentPriorities);
-  const personalizedInsights = getPersonalizedInsights(contentPriorities);
+  // Get recent quizzes
+  const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
+    queryKey: ['/api/user', currentUser?.id, 'quizzes'],
+    enabled: !!currentUser,
+  });
 
-  useEffect(() => {
-    // Check if user should see Helen introduction
-    const shouldShow = shouldShowHelenIntro();
-    if (shouldShow) {
-      // Small delay to let the dashboard load first
-      const timer = setTimeout(() => {
-        setShowHelenIntro(true);
-      }, 1000);
-      return () => clearTimeout(timer);
+  // Get completed quizzes for recent activity
+  const completedQuizzes = recentQuizzes
+    .filter(quiz => quiz.completedAt)
+    .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())
+    .slice(0, 5);
+
+  // Get current date and time
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    return now.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const handleStartPractice = async () => {
+    if (!currentUser?.id) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to start practicing.",
+        variant: "destructive",
+      });
+      return;
     }
-  }, []);
 
-  // Check for newly unlocked features
-  useEffect(() => {
-    if (stats && currentUser?.id) {
-      checkAndUnlockFeatures(stats).then(newFeatures => {
-        if (newFeatures.length > 0) {
-          console.log('New features unlocked:', newFeatures);
-          // Could show a toast notification here
-        }
+    try {
+      const response = await apiRequest({
+        endpoint: "/api/quiz",
+        method: "POST",
+        data: {
+          categoryIds: [35], // Default to first category
+          questionCount: 10,
+          title: `Practice Session - ${new Date().toLocaleDateString()}`,
+        },
+      });
+
+      const quiz = await response.json();
+      if (quiz?.id) {
+        setLocation(`/app/quiz/${quiz.id}`);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create practice session",
+        variant: "destructive",
       });
     }
-  }, [stats, currentUser?.id]);
+  };
 
-  const handleIntroComplete = () => {
-    setShowHelenIntro(false);
-    
-    // After Helen intro, check if we should show goal wizard
-    if (shouldShowGoalWizard()) {
-      setTimeout(() => {
-        setShowGoalWizard(true);
-      }, 500);
+  const handleContinueLearning = () => {
+    // Find the most recent incomplete quiz or start a new one
+    const incompleteQuiz = recentQuizzes.find(quiz => !quiz.completedAt);
+    if (incompleteQuiz) {
+      setLocation(`/app/quiz/${incompleteQuiz.id}`);
+    } else {
+      handleStartPractice();
     }
   };
 
-  const handleGoalWizardComplete = () => {
-    setShowGoalWizard(false);
-    markGoalSettingCompleted();
+  const handleViewProgress = () => {
+    setLocation('/app/achievements');
   };
 
+  const formatDate = (date: string | Date) => {
+    const quizDate = new Date(date);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - quizDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
+    if (diffDays === 1) return 'Today';
+    if (diffDays === 2) return 'Yesterday';
+    if (diffDays <= 7) return `${diffDays - 1} days ago`;
+    return quizDate.toLocaleDateString();
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return "text-green-600";
+    if (score >= 80) return "text-blue-600";
+    if (score >= 70) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  const getLastQuizScore = () => {
+    if (completedQuizzes.length === 0) return null;
+    const lastQuiz = completedQuizzes[0];
+    if (!lastQuiz.score) return null;
+    return Math.round(lastQuiz.score);
+  };
+
+  const getOverallMastery = () => {
+    if (!stats) return 0;
+    if (stats.totalQuizzes === 0) return 0;
+    return Math.round((stats.averageScore || 0));
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      
-      {/* Helen's Introduction Modal */}
-      <HelensIntroduction 
-        isOpen={showHelenIntro} 
-        onComplete={handleIntroComplete} 
-      />
-      
-      {/* Goal Setting Wizard */}
-      <GoalSettingWizard
-        isOpen={showGoalWizard}
-        onComplete={handleGoalWizardComplete}
-      />
-
-      <main className="relative z-10">
-        {/* Welcome & Overview Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
-          {/* Breadcrumb Navigation */}
-          <BreadcrumbNavigation />
-          
-          {/* Personalized Insights */}
-          {personalizedInsights && Array.isArray(personalizedInsights) && personalizedInsights.length > 0 && (
-            <PersonalizedInsights insights={personalizedInsights} />
-          )}
-          
-          {/* Learning Streak */}
-          <LearningStreak />
-          
-          {/* Dashboard Hero */}
-          <DashboardHero />
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Welcome back, {currentUser?.firstName || "Student"}!
+          </h1>
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
+            <Calendar className="w-4 h-4" />
+            <span>{getCurrentDateTime()}</span>
+          </div>
+          <p className="text-lg text-muted-foreground italic">
+            {motivationalMessage}
+          </p>
         </div>
 
-        {/* Learning Configuration Section */}
-        <div className="section-alt-bg py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-slide-up">
-              <div className="lg:col-span-2">
-                {isFeatureUnlocked('advanced-wizard') ? (
-                  <NewFeatureBadge featureId="advanced-wizard">
-                    <LearningModeWizard />
-                  </NewFeatureBadge>
-                ) : (
-                  <LearningModeWizard />
-                )}
-              </div>
-              <div className="space-y-4">
-                <CollapsibleSection
-                  title="Quick Learning Options"
-                  description="Fast access to your preferred study methods"
-                  icon={<Target className="w-4 h-4" />}
-                  defaultExpanded={true}
-                  storageKey="quick-learning-options"
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Primary Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button 
+                  onClick={handleStartPractice}
+                  className="w-full justify-start"
+                  size="lg"
+                  data-testid="start-quick-practice"
                 >
-                  <QuickStartMode
-                    onToggleMode={() => setIsQuickStartMode(!isQuickStartMode)}
-                  />
-                </CollapsibleSection>
+                  <PlayCircle className="mr-3 h-5 w-5" />
+                  Start Quick Practice
+                  <span className="ml-auto text-sm opacity-80">10 questions</span>
+                </Button>
                 
-                <ContextualQuickActions />
+                <Button 
+                  onClick={handleContinueLearning}
+                  variant="outline"
+                  className="w-full justify-start"
+                  size="lg"
+                  data-testid="continue-learning"
+                >
+                  <BookOpen className="mr-3 h-5 w-5" />
+                  Continue Learning
+                  {recentQuizzes.find(q => !q.completedAt) && (
+                    <span className="ml-auto text-sm opacity-80">Resume quiz</span>
+                  )}
+                </Button>
                 
-                {!isQuickStartMode && (
-                  <CollapsibleSection
-                    title="Study Tools"
-                    description="Additional learning resources and options"
-                    icon={<BookOpen className="w-4 h-4" />}
-                    defaultExpanded={false}
-                    storageKey="study-tools"
-                  >
-                    <QuickActionsCard />
-                  </CollapsibleSection>
-                )}
-              </div>
+                <Button 
+                  onClick={handleViewProgress}
+                  variant="outline"
+                  className="w-full justify-start"
+                  size="lg"
+                  data-testid="view-progress"
+                >
+                  <ChartBar className="mr-3 h-5 w-5" />
+                  View Progress
+                  <span className="ml-auto text-sm opacity-80">Achievements</span>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Key Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <Target className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-2xl font-bold">{stats?.totalQuizzes || 0}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Total Quizzes</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-2xl font-bold">{stats?.studyStreak || 0}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Day Streak</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <Trophy className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-2xl font-bold">{getOverallMastery()}%</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Overall Mastery</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <Clock className="h-5 w-5 text-muted-foreground" />
+                    <span className={`text-2xl font-bold ${getLastQuizScore() ? getScoreColor(getLastQuizScore()!) : ''}`}>
+                      {getLastQuizScore() ? `${getLastQuizScore()}%` : 'N/A'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Last Quiz Score</p>
+                </CardContent>
+              </Card>
             </div>
           </div>
-        </div>
 
-        {/* Progress & Activity Section */}
-        <div className="py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div
-              className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-slide-up"
-              style={{ animationDelay: "200ms" }}
-            >
-              <MasteryMeter />
-              <SubscriptionStatus />
-              <ActivitySidebar />
-            </div>
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <History className="h-5 w-5" />
+                  Recent Activity
+                </CardTitle>
+                {completedQuizzes.length > 0 && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setLocation('/app/review')}
+                  >
+                    View all
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                {completedQuizzes.length > 0 ? (
+                  <div className="space-y-3">
+                    {completedQuizzes.map((quiz) => (
+                      <div 
+                        key={quiz.id} 
+                        className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                        onClick={() => setLocation(`/app/results/${quiz.id}`)}
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{quiz.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(quiz.completedAt!)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`font-bold text-lg ${quiz.score ? getScoreColor(quiz.score) : ''}`}>
+                            {quiz.score ? `${Math.round(quiz.score)}%` : 'N/A'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {quiz.questionCount} questions
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p className="mb-4">No completed quizzes yet</p>
+                    <Button onClick={handleStartPractice} variant="outline" size="sm">
+                      Start your first quiz
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
