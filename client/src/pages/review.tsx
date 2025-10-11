@@ -111,7 +111,7 @@ export default function Review() {
             <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">Quiz Not Available for Review</h1>
             <p className="text-sm sm:text-base text-muted-foreground">This quiz hasn't been completed yet or doesn't exist.</p>
             <Button 
-              onClick={() => setLocation("/")}
+              onClick={() => setLocation("/app")}
               className="mt-4 bg-primary hover:bg-primary/90"
             >
               Return to Dashboard
@@ -130,7 +130,7 @@ export default function Review() {
             <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">No Questions Found</h1>
             <p className="text-sm sm:text-base text-muted-foreground">Unable to load questions for this quiz.</p>
             <Button 
-              onClick={() => setLocation("/")}
+              onClick={() => setLocation("/app")}
               className="mt-4 bg-primary hover:bg-primary/90"
             >
               Return to Dashboard
@@ -228,7 +228,7 @@ export default function Review() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setLocation("/")}
+                  onClick={() => setLocation("/app")}
                   size="sm"
                 >
                   <i className="fas fa-home mr-2"></i>

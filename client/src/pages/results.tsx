@@ -44,7 +44,7 @@ export default function Results() {
             <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">Results Not Found</h1>
             <p className="text-sm sm:text-base text-muted-foreground">The quiz you're looking for doesn't exist.</p>
             <Button 
-              onClick={() => setLocation("/")}
+              onClick={() => setLocation("/app")}
               className="mt-4 bg-primary hover:bg-primary/90"
             >
               Return to Dashboard
@@ -77,7 +77,7 @@ export default function Results() {
               </Button>
               <Button 
                 variant="outline"
-                onClick={() => setLocation("/")}
+                onClick={() => setLocation("/app")}
               >
                 Return to Dashboard
               </Button>
@@ -249,7 +249,7 @@ export default function Results() {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button
-                onClick={() => setLocation("/")}
+                onClick={() => setLocation("/app")}
                 className="flex-1 bg-primary text-white hover:bg-primary/90"
                 size="sm"
               >
@@ -266,7 +266,7 @@ export default function Results() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setLocation("/")}
+                onClick={() => setLocation("/app")}
                 className="flex-1"
               >
                 <i className="fas fa-redo mr-2"></i>

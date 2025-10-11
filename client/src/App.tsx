@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -38,6 +38,7 @@ if (typeof window !== 'undefined') {
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
+  const [location] = useLocation();
   const isAdmin = user?.role === 'admin';
 
   if (isLoading) {
@@ -50,37 +51,43 @@ function Router() {
 
   return (
     <div className="min-h-screen bg-background">
-      {isAuthenticated && (
+      {isAuthenticated && location !== '/' && (
         <>
           <Header />
           <BreadcrumbNavigation />
         </>
       )}
       <Switch>
-        {isLoading || !isAuthenticated ? (
-          <Route path="/" component={Landing} />
-        ) : (
+        {/* Landing page is always available at root */}
+        <Route path="/" component={Landing} />
+        
+        {/* Protected routes - only for authenticated users */}
+        {isAuthenticated ? (
           <>
-            <Route path="/" component={Dashboard} />
             <Route path="/app" component={Dashboard} />
+            <Route path="/app/dashboard" component={Dashboard} />
             <Route path="/app/profile" component={ProfilePage} />
             <Route path="/app/quiz/:id" component={Quiz} />
             <Route path="/app/results/:id" component={Results} />
             <Route path="/app/review/:id" component={Review} />
             <Route path="/app/lecture/:id" component={Lecture} />
             <Route path="/app/achievements" component={Achievements} />
-          <Route path="/app/accessibility" component={Accessibility} />
-          <Route path="/app/study-groups" component={StudyGroups} />
-          <Route path="/app/challenges" component={ChallengesPage} />
-          {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
-          <Route path="/subscription/plans" component={SubscriptionPlansPage} />
-          <Route path="/subscription/manage" component={SubscriptionManagePage} />
-          <Route path="/subscription/success" component={SubscriptionSuccessPage} />
-          <Route path="/subscription/cancel" component={SubscriptionCancelPage} />
-          {isAdmin && <Route path="/admin" component={AdminDashboard} />}
-        </>
-      )}
-      <Route component={NotFound} />
+            <Route path="/app/accessibility" component={Accessibility} />
+            <Route path="/app/study-groups" component={StudyGroups} />
+            <Route path="/app/challenges" component={ChallengesPage} />
+            {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
+            <Route path="/subscription/plans" component={SubscriptionPlansPage} />
+            <Route path="/subscription/manage" component={SubscriptionManagePage} />
+            <Route path="/subscription/success" component={SubscriptionSuccessPage} />
+            <Route path="/subscription/cancel" component={SubscriptionCancelPage} />
+            {isAdmin && <Route path="/admin" component={AdminDashboard} />}
+          </>
+        ) : (
+          /* Redirect non-authenticated users trying to access protected routes */
+          <Route path="/app/*" component={Landing} />
+        )}
+        
+        <Route component={NotFound} />
       </Switch>
     </div>
   );
