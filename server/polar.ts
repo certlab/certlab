@@ -88,6 +88,14 @@ class PolarClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+      console.error('Polar API Error Details:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: url,
+        error: error,
+        errorDetail: error.detail ? JSON.stringify(error.detail, null, 2) : 'No detail',
+        body: options.body
+      });
       throw new Error(`Polar API Error: ${error.message || response.statusText}`);
     }
 
@@ -149,7 +157,7 @@ class PolarClient {
       method: 'POST',
       body: JSON.stringify({
         ...customer,
-        organization_id: this.organizationId,
+        // Don't send organization_id when using organization token
       }),
     });
   }
@@ -160,9 +168,11 @@ class PolarClient {
 
   async getCustomerByEmail(email: string): Promise<PolarCustomer | null> {
     const params = new URLSearchParams({ email });
-    if (this.organizationId) params.append('organization_id', this.organizationId);
+    // Don't send organization_id when using organization token
     
+    console.log('Searching for customer with email:', email);
     const customers = await this.request<PolarCustomer[]>(`/customers?${params}`);
+    console.log('Found customers:', customers.length);
     return customers.length > 0 ? customers[0] : null;
   }
 
@@ -189,7 +199,7 @@ class PolarClient {
         cancel_url: params.cancelUrl,
         customer_email: params.customerEmail,
         metadata: params.metadata,
-        organization_id: this.organizationId,
+        // Don't send organization_id when using organization token
       }),
     });
   }
@@ -217,15 +227,27 @@ class PolarClient {
     let customer = await this.getCustomerByEmail(email);
     
     if (!customer) {
-      // Create new customer
-      customer = await this.createCustomer({
-        email,
-        name,
-        metadata: {
-          source: 'certlab',
-          created_at: new Date().toISOString(),
-        },
-      });
+      try {
+        // Create new customer
+        customer = await this.createCustomer({
+          email,
+          name,
+          metadata: {
+            source: 'certlab',
+            created_at: new Date().toISOString(),
+          },
+        });
+      } catch (error: any) {
+        // If customer already exists (race condition), fetch it
+        if (error.message?.includes('already exists')) {
+          customer = await this.getCustomerByEmail(email);
+          if (!customer) {
+            throw new Error('Failed to create or get customer');
+          }
+        } else {
+          throw error;
+        }
+      }
     }
     
     return customer;

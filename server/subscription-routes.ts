@@ -204,7 +204,11 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       });
 
       // Create checkout session with product ID only
-      const baseUrl = process.env.APP_URL || `https://${req.get('host')}`;
+      // Use the actual Replit domain instead of localhost
+      const host = req.get('host') || '';
+      const baseUrl = process.env.APP_URL || (host.includes('localhost') ? 
+        `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}` : 
+        `https://${host}`);
       const session = await polarClient.createCheckoutSession({
         productId: planConfig.productId,
         successUrl: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
