@@ -225,11 +225,28 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       });
 
       // Create checkout session with product ID only
-      // Use the actual Replit domain instead of localhost
-      const host = req.get('host') || '';
-      const baseUrl = process.env.APP_URL || (host.includes('localhost') ? 
-        `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}` : 
-        `https://${host}`);
+      // Properly derive the base URL from request headers
+      let baseUrl: string;
+      
+      // Priority 1: Use APP_URL if explicitly set
+      if (process.env.APP_URL) {
+        baseUrl = process.env.APP_URL;
+      } else {
+        // Priority 2: Derive from request headers
+        const protocol = req.get('x-forwarded-proto') || req.protocol;
+        const host = req.get('host');
+        
+        if (!host) {
+          // Fallback to localhost if no host header
+          baseUrl = 'http://localhost:5000';
+        } else {
+          baseUrl = `${protocol}://${host}`;
+        }
+      }
+      
+      // Ensure baseUrl doesn't have trailing slash
+      baseUrl = baseUrl.replace(/\/$/, '');
+      
       const session = await polarClient.createCheckoutSession({
         productId: planConfig.productId,
         successUrl: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
