@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +42,6 @@ export default function SubscriptionPlans() {
   const { toast } = useToast();
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
-  const isNavigatingRef = useRef(false); // Track if we're already navigating to checkout
 
   const { data: plansData, isLoading } = useQuery<PlansResponse>({
     queryKey: ["/api/subscription/plans"],
@@ -69,43 +68,12 @@ export default function SubscriptionPlans() {
       return result;
     },
     onSuccess: (data) => {
-      if (data.checkoutUrl && !isNavigatingRef.current) {
-        isNavigatingRef.current = true;
-        
-        // Open checkout in a new tab - simpler and more reliable than popups
-        const checkoutTab = window.open(data.checkoutUrl, '_blank');
-        
-        if (checkoutTab) {
-          // Successfully opened in new tab
-          toast({
-            title: "Checkout Opened",
-            description: "Complete your purchase in the new tab. You can close it anytime to return here.",
-            duration: 5000,
-          });
-          
-          // Reset flag after a short delay
-          setTimeout(() => {
-            isNavigatingRef.current = false;
-          }, 1000);
-        } else {
-          // New tab was blocked, fall back to same window navigation
-          isNavigatingRef.current = false;
-          toast({
-            title: "Opening Checkout",
-            description: "Redirecting to secure checkout...",
-            duration: 3000,
-          });
-          
-          // Give user time to see the message
-          setTimeout(() => {
-            window.location.href = data.checkoutUrl;
-          }, 1000);
-        }
+      if (data.checkoutUrl) {
+        // Simple direct navigation to checkout
+        window.location.href = data.checkoutUrl;
       }
     },
     onError: (error: any) => {
-      // Reset navigation flag on error
-      isNavigatingRef.current = false;
       toast({
         title: "Error",
         description: error.message || "Failed to create checkout session",
@@ -139,7 +107,7 @@ export default function SubscriptionPlans() {
 
   const handleSubscribe = (planId: string) => {
     // Prevent double-clicks or rapid calls
-    if (createCheckoutMutation.isPending || isNavigatingRef.current) {
+    if (createCheckoutMutation.isPending) {
       return;
     }
 
