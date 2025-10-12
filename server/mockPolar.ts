@@ -179,10 +179,10 @@ export class MockPolarClient {
 
   // Initialize test data including test user
   private initializeTestData(): void {
-    // Create test user customer
+    // Create test user customer - use actual test user email from the database
     const testCustomer: PolarCustomer = {
       id: 'cust_test_999999',
-      email: 'test@example.com',
+      email: 'adam.chubbuck@gmail.com', // Actual test user email from database
       name: 'Test User',
       metadata: {
         userId: '999999',

@@ -340,6 +340,29 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         },
       });
 
+      // For test user in development mode, immediately update subscription benefits
+      const isTestUser = process.env.NODE_ENV === 'development' && userId === '999999';
+      if (isTestUser) {
+        console.log('Test user checkout: Immediately updating subscription benefits to', plan);
+        
+        // Map plan to benefits
+        const subscriptionBenefits = {
+          plan: plan,
+          quizzesPerDay: plan === 'pro' || plan === 'enterprise' ? null : 5, // null means unlimited for pro/enterprise
+          categoriesAccess: plan === 'pro' || plan === 'enterprise' ? ['all'] : ['basic'],
+          analyticsAccess: plan === 'pro' || plan === 'enterprise' ? 'advanced' : 'basic',
+          teamMembers: plan === 'enterprise' ? 50 : undefined,
+          lastSyncedAt: new Date().toISOString(),
+        };
+        
+        // Update user in database
+        await storage.updateUser(user.id, {
+          subscriptionBenefits: subscriptionBenefits,
+        });
+        
+        console.log('Test user subscription benefits updated in database:', subscriptionBenefits);
+      }
+
       res.json({
         checkoutUrl: session.url,
         sessionId: session.id,
@@ -389,6 +412,9 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         return res.status(401).json({ error: "User not found" });
       }
 
+      // Check if test user in development mode
+      const isTestUser = process.env.NODE_ENV === 'development' && userId === '999999';
+      
       // Get the appropriate Polar client for this user
       const polarClient = await getPolarClient(userId);
       
