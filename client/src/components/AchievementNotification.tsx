@@ -174,7 +174,7 @@ export function AchievementNotification({ userId, onClose }: AchievementNotifica
 
           <div className="flex gap-2 mt-6">
             <Button
-              onClick={() => window.open('/achievements', '_blank')}
+              onClick={() => window.open('/app/achievements', '_blank')}
               className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
             >
               View All Badges
