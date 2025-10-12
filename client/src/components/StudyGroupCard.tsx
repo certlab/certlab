@@ -6,77 +6,41 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Plus, Calendar, BookOpen, Trophy } from "lucide-react";
-
-interface StudyGroup {
-  id: number;
-  name: string;
-  description: string;
-  categoryIds: number[];
-  memberCount: number;
-  maxMembers: number;
-  isPublic: boolean;
-  createdBy: number;
-  recentActivity: string;
-  level: "Beginner" | "Intermediate" | "Advanced";
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import type { StudyGroup, Category } from "@shared/schema";
 
 export default function StudyGroupCard() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDescription, setNewGroupDescription] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedLevel, setSelectedLevel] = useState<string>("Intermediate");
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  // Mock data for study groups - in real implementation, this would come from API
-  const studyGroups: StudyGroup[] = [
-    {
-      id: 1,
-      name: "CISSP Study Squad",
-      description: "Preparing for CISSP certification together",
-      categoryIds: [1],
-      memberCount: 8,
-      maxMembers: 12,
-      isPublic: true,
-      createdBy: 1,
-      recentActivity: "2 hours ago",
-      level: "Advanced"
-    },
-    {
-      id: 2,
-      name: "Cloud+ Beginners",
-      description: "Starting our cloud certification journey",
-      categoryIds: [6],
-      memberCount: 5,
-      maxMembers: 10,
-      isPublic: true,
-      createdBy: 2,
-      recentActivity: "1 day ago",
-      level: "Beginner"
-    },
-    {
-      id: 3,
-      name: "Security Fundamentals",
-      description: "Building strong cybersecurity foundations",
-      categoryIds: [1, 2],
-      memberCount: 12,
-      maxMembers: 15,
-      isPublic: true,
-      createdBy: 3,
-      recentActivity: "3 hours ago",
-      level: "Intermediate"
-    }
-  ];
+  // Fetch study groups from API
+  const { data: studyGroups = [], isLoading: isLoadingGroups } = useQuery<StudyGroup[]>({
+    queryKey: ['/api/study-groups'],
+  });
+
+  // Fetch categories for the create form
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ['/api/categories'],
+  });
 
   const createGroupMutation = useMutation({
     mutationFn: async (groupData: any) => {
-      // Mock implementation - would be real API call
-      return new Promise(resolve => {
-        setTimeout(() => resolve({ id: Date.now(), ...groupData }), 1000);
+      const response = await apiRequest({
+        method: "POST",
+        endpoint: "/api/study-groups",
+        data: groupData,
       });
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -86,6 +50,7 @@ export default function StudyGroupCard() {
       setIsCreateDialogOpen(false);
       setNewGroupName("");
       setNewGroupDescription("");
+      setSelectedCategory("");
       queryClient.invalidateQueries({ queryKey: ['/api/study-groups'] });
     },
     onError: () => {
@@ -99,10 +64,11 @@ export default function StudyGroupCard() {
 
   const joinGroupMutation = useMutation({
     mutationFn: async (groupId: number) => {
-      // Mock implementation - would be real API call
-      return new Promise(resolve => {
-        setTimeout(() => resolve({ success: true }), 500);
+      const response = await apiRequest({
+        method: "POST",
+        endpoint: `/api/study-groups/${groupId}/join`,
       });
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -139,14 +105,22 @@ export default function StudyGroupCard() {
       return;
     }
 
+    if (!selectedCategory) {
+      toast({
+        title: "Category Required",
+        description: "Please select a category for your study group.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     createGroupMutation.mutate({
       name: newGroupName,
       description: newGroupDescription,
-      categoryIds: [1], // Default to first category
+      categoryIds: [parseInt(selectedCategory)],
       maxMembers: 10,
       isPublic: true,
-      createdBy: currentUser.id,
-      level: "Intermediate"
+      level: selectedLevel
     });
   };
 
@@ -208,6 +182,34 @@ export default function StudyGroupCard() {
                     placeholder="Describe your study group..."
                   />
                 </div>
+                <div>
+                  <label className="text-sm font-medium">Category</label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(category => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Level</label>
+                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Beginner">Beginner</SelectItem>
+                      <SelectItem value="Intermediate">Intermediate</SelectItem>
+                      <SelectItem value="Advanced">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button 
                   onClick={handleCreateGroup} 
                   disabled={createGroupMutation.isPending}
@@ -221,7 +223,23 @@ export default function StudyGroupCard() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {studyGroups.slice(0, 3).map((group) => (
+        {isLoadingGroups ? (
+          // Loading state
+          <>
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </>
+        ) : studyGroups.length === 0 ? (
+          // Empty state
+          <div className="text-center py-6 text-muted-foreground">
+            <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No study groups available yet.</p>
+            <p className="text-xs mt-1">Create the first one!</p>
+          </div>
+        ) : (
+          // Show study groups
+          studyGroups.slice(0, 3).map((group) => (
           <Card key={group.id} className="border-muted">
             <CardContent className="p-4">
               <div className="space-y-3">
@@ -282,7 +300,8 @@ export default function StudyGroupCard() {
               </div>
             </CardContent>
           </Card>
-        ))}
+        ))
+        )}
 
         {/* View All Groups */}
         <Button variant="ghost" className="w-full text-sm" onClick={() => {

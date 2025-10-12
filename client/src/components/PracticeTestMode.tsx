@@ -6,24 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Clock, FileText, Trophy, AlertCircle, CheckCircle } from "lucide-react";
-import type { Category } from "@shared/schema";
+import type { Category, PracticeTest, PracticeTestAttempt } from "@shared/schema";
 
-interface PracticeTest {
-  id: string;
-  name: string;
-  description: string;
-  categoryIds: number[];
-  questionCount: number;
-  timeLimit: number;
-  difficulty: "Easy" | "Medium" | "Hard" | "Mixed";
-  passingScore: number;
-  attempts: number;
-  bestScore?: number;
-  lastAttempt?: string;
+interface PracticeTestWithStats extends PracticeTest {
+  totalAttempts?: number;
+  averageScore?: number;
+}
+
+interface UserAttemptWithTest extends PracticeTestAttempt {
+  test?: PracticeTest;
 }
 
 export default function PracticeTestMode() {
@@ -37,72 +33,28 @@ export default function PracticeTestMode() {
     queryKey: ['/api/categories'],
   });
 
-  // Mock practice tests - in real implementation, this would come from API
-  const practiceTests: PracticeTest[] = [
-    {
-      id: "cissp-full",
-      name: "CISSP Full Practice Exam",
-      description: "Complete 125-question practice exam simulating the real CISSP test",
-      categoryIds: [1],
-      questionCount: 125,
-      timeLimit: 180,
-      difficulty: "Mixed",
-      passingScore: 70,
-      attempts: 2,
-      bestScore: 78,
-      lastAttempt: "3 days ago"
-    },
-    {
-      id: "cloud-plus-practice",
-      name: "CompTIA Cloud+ Practice Test",
-      description: "90-question practice exam covering all Cloud+ domains",
-      categoryIds: [6],
-      questionCount: 90,
-      timeLimit: 90,
-      difficulty: "Medium",
-      passingScore: 75,
-      attempts: 1,
-      bestScore: 82,
-      lastAttempt: "1 week ago"
-    },
-    {
-      id: "security-fundamentals",
-      name: "Security Fundamentals Assessment",
-      description: "50-question mixed assessment covering core security concepts",
-      categoryIds: [1, 2],
-      questionCount: 50,
-      timeLimit: 60,
-      difficulty: "Easy",
-      passingScore: 65,
-      attempts: 0
-    },
-    {
-      id: "cism-domain-focus",
-      name: "CISM Domain-Focused Test",
-      description: "75-question exam focusing on CISM key domains",
-      categoryIds: [4],
-      questionCount: 75,
-      timeLimit: 120,
-      difficulty: "Hard",
-      passingScore: 72,
-      attempts: 1,
-      bestScore: 68,
-      lastAttempt: "5 days ago"
-    }
-  ];
+  // Fetch practice tests from API
+  const { data: practiceTests = [], isLoading: isLoadingTests } = useQuery<PracticeTestWithStats[]>({
+    queryKey: ['/api/practice-tests'],
+  });
 
-  const createPracticeTestMutation = useMutation({
-    mutationFn: async (testData: any) => {
+  // Fetch user's practice test attempts
+  const { data: userAttempts = [] } = useQuery<UserAttemptWithTest[]>({
+    queryKey: currentUser ? [`/api/user/${currentUser.id}/practice-test-attempts`] : [],
+    enabled: !!currentUser,
+  });
+
+  const startPracticeTestMutation = useMutation({
+    mutationFn: async (testId: number) => {
       const response = await apiRequest({ 
         method: "POST", 
-        endpoint: "/api/quiz", 
-        data: testData 
+        endpoint: `/api/practice-tests/${testId}/start`
       });
       return response.json();
     },
-    onSuccess: (quiz) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      setLocation(`/app/quiz/${quiz.id}`);
+      setLocation(`/app/quiz/${data.quiz.id}`);
     },
     onError: () => {
       toast({
@@ -116,7 +68,7 @@ export default function PracticeTestMode() {
     }
   });
 
-  const handleStartTest = (test: PracticeTest) => {
+  const handleStartTest = (test: PracticeTestWithStats) => {
     if (!currentUser) {
       toast({
         title: "Login Required",
@@ -127,14 +79,38 @@ export default function PracticeTestMode() {
     }
 
     setIsCreating(true);
-    createPracticeTestMutation.mutate({
-      title: `${test.name} - Practice Test`,
-      categoryIds: test.categoryIds,
-      questionCount: test.questionCount,
-      timeLimit: test.timeLimit,
-      mode: "quiz",
-      isPracticeTest: true
-    });
+    startPracticeTestMutation.mutate(test.id);
+  };
+
+  // Function to get user's best score for a test
+  const getUserBestScore = (testId: number) => {
+    const attempts = userAttempts.filter(a => a.testId === testId && a.score !== null);
+    if (attempts.length === 0) return undefined;
+    return Math.max(...attempts.map(a => a.score || 0));
+  };
+
+  // Function to get user's last attempt for a test
+  const getUserLastAttempt = (testId: number) => {
+    const attempts = userAttempts.filter(a => a.testId === testId);
+    if (attempts.length === 0) return undefined;
+    const lastAttempt = attempts.sort((a, b) => 
+      new Date(b.startedAt || 0).getTime() - new Date(a.startedAt || 0).getTime()
+    )[0];
+    return lastAttempt?.startedAt ? getRelativeTime(new Date(lastAttempt.startedAt)) : undefined;
+  };
+
+  // Helper function for relative time
+  const getRelativeTime = (date: Date): string => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return 'Just now';
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -191,19 +167,52 @@ export default function PracticeTestMode() {
             <Button 
               size="sm" 
               disabled={!selectedTest || isCreating}
-              onClick={() => {
-                const test: PracticeTest = {
-                  id: 'quick-test',
-                  name: `Quick ${categories.find(c => c.id.toString() === selectedTest)?.name} Test`,
-                  description: 'Quick practice test',
-                  categoryIds: [parseInt(selectedTest)],
-                  questionCount: 25,
-                  timeLimit: 30,
-                  difficulty: 'Mixed',
-                  passingScore: 70,
-                  attempts: 0
-                };
-                handleStartTest(test);
+              onClick={async () => {
+                if (!currentUser) {
+                  toast({
+                    title: "Login Required",
+                    description: "Please log in to take practice tests.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                
+                setIsCreating(true);
+                try {
+                  // Create a quick practice test on-demand
+                  const response = await apiRequest({
+                    method: "POST",
+                    endpoint: "/api/practice-tests",
+                    data: {
+                      name: `Quick ${categories.find(c => c.id.toString() === selectedTest)?.name} Test`,
+                      description: 'Quick practice test',
+                      categoryIds: [parseInt(selectedTest)],
+                      questionCount: 25,
+                      timeLimit: 30,
+                      difficulty: 'Mixed',
+                      passingScore: 70
+                    }
+                  });
+                  const test = await response.json();
+                  
+                  // Start the newly created test
+                  const startResponse = await apiRequest({
+                    method: "POST",
+                    endpoint: `/api/practice-tests/${test.id}/start`
+                  });
+                  const data = await startResponse.json();
+                  
+                  queryClient.invalidateQueries({ queryKey: ['/api/practice-tests'] });
+                  setLocation(`/app/quiz/${data.quiz.id}`);
+                } catch (error) {
+                  toast({
+                    title: "Error",
+                    description: "Failed to start quick test. Please try again.",
+                    variant: "destructive",
+                  });
+                } finally {
+                  setIsCreating(false);
+                }
               }}
             >
               {isCreating ? "Starting..." : "Start"}
@@ -214,8 +223,29 @@ export default function PracticeTestMode() {
         {/* Practice Tests */}
         <div className="space-y-4">
           <h3 className="font-medium">Available Practice Tests</h3>
-          <div className="grid gap-4">
-            {practiceTests.map((test) => (
+          {isLoadingTests ? (
+            // Loading state
+            <div className="grid gap-4">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          ) : practiceTests.length === 0 ? (
+            // Empty state
+            <div className="text-center py-6 text-muted-foreground">
+              <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No practice tests available yet.</p>
+              <p className="text-xs mt-1">Create one using the quick test above!</p>
+            </div>
+          ) : (
+            // Show practice tests
+            <div className="grid gap-4">
+              {practiceTests.map((test) => {
+                const userBestScore = getUserBestScore(test.id);
+                const userLastAttempt = getUserLastAttempt(test.id);
+                const userAttemptCount = userAttempts.filter(a => a.testId === test.id).length;
+                
+                return (
               <Card key={test.id} className="border-muted">
                 <CardContent className="p-4">
                   <div className="space-y-3">
@@ -252,29 +282,29 @@ export default function PracticeTestMode() {
                     </div>
 
                     {/* Progress & Results */}
-                    {test.attempts > 0 && (
+                    {userAttemptCount > 0 && userBestScore !== undefined && (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-xs">
                           <span>Best Score: 
-                            <span className={`ml-1 font-medium ${getScoreColor(test.bestScore!, test.passingScore)}`}>
-                              {test.bestScore}%
+                            <span className={`ml-1 font-medium ${getScoreColor(userBestScore, test.passingScore)}`}>
+                              {userBestScore}%
                             </span>
                           </span>
                           <span className="text-muted-foreground">
-                            {test.attempts} attempt{test.attempts > 1 ? 's' : ''}
+                            {userAttemptCount} attempt{userAttemptCount > 1 ? 's' : ''}
                           </span>
                         </div>
                         <Progress 
-                          value={(test.bestScore! / test.passingScore) * 100} 
+                          value={(userBestScore / test.passingScore) * 100} 
                           className="h-1" 
                         />
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          {test.bestScore! >= test.passingScore ? (
+                          {userBestScore >= test.passingScore ? (
                             <CheckCircle className="h-3 w-3 text-green-500" />
                           ) : (
                             <AlertCircle className="h-3 w-3 text-yellow-500" />
                           )}
-                          <span>Last attempt: {test.lastAttempt}</span>
+                          <span>Last attempt: {userLastAttempt}</span>
                         </div>
                       </div>
                     )}
@@ -287,13 +317,15 @@ export default function PracticeTestMode() {
                       disabled={isCreating}
                     >
                       <Clock className="h-4 w-4 mr-2" />
-                      {test.attempts > 0 ? "Retake Test" : "Start Test"}
+                      {userAttemptCount > 0 ? "Retake Test" : "Start Test"}
                     </Button>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Practice Test Tips */}

@@ -782,6 +782,273 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Study Groups endpoints
+  app.get('/api/study-groups', async (req, res) => {
+    try {
+      const groups = await storage.getStudyGroups();
+      
+      // Add member count for each group
+      const groupsWithMembers = await Promise.all(
+        groups.map(async (group) => {
+          const members = await storage.getStudyGroupMembers(group.id);
+          return {
+            ...group,
+            memberCount: members.length,
+            recentActivity: members[0]?.joinedAt ? 
+              getRelativeTime(new Date(members[0].joinedAt)) : 
+              'No recent activity'
+          };
+        })
+      );
+      
+      res.json(groupsWithMembers);
+    } catch (error) {
+      console.error('Error fetching study groups:', error);
+      res.status(500).json({ message: 'Failed to fetch study groups' });
+    }
+  });
+
+  app.get('/api/study-groups/:id', async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      const result = await storage.getStudyGroupWithMembers(groupId);
+      
+      if (!result) {
+        return res.status(404).json({ message: 'Study group not found' });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching study group:', error);
+      res.status(500).json({ message: 'Failed to fetch study group' });
+    }
+  });
+
+  app.post('/api/study-groups', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, description, categoryIds, maxMembers, level } = req.body;
+      
+      if (!name || !categoryIds || categoryIds.length === 0) {
+        return res.status(400).json({ message: 'Name and at least one category are required' });
+      }
+      
+      const group = await storage.createStudyGroup({
+        name,
+        description: description || '',
+        categoryIds,
+        createdBy: userId,
+        maxMembers: maxMembers || 20,
+        level: level || 'Intermediate',
+        tenantId: 1,
+      });
+      
+      res.json(group);
+    } catch (error) {
+      console.error('Error creating study group:', error);
+      res.status(500).json({ message: 'Failed to create study group' });
+    }
+  });
+
+  app.post('/api/study-groups/:id/join', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = parseInt(req.params.id);
+      
+      const member = await storage.joinStudyGroup(groupId, userId, 1);
+      res.json(member);
+    } catch (error) {
+      console.error('Error joining study group:', error);
+      res.status(500).json({ message: 'Failed to join study group' });
+    }
+  });
+
+  app.post('/api/study-groups/:id/leave', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupId = parseInt(req.params.id);
+      
+      await storage.leaveStudyGroup(groupId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error leaving study group:', error);
+      res.status(500).json({ message: 'Failed to leave study group' });
+    }
+  });
+
+  app.get('/api/user/:userId/study-groups', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const groups = await storage.getUserStudyGroups(userId);
+      res.json(groups);
+    } catch (error) {
+      console.error('Error fetching user study groups:', error);
+      res.status(500).json({ message: 'Failed to fetch user study groups' });
+    }
+  });
+
+  // Practice Tests endpoints
+  app.get('/api/practice-tests', async (req, res) => {
+    try {
+      const tests = await storage.getPracticeTests();
+      
+      // Add attempt statistics for each test if user is authenticated
+      const testsWithStats = await Promise.all(
+        tests.map(async (test) => {
+          const attempts = await storage.getPracticeTestAttempts(test.id);
+          return {
+            ...test,
+            totalAttempts: attempts.length,
+            averageScore: attempts.length > 0 ?
+              attempts.reduce((sum, a) => sum + (a.score || 0), 0) / attempts.length :
+              0
+          };
+        })
+      );
+      
+      res.json(testsWithStats);
+    } catch (error) {
+      console.error('Error fetching practice tests:', error);
+      res.status(500).json({ message: 'Failed to fetch practice tests' });
+    }
+  });
+
+  app.get('/api/practice-tests/:id', async (req, res) => {
+    try {
+      const testId = parseInt(req.params.id);
+      const test = await storage.getPracticeTest(testId);
+      
+      if (!test) {
+        return res.status(404).json({ message: 'Practice test not found' });
+      }
+      
+      res.json(test);
+    } catch (error) {
+      console.error('Error fetching practice test:', error);
+      res.status(500).json({ message: 'Failed to fetch practice test' });
+    }
+  });
+
+  app.post('/api/practice-tests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { 
+        name, 
+        description, 
+        categoryIds, 
+        questionCount, 
+        timeLimit, 
+        difficulty, 
+        passingScore 
+      } = req.body;
+      
+      if (!name || !categoryIds || categoryIds.length === 0 || !questionCount || !timeLimit) {
+        return res.status(400).json({ 
+          message: 'Name, categories, question count, and time limit are required' 
+        });
+      }
+      
+      const test = await storage.createPracticeTest({
+        name,
+        description: description || '',
+        categoryIds,
+        questionCount,
+        timeLimit,
+        difficulty: difficulty || 'Mixed',
+        passingScore: passingScore || 70,
+        createdBy: userId,
+        tenantId: 1,
+      });
+      
+      res.json(test);
+    } catch (error) {
+      console.error('Error creating practice test:', error);
+      res.status(500).json({ message: 'Failed to create practice test' });
+    }
+  });
+
+  app.post('/api/practice-tests/:id/start', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const testId = parseInt(req.params.id);
+      
+      // Get the practice test details
+      const test = await storage.getPracticeTest(testId);
+      if (!test) {
+        return res.status(404).json({ message: 'Practice test not found' });
+      }
+      
+      // Create a quiz for this practice test
+      const quiz = await storage.createQuiz({
+        title: test.name,
+        categoryIds: test.categoryIds,
+        subcategoryIds: [],
+        questionCount: test.questionCount,
+        timeLimit: test.timeLimit,
+        userId,
+        mode: 'quiz',
+      });
+      
+      // Create practice test attempt
+      const attempt = await storage.startPracticeTest(testId, userId);
+      
+      res.json({ quiz, attempt });
+    } catch (error) {
+      console.error('Error starting practice test:', error);
+      res.status(500).json({ message: 'Failed to start practice test' });
+    }
+  });
+
+  app.post('/api/practice-tests/attempts/:attemptId/complete', isAuthenticated, async (req, res) => {
+    try {
+      const attemptId = parseInt(req.params.attemptId);
+      const { quizId, score, timeSpent } = req.body;
+      
+      const attempt = await storage.completePracticeTest(attemptId, quizId, score, timeSpent);
+      res.json(attempt);
+    } catch (error) {
+      console.error('Error completing practice test:', error);
+      res.status(500).json({ message: 'Failed to complete practice test' });
+    }
+  });
+
+  app.get('/api/user/:userId/practice-test-attempts', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const attempts = await storage.getUserPracticeTestAttempts(userId);
+      
+      // Add test details to each attempt
+      const attemptsWithTests = await Promise.all(
+        attempts.map(async (attempt) => {
+          const test = await storage.getPracticeTest(attempt.testId);
+          return {
+            ...attempt,
+            test
+          };
+        })
+      );
+      
+      res.json(attemptsWithTests);
+    } catch (error) {
+      console.error('Error fetching user practice test attempts:', error);
+      res.status(500).json({ message: 'Failed to fetch practice test attempts' });
+    }
+  });
+
+  // Helper function for relative time
+  function getRelativeTime(date: Date): string {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return 'Just now';
+  }
+
   // Get personalized study plan (protected)
   app.get('/api/user/:userId/study-plan', isAuthenticated, async (req: any, res) => {
     try {
@@ -994,95 +1261,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Study Groups API endpoints
-  app.get("/api/study-groups", async (req, res) => {
-    try {
-      const studyGroups = [
-        {
-          id: 1,
-          name: "CISSP Study Squad",
-          description: "Preparing for CISSP certification together. We focus on practice questions, sharing study materials, and weekly group discussions.",
-          categoryIds: [1],
-          memberCount: 8,
-          maxMembers: 12,
-          isPublic: true,
-          createdBy: 1,
-          createdAt: "2024-11-15",
-          recentActivity: "2 hours ago",
-          level: "Advanced",
-          tags: ["CISSP", "Security", "Management"],
-          weeklyGoal: 5,
-          currentStreak: 3
-        },
-        {
-          id: 2,
-          name: "Cloud+ Beginners",
-          description: "Starting our cloud certification journey from scratch. Perfect for newcomers to cloud computing.",
-          categoryIds: [6],
-          memberCount: 15,
-          maxMembers: 20,
-          isPublic: true,
-          createdBy: 2,
-          createdAt: "2024-11-20",
-          recentActivity: "1 day ago",
-          level: "Beginner",
-          tags: ["Cloud+", "CompTIA", "Beginners"],
-          weeklyGoal: 3,
-          currentStreak: 1
-        }
-      ];
-      res.json(studyGroups);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch study groups" });
-    }
-  });
-
-  app.post("/api/study-groups", async (req, res) => {
-    try {
-      const { name, description } = req.body;
-      const userId = (req as any).session?.userId;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      const newGroup = {
-        id: Date.now(),
-        name,
-        description,
-        categoryIds: [],
-        memberCount: 1,
-        maxMembers: 10,
-        isPublic: true,
-        createdBy: userId,
-        createdAt: new Date().toISOString(),
-        recentActivity: "just now",
-        level: "Beginner",
-        tags: [],
-        weeklyGoal: 3,
-        currentStreak: 0
-      };
-      
-      res.json(newGroup);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to create study group" });
-    }
-  });
-
-  app.post("/api/study-groups/:id/join", async (req, res) => {
-    try {
-      const groupId = parseInt(req.params.id);
-      const userId = (req as any).session?.userId;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      res.json({ message: "Successfully joined group", groupId, userId });
-    } catch (error) {
-      res.status(400).json({ message: "Failed to join study group" });
-    }
-  });
 
   // Challenge System Routes
   // Get user's available challenges

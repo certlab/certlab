@@ -362,6 +362,103 @@ export type Challenge = typeof challenges.$inferSelect;
 export type InsertChallengeAttempt = z.infer<typeof insertChallengeAttemptSchema>;
 export type ChallengeAttempt = typeof challengeAttempts.$inferSelect;
 
+// Study Groups table for collaborative learning
+export const studyGroups = pgTable("study_groups", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  name: text("name").notNull(),
+  description: text("description"),
+  categoryIds: jsonb("category_ids").notNull().$type<number[]>(), // Categories this group focuses on
+  createdBy: varchar("created_by").notNull(), // User ID who created the group
+  maxMembers: integer("max_members").default(20),
+  isPublic: boolean("is_public").default(true),
+  level: text("level").default("Intermediate"), // "Beginner" | "Intermediate" | "Advanced"
+  meetingSchedule: jsonb("meeting_schedule").$type<{
+    frequency?: string;
+    dayOfWeek?: string;
+    time?: string;
+  }>(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Study Group Members table
+export const studyGroupMembers = pgTable("study_group_members", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  role: text("role").default("member"), // "owner", "moderator", "member"
+  joinedAt: timestamp("joined_at").defaultNow(),
+  lastActiveAt: timestamp("last_active_at"),
+  contributionScore: integer("contribution_score").default(0), // Points for activity in group
+});
+
+// Practice Tests table for certification practice exams
+export const practiceTests = pgTable("practice_tests", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().default(1),
+  name: text("name").notNull(),
+  description: text("description"),
+  categoryIds: jsonb("category_ids").notNull().$type<number[]>(),
+  questionCount: integer("question_count").notNull(),
+  timeLimit: integer("time_limit").notNull(), // in minutes
+  difficulty: text("difficulty").notNull(), // "Easy", "Medium", "Hard", "Mixed"
+  passingScore: integer("passing_score").default(70), // percentage
+  isOfficial: boolean("is_official").default(false), // Whether this is an official practice test
+  questionPool: jsonb("question_pool").$type<number[]>(), // Optional: specific question IDs to use
+  createdBy: varchar("created_by"), // User ID if user-created
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Practice Test Attempts table
+export const practiceTestAttempts = pgTable("practice_test_attempts", {
+  id: serial("id").primaryKey(),
+  testId: integer("test_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  quizId: integer("quiz_id"), // Links to the actual quiz attempt
+  score: integer("score"), // percentage
+  isPassed: boolean("is_passed").default(false),
+  timeSpent: integer("time_spent"), // in seconds
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+// Insert schemas for study groups and practice tests
+export const insertStudyGroupSchema = createInsertSchema(studyGroups).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertStudyGroupMemberSchema = createInsertSchema(studyGroupMembers).omit({
+  id: true,
+  joinedAt: true,
+});
+
+export const insertPracticeTestSchema = createInsertSchema(practiceTests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPracticeTestAttemptSchema = createInsertSchema(practiceTestAttempts).omit({
+  id: true,
+  startedAt: true,
+});
+
+// Types for study groups and practice tests
+export type InsertStudyGroup = z.infer<typeof insertStudyGroupSchema>;
+export type StudyGroup = typeof studyGroups.$inferSelect;
+export type InsertStudyGroupMember = z.infer<typeof insertStudyGroupMemberSchema>;
+export type StudyGroupMember = typeof studyGroupMembers.$inferSelect;
+export type InsertPracticeTest = z.infer<typeof insertPracticeTestSchema>;
+export type PracticeTest = typeof practiceTests.$inferSelect;
+export type InsertPracticeTestAttempt = z.infer<typeof insertPracticeTestAttemptSchema>;
+export type PracticeTestAttempt = typeof practiceTestAttempts.$inferSelect;
+
 // User statistics type for dashboard
 export type UserStats = {
   totalQuizzes: number;

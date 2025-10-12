@@ -1,11 +1,14 @@
 import { 
   tenants, users, categories, subcategories, questions, quizzes, userProgress, lectures, masteryScores,
   badges, userBadges, userGameStats, challenges, challengeAttempts,
+  studyGroups, studyGroupMembers, practiceTests, practiceTestAttempts,
   type Tenant, type InsertTenant, type User, type InsertUser, type UpsertUser, type Category, type InsertCategory,
   type Subcategory, type InsertSubcategory, type Question, type InsertQuestion,
   type Quiz, type InsertQuiz, type UserProgress, type InsertUserProgress,
   type MasteryScore, type InsertMasteryScore, type Badge, type UserBadge, type UserGameStats,
-  type Challenge, type InsertChallenge, type ChallengeAttempt, type InsertChallengeAttempt
+  type Challenge, type InsertChallenge, type ChallengeAttempt, type InsertChallengeAttempt,
+  type StudyGroup, type InsertStudyGroup, type StudyGroupMember, type InsertStudyGroupMember,
+  type PracticeTest, type InsertPracticeTest, type PracticeTestAttempt, type InsertPracticeTestAttempt
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, desc, gte, lte, or, isNull } from "drizzle-orm";
@@ -128,6 +131,29 @@ export interface IStorage {
   completeChallengeAttempt(attemptId: number, score: number, answers: any[], timeSpent: number): Promise<ChallengeAttempt>;
   getUserChallengeAttempts(userId: string): Promise<ChallengeAttempt[]>;
   getChallengeAttempt(id: number): Promise<ChallengeAttempt | undefined>;
+  
+  // Study Groups methods
+  getStudyGroups(tenantId?: number): Promise<StudyGroup[]>;
+  getStudyGroup(id: number): Promise<StudyGroup | undefined>;
+  createStudyGroup(group: InsertStudyGroup): Promise<StudyGroup>;
+  updateStudyGroup(id: number, updates: Partial<InsertStudyGroup>): Promise<StudyGroup | null>;
+  deleteStudyGroup(id: number): Promise<void>;
+  joinStudyGroup(groupId: number, userId: string): Promise<StudyGroupMember>;
+  leaveStudyGroup(groupId: number, userId: string): Promise<void>;
+  getStudyGroupMembers(groupId: number): Promise<StudyGroupMember[]>;
+  getUserStudyGroups(userId: string): Promise<StudyGroup[]>;
+  getStudyGroupWithMembers(groupId: number): Promise<{ group: StudyGroup; members: StudyGroupMember[] } | undefined>;
+  
+  // Practice Tests methods
+  getPracticeTests(tenantId?: number): Promise<PracticeTest[]>;
+  getPracticeTest(id: number): Promise<PracticeTest | undefined>;
+  createPracticeTest(test: InsertPracticeTest): Promise<PracticeTest>;
+  updatePracticeTest(id: number, updates: Partial<InsertPracticeTest>): Promise<PracticeTest | null>;
+  deletePracticeTest(id: number): Promise<void>;
+  startPracticeTest(testId: number, userId: string): Promise<PracticeTestAttempt>;
+  completePracticeTest(attemptId: number, quizId: number, score: number, timeSpent: number): Promise<PracticeTestAttempt>;
+  getUserPracticeTestAttempts(userId: string): Promise<PracticeTestAttempt[]>;
+  getPracticeTestAttempts(testId: number): Promise<PracticeTestAttempt[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3248,6 +3274,195 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
       .from(categories)
       .where(eq(categories.id, categoryId));
     return category?.name || 'Unknown';
+  }
+
+  // Study Groups implementations
+  async getStudyGroups(tenantId?: number): Promise<StudyGroup[]> {
+    const query = db.select().from(studyGroups);
+    
+    if (tenantId) {
+      return await query.where(eq(studyGroups.tenantId, tenantId));
+    }
+    
+    return await query;
+  }
+
+  async getStudyGroup(id: number): Promise<StudyGroup | undefined> {
+    const [group] = await db.select()
+      .from(studyGroups)
+      .where(eq(studyGroups.id, id));
+    return group;
+  }
+
+  async createStudyGroup(group: InsertStudyGroup): Promise<StudyGroup> {
+    const [newGroup] = await db.insert(studyGroups).values(group).returning();
+    
+    // Add the creator as the first member
+    await db.insert(studyGroupMembers).values({
+      tenantId: group.tenantId,
+      groupId: newGroup.id,
+      userId: newGroup.createdBy,
+    });
+    
+    return newGroup;
+  }
+
+  async updateStudyGroup(id: number, updates: Partial<InsertStudyGroup>): Promise<StudyGroup | null> {
+    const [updated] = await db.update(studyGroups)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(studyGroups.id, id))
+      .returning();
+    return updated || null;
+  }
+
+  async deleteStudyGroup(id: number): Promise<void> {
+    // First delete all members
+    await db.delete(studyGroupMembers).where(eq(studyGroupMembers.groupId, id));
+    // Then delete the group
+    await db.delete(studyGroups).where(eq(studyGroups.id, id));
+  }
+
+  async joinStudyGroup(groupId: number, userId: string, tenantId: number): Promise<StudyGroupMember> {
+    // Check if already a member
+    const existing = await db.select()
+      .from(studyGroupMembers)
+      .where(and(
+        eq(studyGroupMembers.groupId, groupId),
+        eq(studyGroupMembers.userId, userId)
+      ));
+    
+    if (existing.length > 0) {
+      return existing[0];
+    }
+    
+    // Add as member
+    const [member] = await db.insert(studyGroupMembers).values({
+      tenantId,
+      groupId,
+      userId,
+    }).returning();
+    
+    return member;
+  }
+
+  async leaveStudyGroup(groupId: number, userId: string): Promise<void> {
+    await db.delete(studyGroupMembers)
+      .where(and(
+        eq(studyGroupMembers.groupId, groupId),
+        eq(studyGroupMembers.userId, userId)
+      ));
+  }
+
+  async getStudyGroupMembers(groupId: number): Promise<StudyGroupMember[]> {
+    return await db.select()
+      .from(studyGroupMembers)
+      .where(eq(studyGroupMembers.groupId, groupId))
+      .orderBy(desc(studyGroupMembers.joinedAt));
+  }
+
+  async getUserStudyGroups(userId: string): Promise<StudyGroup[]> {
+    const memberGroups = await db.select()
+      .from(studyGroupMembers)
+      .where(eq(studyGroupMembers.userId, userId));
+    
+    if (memberGroups.length === 0) return [];
+    
+    const groupIds = memberGroups.map(m => m.groupId);
+    return await db.select()
+      .from(studyGroups)
+      .where(inArray(studyGroups.id, groupIds));
+  }
+
+  async getStudyGroupWithMembers(groupId: number): Promise<{ group: StudyGroup; members: StudyGroupMember[] } | undefined> {
+    const group = await this.getStudyGroup(groupId);
+    if (!group) return undefined;
+    
+    const members = await this.getStudyGroupMembers(groupId);
+    return { group, members };
+  }
+
+  // Practice Tests implementations
+  async getPracticeTests(tenantId?: number): Promise<PracticeTest[]> {
+    const query = db.select().from(practiceTests);
+    
+    if (tenantId) {
+      return await query.where(eq(practiceTests.tenantId, tenantId));
+    }
+    
+    return await query;
+  }
+
+  async getPracticeTest(id: number): Promise<PracticeTest | undefined> {
+    const [test] = await db.select()
+      .from(practiceTests)
+      .where(eq(practiceTests.id, id));
+    return test;
+  }
+
+  async createPracticeTest(test: InsertPracticeTest): Promise<PracticeTest> {
+    const [newTest] = await db.insert(practiceTests).values(test).returning();
+    return newTest;
+  }
+
+  async updatePracticeTest(id: number, updates: Partial<InsertPracticeTest>): Promise<PracticeTest | null> {
+    const [updated] = await db.update(practiceTests)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(practiceTests.id, id))
+      .returning();
+    return updated || null;
+  }
+
+  async deletePracticeTest(id: number): Promise<void> {
+    await db.delete(practiceTests).where(eq(practiceTests.id, id));
+  }
+
+  async startPracticeTest(testId: number, userId: string): Promise<PracticeTestAttempt> {
+    const [attempt] = await db.insert(practiceTestAttempts).values({
+      testId,
+      userId,
+    }).returning();
+    return attempt;
+  }
+
+  async completePracticeTest(attemptId: number, quizId: number, score: number, timeSpent: number): Promise<PracticeTestAttempt> {
+    const [attempt] = await db.select()
+      .from(practiceTestAttempts)
+      .where(eq(practiceTestAttempts.id, attemptId));
+    
+    if (!attempt) throw new Error('Practice test attempt not found');
+    
+    const [test] = await db.select()
+      .from(practiceTests)
+      .where(eq(practiceTests.id, attempt.testId));
+    
+    const isPassed = score >= (test?.passingScore || 70);
+    
+    const [updated] = await db.update(practiceTestAttempts)
+      .set({
+        quizId,
+        score,
+        isPassed,
+        timeSpent,
+        completedAt: new Date(),
+      })
+      .where(eq(practiceTestAttempts.id, attemptId))
+      .returning();
+    
+    return updated;
+  }
+
+  async getUserPracticeTestAttempts(userId: string): Promise<PracticeTestAttempt[]> {
+    return await db.select()
+      .from(practiceTestAttempts)
+      .where(eq(practiceTestAttempts.userId, userId))
+      .orderBy(desc(practiceTestAttempts.startedAt));
+  }
+
+  async getPracticeTestAttempts(testId: number): Promise<PracticeTestAttempt[]> {
+    return await db.select()
+      .from(practiceTestAttempts)
+      .where(eq(practiceTestAttempts.testId, testId))
+      .orderBy(desc(practiceTestAttempts.startedAt));
   }
 }
 
