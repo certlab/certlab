@@ -224,7 +224,58 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         polarCustomerId: customer.id,
       });
 
-      // Create checkout session with product ID only
+      // Check if customer has any existing subscriptions
+      const existingSubscriptions = await polarClient.getSubscriptions(customer.id);
+      
+      // Find active or trialing subscription
+      const activeSubscription = existingSubscriptions.find(sub => 
+        sub.status === 'active' || sub.status === 'trialing'
+      );
+
+      // Handle existing subscription - switch plan instead of creating new checkout
+      if (activeSubscription) {
+        console.log(`User ${user.email} has existing subscription, switching plan from current to ${plan}`);
+        
+        try {
+          // Use switchSubscriptionPlan for immediate upgrade
+          const updatedSubscription = await polarClient.switchSubscriptionPlan({
+            subscriptionId: activeSubscription.id,
+            newProductId: planConfig.productId,
+            switchAtPeriodEnd: false, // Switch immediately for upgrades
+          });
+
+          // Sync the updated subscription benefits
+          const polarData = await polarClient.syncUserSubscriptionBenefits(user.email);
+          await storage.updateUser(user.id, {
+            subscriptionBenefits: polarData.benefits,
+          });
+
+          // Return success response for immediate upgrade
+          return res.json({
+            success: true,
+            message: `Successfully upgraded to ${plan} plan`,
+            upgraded: true,
+            plan: plan,
+            redirectUrl: '/subscription/success', // Redirect to success page
+          });
+        } catch (switchError: any) {
+          console.error('Error switching subscription plan:', switchError);
+          // Fall through to create new checkout if switching fails
+        }
+      }
+
+      // Check for cancelled subscription that might block new checkout
+      const cancelledSubscription = existingSubscriptions.find(sub => 
+        sub.status === 'canceled' && sub.cancelAtPeriodEnd === false
+      );
+
+      if (cancelledSubscription) {
+        console.log(`User ${user.email} has a cancelled subscription, may need special handling`);
+        // For cancelled subscriptions that have ended, proceed with new checkout
+        // Polar should handle this case appropriately
+      }
+
+      // No active subscription or switching failed - create new checkout session
       // Properly derive the base URL from request headers
       let baseUrl: string;
       

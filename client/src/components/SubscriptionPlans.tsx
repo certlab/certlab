@@ -71,6 +71,16 @@ export default function SubscriptionPlans() {
       if (data.checkoutUrl) {
         // Simple direct navigation to checkout
         window.location.href = data.checkoutUrl;
+      } else if (data.upgraded && data.redirectUrl) {
+        // Handle instant upgrade - show success message and redirect
+        toast({
+          title: "Success!",
+          description: data.message || "Successfully upgraded your subscription",
+        });
+        // Redirect to success page after a brief delay
+        setTimeout(() => {
+          window.location.href = data.redirectUrl;
+        }, 1500);
       }
     },
     onError: (error: any) => {
