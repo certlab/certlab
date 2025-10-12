@@ -8,6 +8,8 @@ import DetailedResultsAnalysis from "@/components/DetailedResultsAnalysis";
 import { getScoreColor, getScoreBgColor } from "@/lib/questions";
 import { useAnalyticsAccess, LockedAnalytics } from "@/hooks/useAnalyticsAccess";
 import type { Quiz, Category } from "@shared/schema";
+import { PremiumFeatureBadge } from "@/components/SubscriptionBadge";
+import { Crown, Star, Sparkles } from "lucide-react";
 
 export default function Results() {
   const [, params] = useRoute("/app/results/:id");
@@ -24,6 +26,10 @@ export default function Results() {
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
+  });
+
+  const { data: subscription } = useQuery<any>({
+    queryKey: ["/api/subscription/status"],
   });
 
   if (isLoading) {
@@ -176,7 +182,7 @@ export default function Results() {
               </div>
             </div>
 
-            {/* Performance Feedback */}
+            {/* Performance Feedback with Premium Indicators */}
             <div className="mb-6 sm:mb-8">
               <div className={`rounded-lg p-3 sm:p-4 border-2 ${
                 score >= 90 ? 'border-success/20 bg-success/5' :
@@ -215,7 +221,10 @@ export default function Results() {
             {/* Category Performance - Pro/Enterprise Feature */}
             {analyticsFeatures.categoryBreakdown ? (
               <div className="mb-6 sm:mb-8">
-                <h3 className="text-base sm:text-lg font-medium text-foreground mb-3 sm:mb-4">Performance by Category</h3>
+                <h3 className="text-base sm:text-lg font-medium text-foreground mb-3 sm:mb-4 flex items-center gap-2">
+                  Performance by Category
+                  <PremiumFeatureBadge requiredPlan="pro" feature="Pro analytics" />
+                </h3>
                 <div className="space-y-3 sm:space-y-4">
                   {(quiz.categoryIds as number[]).map(categoryId => {
                     const category = categories.find(c => c.id === categoryId);
@@ -260,7 +269,12 @@ export default function Results() {
             <Tabs defaultValue="summary" className="mb-6">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="summary">Quick Summary</TabsTrigger>
-                <TabsTrigger value="analysis">Detailed Analysis</TabsTrigger>
+                <TabsTrigger value="analysis" className="flex items-center gap-1">
+                  Detailed Analysis
+                  {analyticsFeatures.detailedMetrics && (
+                    <Crown className="w-3 h-3 text-purple-600" />
+                  )}
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="summary" className="mt-6">

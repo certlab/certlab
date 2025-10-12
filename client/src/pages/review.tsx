@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAnalyticsAccess, LockedAnalytics } from "@/hooks/useAnalyticsAccess";
 import type { Quiz, Category } from "@shared/schema";
+import { PremiumFeatureBadge } from "@/components/SubscriptionBadge";
+import { Crown, Star, Sparkles } from "lucide-react";
 
 interface QuizResult {
   questionId: number;
@@ -60,6 +62,10 @@ export default function Review() {
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
+  });
+
+  const { data: subscription } = useQuery<any>({
+    queryKey: ["/api/subscription/status"],
   });
 
   // Mutation for generating lecture notes
@@ -205,7 +211,7 @@ export default function Review() {
                 <Button
                   onClick={() => generateLectureMutation.mutate()}
                   disabled={generateLectureMutation.isPending}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white relative"
                   size="sm"
                 >
                   {generateLectureMutation.isPending ? (
@@ -217,6 +223,12 @@ export default function Review() {
                     <>
                       <i className="fas fa-graduation-cap mr-2"></i>
                       Generate Study Notes
+                      {subscription?.plan === 'pro' && (
+                        <Crown className="w-3 h-3 absolute -top-1 -right-1 text-purple-400" />
+                      )}
+                      {subscription?.plan === 'enterprise' && (
+                        <Star className="w-3 h-3 absolute -top-1 -right-1 text-amber-400" />
+                      )}
                     </>
                   )}
                 </Button>
@@ -300,7 +312,10 @@ export default function Review() {
                   {question.explanation && (
                     analyticsFeatures.weakAreasIdentification ? (
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 className="font-medium text-blue-900 mb-2">Explanation</h4>
+                        <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                          Explanation
+                          <PremiumFeatureBadge requiredPlan="pro" feature="Detailed explanations" />
+                        </h4>
                         <p className="text-blue-800 leading-relaxed">{question.explanation}</p>
                       </div>
                     ) : (

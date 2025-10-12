@@ -33,9 +33,13 @@ import {
   Accessibility,
   Users,
   User,
-  FileText
+  FileText,
+  Crown,
+  Sparkles
 } from "lucide-react";
 import MobileNavigationEnhanced from "@/components/MobileNavigationEnhanced";
+import SubscriptionBadge from "@/components/SubscriptionBadge";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Header() {
   const [location, setLocation] = useLocation();
@@ -43,6 +47,12 @@ export default function Header() {
   const { toast } = useToast();
   const isAdminArea = location.startsWith('/admin');
   const isAdmin = currentUser?.role === 'admin';
+  
+  // Get subscription status
+  const { data: subscription } = useQuery<any>({
+    queryKey: ["/api/subscription/status"],
+    enabled: !!currentUser,
+  });
 
   const handleSignOut = async () => {
     try {
@@ -82,13 +92,26 @@ export default function Header() {
     <header className="bg-card shadow-sm border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+          {/* Logo and Subscription Badge */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-xl font-semibold text-foreground tracking-tight">Cert Lab</h1>
+              {/* Subscription Badge */}
+              {subscription && currentUser && (
+                <SubscriptionBadge 
+                  plan={subscription.plan?.toLowerCase() as 'free' | 'pro' | 'enterprise' || 'free'}
+                  size="small"
+                  showQuizCount={subscription.plan?.toLowerCase() === 'free'}
+                  dailyQuizCount={subscription.dailyQuizCount}
+                  quizLimit={subscription.limits?.quizzesPerDay}
+                  interactive
+                  onClick={() => setLocation('/subscription/plans')}
+                  className="ml-2"
+                />
+              )}
             </div>
           </div>
           
@@ -298,8 +321,57 @@ export default function Header() {
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-semibold">{getUserDisplayName(currentUser)}</p>
                       <p className="text-xs text-muted-foreground">Certification Student</p>
+                      {/* Subscription Info */}
+                      {subscription && (
+                        <div className="mt-1">
+                          <SubscriptionBadge 
+                            plan={subscription.plan?.toLowerCase() as 'free' | 'pro' | 'enterprise' || 'free'}
+                            size="small"
+                            showQuizCount={false}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
+                  {/* Subscription Benefits Summary */}
+                  {subscription && (
+                    <>
+                      <DropdownMenuSeparator className="my-2" />
+                      <div className="px-3 py-2">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Your Benefits:</p>
+                        <div className="space-y-1">
+                          {subscription.plan?.toLowerCase() === 'free' ? (
+                            <>
+                              <div className="flex items-center gap-1.5 text-xs">
+                                <Sparkles className="w-3 h-3 text-muted-foreground" />
+                                <span>{subscription.dailyQuizCount}/{subscription.limits?.quizzesPerDay} quizzes used today</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-xs">
+                                <Crown className="w-3 h-3 text-purple-500" />
+                                <button 
+                                  onClick={() => setLocation('/subscription/plans')}
+                                  className="text-purple-600 hover:underline"
+                                >
+                                  Upgrade for unlimited access
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-1.5 text-xs text-green-600">
+                                <Sparkles className="w-3 h-3" />
+                                <span>Unlimited quizzes</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-xs text-green-600">
+                                <Sparkles className="w-3 h-3" />
+                                <span>All certifications unlocked</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
                   <DropdownMenuSeparator className="my-2" />
                   <DropdownMenuItem 
                     onClick={() => setLocation("/achievements")}

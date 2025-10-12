@@ -15,9 +15,13 @@ import {
   Target,
   Calendar,
   History,
-  ChartBar
+  ChartBar,
+  Crown,
+  Sparkles,
+  ArrowRight
 } from "lucide-react";
 import type { UserStats, Quiz } from "@shared/schema";
+import SubscriptionBadge from "@/components/SubscriptionBadge";
 
 export default function Dashboard() {
   const { user: currentUser } = useAuth();
@@ -53,6 +57,12 @@ export default function Dashboard() {
   // Get recent quizzes
   const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
     queryKey: ['/api/user', currentUser?.id, 'quizzes'],
+    enabled: !!currentUser,
+  });
+
+  // Get subscription status
+  const { data: subscription } = useQuery<any>({
+    queryKey: ["/api/subscription/status"],
     enabled: !!currentUser,
   });
 
@@ -172,6 +182,69 @@ export default function Dashboard() {
             {motivationalMessage}
           </p>
         </div>
+
+        {/* Subscription Card - Prominent placement */}
+        {subscription && (
+          <Card className="mb-6 border-primary/20 overflow-hidden bg-gradient-to-r from-card to-accent/5">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <SubscriptionBadge 
+                      plan={subscription.plan?.toLowerCase() as 'free' | 'pro' | 'enterprise' || 'free'}
+                      size="medium"
+                      showQuizCount={subscription.plan?.toLowerCase() === 'free'}
+                      dailyQuizCount={subscription.dailyQuizCount}
+                      quizLimit={subscription.limits?.quizzesPerDay}
+                    />
+                    {subscription.plan?.toLowerCase() === 'free' && (
+                      <span className="text-sm text-muted-foreground">
+                        {subscription.limits?.quizzesPerDay - subscription.dailyQuizCount} quizzes remaining today
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold">Your {subscription.plan} Plan Benefits</h3>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {subscription.features?.slice(0, 3).map((feature: string, index: number) => (
+                        <div key={index} className="flex items-center gap-1 text-xs bg-accent/10 rounded-full px-2 py-1">
+                          <Sparkles className="w-3 h-3 text-primary" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {subscription.plan?.toLowerCase() !== 'enterprise' && (
+                      <Button
+                        onClick={() => setLocation('/subscription/plans')}
+                        size="sm"
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                      >
+                        <Crown className="w-4 h-4 mr-2" />
+                        {subscription.plan?.toLowerCase() === 'free' ? 'Upgrade to Pro' : 'Upgrade to Enterprise'}
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Visual Enhancement */}
+                <div className="hidden lg:block">
+                  <div className="relative">
+                    {subscription.plan?.toLowerCase() === 'pro' ? (
+                      <Crown className="w-24 h-24 text-purple-500/20" />
+                    ) : subscription.plan?.toLowerCase() === 'enterprise' ? (
+                      <Trophy className="w-24 h-24 text-amber-500/20" />
+                    ) : (
+                      <Sparkles className="w-24 h-24 text-gray-400/20" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

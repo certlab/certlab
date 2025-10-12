@@ -12,8 +12,9 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionQuizSizes } from "@/hooks/useSubscriptionQuizSizes";
 import { isCategoryAccessible, getRequiredPlan } from "@shared/categoryAccess";
-import { Lock, Crown } from "lucide-react";
+import { Lock, Crown, Star, Sparkles } from "lucide-react";
 import type { Category, Subcategory } from "@shared/schema";
+import { PremiumFeatureBadge } from "@/components/SubscriptionBadge";
 
 export default function QuizCreator() {
   const [, setLocation] = useLocation();
@@ -159,12 +160,30 @@ export default function QuizCreator() {
   return (
     <Card className="material-shadow border border-gray-100 overflow-hidden">
       <CardHeader className="p-6 border-b border-gray-100">
-        <CardTitle className="text-xl font-medium text-gray-900 mb-2">
-          Create New Quiz
-        </CardTitle>
-        <p className="text-gray-600 text-sm">
-          HELEN - Highly Efficient Learning Engine for Next-Gen Certification
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-xl font-medium text-gray-900 mb-2 flex items-center gap-2">
+              Create New Quiz
+              {quizSizes.subscription?.plan === 'pro' && (
+                <PremiumFeatureBadge requiredPlan="pro" feature="Pro features active" />
+              )}
+              {quizSizes.subscription?.plan === 'enterprise' && (
+                <PremiumFeatureBadge requiredPlan="enterprise" feature="Enterprise features active" />
+              )}
+            </CardTitle>
+            <p className="text-gray-600 text-sm">
+              HELEN - Highly Efficient Learning Engine for Next-Gen Certification
+            </p>
+          </div>
+          {quizSizes.subscription?.plan === 'free' && (
+            <div className="flex items-center gap-2 text-sm">
+              <Sparkles className="w-4 h-4 text-muted-foreground" />
+              <span className="text-muted-foreground">
+                {quizSizes.remainingQuizzes} of {quizSizes.subscription?.limits?.quizzesPerDay} quizzes left today
+              </span>
+            </div>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent className="p-6">
