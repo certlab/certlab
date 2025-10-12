@@ -153,7 +153,11 @@ class PolarClient {
     if (this.organizationId) params.append('organization_id', this.organizationId);
     
     const queryString = params.toString();
-    return this.request<PolarSubscription[]>(`/subscriptions${queryString ? `?${queryString}` : ''}`);
+    const response = await this.request<any>(`/subscriptions${queryString ? `?${queryString}` : ''}`);
+    
+    // Handle paginated response from Polar API
+    const subscriptions = response.items || response || [];
+    return Array.isArray(subscriptions) ? subscriptions : [];
   }
 
   async getSubscription(subscriptionId: string): Promise<PolarSubscription> {
