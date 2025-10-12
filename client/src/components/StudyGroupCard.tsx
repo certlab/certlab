@@ -306,7 +306,7 @@ export default function StudyGroupCard() {
         {/* View All Groups */}
         <Button variant="ghost" className="w-full text-sm" onClick={() => {
           import('wouter').then(({ useLocation }) => {
-            window.location.href = '/study-groups';
+            window.location.href = '/app/study-groups';
           });
         }}>
           <BookOpen className="h-4 w-4 mr-2" />
