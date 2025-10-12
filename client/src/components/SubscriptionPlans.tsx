@@ -39,14 +39,34 @@ interface PlansResponse {
   plans: Plan[];
 }
 
+interface SubscriptionStatus {
+  isConfigured: boolean;
+  isSubscribed: boolean;
+  plan: string;
+  status: string;
+  expiresAt?: string;
+  features: string[];
+  limits: {
+    quizzesPerDay: number | null;
+    categoriesAccess: string[];
+    analyticsAccess: string;
+    teamMembers?: number;
+  };
+  dailyQuizCount: number;
+}
+
 export default function SubscriptionPlans() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
 
-  const { data: plansData, isLoading } = useQuery<PlansResponse>({
+  const { data: plansData, isLoading: plansLoading } = useQuery<PlansResponse>({
     queryKey: ["/api/subscription/plans"],
+  });
+
+  const { data: subscriptionStatus, isLoading: statusLoading } = useQuery<SubscriptionStatus>({
+    queryKey: ["/api/subscription/status"],
   });
 
   const createCheckoutMutation = useMutation({
@@ -101,6 +121,8 @@ export default function SubscriptionPlans() {
     },
   });
 
+  const isLoading = plansLoading || statusLoading;
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -110,6 +132,7 @@ export default function SubscriptionPlans() {
   }
 
   const plans = plansData?.plans || [];
+  const currentPlan = subscriptionStatus?.plan || 'free';
 
   const planIcons = {
     free: <Zap className="w-8 h-8" />,
@@ -129,14 +152,30 @@ export default function SubscriptionPlans() {
       return;
     }
 
-    if (planId === "free") {
+    // Check if clicking on current plan
+    if (planId === currentPlan) {
       toast({
-        title: "Free Plan",
-        description: "You're already on the free plan!",
+        title: "Current Plan",
+        description: `You're already on the ${planId} plan!`,
       });
       return;
     }
 
+    // Handle downgrade from pro/enterprise to free
+    if (planId === "free" && currentPlan !== "free") {
+      // Show confirmation dialog for downgrade
+      if (!confirm("Are you sure you want to downgrade to the Free plan? You will lose access to premium features.")) {
+        return;
+      }
+      toast({
+        title: "Downgrade to Free",
+        description: "Processing your plan downgrade. This will take effect at the end of your current billing period.",
+      });
+      // TODO: Implement downgrade API call when backend supports it
+      return;
+    }
+
+    // Handle enterprise plan
     if (planId === "enterprise") {
       toast({
         title: "Enterprise Plan",
@@ -146,6 +185,7 @@ export default function SubscriptionPlans() {
       return;
     }
 
+    // Handle upgrades
     createCheckoutMutation.mutate({
       plan: planId,
       billingInterval,
@@ -281,10 +321,22 @@ export default function SubscriptionPlans() {
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Processing...
                     </>
-                  ) : plan.id === "free" ? (
+                  ) : plan.id === currentPlan ? (
                     "Current Plan"
                   ) : plan.id === "enterprise" ? (
                     "Contact Sales"
+                  ) : plan.id === "free" && currentPlan !== "free" ? (
+                    "Downgrade to Free"
+                  ) : currentPlan === "free" && plan.id === "pro" ? (
+                    <>
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Upgrade to Pro
+                    </>
+                  ) : currentPlan === "pro" && plan.id === "enterprise" ? (
+                    <>
+                      <Star className="w-4 h-4 mr-2" />
+                      Upgrade to Enterprise
+                    </>
                   ) : (
                     <>
                       <CreditCard className="w-4 h-4 mr-2" />
