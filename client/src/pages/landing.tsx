@@ -1,18 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCap, Shield, BookOpen, Target, ArrowRight, User, LogOut } from "lucide-react";
+import { GraduationCap, Shield, BookOpen, Target, ArrowRight } from "lucide-react";
 import { useAuth } from "@/lib/auth-provider";
 import { useLocation } from "wouter";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export default function Landing() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   
   const handleLogin = () => {
@@ -21,17 +14,6 @@ export default function Landing() {
 
   const handleGoToDashboard = () => {
     setLocation("/app");
-  };
-
-  const handleLogout = async () => {
-    await logout();
-  };
-
-  const getInitials = (firstName?: string, lastName?: string) => {
-    if (!firstName && !lastName) return '?';
-    const first = firstName?.[0] || '';
-    const last = lastName?.[0] || '';
-    return (first + last).toUpperCase() || '?';
   };
 
   const getUserDisplayName = (user: any) => {
@@ -46,58 +28,6 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Navigation bar for authenticated users */}
-      {isAuthenticated && user && (
-        <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm border-b border-gray-200 dark:border-gray-700">
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Shield className="w-8 h-8 text-primary" />
-                <span className="text-xl font-bold text-foreground">Cert Lab</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <Button 
-                  onClick={handleGoToDashboard}
-                  variant="default"
-                  className="flex items-center gap-2"
-                  data-testid="go-to-dashboard"
-                >
-                  Go to Dashboard
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 rounded-full px-2 hover:bg-accent/10">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center shadow-glow">
-                          <span className="text-primary-foreground text-sm font-semibold">
-                            {getInitials(user.firstName, user.lastName)}
-                          </span>
-                        </div>
-                        <span className="hidden md:block text-foreground text-sm font-medium">
-                          {getUserDisplayName(user)}
-                        </span>
-                      </div>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end">
-                    <DropdownMenuItem onClick={() => setLocation("/app/profile")}>
-                      <User className="w-4 h-4 mr-2" />
-                      My Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          </div>
-        </header>
-      )}
-      
       <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-6">
