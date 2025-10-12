@@ -169,7 +169,7 @@ export default function Header() {
                           <div className="grid grid-cols-3 gap-3">
                             <NavigationMenuLink 
                               className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                              onClick={() => setLocation("/achievements")}
+                              onClick={() => setLocation("/app/achievements")}
                             >
                               <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -374,7 +374,7 @@ export default function Header() {
                   )}
                   <DropdownMenuSeparator className="my-2" />
                   <DropdownMenuItem 
-                    onClick={() => setLocation("/achievements")}
+                    onClick={() => setLocation("/app/achievements")}
                     className="cursor-pointer rounded-md py-2.5 px-3"
                   >
                     <Trophy className="w-4 h-4 mr-3 text-primary" />

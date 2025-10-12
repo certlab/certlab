@@ -242,7 +242,7 @@
     {
       "id": "achievements",
       "label": "Achievements",
-      "route": "/achievements",
+      "route": "/app/achievements",
       "type": "route",
       "description": "Gamification system with badges and progress tracking",
       "icon": "Folder",
@@ -250,7 +250,7 @@
         {
           "id": "achievement-page",
           "label": "achievement",
-          "route": "/achievement",
+          "route": "/app/achievements",
           "type": "page",
           "description": "achievement component with 0 API integrations",
           "icon": "FileText",
@@ -267,7 +267,7 @@
             {
               "id": "chievementbadges",
               "label": "AchievementBadges",
-              "route": "/achievement",
+              "route": "/app/achievements",
               "type": "component",
               "description": "Badge display with progress indicators and categories",
               "icon": "Puzzle",
@@ -282,7 +282,7 @@
             {
               "id": "chievementnotification",
               "label": "AchievementNotification",
-              "route": "/achievement",
+              "route": "/app/achievements",
               "type": "component",
               "description": "AchievementNotification component with 1 API integrations",
               "icon": "Puzzle",
@@ -304,7 +304,7 @@
             {
               "id": "chievementprogress",
               "label": "AchievementProgress",
-              "route": "/achievement",
+              "route": "/app/achievements",
               "type": "component",
               "description": "AchievementProgress component with 0 API integrations",
               "icon": "Puzzle",
@@ -321,7 +321,7 @@
             {
               "id": "evelprogress",
               "label": "LevelProgress",
-              "route": "/achievement",
+              "route": "/app/achievements",
               "type": "component",
               "description": "XP tracking, level progression, and motivational display",
               "icon": "Puzzle",

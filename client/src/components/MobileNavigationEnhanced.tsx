@@ -74,7 +74,7 @@ export default function MobileNavigationEnhanced() {
           id: "achievements",
           label: "Achievements",
           icon: <Trophy className="w-4 h-4" />,
-          href: "/achievements",
+          href: "/app/achievements",
           description: "Track your progress and badges"
         }
       ]

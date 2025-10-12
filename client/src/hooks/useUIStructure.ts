@@ -208,7 +208,7 @@ const getStaticStructureData = (): UIStructureData => ({
     {
       id: 'achievements',
       label: 'Achievements',
-      route: '/achievements',
+      route: '/app/achievements',
       type: 'route',
       description: 'Gamification system with badges and progress tracking',
       icon: 'Folder',
@@ -216,7 +216,7 @@ const getStaticStructureData = (): UIStructureData => ({
         {
           id: 'achievement-badges',
           label: 'AchievementBadges',
-          route: '/achievements',
+          route: '/app/achievements',
           type: 'component',
           description: 'Badge display with progress indicators and categories',
           icon: 'Trophy',
@@ -225,7 +225,7 @@ const getStaticStructureData = (): UIStructureData => ({
         {
           id: 'level-progress',
           label: 'LevelProgress',
-          route: '/achievements',
+          route: '/app/achievements',
           type: 'component',
           description: 'XP tracking, level progression, and motivational display',
           icon: 'Puzzle',
