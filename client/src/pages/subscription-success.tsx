@@ -96,7 +96,7 @@ export default function SubscriptionSuccess() {
               </AlertDescription>
             </Alert>
             <div className="flex gap-4">
-              <Link href="/dashboard">
+              <Link href="/app">
                 <Button>Go to Dashboard</Button>
               </Link>
               <Link href="/subscription/manage">
@@ -145,7 +145,7 @@ export default function SubscriptionSuccess() {
           )}
 
           <div className="flex gap-4 pt-4">
-            <Link href="/dashboard">
+            <Link href="/app">
               <Button size="lg" data-testid="dashboard-button">
                 Go to Dashboard
               </Button>

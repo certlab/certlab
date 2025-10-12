@@ -42,7 +42,7 @@ export default function SubscriptionCancel() {
                 View Plans Again
               </Button>
             </Link>
-            <Link href="/dashboard">
+            <Link href="/app">
               <Button variant="outline" size="lg" data-testid="dashboard-button">
                 Go to Dashboard
               </Button>
