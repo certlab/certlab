@@ -105,8 +105,8 @@ export default function BreadcrumbNavigation({ className }: { className?: string
 
   return (
     <div className={cn(
-      "mb-6 px-4 py-3 bg-muted/30 backdrop-blur-sm rounded-lg border border-border/50 shadow-sm",
-      "transition-all duration-200 hover:shadow-md hover:bg-muted/40",
+      "bg-gray-100 dark:bg-gray-800/50 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 mb-4",
+      "transition-all duration-200 hover:shadow-md hover:bg-gray-200 dark:hover:bg-gray-800/60",
       className
     )}>
       <Breadcrumb>
@@ -116,7 +116,7 @@ export default function BreadcrumbNavigation({ className }: { className?: string
             
             // Add the breadcrumb item
             items.push(
-              <BreadcrumbItem key={`${crumb.label}-${index}`}>
+              <BreadcrumbItem key={`${crumb.label}-${index}`} data-testid={index === 0 ? "breadcrumb-home" : `breadcrumb-item-${index}`}>
                 {crumb.href ? (
                   <BreadcrumbLink asChild>
                     <Button
@@ -125,26 +125,22 @@ export default function BreadcrumbNavigation({ className }: { className?: string
                       onClick={() => setLocation(crumb.href!)}
                       className={cn(
                         "h-auto py-1.5 px-2.5",
-                        "text-muted-foreground hover:text-foreground",
+                        "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100",
                         "transition-all duration-200",
-                        "hover:bg-accent/50"
+                        "hover:bg-gray-200/50 dark:hover:bg-gray-700/50"
                       )}
+                      data-testid={index === 0 ? "breadcrumb-home-link" : undefined}
                     >
                       <span className="flex items-center gap-1.5">
-                        {index === 0 && (
-                          <>
-                            {crumb.icon}
-                            <span className="hidden sm:inline">{crumb.label}</span>
-                          </>
-                        )}
-                        {index !== 0 && crumb.label}
+                        {index === 0 && crumb.icon}
+                        <span>{crumb.label}</span>
                       </span>
                     </Button>
                   </BreadcrumbLink>
                 ) : (
-                  <BreadcrumbPage className="flex items-center gap-1.5 font-semibold text-foreground px-2.5 py-1.5">
+                  <BreadcrumbPage className="flex items-center gap-1.5 font-semibold text-gray-900 dark:text-gray-100 px-2.5 py-1.5">
                     {index === 0 && crumb.icon}
-                    <span className={cn(index === 0 && "hidden sm:inline")}>
+                    <span>
                       {crumb.label}
                     </span>
                   </BreadcrumbPage>
@@ -155,7 +151,7 @@ export default function BreadcrumbNavigation({ className }: { className?: string
             // Add separator if not the last item
             if (index < breadcrumbs.length - 1) {
               items.push(
-                <BreadcrumbSeparator key={`separator-${index}`} className="[&>svg]:w-4 [&>svg]:h-4 text-muted-foreground/60">
+                <BreadcrumbSeparator key={`separator-${index}`} className="[&>svg]:w-4 [&>svg]:h-4 text-gray-400 dark:text-gray-600">
                   <ChevronRight />
                 </BreadcrumbSeparator>
               );

@@ -3,12 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { XCircle, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import BreadcrumbNavigation from "@/components/BreadcrumbNavigation";
 
 export default function SubscriptionCancel() {
   return (
     <div className="container max-w-2xl mx-auto p-8">
-      <BreadcrumbNavigation />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2" data-testid="cancel-title">

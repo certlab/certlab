@@ -6,7 +6,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { Link, useSearch } from "wouter";
 import { queryClient } from "@/lib/queryClient";
-import BreadcrumbNavigation from "@/components/BreadcrumbNavigation";
 
 interface ConfirmationResponse {
   success: boolean;
@@ -112,7 +111,6 @@ export default function SubscriptionSuccess() {
 
   return (
     <div className="container max-w-2xl mx-auto p-8">
-      <BreadcrumbNavigation />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2" data-testid="success-title">

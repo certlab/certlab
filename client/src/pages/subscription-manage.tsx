@@ -16,7 +16,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import BreadcrumbNavigation from "@/components/BreadcrumbNavigation";
 import {
   CreditCard,
   Calendar,
@@ -217,9 +216,6 @@ export default function SubscriptionManagePage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container max-w-4xl mx-auto py-8 px-4">
-        {/* Breadcrumb Navigation */}
-        <BreadcrumbNavigation />
-
         {/* Header */}
         <h1 className="text-3xl font-bold mb-8">Manage Subscription</h1>
 

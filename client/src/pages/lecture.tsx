@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
-import BreadcrumbNavigation from "@/components/BreadcrumbNavigation";
 
 export default function LecturePage() {
   const { id } = useParams<{ id: string }>();
@@ -61,9 +60,6 @@ export default function LecturePage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Breadcrumb Navigation */}
-        <BreadcrumbNavigation />
-
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-3">
