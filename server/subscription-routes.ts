@@ -69,8 +69,16 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       let status = 'inactive';
       let expiresAt = undefined;
 
-      // If Polar is configured and user has email, sync with Polar
-      if (process.env.POLAR_API_KEY && user.email) {
+      // Skip Polar sync for test user in development mode
+      const isTestUser = process.env.NODE_ENV === 'development' && userId === '999999';
+      
+      if (isTestUser) {
+        console.log('Test user detected in development mode - skipping Polar sync');
+        console.log('Test user subscription benefits:', updatedUser?.subscriptionBenefits);
+      }
+
+      // If Polar is configured and user has email, sync with Polar (but skip for test user)
+      if (process.env.POLAR_API_KEY && user.email && !isTestUser) {
         try {
           const polarData = await polarClient.syncUserSubscriptionBenefits(user.email);
           
@@ -115,14 +123,32 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
           }
         }
       } else if (updatedUser?.subscriptionBenefits) {
-        // No Polar configured, use cached benefits
+        // No Polar configured OR test user in development - use cached benefits
         benefits = updatedUser.subscriptionBenefits as any;
         isSubscribed = benefits.plan !== 'free';
+        
+        // For test user in development, ensure status is active if they have pro/enterprise plan
+        if (isTestUser && benefits.plan !== 'free') {
+          status = 'active';
+        }
       }
 
       // Get the plan configuration for features list
       const planName = benefits.plan || 'free';
       const plan = SUBSCRIPTION_PLANS[planName as keyof typeof SUBSCRIPTION_PLANS] || SUBSCRIPTION_PLANS.free;
+      
+      if (isTestUser) {
+        console.log('Test user subscription response:', {
+          plan: planName,
+          isSubscribed,
+          status,
+          limits: {
+            quizzesPerDay: benefits.quizzesPerDay,
+            categoriesAccess: benefits.categoriesAccess,
+            analyticsAccess: benefits.analyticsAccess,
+          }
+        });
+      }
 
       return res.json({
         isConfigured: !!process.env.POLAR_API_KEY,

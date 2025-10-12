@@ -193,18 +193,31 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       } catch (error) {
         console.error('Failed to create test user:', error);
       }
-    } else if (!testUser.subscriptionBenefits) {
-      // If test user exists but has no subscription data, add it
-      await storage.updateUser(testUserId, {
-        subscriptionBenefits: {
-          plan: 'pro', // Give test user pro plan for demo
-          quizzesPerDay: -1, // Unlimited for testing
-          categoriesAccess: ['all'],
-          analyticsAccess: 'advanced',
-          lastSyncedAt: new Date().toISOString(),
-        },
-      });
-      console.log('Development: Updated test user with Pro subscription');
+    } 
+    
+    // ALWAYS update the test user's subscription to Pro in development
+    // This ensures consistent pro benefits for testing
+    if (testUser) {
+      const currentBenefits = testUser.subscriptionBenefits as any;
+      
+      // Always update to ensure test user has pro benefits
+      // This prevents any Polar sync or other process from overwriting them
+      if (!currentBenefits || 
+          currentBenefits.plan !== 'pro' || 
+          currentBenefits.quizzesPerDay !== -1 ||
+          currentBenefits.analyticsAccess !== 'advanced') {
+        
+        await storage.updateUser(testUserId, {
+          subscriptionBenefits: {
+            plan: 'pro', // Give test user pro plan for demo
+            quizzesPerDay: -1, // Unlimited for testing
+            categoriesAccess: ['all'],
+            analyticsAccess: 'advanced',
+            lastSyncedAt: new Date().toISOString(),
+          },
+        });
+        console.log('Development: Updated test user with Pro subscription benefits');
+      }
     }
 
     // Mock user session for development
