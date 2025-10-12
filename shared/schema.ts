@@ -47,18 +47,16 @@ export const users = pgTable("users", {
     completedCertifications?: string[];
     motivations?: string[];
   }>(),
-  // Subscription fields for Polar integration
-  polarCustomerId: varchar("polar_customer_id"),
-  subscriptionPlan: text("subscription_plan").default("free"), // "free", "pro", "enterprise"
-  subscriptionStatus: text("subscription_status").default("inactive"), // "active", "inactive", "past_due", "canceled", "trialing"
-  subscriptionId: varchar("subscription_id"),
-  subscriptionExpiresAt: timestamp("subscription_expires_at"),
-  subscriptionFeatures: jsonb("subscription_features").$type<{
+  // Subscription benefits - cached from Polar
+  polarCustomerId: varchar("polar_customer_id"), // Keep for webhook identification
+  subscriptionBenefits: jsonb("subscription_benefits").$type<{
+    plan?: string; // Current plan name for display purposes
     quizzesPerDay?: number;
     categoriesAccess?: string[];
     analyticsAccess?: string;
     teamMembers?: number;
-  }>(),
+    lastSyncedAt?: string; // ISO date string of last Polar sync
+  }>().default({ plan: "free", quizzesPerDay: 5, categoriesAccess: ["basic"], analyticsAccess: "basic" }),
   dailyQuizCount: integer("daily_quiz_count").default(0), // Reset daily
   lastQuizResetDate: timestamp("last_quiz_reset_date").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
