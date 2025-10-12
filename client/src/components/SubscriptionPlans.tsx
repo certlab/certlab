@@ -21,7 +21,8 @@ import {
   Users
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 
 interface Plan {
   id: string;
@@ -40,6 +41,7 @@ interface PlansResponse {
 
 export default function SubscriptionPlans() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
 
@@ -71,16 +73,22 @@ export default function SubscriptionPlans() {
       if (data.checkoutUrl) {
         // Simple direct navigation to checkout
         window.location.href = data.checkoutUrl;
-      } else if (data.upgraded && data.redirectUrl) {
-        // Handle instant upgrade - show success message and redirect
+      } else if (data.upgraded) {
+        // Handle instant upgrade - show success message and stay on page
         toast({
-          title: "Success!",
-          description: data.message || "Successfully upgraded your subscription",
+          title: "Upgrade Successful! 🎉",
+          description: data.message || "Your subscription has been upgraded successfully. Your new plan features are now active!",
         });
-        // Redirect to success page after a brief delay
+        
+        // Invalidate subscription-related queries to refresh the UI
+        queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        
+        // Navigate to dashboard after a brief delay to show the toast
         setTimeout(() => {
-          window.location.href = data.redirectUrl;
-        }, 1500);
+          setLocation("/app");
+        }, 2000);
       }
     },
     onError: (error: any) => {
