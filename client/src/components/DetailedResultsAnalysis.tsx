@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { TrendingUp, TrendingDown, Target, Clock, CheckCircle, XCircle, BarChart3 } from "lucide-react";
+import { useAnalyticsAccess, LockedAnalytics } from "@/hooks/useAnalyticsAccess";
 import type { Quiz, Category } from "@shared/schema";
 
 interface DetailedResultsAnalysisProps {
@@ -13,6 +14,7 @@ interface DetailedResultsAnalysisProps {
 
 export default function DetailedResultsAnalysis({ quizId }: DetailedResultsAnalysisProps) {
   const { user: currentUser } = useAuth();
+  const { features: analyticsFeatures } = useAnalyticsAccess();
 
   const { data: quiz } = useQuery<Quiz>({
     queryKey: ['/api/quiz', quizId],
@@ -108,6 +110,38 @@ export default function DetailedResultsAnalysis({ quizId }: DetailedResultsAnaly
   };
 
   const recommendations = getStudyRecommendations();
+
+  // This entire component is a Pro/Enterprise feature
+  if (!analyticsFeatures.detailedMetrics) {
+    return (
+      <LockedAnalytics title="Detailed Performance Analytics" requiredLevel="advanced">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Performance Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-32 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg animate-pulse"></div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Time Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-24 bg-muted rounded-lg animate-pulse"></div>
+            </CardContent>
+          </Card>
+        </div>
+      </LockedAnalytics>
+    );
+  }
 
   return (
     <div className="space-y-6">

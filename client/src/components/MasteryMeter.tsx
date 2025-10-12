@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuth } from "@/lib/auth";
 import { ChevronDown, ChevronUp, Grid, List, BarChart3 } from "lucide-react";
+import { useAnalyticsAccess, LockedAnalytics } from "@/hooks/useAnalyticsAccess";
 import type { Category, Subcategory, MasteryScore } from "@shared/schema";
 import { useState } from "react";
 
@@ -16,6 +17,7 @@ interface MasteryMeterProps {
 
 export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) {
   const { user: currentUser } = useAuth();
+  const { features: analyticsFeatures } = useAnalyticsAccess();
   const [viewMode, setViewMode] = useState<'summary' | 'grid' | 'detailed'>('summary');
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
 
@@ -134,96 +136,119 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
               
               <Progress value={categoryMastery} className="h-2 mb-3" />
               
-              {/* Domain Progress Visualization */}
-              <div className="mb-3">
-                <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
-                  <span>Domain Progress</span>
-                  <span>{completedDomains}/{categorySubcategories.length} ready</span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {categorySubcategories.map((subcategory) => {
-                    const subcategoryMastery = getSubcategoryMastery(category.id, subcategory.id);
-                    const hasData = masteryScores.some(score => 
-                      score.categoryId === category.id && score.subcategoryId === subcategory.id
-                    );
-                    
-                    const getStatusColor = () => {
-                      if (!hasData) return 'bg-gray-200';
-                      if (subcategoryMastery >= 85) return 'bg-green-500';
-                      if (subcategoryMastery >= 70) return 'bg-blue-500';
-                      if (subcategoryMastery >= 50) return 'bg-yellow-500';
-                      return 'bg-red-400';
-                    };
+              {/* Domain Progress Visualization - Pro/Enterprise Feature */}
+              {analyticsFeatures.categoryBreakdown ? (
+                <div className="mb-3">
+                  <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+                    <span>Domain Progress</span>
+                    <span>{completedDomains}/{categorySubcategories.length} ready</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {categorySubcategories.map((subcategory) => {
+                      const subcategoryMastery = getSubcategoryMastery(category.id, subcategory.id);
+                      const hasData = masteryScores.some(score => 
+                        score.categoryId === category.id && score.subcategoryId === subcategory.id
+                      );
+                      
+                      const getStatusColor = () => {
+                        if (!hasData) return 'bg-gray-200';
+                        if (subcategoryMastery >= 85) return 'bg-green-500';
+                        if (subcategoryMastery >= 70) return 'bg-blue-500';
+                        if (subcategoryMastery >= 50) return 'bg-yellow-500';
+                        return 'bg-red-400';
+                      };
 
-                    return (
-                      <div
-                        key={subcategory.id}
-                        className={`w-6 h-6 rounded ${getStatusColor()} flex items-center justify-center`}
-                        title={`${subcategory.name}: ${hasData ? `${subcategoryMastery}%` : 'No data'}`}
-                      >
-                        {subcategoryMastery >= 85 && hasData && (
-                          <span className="text-white text-xs">✓</span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleCategoryExpansion(category.id)}
-                className="w-full justify-between text-xs"
-              >
-                View Details
-                {expandedCategories.has(category.id) ? 
-                  <ChevronUp className="h-4 w-4" /> : 
-                  <ChevronDown className="h-4 w-4" />
-                }
-              </Button>
-              
-              <Collapsible open={expandedCategories.has(category.id)}>
-                <CollapsibleContent className="mt-3 space-y-2">
-                  {categorySubcategories.map((subcategory) => {
-                    const subcategoryMastery = getSubcategoryMastery(category.id, subcategory.id);
-                    const hasData = masteryScores.some(score => 
-                      score.categoryId === category.id && score.subcategoryId === subcategory.id
-                    );
-
-                    return (
-                      <div key={subcategory.id} className="flex items-center gap-3 text-sm">
-                        <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                          !hasData ? 'bg-gray-200' :
-                          subcategoryMastery >= 85 ? 'bg-green-500' :
-                          subcategoryMastery >= 70 ? 'bg-blue-500' :
-                          subcategoryMastery >= 50 ? 'bg-yellow-500' : 'bg-red-400'
-                        }`}></div>
-                        <span className="text-gray-600 truncate flex-1">{subcategory.name}</span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                            <div 
-                              className={`h-1.5 rounded-full ${
-                                !hasData ? 'bg-gray-300' :
-                                subcategoryMastery >= 85 ? 'bg-green-500' :
-                                subcategoryMastery >= 70 ? 'bg-blue-500' :
-                                subcategoryMastery >= 50 ? 'bg-yellow-500' : 'bg-red-400'
-                              }`}
-                              style={{ width: `${Math.max(subcategoryMastery, 5)}%` }}
-                            ></div>
-                          </div>
-                          <span className={`text-xs font-medium min-w-8 text-right ${
-                            subcategoryMastery >= 85 ? 'text-green-600' : 
-                            subcategoryMastery >= 70 ? 'text-blue-600' : 'text-gray-500'
-                          }`}>
-                            {hasData ? `${subcategoryMastery}%` : '--'}
-                          </span>
+                      return (
+                        <div
+                          key={subcategory.id}
+                          className={`w-6 h-6 rounded ${getStatusColor()} flex items-center justify-center`}
+                          title={`${subcategory.name}: ${hasData ? `${subcategoryMastery}%` : 'No data'}`}
+                        >
+                          {subcategoryMastery >= 85 && hasData && (
+                            <span className="text-white text-xs">✓</span>
+                          )}
                         </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-3">
+                  <LockedAnalytics title="Domain Progress Tracking" requiredLevel="advanced">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs text-gray-600">
+                        <span>Domain Progress</span>
+                        <span>-- / -- ready</span>
                       </div>
-                    );
-                  })}
-                </CollapsibleContent>
-              </Collapsible>
+                      <div className="flex flex-wrap gap-1">
+                        {[...Array(8)].map((_, i) => (
+                          <div key={i} className="w-6 h-6 rounded bg-gray-200"></div>
+                        ))}
+                      </div>
+                    </div>
+                  </LockedAnalytics>
+                </div>
+              )}
+              
+              {/* Details View - Pro/Enterprise Feature */}
+              {analyticsFeatures.categoryBreakdown && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleCategoryExpansion(category.id)}
+                    className="w-full justify-between text-xs"
+                  >
+                    View Details
+                    {expandedCategories.has(category.id) ? 
+                      <ChevronUp className="h-4 w-4" /> : 
+                      <ChevronDown className="h-4 w-4" />
+                    }
+                  </Button>
+                  
+                  <Collapsible open={expandedCategories.has(category.id)}>
+                    <CollapsibleContent className="mt-3 space-y-2">
+                      {categorySubcategories.map((subcategory) => {
+                        const subcategoryMastery = getSubcategoryMastery(category.id, subcategory.id);
+                        const hasData = masteryScores.some(score => 
+                          score.categoryId === category.id && score.subcategoryId === subcategory.id
+                        );
+
+                        return (
+                          <div key={subcategory.id} className="flex items-center gap-3 text-sm">
+                            <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                              !hasData ? 'bg-gray-200' :
+                              subcategoryMastery >= 85 ? 'bg-green-500' :
+                              subcategoryMastery >= 70 ? 'bg-blue-500' :
+                              subcategoryMastery >= 50 ? 'bg-yellow-500' : 'bg-red-400'
+                            }`}></div>
+                            <span className="text-gray-600 truncate flex-1">{subcategory.name}</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                                <div 
+                                  className={`h-1.5 rounded-full ${
+                                    !hasData ? 'bg-gray-300' :
+                                    subcategoryMastery >= 85 ? 'bg-green-500' :
+                                    subcategoryMastery >= 70 ? 'bg-blue-500' :
+                                    subcategoryMastery >= 50 ? 'bg-yellow-500' : 'bg-red-400'
+                                  }`}
+                                  style={{ width: `${Math.max(subcategoryMastery, 5)}%` }}
+                                ></div>
+                              </div>
+                              <span className={`text-xs font-medium min-w-8 text-right ${
+                                subcategoryMastery >= 85 ? 'text-green-600' : 
+                                subcategoryMastery >= 70 ? 'text-blue-600' : 'text-gray-500'
+                              }`}>
+                                {hasData ? `${subcategoryMastery}%` : '--'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </>
+              )}
             </CardContent>
           </Card>
         );

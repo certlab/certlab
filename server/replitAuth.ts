@@ -181,7 +181,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
         // This ensures the test user has actual subscription data in the database
         await storage.updateUser(testUserId, {
           subscriptionBenefits: {
-            plan: 'pro', // Give test user pro plan for testing
+            plan: 'pro', // Give test user pro plan for demo
             quizzesPerDay: -1, // Unlimited for testing
             categoriesAccess: ['all'],
             analyticsAccess: 'advanced',
@@ -197,8 +197,8 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       // If test user exists but has no subscription data, add it
       await storage.updateUser(testUserId, {
         subscriptionBenefits: {
-          plan: 'pro',
-          quizzesPerDay: -1,
+          plan: 'pro', // Give test user pro plan for demo
+          quizzesPerDay: -1, // Unlimited for testing
           categoriesAccess: ['all'],
           analyticsAccess: 'advanced',
           lastSyncedAt: new Date().toISOString(),

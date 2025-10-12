@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAnalyticsAccess, LockedAnalytics } from "@/hooks/useAnalyticsAccess";
 import type { Quiz, Category } from "@shared/schema";
 
 interface QuizResult {
@@ -45,6 +46,7 @@ export default function Review() {
   const quizId = parseInt(params?.id || "0");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { features: analyticsFeatures } = useAnalyticsAccess();
 
   const { data: quiz, isLoading: quizLoading } = useQuery<Quiz>({
     queryKey: ['/api/quiz', quizId],
@@ -294,12 +296,22 @@ export default function Review() {
                     })}
                   </div>
 
-                  {/* Explanation */}
+                  {/* Explanation - Pro/Enterprise Feature */}
                   {question.explanation && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <h4 className="font-medium text-blue-900 mb-2">Explanation</h4>
-                      <p className="text-blue-800 leading-relaxed">{question.explanation}</p>
-                    </div>
+                    analyticsFeatures.weakAreasIdentification ? (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 className="font-medium text-blue-900 mb-2">Explanation</h4>
+                        <p className="text-blue-800 leading-relaxed">{question.explanation}</p>
+                      </div>
+                    ) : (
+                      <LockedAnalytics title="Detailed Explanations" requiredLevel="advanced">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <h4 className="font-medium text-blue-900 mb-2">Explanation</h4>
+                          <div className="h-4 bg-blue-100 rounded w-full mb-2"></div>
+                          <div className="h-4 bg-blue-100 rounded w-3/4"></div>
+                        </div>
+                      </LockedAnalytics>
+                    )
                   )}
                 </CardContent>
               </Card>
