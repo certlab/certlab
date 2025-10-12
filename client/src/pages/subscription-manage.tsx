@@ -82,7 +82,11 @@ export default function SubscriptionManagePage() {
         endpoint: "/api/subscription/resume",
         method: "POST",
       });
-      return response.json();
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to resume subscription");
+      }
+      return data;
     },
     onSuccess: () => {
       toast({
@@ -92,11 +96,29 @@ export default function SubscriptionManagePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to resume subscription",
-        variant: "destructive",
-      });
+      // Check if it's a "subscription not found" error
+      if (error.message?.includes("expired") || error.message?.includes("not found")) {
+        toast({
+          title: "Subscription Cannot Be Resumed",
+          description: error.message,
+          variant: "destructive",
+          action: (
+            <Link href="/subscription/plans">
+              <Button variant="secondary" size="sm">
+                View Plans
+              </Button>
+            </Link>
+          ),
+        });
+        // Refresh subscription status to clear invalid state
+        queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to resume subscription",
+          variant: "destructive",
+        });
+      }
     },
   });
 

@@ -465,7 +465,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
             const subscriptions = await polarClient.getSubscriptions(customer.id);
             const canceledSubscription = subscriptions.find(sub => 
               sub.status === 'canceled' && 
-              sub.cancel_at_period_end === true
+              sub.cancelAtPeriodEnd === true
             );
             
             if (canceledSubscription) {
@@ -515,8 +515,9 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       
       // Check if it's a Polar API error about subscription not existing
       if (error.message?.includes("not found") || error.message?.includes("does not exist")) {
+        const sessionUser = req.user as User;
         // Clear invalid subscription data
-        await storage.updateUser(user.id, {
+        await storage.updateUser(sessionUser.id, {
           subscriptionId: null,
           subscriptionStatus: 'expired',
           subscriptionPlan: 'free',
