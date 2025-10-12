@@ -9,10 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, Edit, Trash2, Users, FileText, FolderOpen, Building, Home, Settings } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Users, FileText, FolderOpen, Building, Home, Settings, Code, AlertTriangle } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import type { DevModeResponse } from "@/lib/api-types";
 
 interface Tenant {
   id: number;
@@ -182,6 +185,183 @@ function QuestionForm({
         </Button>
       </DialogFooter>
     </form>
+  );
+}
+
+// Developer Settings Component
+function DeveloperSettings() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  // Fetch current dev mode status
+  const { data: devModeData, isLoading: devModeLoading } = useQuery<DevModeResponse>({
+    queryKey: ["/api/user/dev-mode"],
+    refetchInterval: false,
+  });
+  
+  // Mutation to update dev mode status
+  const toggleDevModeMutation = useMutation({
+    mutationFn: async (newState: boolean) => {
+      return apiRequest({
+        method: "POST",
+        endpoint: "/api/user/dev-mode",
+        data: { devMode: newState },
+      });
+    },
+    onMutate: async (newState) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["/api/user/dev-mode"] });
+      
+      // Snapshot the previous value
+      const previousValue = queryClient.getQueryData(["/api/user/dev-mode"]);
+      
+      // Optimistically update to the new value
+      queryClient.setQueryData(["/api/user/dev-mode"], { devMode: newState });
+      
+      return { previousValue };
+    },
+    onError: (err, newState, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(["/api/user/dev-mode"], context?.previousValue);
+      
+      toast({
+        title: "Error",
+        description: "Failed to toggle dev mode. Please try again.",
+        variant: "destructive",
+      });
+    },
+    onSuccess: (data, variables) => {
+      toast({
+        title: variables ? "Dev Mode Enabled" : "Dev Mode Disabled",
+        description: variables 
+          ? "Mock Polar API is now active for testing subscriptions"
+          : "Live Polar API is now active",
+      });
+      
+      // Invalidate subscription status to reflect changes
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/dev-mode"] });
+    },
+  });
+  
+  const isDevModeOn = devModeData?.devMode === true;
+  const isToggling = toggleDevModeMutation.isPending;
+  
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center space-x-2">
+          <Code className="w-5 h-5 text-primary" />
+          <div className="flex-1">
+            <CardTitle>Developer Settings</CardTitle>
+            <CardDescription>Configure development and testing features</CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Dev Mode Toggle */}
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="dev-mode" className="text-base font-medium">
+                  Development Mode
+                </Label>
+                {isDevModeOn && (
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                    <AlertTriangle className="w-3 h-3 mr-1" />
+                    MOCK API ACTIVE
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Enable Dev Mode to test subscription features with mock data
+              </p>
+            </div>
+            <Switch
+              id="dev-mode"
+              checked={isDevModeOn}
+              onCheckedChange={(checked) => toggleDevModeMutation.mutate(checked)}
+              disabled={devModeLoading || isToggling}
+              aria-label="Toggle development mode"
+            />
+          </div>
+          
+          {/* Warning Alert when Dev Mode is On */}
+          {isDevModeOn && (
+            <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20">
+              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              <AlertDescription className="text-sm">
+                <strong className="font-medium">Development Mode Active:</strong> The application is using mock Polar API responses. 
+                Subscription operations will not affect real billing and are for testing purposes only.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* Dev Mode Features */}
+          {isDevModeOn && (
+            <div className="border rounded-lg p-4 bg-muted/30">
+              <h4 className="text-sm font-medium mb-3">Active Mock Features:</h4>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li className="flex items-start gap-2">
+                  <Badge variant="outline" className="mt-0.5 text-xs">API</Badge>
+                  <span>Mock Polar subscription service with test data</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Badge variant="outline" className="mt-0.5 text-xs">Auth</Badge>
+                  <span>Test user (ID: 999999) auto-authentication</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Badge variant="outline" className="mt-0.5 text-xs">Data</Badge>
+                  <span>Pre-configured subscription plans and benefits</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Badge variant="outline" className="mt-0.5 text-xs">Testing</Badge>
+                  <span>Instant subscription state changes for testing flows</span>
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
+        
+        {/* Additional Dev Tools */}
+        <div className="pt-4 border-t">
+          <h4 className="text-sm font-medium mb-3">Quick Actions</h4>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              disabled={!isDevModeOn}
+              onClick={() => {
+                queryClient.invalidateQueries();
+                toast({
+                  title: "Cache Cleared",
+                  description: "All query caches have been invalidated",
+                });
+              }}
+            >
+              Clear All Caches
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              disabled={!isDevModeOn}
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/subscription"] });
+                toast({
+                  title: "Subscription Cache Cleared",
+                  description: "Subscription data will be refreshed",
+                });
+              }}
+            >
+              Refresh Subscriptions
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -771,7 +951,8 @@ export default function AdminDashboard() {
                 <UserManagement selectedTenant={selectedTenant} />
               </TabsContent>
 
-              <TabsContent value="settings">
+              <TabsContent value="settings" className="space-y-6">
+                {/* Tenant Settings */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Tenant Settings</CardTitle>
@@ -801,6 +982,9 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
+                
+                {/* Developer Settings / Tools & Features */}
+                <DeveloperSettings />
               </TabsContent>
             </Tabs>
           ) : (

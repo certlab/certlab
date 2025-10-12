@@ -1810,7 +1810,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
+    // Ensure proper array format for values
+    const userData: any = {
+      ...insertUser,
+      certificationGoals: insertUser.certificationGoals || [],
+    };
+    const [user] = await db.insert(users).values([userData]).returning();
     return user;
   }
 
@@ -1955,7 +1960,7 @@ export class DatabaseStorage implements IStorage {
     return {
       totalQuizzes,
       averageScore,
-      studyStreak,
+      studyStreak: studyStreak || 0,
       certifications,
       passingRate,
       masteryScore
@@ -3035,6 +3040,13 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
 
   async getUserDevMode(userId: string): Promise<boolean> {
     try {
+      // First ensure the user exists
+      const existingUser = await this.getUser(userId);
+      if (!existingUser) {
+        console.log(`User ${userId} not found, returning default devMode: false`);
+        return false;
+      }
+      
       const [user] = await db.select({ devMode: users.devMode }).from(users).where(eq(users.id, userId));
       return user?.devMode ?? false;
     } catch (error) {
@@ -3342,11 +3354,15 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
   }
 
   async createStudyGroup(group: InsertStudyGroup): Promise<StudyGroup> {
-    const [newGroup] = await db.insert(studyGroups).values(group).returning();
+    // Ensure categoryIds is a proper array
+    const groupData: any = {
+      ...group,
+      categoryIds: Array.isArray(group.categoryIds) ? group.categoryIds : []
+    };
+    const [newGroup] = await db.insert(studyGroups).values([groupData]).returning();
     
     // Add the creator as the first member
     await db.insert(studyGroupMembers).values({
-      tenantId: group.tenantId,
       groupId: newGroup.id,
       userId: newGroup.createdBy,
     });
@@ -3355,8 +3371,16 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
   }
 
   async updateStudyGroup(id: number, updates: Partial<InsertStudyGroup>): Promise<StudyGroup | null> {
+    // Fix categoryIds if present - ensure it's a proper array
+    const processedUpdates: any = { ...updates };
+    if (updates.categoryIds) {
+      processedUpdates.categoryIds = Array.isArray(updates.categoryIds) 
+        ? updates.categoryIds 
+        : Object.values(updates.categoryIds).map((id: any) => Number(id));
+    }
+    
     const [updated] = await db.update(studyGroups)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...processedUpdates, updatedAt: new Date() })
       .where(eq(studyGroups.id, id))
       .returning();
     return updated || null;
@@ -3369,7 +3393,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     await db.delete(studyGroups).where(eq(studyGroups.id, id));
   }
 
-  async joinStudyGroup(groupId: number, userId: string, tenantId: number): Promise<StudyGroupMember> {
+  async joinStudyGroup(groupId: number, userId: string): Promise<StudyGroupMember> {
     // Check if already a member
     const existing = await db.select()
       .from(studyGroupMembers)
@@ -3384,7 +3408,6 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     
     // Add as member
     const [member] = await db.insert(studyGroupMembers).values({
-      tenantId,
       groupId,
       userId,
     }).returning();
@@ -3447,13 +3470,26 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
   }
 
   async createPracticeTest(test: InsertPracticeTest): Promise<PracticeTest> {
-    const [newTest] = await db.insert(practiceTests).values(test).returning();
+    // Ensure categoryIds is a proper array
+    const testData: any = {
+      ...test,
+      categoryIds: Array.isArray(test.categoryIds) ? test.categoryIds : []
+    };
+    const [newTest] = await db.insert(practiceTests).values([testData]).returning();
     return newTest;
   }
 
   async updatePracticeTest(id: number, updates: Partial<InsertPracticeTest>): Promise<PracticeTest | null> {
+    // Fix categoryIds if present - ensure it's a proper array
+    const processedUpdates: any = { ...updates };
+    if (updates.categoryIds) {
+      processedUpdates.categoryIds = Array.isArray(updates.categoryIds) 
+        ? updates.categoryIds 
+        : Object.values(updates.categoryIds).map((id: any) => Number(id));
+    }
+    
     const [updated] = await db.update(practiceTests)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...processedUpdates, updatedAt: new Date() })
       .where(eq(practiceTests.id, id))
       .returning();
     return updated || null;

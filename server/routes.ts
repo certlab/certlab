@@ -135,6 +135,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/dev-mode", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log("Getting dev mode for user:", userId);
+      
+      // getUserDevMode handles the case where user doesn't exist
       const devMode = await storage.getUserDevMode(userId);
       res.json({ devMode });
     } catch (error) {
@@ -903,7 +906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const groupId = parseInt(req.params.id);
       
-      const member = await storage.joinStudyGroup(groupId, userId, 1);
+      const member = await storage.joinStudyGroup(groupId, userId);
       res.json(member);
     } catch (error) {
       console.error('Error joining study group:', error);
