@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import adminRoutes from "./admin-routes";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { registerSubscriptionRoutes } from "./subscription-routes";
+import { isCategoryAccessible } from "@shared/categoryAccess";
 import { 
   insertUserSchema, 
   createQuizSchema, 
@@ -180,6 +181,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const benefits = user.subscriptionBenefits as any || {};
         const plan = benefits.plan || 'free';
         const quizLimit = benefits.quizzesPerDay || 5;
+        const categoriesAccess = benefits.categoriesAccess || ['basic'];
+        
+        // Validate category access based on subscription
+        const categories = await storage.getCategories();
+        const selectedCategoryNames = categories
+          .filter(cat => quizData.categoryIds.includes(cat.id))
+          .map(cat => cat.name);
+        
+        // Check if user has access to all selected categories
+        const restrictedCategories = selectedCategoryNames.filter(
+          catName => !isCategoryAccessible(catName, categoriesAccess)
+        );
+        
+        if (restrictedCategories.length > 0) {
+          return res.status(403).json({
+            error: "Category access restricted",
+            message: `The following categories require a Pro subscription: ${restrictedCategories.join(', ')}. Upgrade to access advanced certifications!`,
+            restrictedCategories: restrictedCategories,
+            upgradeUrl: "/subscription/plans",
+            currentPlan: plan,
+          });
+        }
         
         // Check if user has reached their daily limit
         if (quizLimit > 0 && (user.dailyQuizCount || 0) >= quizLimit) {

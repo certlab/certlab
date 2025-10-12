@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionQuizSizes } from "@/hooks/useSubscriptionQuizSizes";
+import { getAccessibleCategories } from "@shared/categoryAccess";
 import { 
   Play, 
   RotateCcw, 
@@ -15,7 +16,8 @@ import {
   Target,
   BookOpen,
   Award,
-  Users
+  Users,
+  Crown
 } from "lucide-react";
 import type { Quiz, UserStats, Category } from "@shared/schema";
 
@@ -66,6 +68,10 @@ export default function ContextualQuickActions() {
   const getContextualActions = () => {
     const actions = [];
     const currentPath = location;
+    
+    // Get accessible categories based on subscription
+    const subscriptionAccess = quizSizes.subscription?.limits?.categoriesAccess || ['basic'];
+    const accessibleCategoryIds = getAccessibleCategories(categories, subscriptionAccess);
 
     // Universal quick actions
     actions.push({
@@ -83,9 +89,29 @@ export default function ContextualQuickActions() {
           });
           return;
         }
+        
+        if (accessibleCategoryIds.length === 0) {
+          toast({
+            title: "No Accessible Categories",
+            description: "Upgrade your subscription to access certification categories.",
+            variant: "default",
+            action: (
+              <Button 
+                size="sm" 
+                onClick={() => setLocation('/subscription/plans')}
+                className="bg-purple-600 text-white hover:bg-purple-700"
+              >
+                <Crown className="w-3 h-3 mr-1" />
+                Upgrade
+              </Button>
+            ),
+          });
+          return;
+        }
+        
         if (currentUser?.id) {
           createQuizMutation.mutate({
-            categoryIds: categories.length > 0 ? [categories[0].id] : [35], // Use first available category or default to CC
+            categoryIds: [accessibleCategoryIds[0]], // Use first accessible category
             questionCount: 15,
             title: `Quick Session - ${new Date().toLocaleDateString()}`,
           });
@@ -114,7 +140,7 @@ export default function ContextualQuickActions() {
           if (currentUser?.id) {
             // Create a quiz focused on review/weak areas
             createQuizMutation.mutate({
-              categoryIds: categories.length > 0 ? [categories[0].id] : [35],
+              categoryIds: accessibleCategoryIds.length > 0 ? [accessibleCategoryIds[0]] : [],
               questionCount: 20,
               title: `Review Session - ${new Date().toLocaleDateString()}`,
               mode: 'study' // Study mode for reviewing weak areas
@@ -152,7 +178,7 @@ export default function ContextualQuickActions() {
           }
           if (currentUser?.id) {
             createQuizMutation.mutate({
-              categoryIds: categories.length > 0 ? [categories[0].id] : [35],
+              categoryIds: accessibleCategoryIds.length > 0 ? [accessibleCategoryIds[0]] : [],
               questionCount: 20,
               timeLimit: 30,
               title: `Timed Practice - ${new Date().toLocaleDateString()}`,
@@ -181,7 +207,7 @@ export default function ContextualQuickActions() {
           if (currentUser?.id) {
             // Create a quiz for badge earning
             createQuizMutation.mutate({
-              categoryIds: categories.length > 0 ? [categories[0].id] : [35],
+              categoryIds: accessibleCategoryIds.length > 0 ? [accessibleCategoryIds[0]] : [],
               questionCount: 15,
               title: `Badge Quest - ${new Date().toLocaleDateString()}`,
             });
@@ -240,7 +266,7 @@ export default function ContextualQuickActions() {
           if (currentUser?.id) {
             // Create a solo practice quiz
             createQuizMutation.mutate({
-              categoryIds: categories.length > 0 ? [categories[0].id] : [35],
+              categoryIds: accessibleCategoryIds.length > 0 ? [accessibleCategoryIds[0]] : [],
               questionCount: 15,
               title: `Solo Practice - ${new Date().toLocaleDateString()}`,
             });

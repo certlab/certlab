@@ -130,9 +130,10 @@ export default function PracticeTestMode() {
     }
   };
 
-  const getScoreColor = (score: number, passingScore: number) => {
-    if (score >= passingScore) return "text-green-600";
-    if (score >= passingScore - 10) return "text-yellow-600";
+  const getScoreColor = (score: number, passingScore: number | null) => {
+    const threshold = passingScore ?? 70; // Default to 70 if null
+    if (score >= threshold) return "text-green-600";
+    if (score >= threshold - 10) return "text-yellow-600";
     return "text-red-600";
   };
 
@@ -283,7 +284,7 @@ export default function PracticeTestMode() {
                         <div className="text-muted-foreground">Time Limit</div>
                       </div>
                       <div className="text-center">
-                        <div className="font-medium">{test.passingScore}%</div>
+                        <div className="font-medium">{test.passingScore ?? 70}%</div>
                         <div className="text-muted-foreground">Pass Score</div>
                       </div>
                     </div>
@@ -302,11 +303,11 @@ export default function PracticeTestMode() {
                           </span>
                         </div>
                         <Progress 
-                          value={(userBestScore / test.passingScore) * 100} 
+                          value={(userBestScore / (test.passingScore ?? 70)) * 100} 
                           className="h-1" 
                         />
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          {userBestScore >= test.passingScore ? (
+                          {userBestScore >= (test.passingScore ?? 70) ? (
                             <CheckCircle className="h-3 w-3 text-green-500" />
                           ) : (
                             <AlertCircle className="h-3 w-3 text-yellow-500" />

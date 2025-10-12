@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionQuizSizes } from "@/hooks/useSubscriptionQuizSizes";
+import { isCategoryAccessible, getRequiredPlan } from "@shared/categoryAccess";
+import { Lock, Crown } from "lucide-react";
 import type { Category, Subcategory } from "@shared/schema";
 
 export default function QuizCreator() {
@@ -60,7 +63,31 @@ export default function QuizCreator() {
     },
   });
 
-  const handleCategoryToggle = (categoryId: number, checked: boolean) => {
+  const handleCategoryToggle = (categoryId: number, checked: boolean, categoryName: string) => {
+    // Get user's subscription access levels
+    const subscriptionAccess = quizSizes.subscription?.limits?.categoriesAccess || ['basic'];
+    
+    // Check if category is accessible
+    if (!isCategoryAccessible(categoryName, subscriptionAccess)) {
+      // Show upgrade prompt for locked categories
+      toast({
+        title: "Certification Locked",
+        description: `${categoryName} certification requires ${getRequiredPlan(categoryName)} plan. Upgrade to access advanced certifications!`,
+        variant: "default",
+        action: (
+          <Button 
+            size="sm" 
+            onClick={() => setLocation('/subscription/plans')}
+            className="bg-purple-600 text-white hover:bg-purple-700"
+          >
+            <Crown className="w-3 h-3 mr-1" />
+            Upgrade
+          </Button>
+        ),
+      });
+      return;
+    }
+    
     if (checked) {
       setSelectedCategories([...selectedCategories, categoryId]);
     } else {
@@ -147,27 +174,57 @@ export default function QuizCreator() {
             Select Certification Categories
           </Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                className="border border-gray-200 rounded-lg p-4 hover:border-primary hover:bg-primary hover:bg-opacity-5 cursor-pointer transition-all material-shadow-hover"
-                onClick={() => handleCategoryToggle(category.id, !selectedCategories.includes(category.id))}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <i className={`${category.icon} text-primary`}></i>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{category.name}</h3>
-                      <p className="text-xs text-gray-500">{category.description}</p>
+            {categories.map((category) => {
+              const subscriptionAccess = quizSizes.subscription?.limits?.categoriesAccess || ['basic'];
+              const isAccessible = isCategoryAccessible(category.name, subscriptionAccess);
+              const requiredPlan = !isAccessible ? getRequiredPlan(category.name) : null;
+              
+              return (
+                <div
+                  key={category.id}
+                  className={`relative border rounded-lg p-4 cursor-pointer transition-all material-shadow-hover ${
+                    isAccessible 
+                      ? 'border-gray-200 hover:border-primary hover:bg-primary hover:bg-opacity-5' 
+                      : 'border-gray-300 bg-gray-50 opacity-75'
+                  }`}
+                  onClick={() => handleCategoryToggle(category.id, !selectedCategories.includes(category.id), category.name)}
+                >
+                  {!isAccessible && (
+                    <Badge 
+                      className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs px-2 py-1"
+                    >
+                      <Crown className="w-3 h-3 mr-1" />
+                      {requiredPlan} Plan
+                    </Badge>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <i className={`${category.icon} ${isAccessible ? 'text-primary' : 'text-gray-400'}`}></i>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className={`font-medium ${isAccessible ? 'text-gray-900' : 'text-gray-500'}`}>
+                            {category.name}
+                          </h3>
+                          {!isAccessible && <Lock className="w-4 h-4 text-gray-400" />}
+                        </div>
+                        <p className="text-xs text-gray-500">{category.description}</p>
+                      </div>
                     </div>
+                    {isAccessible ? (
+                      <Checkbox
+                        checked={selectedCategories.includes(category.id)}
+                        onCheckedChange={(checked) => handleCategoryToggle(category.id, checked as boolean, category.name)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <div className="p-2">
+                        <Lock className="w-5 h-5 text-gray-400" />
+                      </div>
+                    )}
                   </div>
-                  <Checkbox
-                    checked={selectedCategories.includes(category.id)}
-                    onCheckedChange={(checked) => handleCategoryToggle(category.id, checked as boolean)}
-                  />
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

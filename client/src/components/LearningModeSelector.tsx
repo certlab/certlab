@@ -12,6 +12,8 @@ import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionQuizSizes } from "@/hooks/useSubscriptionQuizSizes";
+import { isCategoryAccessible, getRequiredPlan } from "@shared/categoryAccess";
+import { Lock, Crown } from "lucide-react";
 import type { Category, Subcategory } from "@shared/schema";
 
 type LearningMode = "study" | "quiz" | "challenge";
@@ -64,7 +66,31 @@ export default function LearningModeSelector() {
     },
   });
 
-  const handleCategoryToggle = (categoryId: number, checked: boolean) => {
+  const handleCategoryToggle = (categoryId: number, checked: boolean, categoryName: string) => {
+    // Get user's subscription access levels
+    const subscriptionAccess = quizSizes.subscription?.limits?.categoriesAccess || ['basic'];
+    
+    // Check if category is accessible
+    if (!isCategoryAccessible(categoryName, subscriptionAccess)) {
+      // Show upgrade prompt for locked categories
+      toast({
+        title: "Certification Locked",
+        description: `${categoryName} certification requires ${getRequiredPlan(categoryName)} plan. Upgrade to access advanced certifications!`,
+        variant: "default",
+        action: (
+          <Button 
+            size="sm" 
+            onClick={() => setLocation('/subscription/plans')}
+            className="bg-purple-600 text-white hover:bg-purple-700"
+          >
+            <Crown className="w-3 h-3 mr-1" />
+            Upgrade
+          </Button>
+        ),
+      });
+      return;
+    }
+    
     if (selectedMode === "quiz" && checked && selectedCategories.length > 0) {
       // For quiz mode, only allow one category at a time
       setSelectedCategories([categoryId]);
@@ -324,34 +350,64 @@ export default function LearningModeSelector() {
             Select Certification{selectedMode === "quiz" ? " (Choose One)" : "s"}
           </Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                className={`border-2 rounded-xl p-3 sm:p-4 lg:p-5 cursor-pointer transition-all duration-300 ${
-                  selectedCategories.includes(category.id)
-                    ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-glow"
-                    : "border-border hover:border-primary/50 hover:shadow-medium bg-card"
-                }`}
-                onClick={() => handleCategoryToggle(category.id, !selectedCategories.includes(category.id))}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <i className={`${category.icon} text-primary text-lg`}></i>
+            {categories.map((category) => {
+              const subscriptionAccess = quizSizes.subscription?.limits?.categoriesAccess || ['basic'];
+              const isAccessible = isCategoryAccessible(category.name, subscriptionAccess);
+              const requiredPlan = !isAccessible ? getRequiredPlan(category.name) : null;
+              
+              return (
+                <div
+                  key={category.id}
+                  className={`relative border-2 rounded-xl p-3 sm:p-4 lg:p-5 cursor-pointer transition-all duration-300 ${
+                    isAccessible
+                      ? selectedCategories.includes(category.id)
+                        ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-glow"
+                        : "border-border hover:border-primary/50 hover:shadow-medium bg-card"
+                      : "border-gray-300 bg-gray-50 opacity-75"
+                  }`}
+                  onClick={() => handleCategoryToggle(category.id, !selectedCategories.includes(category.id), category.name)}
+                >
+                  {!isAccessible && (
+                    <Badge 
+                      className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs px-2 py-1"
+                    >
+                      <Crown className="w-3 h-3 mr-1" />
+                      {requiredPlan} Plan
+                    </Badge>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                        isAccessible ? 'bg-primary/10' : 'bg-gray-200'
+                      }`}>
+                        <i className={`${category.icon} ${isAccessible ? 'text-primary' : 'text-gray-400'} text-lg`}></i>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className={`font-semibold ${isAccessible ? 'text-foreground' : 'text-gray-500'}`}>
+                            {category.name}
+                          </h3>
+                          {!isAccessible && <Lock className="w-4 h-4 text-gray-400" />}
+                        </div>
+                        <p className="text-xs text-foreground/60 mt-0.5">{category.description}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">{category.name}</h3>
-                      <p className="text-xs text-foreground/60 mt-0.5">{category.description}</p>
-                    </div>
+                    {isAccessible ? (
+                      <Checkbox
+                        checked={selectedCategories.includes(category.id)}
+                        onCheckedChange={(checked) => handleCategoryToggle(category.id, checked as boolean, category.name)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      />
+                    ) : (
+                      <div className="p-2">
+                        <Lock className="w-5 h-5 text-gray-400" />
+                      </div>
+                    )}
                   </div>
-                  <Checkbox
-                    checked={selectedCategories.includes(category.id)}
-                    onCheckedChange={(checked) => handleCategoryToggle(category.id, checked as boolean)}
-                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  />
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
