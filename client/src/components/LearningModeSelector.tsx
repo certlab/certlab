@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscriptionQuizSizes } from "@/hooks/useSubscriptionQuizSizes";
 import type { Category, Subcategory } from "@shared/schema";
 
 type LearningMode = "study" | "quiz" | "challenge";
@@ -19,6 +20,7 @@ export default function LearningModeSelector() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
+  const quizSizes = useSubscriptionQuizSizes();
   
   const [selectedMode, setSelectedMode] = useState<LearningMode>("study");
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
@@ -119,6 +121,16 @@ export default function LearningModeSelector() {
       toast({
         title: "Error",
         description: "Please log in to start a learning session.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check quiz limit
+    if (!quizSizes.canCreateQuiz) {
+      toast({
+        title: "Daily Limit Reached",
+        description: `You've reached your daily quiz limit. ${quizSizes.subscription?.plan === 'free' ? 'Upgrade to Pro for unlimited quizzes!' : 'Try again tomorrow.'}`,
         variant: "destructive",
       });
       return;

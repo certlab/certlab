@@ -229,42 +229,71 @@ export default function QuizCreator() {
           </div>
         </div>
 
-        {/* Subscription Status Indicator */}
+        {/* Enhanced Subscription Status Indicator */}
         {quizSizes.remainingQuizzes !== null && (
-          <div className={`mb-6 p-4 rounded-lg border ${
+          <div className={`mb-6 p-4 rounded-lg border-2 ${
             quizSizes.canCreateQuiz 
-              ? 'bg-green-50 border-green-200' 
-              : 'bg-red-50 border-red-200'
+              ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300' 
+              : 'bg-gradient-to-r from-red-50 to-pink-50 border-red-300'
           }`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <i className={`fas ${
-                  quizSizes.canCreateQuiz 
-                    ? 'fa-check-circle text-green-600' 
-                    : 'fa-exclamation-circle text-red-600'
-                }`}></i>
-                <span className={`text-sm font-medium ${
-                  quizSizes.canCreateQuiz 
-                    ? 'text-green-700' 
-                    : 'text-red-700'
-                }`}>
-                  {quizSizes.canCreateQuiz 
-                    ? `${quizSizes.remainingQuizzes} quizzes remaining today`
-                    : 'Daily quiz limit reached'
-                  }
-                </span>
+            <div className="flex flex-col gap-3">
+              {/* Main Status */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <i className={`fas ${
+                    quizSizes.canCreateQuiz 
+                      ? 'fa-check-circle text-green-600' 
+                      : 'fa-times-circle text-red-600'
+                  } text-xl`}></i>
+                  <div>
+                    <span className={`font-semibold ${
+                      quizSizes.canCreateQuiz 
+                        ? 'text-green-700' 
+                        : 'text-red-700'
+                    }`}>
+                      {quizSizes.canCreateQuiz 
+                        ? `${quizSizes.remainingQuizzes} of ${quizSizes.subscription?.limits?.quizzesPerDay || 5} quizzes remaining today`
+                        : 'Daily quiz limit reached'
+                      }
+                    </span>
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      <i className="far fa-clock mr-1"></i>
+                      Resets at midnight ({new Date().toLocaleDateString('en-US', { timeZoneName: 'short' }).split(',')[1]?.trim() || 'local time'})
+                    </p>
+                  </div>
+                </div>
+                {/* Progress Bar for remaining quizzes */}
+                {quizSizes.canCreateQuiz && (
+                  <div className="w-32">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                        style={{ 
+                          width: `${(quizSizes.remainingQuizzes / (quizSizes.subscription?.limits?.quizzesPerDay || 5)) * 100}%` 
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
               </div>
+              
+              {/* Upgrade Prompt for Free Users */}
               {!quizSizes.canCreateQuiz && quizSizes.subscription?.plan === 'free' && (
-                <a
-                  href="/subscription/plans"
-                  className="text-xs text-blue-600 hover:text-blue-700 underline"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setLocation('/subscription/plans');
-                  }}
-                >
-                  Upgrade to Pro
-                </a>
+                <div className="flex items-center justify-between bg-white/70 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <i className="fas fa-crown text-purple-600"></i>
+                    <span className="text-sm font-medium text-gray-700">
+                      Upgrade to Pro for unlimited quizzes
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-purple-600 text-white hover:bg-purple-700"
+                    onClick={() => setLocation('/subscription/plans')}
+                  >
+                    Upgrade Now
+                  </Button>
+                </div>
               )}
             </div>
           </div>
