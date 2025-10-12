@@ -258,7 +258,7 @@ export default function Results() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setLocation(`/review/${quizId}`)}
+                onClick={() => setLocation(`/app/review/${quizId}`)}
                 className="flex-1"
               >
                 <i className="fas fa-eye mr-2"></i>
