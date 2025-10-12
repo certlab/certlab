@@ -452,11 +452,40 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       }
 
       // Get user's current subscription
-      const userData = await storage.getUserById(user.id);
+      let userData = await storage.getUserById(user.id);
+      
+      // Check if user has a canceled subscription without ID - try to sync from Polar
+      if (!userData?.subscriptionId && userData?.subscriptionStatus === 'canceled' && userData?.email) {
+        console.log("Attempting to sync subscription ID from Polar for user:", user.id);
+        
+        try {
+          // Try to find the subscription in Polar
+          const customer = await polarClient.getCustomerByEmail(userData.email);
+          if (customer) {
+            const subscriptions = await polarClient.getSubscriptions(customer.id);
+            const canceledSubscription = subscriptions.find(sub => 
+              sub.status === 'canceled' && 
+              sub.cancel_at_period_end === true
+            );
+            
+            if (canceledSubscription) {
+              // Update the user's subscription ID
+              await storage.updateUser(user.id, {
+                subscriptionId: canceledSubscription.id,
+              });
+              userData.subscriptionId = canceledSubscription.id;
+              console.log("Successfully synced subscription ID from Polar:", canceledSubscription.id);
+            }
+          }
+        } catch (syncError) {
+          console.error("Failed to sync subscription from Polar:", syncError);
+        }
+      }
+      
       if (!userData?.subscriptionId) {
         return res.status(400).json({ 
           error: "No subscription found", 
-          message: "You don't have a subscription to resume" 
+          message: "Unable to find a subscription to resume. Your subscription may have expired or been deleted. Please start a new subscription." 
         });
       }
 
@@ -483,6 +512,22 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       });
     } catch (error: any) {
       console.error("Error resuming subscription:", error);
+      
+      // Check if it's a Polar API error about subscription not existing
+      if (error.message?.includes("not found") || error.message?.includes("does not exist")) {
+        // Clear invalid subscription data
+        await storage.updateUser(user.id, {
+          subscriptionId: null,
+          subscriptionStatus: 'expired',
+          subscriptionPlan: 'free',
+        });
+        
+        return res.status(400).json({ 
+          error: "Subscription not found",
+          message: "Your subscription could not be found in our payment system. It may have expired or been removed. Please start a new subscription." 
+        });
+      }
+      
       res.status(500).json({ 
         error: "Failed to resume subscription",
         message: error.message 
