@@ -69,66 +69,37 @@ export default function SubscriptionPlans() {
       return result;
     },
     onSuccess: (data) => {
-      // Prevent double navigation
       if (data.checkoutUrl && !isNavigatingRef.current) {
         isNavigatingRef.current = true;
         
-        // Open checkout in a popup window
-        const width = 600;
-        const height = 800;
-        const left = (window.screen.width - width) / 2;
-        const top = (window.screen.height - height) / 2;
+        // Open checkout in a new tab - simpler and more reliable than popups
+        const checkoutTab = window.open(data.checkoutUrl, '_blank');
         
-        const checkoutWindow = window.open(
-          data.checkoutUrl,
-          'polarCheckout',
-          `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
-        );
-        
-        // Monitor the popup window
-        if (checkoutWindow) {
-          const checkInterval = setInterval(() => {
-            try {
-              // Check if the window was closed
-              if (checkoutWindow.closed) {
-                clearInterval(checkInterval);
-                isNavigatingRef.current = false;
-                
-                // Check if we're on a success or cancel URL
-                // If not, assume the user closed the window without completing
-                const currentPath = window.location.pathname;
-                if (!currentPath.includes('/subscription/success') && 
-                    !currentPath.includes('/subscription/cancel')) {
-                  // User closed the popup without completing checkout
-                  toast({
-                    title: "Checkout Cancelled",
-                    description: "You can upgrade to a paid plan anytime from the subscription page.",
-                  });
-                }
-              }
-            } catch (e) {
-              // Cross-origin errors are expected when the popup navigates to Polar
-              // We can safely ignore these
-            }
-          }, 500);
-          
-          // Clean up after 10 minutes (max checkout time)
-          setTimeout(() => {
-            clearInterval(checkInterval);
-            isNavigatingRef.current = false;
-          }, 600000);
-        } else {
-          // Popup was blocked, fall back to regular navigation
-          isNavigatingRef.current = false;
+        if (checkoutTab) {
+          // Successfully opened in new tab
           toast({
-            title: "Popup Blocked",
-            description: "Please allow popups for this site to complete checkout, or we'll redirect you directly.",
+            title: "Checkout Opened",
+            description: "Complete your purchase in the new tab. You can close it anytime to return here.",
             duration: 5000,
           });
-          // Wait a moment then redirect normally
+          
+          // Reset flag after a short delay
+          setTimeout(() => {
+            isNavigatingRef.current = false;
+          }, 1000);
+        } else {
+          // New tab was blocked, fall back to same window navigation
+          isNavigatingRef.current = false;
+          toast({
+            title: "Opening Checkout",
+            description: "Redirecting to secure checkout...",
+            duration: 3000,
+          });
+          
+          // Give user time to see the message
           setTimeout(() => {
             window.location.href = data.checkoutUrl;
-          }, 3000);
+          }, 1000);
         }
       }
     },
@@ -138,7 +109,7 @@ export default function SubscriptionPlans() {
       toast({
         title: "Error",
         description: error.message || "Failed to create checkout session",
-        variant: "destructive",
+        variant: "destructive",  
         duration: error.message?.includes("Subscription setup required") ? 8000 : 5000,
       });
     },
