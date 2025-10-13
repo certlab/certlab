@@ -6,7 +6,7 @@ import type { User } from "@shared/schema";
 
 // Request/Response schemas
 const createCheckoutSchema = z.object({
-  plan: z.enum(['pro', 'enterprise']),
+  plan: z.enum(['free', 'pro', 'enterprise']), // Added 'free' to support downgrades
   billingInterval: z.enum(['monthly', 'yearly']).optional().default('monthly'),
 });
 
@@ -218,13 +218,6 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         return res.status(401).json({ error: "User not found" });
       }
 
-      if (!user.email) {
-        return res.status(400).json({ 
-          error: "Email required", 
-          message: "Please set up an email address in your profile to subscribe" 
-        });
-      }
-
       // Validate request body
       const result = createCheckoutSchema.safeParse(req.body);
       if (!result.success) {
@@ -235,6 +228,63 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       }
 
       const { plan, billingInterval } = result.data;
+      
+      // Check if this is a test user in development mode - HANDLE EARLY
+      const isTestUser = process.env.NODE_ENV === 'development' && userId === '999999';
+      
+      if (isTestUser) {
+        const currentPlan = (user.subscriptionBenefits as any)?.plan || 'free';
+        console.log(`Test user (${userId}) changing subscription from ${currentPlan} to ${plan}`);
+        
+        // Handle test user subscription changes directly without Polar
+        const subscriptionBenefits = {
+          plan: plan,
+          quizzesPerDay: plan === 'pro' || plan === 'enterprise' ? null : 5, // null means unlimited
+          categoriesAccess: plan === 'pro' || plan === 'enterprise' ? ['all'] : ['basic'],
+          analyticsAccess: plan === 'pro' || plan === 'enterprise' ? 'advanced' : 'basic',
+          teamMembers: plan === 'enterprise' ? 50 : undefined,
+          lastSyncedAt: new Date().toISOString(),
+          // Clear any cancellation state when changing plans
+          cancelAtPeriodEnd: false,
+          canceledAt: undefined,
+        };
+        
+        // Update user in database
+        await storage.updateUser(userId, {
+          subscriptionBenefits: subscriptionBenefits,
+        });
+        
+        console.log('Test user subscription benefits updated:', subscriptionBenefits);
+        
+        // Get the plan configuration for features list
+        const planConfig = SUBSCRIPTION_PLANS[plan];
+        
+        // Return success response with redirectUrl - matching the expected format
+        return res.json({
+          success: true,
+          message: `Successfully updated to ${plan} plan`,
+          subscription: {
+            plan: plan,
+            status: 'active',
+            features: planConfig.features,
+            limits: {
+              quizzesPerDay: subscriptionBenefits.quizzesPerDay,
+              categoriesAccess: subscriptionBenefits.categoriesAccess,
+              analyticsAccess: subscriptionBenefits.analyticsAccess,
+              teamMembers: subscriptionBenefits.teamMembers,
+            },
+          },
+          redirectUrl: '/subscription/success', // Important: frontend uses this to redirect
+        });
+      }
+      
+      // For non-test users, require email
+      if (!user.email) {
+        return res.status(400).json({ 
+          error: "Email required", 
+          message: "Please set up an email address in your profile to subscribe" 
+        });
+      }
 
       // Check if Polar is configured
       if (!process.env.POLAR_API_KEY) {
@@ -287,34 +337,11 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
             switchAtPeriodEnd: false, // Switch immediately for upgrades
           });
 
-          // Check if this is a test user
-          const isTestUser = process.env.NODE_ENV === 'development' && userId === '999999';
-          
-          if (isTestUser) {
-            console.log('Test user upgrade: Updating subscription benefits to', plan);
-            
-            // For test user, directly update benefits based on the new plan
-            const subscriptionBenefits = {
-              plan: plan,
-              quizzesPerDay: plan === 'pro' || plan === 'enterprise' ? null : 5, // null means unlimited
-              categoriesAccess: plan === 'pro' || plan === 'enterprise' ? ['all'] : ['basic'],
-              analyticsAccess: plan === 'pro' || plan === 'enterprise' ? 'advanced' : 'basic',
-              teamMembers: plan === 'enterprise' ? 50 : undefined,
-              lastSyncedAt: new Date().toISOString(),
-            };
-            
-            await storage.updateUser(userId, {
-              subscriptionBenefits: subscriptionBenefits,
-            });
-            
-            console.log('Test user subscription benefits updated after upgrade:', subscriptionBenefits);
-          } else {
-            // For regular users, sync from Polar
-            const polarData = await polarClient.syncUserSubscriptionBenefits(user.email);
-            await storage.updateUser(userId, {
-              subscriptionBenefits: polarData.benefits,
-            });
-          }
+          // For regular users, sync from Polar
+          const polarData = await polarClient.syncUserSubscriptionBenefits(user.email);
+          await storage.updateUser(userId, {
+            subscriptionBenefits: polarData.benefits,
+          });
 
           // Return success response for immediate upgrade
           return res.json({
@@ -375,29 +402,6 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
           billingInterval: billingInterval || 'month',
         },
       });
-
-      // For test user in development mode, immediately update subscription benefits
-      const isTestUser = process.env.NODE_ENV === 'development' && userId === '999999';
-      if (isTestUser) {
-        console.log('Test user checkout: Immediately updating subscription benefits to', plan);
-        
-        // Map plan to benefits
-        const subscriptionBenefits = {
-          plan: plan,
-          quizzesPerDay: plan === 'pro' || plan === 'enterprise' ? null : 5, // null means unlimited for pro/enterprise
-          categoriesAccess: plan === 'pro' || plan === 'enterprise' ? ['all'] : ['basic'],
-          analyticsAccess: plan === 'pro' || plan === 'enterprise' ? 'advanced' : 'basic',
-          teamMembers: plan === 'enterprise' ? 50 : undefined,
-          lastSyncedAt: new Date().toISOString(),
-        };
-        
-        // Update user in database
-        await storage.updateUser(userId, {
-          subscriptionBenefits: subscriptionBenefits,
-        });
-        
-        console.log('Test user subscription benefits updated in database:', subscriptionBenefits);
-      }
 
       res.json({
         checkoutUrl: session.url,
