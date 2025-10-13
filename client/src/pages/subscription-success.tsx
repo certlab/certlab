@@ -24,22 +24,26 @@ export default function SubscriptionSuccess() {
   const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
 
-  const { data, error, isLoading, refetch } = useQuery<ConfirmationResponse>({
+  const { data, error, isLoading, refetch, failureCount } = useQuery<ConfirmationResponse>({
     queryKey: ["/api/subscription/confirm", sessionId],
     enabled: !!sessionId,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    onError: (err: any) => {
-      setRetryCount(prev => prev + 1);
+  });
+
+  // Handle errors with useEffect instead of deprecated onError
+  useEffect(() => {
+    if (error && failureCount > 0) {
+      setRetryCount(failureCount);
       // Show toast for retries
-      if (retryCount < 3) {
+      if (failureCount < 3) {
         toast({
           title: "Verifying subscription...",
-          description: `Please wait, we're confirming your payment (attempt ${retryCount + 1}/3)`,
+          description: `Please wait, we're confirming your payment (attempt ${failureCount}/3)`,
         });
       }
-    },
-  });
+    }
+  }, [error, failureCount, toast]);
 
   useEffect(() => {
     if (data || (error && retryCount >= 3)) {
@@ -261,13 +265,13 @@ export default function SubscriptionSuccess() {
             </ul>
           </div>
 
-          {data?.plan && (
+          {data && data.plan && (
             <div className="p-4 bg-muted rounded-lg">
               <p className="text-sm font-medium">Your Plan</p>
               <p className="text-2xl font-bold capitalize">{data.plan}</p>
               {data.billingInterval && (
                 <p className="text-sm text-muted-foreground">
-                  Billed {data.billingInterval}
+                  Billed {data.billingInterval === 'month' ? 'monthly' : data.billingInterval === 'year' ? 'yearly' : data.billingInterval}
                 </p>
               )}
             </div>
