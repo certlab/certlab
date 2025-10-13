@@ -3,7 +3,7 @@ import { z } from "zod";
 import { fromError } from "zod-validation-error";
 import { getPolarClient, SUBSCRIPTION_PLANS, clearDevModeCache } from "./polar";
 import type { User } from "@shared/schema";
-import { normalizePlanName, getPlanFeatures, isPaidPlan, type SubscriptionPlan } from "../shared/subscriptionUtils";
+import { normalizePlanName, getPlanFeatures, isPaidPlan, validateSubscriptionState, mergeSubscriptionState, type SubscriptionPlan } from "../shared/subscriptionUtils";
 
 // Request/Response schemas
 const createCheckoutSchema = z.object({
@@ -144,17 +144,46 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         status = 'canceling';
       }
 
-      // Get the plan configuration for features list
-      const planName = benefits.plan || 'free';
+      // Prepare subscription state for validation
+      const subscriptionState = {
+        plan: benefits.plan || 'free',
+        status,
+        expiresAt: expiresAt || (cancelAtPeriodEnd ? (benefits as any).currentPeriodEnd : undefined),
+        canceledAt,
+        subscriptionId: (benefits as any).subscriptionId,
+        trialEndsAt: (benefits as any).trialEndsAt,
+      };
+
+      // Validate and normalize subscription state
+      const validation = validateSubscriptionState(subscriptionState);
+      
+      // Apply corrections if any
+      if (validation.corrections) {
+        Object.assign(subscriptionState, validation.corrections);
+        
+        // Log warnings in development
+        if (process.env.NODE_ENV === 'development' && validation.warnings.length > 0) {
+          console.log('Subscription state validation warnings:', validation.warnings);
+        }
+      }
+
+      // Handle validation errors
+      if (!validation.isValid) {
+        console.error('Subscription state validation errors:', validation.errors);
+        // Continue with corrected state but log the issues
+      }
+
+      // Use normalized plan name
+      const planName = validation.normalizedPlan;
       const plan = SUBSCRIPTION_PLANS[planName as keyof typeof SUBSCRIPTION_PLANS] || SUBSCRIPTION_PLANS.free;
       
       if (isTestUser) {
         console.log('Test user subscription response:', {
           plan: planName,
           isSubscribed,
-          status,
+          status: subscriptionState.status,
           cancelAtPeriodEnd,
-          canceledAt,
+          canceledAt: subscriptionState.canceledAt,
           limits: {
             quizzesPerDay: benefits.quizzesPerDay,
             categoriesAccess: benefits.categoriesAccess,
@@ -167,10 +196,10 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         isConfigured: !!process.env.POLAR_API_KEY,
         isSubscribed,
         plan: planName,
-        status,
+        status: subscriptionState.status,
         cancelAtPeriodEnd,
-        canceledAt,
-        expiresAt: expiresAt || (cancelAtPeriodEnd ? (benefits as any).currentPeriodEnd : undefined),
+        canceledAt: subscriptionState.canceledAt,
+        expiresAt: subscriptionState.expiresAt,
         features: plan.features,
         limits: {
           quizzesPerDay: benefits.quizzesPerDay,
@@ -944,13 +973,16 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
           });
         }
         
-        // Immediate switch - update benefits now
+        // Immediate switch - update benefits now using consistent plan features
+        const normalizedPlan = normalizePlanName(newPlan);
+        const planFeatures = getPlanFeatures(normalizedPlan);
+        
         const subscriptionBenefits = {
-          plan: newPlan,
-          quizzesPerDay: newPlan === 'pro' || newPlan === 'enterprise' ? null : 5, // null means unlimited
-          categoriesAccess: newPlan === 'pro' || newPlan === 'enterprise' ? ['all'] : ['basic'],
-          analyticsAccess: newPlan === 'pro' || newPlan === 'enterprise' ? 'advanced' : 'basic',
-          teamMembers: newPlan === 'enterprise' ? 50 : undefined,
+          plan: normalizedPlan,
+          quizzesPerDay: planFeatures.quizzesPerDay === -1 ? null : planFeatures.quizzesPerDay, // null means unlimited
+          categoriesAccess: planFeatures.categoriesAccess,
+          analyticsAccess: planFeatures.analyticsAccess,
+          teamMembers: planFeatures.teamMembers > 1 ? planFeatures.teamMembers : undefined,
           lastSyncedAt: new Date().toISOString(),
         };
         
