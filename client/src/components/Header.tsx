@@ -52,6 +52,9 @@ export default function Header() {
   const { data: subscription } = useQuery<any>({
     queryKey: ["/api/subscription/status"],
     enabled: !!currentUser,
+    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    refetchOnWindowFocus: false, // Avoid unnecessary refetches
   });
 
   const handleSignOut = async () => {
@@ -283,11 +286,8 @@ export default function Header() {
             )}
           </nav>
 
-          {/* Mobile Navigation & User Profile */}
+          {/* User Profile & Theme Toggle */}
           <div className="flex items-center space-x-2">
-            {/* Mobile Navigation */}
-            <MobileNavigationEnhanced />
-            
             {/* Desktop Theme Toggle */}
             <div className="hidden md:block">
               <ThemeToggle />
