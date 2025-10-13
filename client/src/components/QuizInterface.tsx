@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useReducer, useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,29 +26,126 @@ interface QuizInterfaceProps {
   quizId: number;
 }
 
+// Define quiz state shape
+interface QuizState {
+  currentQuestionIndex: number;
+  answers: Record<number, number>;
+  flaggedQuestions: Set<number>;
+  selectedAnswer: number | undefined;
+  showFeedback: boolean;
+  isCorrect: boolean;
+  isReviewingFlagged: boolean;
+  currentFlaggedIndex: number;
+  flaggedQuestionIndices: number[];
+}
+
+// Define action types
+type QuizAction =
+  | { type: 'SELECT_ANSWER'; payload: { questionId: number; answer: number; isCorrect: boolean } }
+  | { type: 'CHANGE_QUESTION'; payload: { index: number; savedAnswer?: number } }
+  | { type: 'TOGGLE_FLAG'; payload: { questionId: number } }
+  | { type: 'START_FLAGGED_REVIEW'; payload: { indices: number[] } }
+  | { type: 'MOVE_TO_FLAGGED'; payload: { flaggedIndex: number; questionIndex: number } }
+  | { type: 'END_FLAGGED_REVIEW' }
+  | { type: 'RESET_FEEDBACK' };
+
+// Reducer function to handle state updates
+function quizReducer(state: QuizState, action: QuizAction): QuizState {
+  switch (action.type) {
+    case 'SELECT_ANSWER':
+      return {
+        ...state,
+        selectedAnswer: action.payload.answer,
+        answers: {
+          ...state.answers,
+          [action.payload.questionId]: action.payload.answer
+        },
+        showFeedback: true,
+        isCorrect: action.payload.isCorrect
+      };
+      
+    case 'CHANGE_QUESTION':
+      return {
+        ...state,
+        currentQuestionIndex: action.payload.index,
+        selectedAnswer: action.payload.savedAnswer,
+        showFeedback: false,
+        isCorrect: false
+      };
+      
+    case 'TOGGLE_FLAG':
+      const newFlagged = new Set(state.flaggedQuestions);
+      if (newFlagged.has(action.payload.questionId)) {
+        newFlagged.delete(action.payload.questionId);
+      } else {
+        newFlagged.add(action.payload.questionId);
+      }
+      return {
+        ...state,
+        flaggedQuestions: newFlagged
+      };
+      
+    case 'START_FLAGGED_REVIEW':
+      return {
+        ...state,
+        isReviewingFlagged: true,
+        currentFlaggedIndex: 0,
+        flaggedQuestionIndices: action.payload.indices
+      };
+      
+    case 'MOVE_TO_FLAGGED':
+      return {
+        ...state,
+        currentFlaggedIndex: action.payload.flaggedIndex,
+        currentQuestionIndex: action.payload.questionIndex
+      };
+      
+    case 'END_FLAGGED_REVIEW':
+      return {
+        ...state,
+        isReviewingFlagged: false,
+        currentFlaggedIndex: 0,
+        flaggedQuestionIndices: []
+      };
+      
+    case 'RESET_FEEDBACK':
+      return {
+        ...state,
+        showFeedback: false,
+        isCorrect: false
+      };
+      
+    default:
+      return state;
+  }
+}
+
 export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set());
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | undefined>();
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
+  // Initialize quiz state with useReducer for batched updates
+  const [state, dispatch] = useReducer(quizReducer, {
+    currentQuestionIndex: 0,
+    answers: {},
+    flaggedQuestions: new Set(),
+    selectedAnswer: undefined,
+    showFeedback: false,
+    isCorrect: false,
+    isReviewingFlagged: false,
+    currentFlaggedIndex: 0,
+    flaggedQuestionIndices: []
+  });
   
-  // Flagged questions review state
+  // Separate state for time and dialogs (don't need batching)
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [showFlaggedQuestionsDialog, setShowFlaggedQuestionsDialog] = useState(false);
-  const [isReviewingFlagged, setIsReviewingFlagged] = useState(false);
-  const [flaggedQuestionIndices, setFlaggedQuestionIndices] = useState<number[]>([]);
-  const [currentFlaggedIndex, setCurrentFlaggedIndex] = useState(0);
 
   const { data: quiz } = useQuery<Quiz>({
     queryKey: ['/api/quiz', quizId],
   });
 
-  const { data: questions = [], isLoading: isLoadingQuestions, error: questionsError } = useQuery<Question[]>({
+  const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<Question[]>({
     queryKey: ['/api/quiz', quizId, 'questions'],
     enabled: !!quiz,
   });
@@ -99,52 +196,59 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
     return () => clearInterval(timer);
   }, [timeRemaining]);
 
-  // Load saved answer when question changes and reset feedback
+  // Load saved answer when question changes
   useEffect(() => {
-    const currentQuestion = questions[currentQuestionIndex];
+    const currentQuestion = questions[state.currentQuestionIndex];
     if (currentQuestion) {
-      setSelectedAnswer(answers[currentQuestion.id]);
-      setShowFeedback(false);
-      setIsCorrect(false);
+      const savedAnswer = state.answers[currentQuestion.id];
+      dispatch({ 
+        type: 'CHANGE_QUESTION', 
+        payload: { 
+          index: state.currentQuestionIndex,
+          savedAnswer 
+        } 
+      });
     }
-  }, [currentQuestionIndex, questions, answers]);
+  }, [state.currentQuestionIndex, questions]);
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
+  const currentQuestion = questions[state.currentQuestionIndex];
+  const progress = questions.length > 0 ? ((state.currentQuestionIndex + 1) / questions.length) * 100 : 0;
 
   const handleAnswerChange = (value: string) => {
     const answerValue = parseInt(value);
-    setSelectedAnswer(answerValue);
     
     if (currentQuestion) {
-      const newAnswers = {
-        ...answers,
-        [currentQuestion.id]: answerValue
-      };
-      setAnswers(newAnswers);
-      
-      console.log('Answer selected:', { questionId: currentQuestion.id, answer: answerValue });
-      console.log('Updated answers state:', newAnswers);
-
-      // Show immediate feedback
       const correct = answerValue === currentQuestion.correctAnswer;
-      setIsCorrect(correct);
-      setShowFeedback(true);
+      
+      // Batch all state updates in a single dispatch
+      dispatch({
+        type: 'SELECT_ANSWER',
+        payload: {
+          questionId: currentQuestion.id,
+          answer: answerValue,
+          isCorrect: correct
+        }
+      });
     }
   };
 
   const handleNextQuestion = () => {
-    if (isReviewingFlagged) {
+    if (state.isReviewingFlagged) {
       // In review mode, navigate only through flagged questions
-      if (currentFlaggedIndex < flaggedQuestionIndices.length - 1) {
-        const nextFlaggedIndex = currentFlaggedIndex + 1;
-        setCurrentFlaggedIndex(nextFlaggedIndex);
-        setCurrentQuestionIndex(flaggedQuestionIndices[nextFlaggedIndex]);
+      if (state.currentFlaggedIndex < state.flaggedQuestionIndices.length - 1) {
+        const nextFlaggedIndex = state.currentFlaggedIndex + 1;
+        dispatch({
+          type: 'MOVE_TO_FLAGGED',
+          payload: {
+            flaggedIndex: nextFlaggedIndex,
+            questionIndex: state.flaggedQuestionIndices[nextFlaggedIndex]
+          }
+        });
       } else {
         // Finished reviewing all flagged questions, auto-submit
-        setIsReviewingFlagged(false);
+        dispatch({ type: 'END_FLAGGED_REVIEW' });
         const quizAnswers = questions.map(question => {
-          const answer = answers[question.id];
+          const answer = state.answers[question.id];
           return {
             questionId: question.id,
             answer: answer !== undefined ? answer : 0,
@@ -154,8 +258,17 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
       }
     } else {
       // Normal mode navigation
-      if (currentQuestionIndex < questions.length - 1) {
-        setCurrentQuestionIndex(prev => prev + 1);
+      if (state.currentQuestionIndex < questions.length - 1) {
+        const nextIndex = state.currentQuestionIndex + 1;
+        const nextQuestion = questions[nextIndex];
+        const savedAnswer = nextQuestion ? state.answers[nextQuestion.id] : undefined;
+        dispatch({
+          type: 'CHANGE_QUESTION',
+          payload: {
+            index: nextIndex,
+            savedAnswer
+          }
+        });
       } else {
         handleSubmitQuiz();
       }
@@ -163,50 +276,58 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   };
 
   const handlePreviousQuestion = () => {
-    if (isReviewingFlagged) {
+    if (state.isReviewingFlagged) {
       // In review mode, navigate only through flagged questions
-      if (currentFlaggedIndex > 0) {
-        const prevFlaggedIndex = currentFlaggedIndex - 1;
-        setCurrentFlaggedIndex(prevFlaggedIndex);
-        setCurrentQuestionIndex(flaggedQuestionIndices[prevFlaggedIndex]);
+      if (state.currentFlaggedIndex > 0) {
+        const prevFlaggedIndex = state.currentFlaggedIndex - 1;
+        dispatch({
+          type: 'MOVE_TO_FLAGGED',
+          payload: {
+            flaggedIndex: prevFlaggedIndex,
+            questionIndex: state.flaggedQuestionIndices[prevFlaggedIndex]
+          }
+        });
       }
     } else {
       // Normal mode navigation
-      if (currentQuestionIndex > 0) {
-        setCurrentQuestionIndex(prev => prev - 1);
+      if (state.currentQuestionIndex > 0) {
+        const prevIndex = state.currentQuestionIndex - 1;
+        const prevQuestion = questions[prevIndex];
+        const savedAnswer = prevQuestion ? state.answers[prevQuestion.id] : undefined;
+        dispatch({
+          type: 'CHANGE_QUESTION',
+          payload: {
+            index: prevIndex,
+            savedAnswer
+          }
+        });
       }
     }
   };
 
   const handleFlagQuestion = () => {
     if (currentQuestion) {
-      setFlaggedQuestions(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(currentQuestion.id)) {
-          newSet.delete(currentQuestion.id);
-        } else {
-          newSet.add(currentQuestion.id);
-        }
-        return newSet;
+      dispatch({
+        type: 'TOGGLE_FLAG',
+        payload: { questionId: currentQuestion.id }
       });
     }
   };
 
   const handleSubmitQuiz = () => {
     // Check if there are flagged questions
-    if (flaggedQuestions.size > 0 && !isReviewingFlagged) {
+    if (state.flaggedQuestions.size > 0 && !state.isReviewingFlagged) {
       // Find indices of flagged questions
       const flaggedIndices = questions
         .map((q, index) => ({ question: q, index }))
-        .filter(item => flaggedQuestions.has(item.question.id))
+        .filter(item => state.flaggedQuestions.has(item.question.id))
         .map(item => item.index);
       
-      setFlaggedQuestionIndices(flaggedIndices);
       setShowFlaggedQuestionsDialog(true);
     } else {
       // Submit the quiz directly
       const quizAnswers = questions.map(question => {
-        const answer = answers[question.id];
+        const answer = state.answers[question.id];
         return {
           questionId: question.id,
           answer: answer !== undefined ? answer : 0,
@@ -219,11 +340,30 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
 
   const handleReviewFlaggedQuestions = () => {
     setShowFlaggedQuestionsDialog(false);
-    setIsReviewingFlagged(true);
-    setCurrentFlaggedIndex(0);
-    // Navigate to the first flagged question
-    if (flaggedQuestionIndices.length > 0) {
-      setCurrentQuestionIndex(flaggedQuestionIndices[0]);
+    
+    // Find indices of flagged questions
+    const flaggedIndices = questions
+      .map((q, index) => ({ question: q, index }))
+      .filter(item => state.flaggedQuestions.has(item.question.id))
+      .map(item => item.index);
+    
+    if (flaggedIndices.length > 0) {
+      dispatch({
+        type: 'START_FLAGGED_REVIEW',
+        payload: { indices: flaggedIndices }
+      });
+      
+      // Navigate to the first flagged question
+      const firstIndex = flaggedIndices[0];
+      const firstQuestion = questions[firstIndex];
+      const savedAnswer = firstQuestion ? state.answers[firstQuestion.id] : undefined;
+      dispatch({
+        type: 'CHANGE_QUESTION',
+        payload: {
+          index: firstIndex,
+          savedAnswer
+        }
+      });
     }
   };
 
@@ -231,7 +371,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
     setShowFlaggedQuestionsDialog(false);
     // Submit the quiz directly
     const quizAnswers = questions.map(question => {
-      const answer = answers[question.id];
+      const answer = state.answers[question.id];
       return {
         questionId: question.id,
         answer: answer !== undefined ? answer : 0,
@@ -242,16 +382,24 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   };
 
   const navigateToQuestion = (index: number) => {
-    setCurrentQuestionIndex(index);
+    const targetQuestion = questions[index];
+    const savedAnswer = targetQuestion ? state.answers[targetQuestion.id] : undefined;
+    dispatch({
+      type: 'CHANGE_QUESTION',
+      payload: {
+        index,
+        savedAnswer
+      }
+    });
   };
 
   const getQuestionStatus = (questionIndex: number) => {
     const question = questions[questionIndex];
     if (!question) return 'unanswered';
     
-    if (questionIndex === currentQuestionIndex) return 'current';
-    if (flaggedQuestions.has(question.id)) return 'flagged';
-    if (answers[question.id] !== undefined) return 'answered';
+    if (questionIndex === state.currentQuestionIndex) return 'current';
+    if (state.flaggedQuestions.has(question.id)) return 'flagged';
+    if (state.answers[question.id] !== undefined) return 'answered';
     return 'unanswered';
   };
 
@@ -337,21 +485,21 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
           {/* Progress Bar */}
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs sm:text-sm text-muted-foreground">
-              {isReviewingFlagged ? (
+              {state.isReviewingFlagged ? (
                 <>
                   <Badge variant="outline" className="mr-2 bg-accent/10 text-accent border-accent">
                     <i className="fas fa-flag mr-1"></i>
                     Reviewing Flagged
                   </Badge>
-                  Question {currentFlaggedIndex + 1} of {flaggedQuestionIndices.length}
+                  Question {state.currentFlaggedIndex + 1} of {state.flaggedQuestionIndices.length}
                 </>
               ) : (
-                `Question ${currentQuestionIndex + 1} of ${questions.length}`
+                `Question ${state.currentQuestionIndex + 1} of ${questions.length}`
               )}
             </span>
             <span className="text-xs sm:text-sm text-muted-foreground">{Math.round(progress)}%</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-2 quiz-progress-smooth" />
         </div>
 
         {/* Question Content */}
@@ -361,66 +509,61 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
               {currentQuestion.text}
             </h3>
             
-            {/* Answer Options */}
+            {/* Answer Options - Remove key prop to prevent re-mounting */}
             <RadioGroup
-              key={currentQuestion.id} // Force re-render when question changes
-              value={selectedAnswer !== undefined ? selectedAnswer.toString() : ""}
+              value={state.selectedAnswer !== undefined ? state.selectedAnswer.toString() : ""}
               onValueChange={handleAnswerChange}
               className="space-y-3"
             >
               {(currentQuestion.options as any[]).map((option, index) => {
                 // Use option.id if available, otherwise use index
                 const optionId = option.id !== undefined ? option.id : index;
-                const isSelectedAnswer = selectedAnswer === optionId;
+                const isSelectedAnswer = state.selectedAnswer === optionId;
                 const isCorrectAnswer = optionId === currentQuestion.correctAnswer;
                 
-
+                // Simplified className logic with smoother transitions
+                let optionClassName = "quiz-option-base";
                 
-                let optionClassName = "flex items-start space-x-3 p-3 sm:p-4 border-2 rounded-lg transition-all";
-                
-                if (showFeedback && isSelectedAnswer) {
-                  if (isCorrect) {
-                    optionClassName += " border-success bg-success/10";
-                  } else {
-                    optionClassName += " border-destructive bg-destructive/10";
-                  }
-                } else if (showFeedback && isCorrectAnswer && !isCorrect) {
-                  optionClassName += " border-success/50 bg-success/5";
-                } else if (isSelectedAnswer && !showFeedback) {
-                  optionClassName += " border-primary bg-primary/10";
+                if (state.showFeedback && isSelectedAnswer) {
+                  optionClassName += isCorrect ? " quiz-option-correct" : " quiz-option-incorrect";
+                } else if (state.showFeedback && isCorrectAnswer && !state.isCorrect) {
+                  optionClassName += " quiz-option-correct-reveal";
+                } else if (isSelectedAnswer && !state.showFeedback) {
+                  optionClassName += " quiz-option-selected";
                 } else {
-                  optionClassName += " border-border hover:border-primary/50 hover:bg-primary/5";
+                  optionClassName += " quiz-option-default";
                 }
 
                 return (
                   <div 
-                    key={`${currentQuestion.id}-option-${optionId}`} 
-                    className={`${optionClassName} cursor-pointer`}
-                    onClick={() => !showFeedback && handleAnswerChange(optionId.toString())}
+                    key={`option-${optionId}`}
+                    className={optionClassName}
+                    onClick={() => !state.showFeedback && handleAnswerChange(optionId.toString())}
                   >
                     <RadioGroupItem 
                       value={optionId.toString()} 
                       id={`question-${currentQuestion.id}-option-${optionId}`}
+                      className="quiz-radio-smooth"
                     />
                     <Label 
                       htmlFor={`question-${currentQuestion.id}-option-${optionId}`} 
                       className="text-foreground cursor-pointer flex-1 text-sm sm:text-base"
                     >
                       {option.text}
-                      {showFeedback && isSelectedAnswer && (
-                        <div className="mt-2 flex items-center space-x-2">
-                          {isCorrect ? (
+                      {state.showFeedback && isSelectedAnswer && (
+                        <div className="mt-2 flex items-center space-x-2 quiz-feedback-fade-in">
+                          {state.isCorrect ? (
                             <i className="fas fa-check-circle text-success"></i>
                           ) : (
                             <i className="fas fa-times-circle text-destructive"></i>
                           )}
-                          <span className={`text-xs sm:text-sm font-medium ${isCorrect ? 'text-success' : 'text-destructive'}`}>
-                            {isCorrect ? 'Correct!' : 'Incorrect'}
+                          <span className={`text-xs sm:text-sm font-medium ${state.isCorrect ? 'text-success' : 'text-destructive'}`}>
+                            {state.isCorrect ? 'Correct!' : 'Incorrect'}
                           </span>
                         </div>
                       )}
-                      {showFeedback && isCorrectAnswer && !isCorrect && (
-                        <div className="mt-2 flex items-center space-x-2">
+                      {state.showFeedback && isCorrectAnswer && !state.isCorrect && (
+                        <div className="mt-2 flex items-center space-x-2 quiz-feedback-fade-in">
                           <i className="fas fa-check-circle text-success"></i>
                           <span className="text-xs sm:text-sm font-medium text-success">Correct Answer</span>
                         </div>
@@ -432,30 +575,30 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
             </RadioGroup>
 
             {/* Immediate Feedback Explanation */}
-            {showFeedback && currentQuestion.explanation && (
-              <div className={`mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg border-2 ${
-                isCorrect 
+            {state.showFeedback && currentQuestion.explanation && (
+              <div className={`mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg border-2 quiz-explanation-fade-in ${
+                state.isCorrect 
                   ? 'border-success/20 bg-success/5' 
                   : 'border-destructive/20 bg-destructive/5'
               }`}>
                 <div className="flex items-start space-x-3">
                   <div className={`flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center ${
-                    isCorrect ? 'bg-success/20' : 'bg-destructive/20'
+                    state.isCorrect ? 'bg-success/20' : 'bg-destructive/20'
                   }`}>
                     <i className={`fas text-xs sm:text-sm ${
-                      isCorrect 
+                      state.isCorrect 
                         ? 'fa-lightbulb text-success' 
                         : 'fa-info-circle text-destructive'
                     }`}></i>
                   </div>
                   <div className="flex-1">
                     <h5 className={`font-medium mb-1 sm:mb-2 text-sm sm:text-base ${
-                      isCorrect ? 'text-success' : 'text-destructive'
+                      state.isCorrect ? 'text-success' : 'text-destructive'
                     }`}>
-                      {isCorrect ? 'Why this is correct:' : 'Why this is incorrect:'}
+                      {state.isCorrect ? 'Why this is correct:' : 'Why this is incorrect:'}
                     </h5>
                     <p className={`text-xs sm:text-sm leading-relaxed ${
-                      isCorrect ? 'text-success/80' : 'text-destructive/80'
+                      state.isCorrect ? 'text-success/80' : 'text-destructive/80'
                     }`}>
                       {currentQuestion.explanation}
                     </p>
@@ -471,7 +614,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
               <Button
                 variant="outline"
                 onClick={handlePreviousQuestion}
-                disabled={isReviewingFlagged ? currentFlaggedIndex === 0 : currentQuestionIndex === 0}
+                disabled={state.isReviewingFlagged ? state.currentFlaggedIndex === 0 : state.currentQuestionIndex === 0}
                 size="sm"
                 className="flex-1 sm:flex-initial"
               >
@@ -484,18 +627,18 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                 variant="outline"
                 onClick={handleFlagQuestion}
                 size="sm"
-                className={`flex-1 sm:flex-initial ${
-                  flaggedQuestions.has(currentQuestion.id) 
+                className={`flex-1 sm:flex-initial quiz-flag-button ${
+                  state.flaggedQuestions.has(currentQuestion.id) 
                     ? 'bg-accent text-white hover:bg-accent/90' 
                     : ''
                 }`}
               >
                 <i className="fas fa-flag mr-1 sm:mr-2"></i>
                 <span className="hidden sm:inline">
-                  {flaggedQuestions.has(currentQuestion.id) ? 'Unflag' : 'Flag for Review'}
+                  {state.flaggedQuestions.has(currentQuestion.id) ? 'Unflag' : 'Flag for Review'}
                 </span>
                 <span className="sm:hidden">
-                  {flaggedQuestions.has(currentQuestion.id) ? 'Unflag' : 'Flag'}
+                  {state.flaggedQuestions.has(currentQuestion.id) ? 'Unflag' : 'Flag'}
                 </span>
               </Button>
             </div>
@@ -506,8 +649,8 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
               size="sm"
               className="w-full sm:w-auto bg-primary text-white hover:bg-primary/90"
             >
-              {isReviewingFlagged ? (
-                currentFlaggedIndex === flaggedQuestionIndices.length - 1 ? (
+              {state.isReviewingFlagged ? (
+                state.currentFlaggedIndex === state.flaggedQuestionIndices.length - 1 ? (
                   submitQuizMutation.isPending ? 'Submitting...' : 'Finish Review & Submit'
                 ) : (
                   <>
@@ -517,7 +660,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                   </>
                 )
               ) : (
-                currentQuestionIndex === questions.length - 1 ? (
+                state.currentQuestionIndex === questions.length - 1 ? (
                   submitQuizMutation.isPending ? 'Submitting...' : 'Submit Quiz'
                 ) : (
                   <>
@@ -538,20 +681,20 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
         <div className="grid grid-cols-8 sm:grid-cols-10 gap-1.5 sm:gap-2">
           {questions.map((_, index) => {
             const status = getQuestionStatus(index);
-            let className = "w-full aspect-square rounded text-xs sm:text-sm font-medium transition-colors flex items-center justify-center ";
+            let className = "quiz-nav-button ";
             
             switch (status) {
               case 'current':
-                className += "bg-primary text-white";
+                className += "quiz-nav-current";
                 break;
               case 'answered':
-                className += "bg-secondary text-white";
+                className += "quiz-nav-answered";
                 break;
               case 'flagged':
-                className += "bg-accent text-white";
+                className += "quiz-nav-flagged";
                 break;
               default:
-                className += "bg-muted text-muted-foreground hover:bg-muted/80";
+                className += "quiz-nav-unanswered";
             }
             
             return (
@@ -567,19 +710,19 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
         </div>
         <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-3 sm:gap-x-6 mt-3 sm:mt-4 text-[10px] sm:text-xs">
           <div className="flex items-center space-x-1.5 sm:space-x-2">
-            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-primary rounded"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-primary rounded quiz-legend-dot"></div>
             <span className="text-muted-foreground">Current</span>
           </div>
           <div className="flex items-center space-x-1.5 sm:space-x-2">
-            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-secondary rounded"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-secondary rounded quiz-legend-dot"></div>
             <span className="text-muted-foreground">Answered</span>
           </div>
           <div className="flex items-center space-x-1.5 sm:space-x-2">
-            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-accent rounded"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-accent rounded quiz-legend-dot"></div>
             <span className="text-muted-foreground">Flagged</span>
           </div>
           <div className="flex items-center space-x-1.5 sm:space-x-2">
-            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-muted rounded"></div>
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-muted rounded quiz-legend-dot"></div>
             <span className="text-muted-foreground">Not Answered</span>
           </div>
         </div>
@@ -594,8 +737,8 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
               Review Flagged Questions?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              You have {flaggedQuestions.size} flagged question{flaggedQuestions.size !== 1 ? 's' : ''} for review.
-              Would you like to review {flaggedQuestions.size === 1 ? 'it' : 'them'} before submitting the quiz?
+              You have {state.flaggedQuestions.size} flagged question{state.flaggedQuestions.size !== 1 ? 's' : ''} for review.
+              Would you like to review {state.flaggedQuestions.size === 1 ? 'it' : 'them'} before submitting the quiz?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
