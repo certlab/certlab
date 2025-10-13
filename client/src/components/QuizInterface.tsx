@@ -128,7 +128,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   const [state, dispatch] = useReducer(quizReducer, {
     currentQuestionIndex: 0,
     answers: {},
-    flaggedQuestions: new Set(),
+    flaggedQuestions: new Set<number>(),
     selectedAnswer: undefined,
     showFeedback: false,
     isCorrect: false,
@@ -525,7 +525,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                 let optionClassName = "quiz-option-base";
                 
                 if (state.showFeedback && isSelectedAnswer) {
-                  optionClassName += isCorrect ? " quiz-option-correct" : " quiz-option-incorrect";
+                  optionClassName += state.isCorrect ? " quiz-option-correct" : " quiz-option-incorrect";
                 } else if (state.showFeedback && isCorrectAnswer && !state.isCorrect) {
                   optionClassName += " quiz-option-correct-reveal";
                 } else if (isSelectedAnswer && !state.showFeedback) {
