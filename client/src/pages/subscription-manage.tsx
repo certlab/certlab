@@ -82,7 +82,10 @@ export default function SubscriptionManagePage() {
         title,
         description,
       });
+      // Invalidate both subscription status and user queries for immediate UI update
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setShowCancelDialog(false);
       setSelectedCancelOption(null);
     },
@@ -112,7 +115,10 @@ export default function SubscriptionManagePage() {
         title: "Subscription Resumed",
         description: "Your subscription has been reactivated successfully.",
       });
+      // Invalidate both subscription status and user queries for immediate UI update
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
     onError: (error: any) => {
       // Check if it's a "subscription not found" error
@@ -129,8 +135,10 @@ export default function SubscriptionManagePage() {
             </Link>
           ),
         });
-        // Refresh subscription status to clear invalid state
+        // Refresh subscription status and user data to clear invalid state
         queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       } else {
         toast({
           title: "Error",
@@ -163,7 +171,10 @@ export default function SubscriptionManagePage() {
         title: "Plan Changed Successfully",
         description: data.message,
       });
+      // Invalidate both subscription status and user queries for immediate UI update
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setShowSwitchDialog(false);
       setSwitchPlan(null);
     },

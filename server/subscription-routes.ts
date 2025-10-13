@@ -296,10 +296,19 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
 
       // Get the plan configuration
       const planConfig = SUBSCRIPTION_PLANS[plan];
-      if (!planConfig || !planConfig.productId) {
+      // Free plan doesn't have productId - that's ok, we'll handle it below
+      if (!planConfig) {
         return res.status(400).json({ 
           error: "Invalid plan", 
           message: "The selected plan is not available" 
+        });
+      }
+      
+      // Check if plan has productId (free plan doesn't)
+      if (!('productId' in planConfig) || !planConfig.productId) {
+        return res.status(400).json({ 
+          error: "Invalid plan", 
+          message: "The selected plan requires a valid product ID configuration" 
         });
       }
 
@@ -330,6 +339,14 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         console.log(`User ${user.email} has existing subscription, switching plan from current to ${plan}`);
         
         try {
+          // Check if planConfig has productId before using it
+          if (!('productId' in planConfig) || !planConfig.productId) {
+            return res.status(400).json({ 
+              error: "Invalid plan configuration",
+              message: "Cannot switch to a plan without a product ID"
+            });
+          }
+          
           // Use switchSubscriptionPlan for immediate upgrade
           const updatedSubscription = await polarClient.switchSubscriptionPlan({
             subscriptionId: activeSubscription.id,
@@ -390,6 +407,14 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       
       // Ensure baseUrl doesn't have trailing slash
       baseUrl = baseUrl.replace(/\/$/, '');
+      
+      // Check productId again before creating session (defensive programming)
+      if (!('productId' in planConfig) || !planConfig.productId) {
+        return res.status(400).json({ 
+          error: "Invalid plan configuration",
+          message: "Cannot create checkout session without a product ID"
+        });
+      }
       
       const session = await polarClient.createCheckoutSession({
         productId: planConfig.productId,
@@ -986,13 +1011,14 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       }
 
       // Get the product ID for the new plan
-      const newProductId = SUBSCRIPTION_PLANS[newPlan].productId;
-      if (!newProductId) {
+      const newPlanConfig = SUBSCRIPTION_PLANS[newPlan];
+      if (!newPlanConfig || !('productId' in newPlanConfig) || !newPlanConfig.productId) {
         return res.status(400).json({ 
           error: "Invalid plan",
           message: `The ${newPlan} plan is not properly configured. Please contact support.`
         });
       }
+      const newProductId = newPlanConfig.productId;
 
       // Check if switching to the same plan
       if (currentSubscription.productId === newProductId) {

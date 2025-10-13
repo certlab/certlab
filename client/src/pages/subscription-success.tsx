@@ -29,9 +29,10 @@ export default function SubscriptionSuccess() {
   useEffect(() => {
     if (data || error) {
       setProcessing(false);
-      // Invalidate subscription status to refresh it
+      // Invalidate subscription status and user queries to refresh all related data
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     }
   }, [data, error]);
 
