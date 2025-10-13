@@ -238,7 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             error: "Category access restricted",
             message: `The following categories require a Pro subscription: ${restrictedCategories.join(', ')}. Upgrade to access advanced certifications!`,
             restrictedCategories: restrictedCategories,
-            upgradeUrl: "/subscription/plans",
+            upgradeUrl: "/app/subscription-plans",
             currentPlan: plan,
           });
         }
@@ -248,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ 
             error: "Daily quiz limit reached",
             message: `You have reached your daily limit of ${quizLimit} quizzes. Upgrade to Pro for unlimited quizzes!`,
-            upgradeUrl: "/subscription/plans",
+            upgradeUrl: "/app/subscription-plans",
             currentCount: user.dailyQuizCount || 0,
             limit: quizLimit,
           });

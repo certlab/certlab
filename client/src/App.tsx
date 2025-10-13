@@ -73,9 +73,9 @@ function Router() {
               <Route path="/app/challenges" component={ChallengesPage} />
               {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
               <Route path="/app/subscription-plans" component={SubscriptionPlansPage} />
-              <Route path="/subscription/manage" component={SubscriptionManagePage} />
-              <Route path="/subscription/success" component={SubscriptionSuccessPage} />
-              <Route path="/subscription/cancel" component={SubscriptionCancelPage} />
+              <Route path="/app/subscription/manage" component={SubscriptionManagePage} />
+              <Route path="/app/subscription/success" component={SubscriptionSuccessPage} />
+              <Route path="/app/subscription/cancel" component={SubscriptionCancelPage} />
               {isAdmin && <Route path="/admin" component={AdminDashboard} />}
               <Route component={NotFound} />
             </Switch>

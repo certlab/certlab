@@ -87,13 +87,13 @@ export default function SubscriptionSuccess() {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Link href="/subscription/manage">
+              <Link href="/app/subscription/manage">
                 <Button className="w-full sm:w-auto" data-testid="check-subscription-button">
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Check My Subscription
                 </Button>
               </Link>
-              <Link href="/subscription/plans">
+              <Link href="/app/subscription-plans">
                 <Button variant="outline" className="w-full sm:w-auto" data-testid="view-plans-button">
                   View Plans
                 </Button>
@@ -198,7 +198,7 @@ export default function SubscriptionSuccess() {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Try Again
               </Button>
-              <Link href="/subscription/manage">
+              <Link href="/app/subscription/manage">
                 <Button 
                   variant="outline" 
                   className="w-full sm:w-auto"

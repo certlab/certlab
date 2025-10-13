@@ -274,7 +274,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
               teamMembers: subscriptionBenefits.teamMembers,
             },
           },
-          redirectUrl: '/subscription/success', // Important: frontend uses this to redirect
+          redirectUrl: '/app/subscription/success', // Important: frontend uses this to redirect
         });
       }
       
@@ -366,7 +366,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
             message: `Successfully upgraded to ${plan} plan`,
             upgraded: true,
             plan: plan,
-            redirectUrl: '/subscription/success', // Redirect to success page
+            redirectUrl: '/app/subscription/success', // Redirect to success page
           });
         } catch (switchError: any) {
           console.error('Error switching subscription plan:', switchError);
@@ -418,8 +418,8 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       
       const session = await polarClient.createCheckoutSession({
         productId: planConfig.productId,
-        successUrl: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${baseUrl}/subscription/cancel`,
+        successUrl: `${baseUrl}/app/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${baseUrl}/app/subscription/cancel`,
         customerEmail: user.email,
         metadata: {
           userId: userId,

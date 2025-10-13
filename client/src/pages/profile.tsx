@@ -721,7 +721,7 @@ export default function ProfilePage() {
                       </Link>
                     ) : (
                       <>
-                        <Link href="/subscription/manage">
+                        <Link href="/app/subscription/manage">
                           <Button variant="outline" data-testid="manage-subscription-button">
                             <Settings className="h-4 w-4 mr-2" />
                             Manage Subscription

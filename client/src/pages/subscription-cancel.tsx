@@ -36,7 +36,7 @@ export default function SubscriptionCancel() {
           </div>
 
           <div className="flex gap-4 pt-4">
-            <Link href="/subscription/plans">
+            <Link href="/app/subscription-plans">
               <Button size="lg" data-testid="view-plans-button">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 View Plans Again

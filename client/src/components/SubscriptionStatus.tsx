@@ -206,7 +206,7 @@ export default function SubscriptionStatus() {
             )}
             
             {subscription.isSubscribed && subscription.status === 'active' && (
-              <Link href="/subscription/manage">
+              <Link href="/app/subscription/manage">
                 <Button variant="outline" className="w-full" size="sm" data-testid="manage-button">
                   <CreditCard className="w-4 h-4 mr-2" />
                   Manage Subscription

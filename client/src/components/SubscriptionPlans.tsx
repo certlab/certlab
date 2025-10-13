@@ -148,7 +148,7 @@ export default function SubscriptionPlans() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => setLocation("/subscription/manage")}
+            onClick={() => setLocation("/app/subscription/manage")}
           >
             Manage Subscription
           </Button>
@@ -201,7 +201,7 @@ export default function SubscriptionPlans() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => setLocation("/subscription/manage")}
+            onClick={() => setLocation("/app/subscription/manage")}
           >
             Manage Plan
           </Button>
