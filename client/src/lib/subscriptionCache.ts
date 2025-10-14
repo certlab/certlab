@@ -10,7 +10,6 @@ export async function invalidateSubscriptionQueries(queryClient: QueryClient): P
     queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] }),
     queryClient.invalidateQueries({ queryKey: ["/api/user"] }),
     queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] }),
-    queryClient.invalidateQueries({ queryKey: ["/api/user/dev-mode"] }),
     // Invalidate any user-specific queries
     queryClient.invalidateQueries({ 
       predicate: (query) => {

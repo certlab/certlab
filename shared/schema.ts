@@ -47,7 +47,6 @@ export const users = pgTable("users", {
     completedCertifications?: string[];
     motivations?: string[];
   }>(),
-  devMode: boolean("dev_mode").default(false), // Tracks whether user has enabled dev mode for testing
   // Subscription benefits - cached from Polar
   polarCustomerId: varchar("polar_customer_id"), // Keep for webhook identification
   subscriptionBenefits: jsonb("subscription_benefits").$type<{

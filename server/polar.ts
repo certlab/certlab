@@ -1,9 +1,6 @@
 // Polar API Integration Module
 // Documentation: https://polar.sh/docs/introduction
 
-import { storage } from "./storage";
-import { MockPolarClient } from "./mockPolar";
-
 interface PolarConfig {
   apiKey: string;
   organizationId?: string;
@@ -535,64 +532,18 @@ class PolarClient {
   }
 }
 
-// Create instances of both real and mock clients
-const realPolarClient = new PolarClient();
-const mockPolarClient = new MockPolarClient() as unknown as PolarClient;
+// Create singleton instance of Polar client
+const polarClientInstance = new PolarClient();
 
-// Cache for devMode checks to avoid repeated database queries
-const devModeCache: Map<string, { value: boolean; timestamp: number }> = new Map();
-const CACHE_TTL = 60000; // 1 minute cache TTL
-
-// Factory function to get appropriate Polar client based on user's devMode
+// Simplified function to always return the real Polar client
 export async function getPolarClient(userId?: string): Promise<PolarClient> {
-  // If no userId provided, use real client by default
-  if (!userId) {
-    console.log('[Polar] No userId provided, using real Polar client');
-    return realPolarClient;
-  }
-
-  // Check cache first
-  const cached = devModeCache.get(userId);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log(`[Polar] Using cached devMode for user ${userId}: ${cached.value}`);
-    return cached.value ? mockPolarClient : realPolarClient;
-  }
-
-  try {
-    // Check user's devMode setting from database
-    const isDevMode = await storage.getUserDevMode(userId);
-    
-    // Update cache
-    devModeCache.set(userId, { value: isDevMode, timestamp: Date.now() });
-    
-    if (isDevMode) {
-      console.log(`[Polar] User ${userId} has devMode enabled, using mock Polar client`);
-      return mockPolarClient;
-    } else {
-      console.log(`[Polar] User ${userId} has devMode disabled, using real Polar client`);
-      return realPolarClient;
-    }
-  } catch (error) {
-    console.error(`[Polar] Error checking devMode for user ${userId}, using real client:`, error);
-    return realPolarClient;
-  }
+  console.log('[Polar] Using real Polar client');
+  return polarClientInstance;
 }
 
-// Clear cache when devMode is toggled (exported for use in other modules if needed)
-export function clearDevModeCache(userId?: string): void {
-  if (userId) {
-    devModeCache.delete(userId);
-    console.log(`[Polar] Cleared devMode cache for user ${userId}`);
-  } else {
-    devModeCache.clear();
-    console.log('[Polar] Cleared entire devMode cache');
-  }
-}
-
-// Export singleton instance for backward compatibility (uses real client)
-// Deprecated: Use getPolarClient() instead
-export const polarClient = realPolarClient;
-console.log('[Polar] Initialized Polar clients (real and mock) with dynamic environment variable reading');
+// Export singleton instance
+export const polarClient = polarClientInstance;
+console.log('[Polar] Initialized Polar client with dynamic environment variable reading');
 
 // Subscription plans configuration with dynamic environment variable reading
 export const SUBSCRIPTION_PLANS = {

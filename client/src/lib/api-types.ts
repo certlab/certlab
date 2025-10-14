@@ -1,10 +1,5 @@
 // API Response Types
 
-// Dev Mode Response
-export interface DevModeResponse {
-  devMode: boolean;
-}
-
 // User Response (extend as needed)
 export interface UserResponse {
   id: string;
@@ -28,7 +23,6 @@ export interface SubscriptionStatusResponse {
     analyticsAccess: string;
   };
   dailyQuizCount: number;
-  devMode?: boolean; // Optional field for dev mode status
 }
 
 // Achievement Response

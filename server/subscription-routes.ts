@@ -1,7 +1,7 @@
 import { Express, Request, Response } from "express";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
-import { getPolarClient, SUBSCRIPTION_PLANS, clearDevModeCache } from "./polar";
+import { getPolarClient, SUBSCRIPTION_PLANS } from "./polar";
 import type { User } from "@shared/schema";
 import { normalizePlanName, getPlanFeatures, isPaidPlan, validateSubscriptionState, mergeSubscriptionState, type SubscriptionPlan } from "../shared/subscriptionUtils";
 import { subscriptionLockManager } from "./subscriptionLock";
@@ -71,16 +71,8 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       let status = 'inactive';
       let expiresAt = undefined;
 
-      // Skip Polar sync for test user in development mode
-      const isTestUser = process.env.NODE_ENV === 'development' && userId === '999999';
-      
-      if (isTestUser) {
-        console.log('Test user detected in development mode - skipping Polar sync');
-        console.log('Test user subscription benefits:', updatedUser?.subscriptionBenefits);
-      }
-
-      // If Polar is configured and user has email, sync with Polar (but skip for test user)
-      if (process.env.POLAR_API_KEY && user.email && !isTestUser) {
+      // If Polar is configured and user has email, sync with Polar
+      if (process.env.POLAR_API_KEY && user.email) {
         try {
           const polarClient = await getPolarClient(userId);
           const polarData = await polarClient.syncUserSubscriptionBenefits(user.email);
@@ -126,14 +118,9 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
           }
         }
       } else if (updatedUser?.subscriptionBenefits) {
-        // No Polar configured OR test user in development - use cached benefits
+        // No Polar configured - use cached benefits
         benefits = updatedUser.subscriptionBenefits as any;
         isSubscribed = benefits.plan !== 'free';
-        
-        // For test user in development, ensure status is active if they have pro/enterprise plan
-        if (isTestUser && benefits.plan !== 'free') {
-          status = 'active';
-        }
       }
 
       // Check if subscription is scheduled for cancellation
@@ -177,21 +164,6 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       // Use normalized plan name
       const planName = validation.normalizedPlan;
       const plan = SUBSCRIPTION_PLANS[planName as keyof typeof SUBSCRIPTION_PLANS] || SUBSCRIPTION_PLANS.free;
-      
-      if (isTestUser) {
-        console.log('Test user subscription response:', {
-          plan: planName,
-          isSubscribed,
-          status: subscriptionState.status,
-          cancelAtPeriodEnd,
-          canceledAt: subscriptionState.canceledAt,
-          limits: {
-            quizzesPerDay: benefits.quizzesPerDay,
-            categoriesAccess: benefits.categoriesAccess,
-            analyticsAccess: benefits.analyticsAccess,
-          }
-        });
-      }
 
       return res.json({
         isConfigured: !!process.env.POLAR_API_KEY,
@@ -260,58 +232,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
 
       const { plan, billingInterval } = result.data;
       
-      // Check if this is a test user in development mode - HANDLE EARLY
-      const isTestUser = process.env.NODE_ENV === 'development' && userId === '999999';
-      
-      if (isTestUser) {
-        const currentPlan = normalizePlanName((user.subscriptionBenefits as any)?.plan);
-        const normalizedPlan = normalizePlanName(plan);
-        console.log(`Test user (${userId}) changing subscription from ${currentPlan} to ${normalizedPlan}`);
-        
-        // Handle test user subscription changes directly without Polar
-        const planFeatures = getPlanFeatures(normalizedPlan);
-        const subscriptionBenefits = {
-          plan: normalizedPlan,
-          quizzesPerDay: planFeatures.quizzesPerDay === -1 ? null : planFeatures.quizzesPerDay, // null means unlimited
-          categoriesAccess: planFeatures.categoriesAccess,
-          analyticsAccess: planFeatures.analyticsAccess,
-          teamMembers: normalizedPlan === 'enterprise' ? 50 : undefined,
-          lastSyncedAt: new Date().toISOString(),
-          // Clear any cancellation state when changing plans
-          cancelAtPeriodEnd: false,
-          canceledAt: undefined,
-        };
-        
-        // Update user in database
-        await storage.updateUser(userId, {
-          subscriptionBenefits: subscriptionBenefits,
-        });
-        
-        console.log('Test user subscription benefits updated:', subscriptionBenefits);
-        
-        // Get the plan configuration for features list
-        const planConfig = SUBSCRIPTION_PLANS[plan];
-        
-        // Return success response with redirectUrl - matching the expected format
-        return res.json({
-          success: true,
-          message: `Successfully updated to ${plan} plan`,
-          subscription: {
-            plan: plan,
-            status: 'active',
-            features: planConfig.features,
-            limits: {
-              quizzesPerDay: subscriptionBenefits.quizzesPerDay,
-              categoriesAccess: subscriptionBenefits.categoriesAccess,
-              analyticsAccess: subscriptionBenefits.analyticsAccess,
-              teamMembers: subscriptionBenefits.teamMembers,
-            },
-          },
-          redirectUrl: '/app/subscription/success', // Important: frontend uses this to redirect
-        });
-      }
-      
-      // For non-test users, require email
+      // Require email for all users
       if (!user.email) {
         return res.status(400).json({ 
           error: "Email required", 
@@ -535,49 +456,13 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         return res.status(401).json({ error: "User not found" });
       }
 
-      // Check if test user in development mode
-      const isTestUser = process.env.NODE_ENV === 'development' && userId === '999999';
-      
       // Get the appropriate Polar client for this user
       const polarClient = await getPolarClient(userId);
       
       // Verify the checkout session
       const session = await polarClient.getCheckoutSession(session_id);
       
-      // Special handling for test user
-      if (isTestUser) {
-        console.log('Test user subscription success: Processing checkout completion');
-        
-        // Extract plan from session metadata if available
-        const planFromSession = (session as any).metadata?.plan || 'pro';
-        
-        // Update test user benefits directly
-        const subscriptionBenefits = {
-          plan: planFromSession,
-          quizzesPerDay: planFromSession === 'pro' || planFromSession === 'enterprise' ? null : 5,
-          categoriesAccess: planFromSession === 'pro' || planFromSession === 'enterprise' ? ['all'] : ['basic'],
-          analyticsAccess: planFromSession === 'pro' || planFromSession === 'enterprise' ? 'advanced' : 'basic',
-          teamMembers: planFromSession === 'enterprise' ? 50 : undefined,
-          lastSyncedAt: new Date().toISOString(),
-        };
-        
-        await storage.updateUser(userId, {
-          subscriptionBenefits: subscriptionBenefits,
-        });
-        
-        console.log('Test user benefits updated on subscription success:', subscriptionBenefits);
-        
-        const plan = SUBSCRIPTION_PLANS[planFromSession as keyof typeof SUBSCRIPTION_PLANS] || SUBSCRIPTION_PLANS.pro;
-        
-        return res.json({
-          success: true,
-          message: "Subscription activated successfully",
-          plan: planFromSession,
-          features: plan.features,
-        });
-      }
-      
-      // Regular flow for non-test users - sync from Polar
+      // Sync from Polar
       if (user.email) {
         const polarData = await polarClient.syncUserSubscriptionBenefits(user.email);
         
@@ -625,7 +510,6 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
 
       // Fetch user ID consistently with other endpoints
       const userId = sessionUser.claims?.sub || sessionUser.id;
-      console.log('Cancel subscription request for user:', userId, 'NODE_ENV:', process.env.NODE_ENV);
 
       // Acquire lock to prevent race conditions
       try {
@@ -652,68 +536,10 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
 
       const { immediate } = result.data;
 
-      // Special handling for test user in development mode
-      const isTestUser = process.env.NODE_ENV === 'development' && userId === '999999';
-      console.log('Is test user?', isTestUser, 'User ID:', userId);
-
       // Get user data
       const userData = await storage.getUserById(userId);
       
-      if (isTestUser) {
-        console.log('Test user cancellation in development mode - simulating cancellation');
-        
-        // Simulate cancellation for test user
-        if (immediate) {
-          // Immediate cancellation: revert to free plan immediately
-          const updatedBenefits = {
-            plan: 'free',
-            quizzesPerDay: 5,
-            categoriesAccess: ['basic'],
-            analyticsAccess: 'basic',
-            lastSyncedAt: new Date().toISOString(),
-          };
-          
-          await storage.updateUser(userId, {
-            subscriptionBenefits: updatedBenefits,
-          });
-          
-          // Calculate mock refund amount (assuming 30 day period, 15 days left = 50% refund)
-          const mockRefundAmount = 999; // $9.99 in cents
-          
-          return res.json({
-            success: true,
-            message: "Subscription canceled immediately and refund will be processed",
-            refundAmount: mockRefundAmount,
-            canceledAt: new Date().toISOString(),
-          });
-        } else {
-          // Schedule cancellation at period end - keep benefits but mark as canceling
-          const currentBenefits = userData?.subscriptionBenefits as any || {};
-          const periodEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-          
-          const updatedBenefits = {
-            ...currentBenefits,
-            cancelAtPeriodEnd: true,
-            canceledAt: new Date().toISOString(),
-            currentPeriodEnd: periodEndDate.toISOString(),
-            lastSyncedAt: new Date().toISOString(),
-          };
-          
-          await storage.updateUser(userId, {
-            subscriptionBenefits: updatedBenefits,
-          });
-          
-          return res.json({
-            success: true,
-            message: "Subscription will be canceled at the end of the current period (test mode)",
-            cancelAtPeriodEnd: true,
-            canceledAt: updatedBenefits.canceledAt,
-            endsAt: periodEndDate.toISOString(),
-          });
-        }
-      }
-      
-      // Regular flow for non-test users
+      // Regular flow for all users
       if (!userData?.polarCustomerId) {
         return res.status(400).json({ 
           error: "No active subscription", 
@@ -825,35 +651,6 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
     const userData = await storage.getUserById(userId);
     
     try {
-      // Handle test user in development mode
-      const isTestUser = process.env.NODE_ENV === 'development' && userId === '999999';
-      if (isTestUser) {
-        const currentBenefits = userData?.subscriptionBenefits as any || {};
-        
-        // Check if there's a scheduled cancellation to resume
-        if (currentBenefits.cancelAtPeriodEnd) {
-          // Clear the cancellation flags
-          delete currentBenefits.cancelAtPeriodEnd;
-          delete currentBenefits.canceledAt;
-          currentBenefits.lastSyncedAt = new Date().toISOString();
-          
-          await storage.updateUser(userId, {
-            subscriptionBenefits: currentBenefits,
-          });
-          
-          return res.json({
-            success: true,
-            message: "Subscription resumed successfully (test mode)",
-            status: 'active',
-          });
-        } else {
-          return res.status(400).json({
-            error: "No scheduled cancellation",
-            message: "Your subscription is not scheduled for cancellation."
-          });
-        }
-      }
-      
       if (!userData?.polarCustomerId) {
         return res.status(400).json({ 
           error: "No subscription found", 
@@ -982,101 +779,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       // Get user data
       const userData = await storage.getUserById(userId);
       
-      // Special handling for test user in development mode
-      const isTestUser = process.env.NODE_ENV === 'development' && userId === '999999';
-      
-      if (isTestUser) {
-        console.log('Test user plan switch request:', { newPlan, billingInterval, switchAtPeriodEnd });
-        
-        // Get current benefits for comparison
-        const currentBenefits = userData?.subscriptionBenefits as any || {};
-        const currentPlan = currentBenefits.plan || 'free';
-        
-        // Check if switching to the same plan
-        if (currentPlan === newPlan) {
-          return res.status(400).json({ 
-            error: "Already on this plan",
-            message: `You are already subscribed to the ${newPlan} plan.`
-          });
-        }
-        
-        // Determine the effective date
-        const effectiveDate = switchAtPeriodEnd 
-          ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // Mock 30 days from now
-          : new Date();
-        
-        // If switching at period end, don't update benefits immediately
-        if (switchAtPeriodEnd) {
-          // Just mark the scheduled switch in benefits
-          const scheduledBenefits = {
-            ...currentBenefits,
-            scheduledPlan: newPlan,
-            scheduledSwitchDate: effectiveDate.toISOString(),
-            lastSyncedAt: new Date().toISOString(),
-          };
-          
-          await storage.updateUser(userId, {
-            subscriptionBenefits: scheduledBenefits,
-          });
-          
-          const isUpgrade = newPlan === 'enterprise' || (newPlan === 'pro' && currentPlan === 'free');
-          
-          return res.json({
-            success: true,
-            message: `Plan ${isUpgrade ? 'upgrade' : 'downgrade'} scheduled for the end of your current billing period (test mode)`,
-            newPlan,
-            billingInterval,
-            switchAtPeriodEnd: true,
-            effectiveDate: effectiveDate.toISOString(),
-            subscription: {
-              id: 'test-subscription-' + Date.now(),
-              status: 'active',
-              currentPeriodEnd: effectiveDate.toISOString(),
-            },
-          });
-        }
-        
-        // Immediate switch - update benefits now using consistent plan features
-        const normalizedPlan = normalizePlanName(newPlan);
-        const planFeatures = getPlanFeatures(normalizedPlan);
-        
-        const subscriptionBenefits = {
-          plan: normalizedPlan,
-          quizzesPerDay: planFeatures.quizzesPerDay === -1 ? null : planFeatures.quizzesPerDay, // null means unlimited
-          categoriesAccess: planFeatures.categoriesAccess,
-          analyticsAccess: planFeatures.analyticsAccess,
-          teamMembers: planFeatures.teamMembers > 1 ? planFeatures.teamMembers : undefined,
-          lastSyncedAt: new Date().toISOString(),
-        };
-        
-        // Clear any scheduled switch if switching immediately
-        delete (subscriptionBenefits as any).scheduledPlan;
-        delete (subscriptionBenefits as any).scheduledSwitchDate;
-        
-        await storage.updateUser(userId, {
-          subscriptionBenefits: subscriptionBenefits,
-        });
-        
-        console.log('Test user subscription benefits updated to', newPlan, ':', subscriptionBenefits);
-        
-        const isUpgrade = newPlan === 'enterprise' || (newPlan === 'pro' && currentPlan === 'free');
-        
-        return res.json({
-          success: true,
-          message: `Successfully ${isUpgrade ? 'upgraded' : 'downgraded'} to ${newPlan} plan (test mode)`,
-          newPlan,
-          billingInterval,
-          switchAtPeriodEnd: false,
-          effectiveDate: effectiveDate.toISOString(),
-          subscription: {
-            id: 'test-subscription-' + Date.now(),
-            status: 'active',
-            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        });
-      }
-      
-      // Regular flow for non-test users - check for Polar customer ID
+      // Check for Polar customer ID
       if (!userData?.polarCustomerId) {
         return res.status(400).json({ 
           error: "No customer account found", 

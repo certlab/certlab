@@ -1,9 +1,7 @@
-import { Crown, Zap, Star, ChevronRight, Sparkles, Code } from "lucide-react";
+import { Crown, Zap, Star, ChevronRight, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import type { DevModeResponse } from "@/lib/api-types";
 
 interface SubscriptionBadgeProps {
   plan: 'free' | 'pro' | 'enterprise';
@@ -81,14 +79,6 @@ export default function SubscriptionBadge({
 }: SubscriptionBadgeProps) {
   const config = planConfig[plan];
   const Icon = config.icon;
-  
-  // Check if dev mode is enabled
-  const { data: devModeData } = useQuery<DevModeResponse>({
-    queryKey: ["/api/user/dev-mode"],
-    refetchInterval: false,
-  });
-  
-  const isDevMode = devModeData?.devMode === true;
 
   const getSizeClasses = () => {
     switch (size) {
@@ -133,50 +123,26 @@ export default function SubscriptionBadge({
   ) : null;
 
   const badgeContent = (
-    <div className="inline-flex items-center gap-2">
-      <div
-        className={cn(
-          "inline-flex items-center rounded-full font-medium transition-all border",
-          config.gradient,
-          config.borderColor,
-          plan !== 'free' && config.glowColor,
-          interactive && "cursor-pointer hover:scale-105 active:scale-95",
-          sizeClasses.badge,
-          sizeClasses.gap,
-          className
-        )}
-        onClick={onClick}
-      >
-        <Icon className={cn(sizeClasses.icon, plan !== 'free' && "animate-pulse-slow")} />
-        <span className="font-semibold">
-          {size === 'small' ? config.shortLabel : config.label}
-        </span>
-        {quizCountDisplay}
-        {interactive && (
-          <ChevronRight className={cn(sizeClasses.icon, "opacity-70")} />
-        )}
-      </div>
-      {/* Dev Mode Badge */}
-      {isDevMode && (
-        <TooltipProvider>
-          <Tooltip delayDuration={200}>
-            <TooltipTrigger asChild>
-              <Badge 
-                variant="outline" 
-                className={cn(
-                  "inline-flex items-center bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-300 dark:border-yellow-600",
-                  size === 'small' ? "h-5 px-1.5 py-0 text-xs" : "h-6 px-2 py-0.5 text-xs"
-                )}
-              >
-                <Code className={size === 'small' ? "w-3 h-3 mr-0.5" : "w-3 h-3 mr-1"} />
-                DEV
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-xs">Dev Mode Active - Using mock API</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+    <div
+      className={cn(
+        "inline-flex items-center rounded-full font-medium transition-all border",
+        config.gradient,
+        config.borderColor,
+        plan !== 'free' && config.glowColor,
+        interactive && "cursor-pointer hover:scale-105 active:scale-95",
+        sizeClasses.badge,
+        sizeClasses.gap,
+        className
+      )}
+      onClick={onClick}
+    >
+      <Icon className={cn(sizeClasses.icon, plan !== 'free' && "animate-pulse-slow")} />
+      <span className="font-semibold">
+        {size === 'small' ? config.shortLabel : config.label}
+      </span>
+      {quizCountDisplay}
+      {interactive && (
+        <ChevronRight className={cn(sizeClasses.icon, "opacity-70")} />
       )}
     </div>
   );

@@ -14,13 +14,11 @@ import {
   Star,
   TrendingUp,
   Calendar,
-  Clock,
-  Code
+  Clock
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { format } from "date-fns";
-import type { DevModeResponse } from "@/lib/api-types";
 
 interface SubscriptionStatusResponse {
   isConfigured: boolean;
@@ -43,14 +41,6 @@ export default function SubscriptionStatus() {
   const { data: subscription, isLoading, error } = useQuery<SubscriptionStatusResponse>({
     queryKey: ["/api/subscription/status"],
   });
-  
-  // Check if dev mode is enabled
-  const { data: devModeData } = useQuery<DevModeResponse>({
-    queryKey: ["/api/user/dev-mode"],
-    refetchInterval: false,
-  });
-  
-  const isDevMode = devModeData?.devMode === true;
 
   if (isLoading) {
     return (
@@ -112,16 +102,6 @@ export default function SubscriptionStatus() {
 
   return (
     <div className="space-y-4">
-      {/* Dev Mode Warning */}
-      {isDevMode && (
-        <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20">
-          <Code className="h-4 w-4 text-yellow-600" />
-          <AlertDescription className="text-sm">
-            <strong>Dev Mode Active:</strong> Using mock subscription data for testing.
-          </AlertDescription>
-        </Alert>
-      )}
-      
       {/* Current Plan Card */}
       <Card className="border-primary/20 overflow-hidden">
         <div className={`h-2 ${currentPlan.color}`}></div>
@@ -130,12 +110,6 @@ export default function SubscriptionStatus() {
             <CardTitle className="flex items-center gap-2" data-testid="current-plan">
               {currentPlan.icon}
               {currentPlan.label}
-              {isDevMode && (
-                <Badge className="ml-1 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" variant="secondary">
-                  <Code className="w-3 h-3 mr-1" />
-                  DEV
-                </Badge>
-              )}
             </CardTitle>
             {getStatusBadge()}
           </div>

@@ -35,8 +35,6 @@ export interface IStorage {
   }): Promise<User | null>;
   getUsersByTenant(tenantId: number): Promise<User[]>;
   getUserByPolarCustomerId(polarCustomerId: string): Promise<User[]>;
-  getUserDevMode(userId: string): Promise<boolean>;
-  updateUserDevMode(userId: string, devMode: boolean): Promise<void>;
   
   // Categories and subcategories
   getCategories(tenantId?: number): Promise<Category[]>;
@@ -3038,28 +3036,6 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     return await db.select().from(users).where(eq(users.polarCustomerId, polarCustomerId));
   }
 
-  async getUserDevMode(userId: string): Promise<boolean> {
-    try {
-      // First ensure the user exists
-      const existingUser = await this.getUser(userId);
-      if (!existingUser) {
-        console.log(`User ${userId} not found, returning default devMode: false`);
-        return false;
-      }
-      
-      const [user] = await db.select({ devMode: users.devMode }).from(users).where(eq(users.id, userId));
-      return user?.devMode ?? false;
-    } catch (error) {
-      console.error("Error getting user dev mode:", error);
-      return false;
-    }
-  }
-
-  async updateUserDevMode(userId: string, devMode: boolean): Promise<void> {
-    await db.update(users)
-      .set({ devMode, updatedAt: new Date() })
-      .where(eq(users.id, userId));
-  }
 
   async createCategory(category: InsertCategory): Promise<Category> {
     const result = await db.insert(categories).values(category).returning();

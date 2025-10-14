@@ -5,7 +5,6 @@ import adminRoutes from "./admin-routes";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { registerSubscriptionRoutes } from "./subscription-routes";
 import { isCategoryAccessible } from "@shared/categoryAccess";
-import { clearDevModeCache } from "./polar";
 import { 
   insertUserSchema, 
   createQuizSchema, 
@@ -132,43 +131,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user dev mode status (protected)
-  app.get("/api/user/dev-mode", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      console.log("Getting dev mode for user:", userId);
-      
-      // getUserDevMode handles the case where user doesn't exist
-      const devMode = await storage.getUserDevMode(userId);
-      res.json({ devMode });
-    } catch (error) {
-      console.error("Error fetching dev mode status:", error);
-      res.status(500).json({ message: "Failed to fetch dev mode status" });
-    }
-  });
-
-  // Update user dev mode status (protected)
-  app.post("/api/user/dev-mode", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { devMode } = req.body;
-      
-      if (typeof devMode !== 'boolean') {
-        return res.status(400).json({ message: "Invalid devMode value. Must be a boolean." });
-      }
-      
-      await storage.updateUserDevMode(userId, devMode);
-      
-      // Clear the Polar client cache for this user to ensure immediate switching
-      clearDevModeCache(userId);
-      console.log(`Dev mode updated for user ${userId}: ${devMode}. Polar client cache cleared.`);
-      
-      res.json({ devMode });
-    } catch (error) {
-      console.error("Error updating dev mode status:", error);
-      res.status(500).json({ message: "Failed to update dev mode status" });
-    }
-  });
 
   // Get categories
   app.get("/api/categories", async (req, res) => {
