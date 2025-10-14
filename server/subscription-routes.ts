@@ -461,10 +461,21 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         });
       }
       
+      // Log the URLs being used for debugging
+      const successUrl = `${baseUrl}/app/subscription/success?session_id={CHECKOUT_SESSION_ID}`;
+      const cancelUrl = `${baseUrl}/app/subscription/cancel`;
+      
+      console.log('[Subscription] Checkout URLs:', {
+        success: successUrl,
+        cancel: cancelUrl,
+        productId: planConfig.productId,
+        customerEmail: user.email
+      });
+
       const session = await polarClient.createCheckoutSession({
         productId: planConfig.productId,
-        successUrl: `${baseUrl}/app/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${baseUrl}/app/subscription/cancel`,
+        successUrl: successUrl,
+        cancelUrl: cancelUrl,
         customerEmail: user.email,
         metadata: {
           userId: userId,
@@ -472,6 +483,8 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
           billingInterval: billingInterval || 'month',
         },
       });
+
+      console.log(`[Subscription] Checkout session created successfully: ${session.id}`);
 
       res.json({
         checkoutUrl: session.url,

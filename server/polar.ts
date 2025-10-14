@@ -115,15 +115,28 @@ class PolarClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-      console.error('Polar API Error Details:', {
+      console.error('[Polar] API Error Details:', {
         status: response.status,
         statusText: response.statusText,
         url: url,
         error: error,
         errorDetail: error.detail ? JSON.stringify(error.detail, null, 2) : 'No detail',
-        body: options.body
+        body: options.body,
+        apiKeyPresent: !!this.apiKey,
+        organizationId: this.organizationId,
+        endpoint: endpoint
       });
-      throw new Error(`Polar API Error: ${error.message || response.statusText}`);
+      
+      // Provide more specific error messages based on status code
+      if (response.status === 404) {
+        throw new Error(`Polar API Error: Resource not found. Please ensure your product IDs and organization ID are correct.`);
+      } else if (response.status === 401) {
+        throw new Error(`Polar API Error: Authentication failed. Please check your API key configuration.`);
+      } else if (response.status === 403) {
+        throw new Error(`Polar API Error: Permission denied. Please check your API key permissions.`);
+      } else {
+        throw new Error(`Polar API Error (${response.status}): ${error.message || response.statusText}`);
+      }
     }
 
     return response.json();
