@@ -425,21 +425,33 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       // Priority 1: Use APP_URL if explicitly set
       if (process.env.APP_URL) {
         baseUrl = process.env.APP_URL;
+        console.log('[Subscription] Using APP_URL for checkout:', baseUrl);
       } else {
-        // Priority 2: Derive from request headers
-        const protocol = req.get('x-forwarded-proto') || req.protocol;
-        const host = req.get('host');
-        
-        if (!host) {
-          // Fallback to localhost if no host header
-          baseUrl = 'http://localhost:5000';
+        // Priority 2: Try to use REPLIT_DOMAINS if available (production Replit)
+        if (process.env.REPLIT_DOMAINS) {
+          const replitDomain = process.env.REPLIT_DOMAINS.split(',')[0].trim();
+          baseUrl = `https://${replitDomain}`;
+          console.log('[Subscription] Using REPLIT_DOMAINS for checkout:', baseUrl);
         } else {
-          baseUrl = `${protocol}://${host}`;
+          // Priority 3: Derive from request headers
+          const protocol = req.get('x-forwarded-proto') || req.protocol;
+          const host = req.get('host');
+          
+          if (!host) {
+            // Fallback to localhost if no host header
+            baseUrl = 'http://localhost:5000';
+            console.warn('[Subscription] Warning: Using fallback localhost URL for checkout');
+          } else {
+            baseUrl = `${protocol}://${host}`;
+            console.log('[Subscription] Using request headers for checkout:', baseUrl);
+          }
         }
       }
       
       // Ensure baseUrl doesn't have trailing slash
       baseUrl = baseUrl.replace(/\/$/, '');
+      
+      console.log(`[Subscription] Creating checkout for user ${user.email} with baseUrl: ${baseUrl}`);
       
       // Check productId again before creating session (defensive programming)
       if (!('productId' in planConfig) || !planConfig.productId) {
@@ -1188,7 +1200,10 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       const user = req.user as User;
       const userId = (user as any).claims?.sub || (user as any).id;
 
+      console.log(`[Subscription] Confirming checkout session ${session_id} for user ${userId}`);
+
       if (!session_id || typeof session_id !== 'string') {
+        console.error('[Subscription] Missing or invalid session ID in confirmation request');
         return res.status(400).json({ 
           error: "Missing session ID",
           success: false 
