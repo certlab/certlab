@@ -368,11 +368,16 @@ export const subscriptions = pgTable("subscriptions", {
   polarSubscriptionId: varchar("polar_subscription_id").unique().notNull(),
   polarCustomerId: varchar("polar_customer_id").notNull(),
   productId: varchar("product_id").notNull(),
-  productName: varchar("product_name").notNull(),
+  priceId: varchar("price_id"),
+  productName: varchar("product_name", { length: 255 }),
+  plan: varchar("plan", { length: 50 }), // "free", "pro", "team", etc.
+  billingInterval: varchar("billing_interval", { length: 20 }), // "monthly", "yearly", etc.
   status: text("status").notNull(), // "active", "canceled", "past_due", "trialing", etc.
   currentPeriodStart: timestamp("current_period_start"),
   currentPeriodEnd: timestamp("current_period_end"),
+  trialEndsAt: timestamp("trial_ends_at"),
   canceledAt: timestamp("canceled_at"),
+  endedAt: timestamp("ended_at"),
   cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
   metadata: jsonb("metadata").$type<Record<string, any>>(), // Store any additional Polar data
   createdAt: timestamp("created_at").defaultNow(),
