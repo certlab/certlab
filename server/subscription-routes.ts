@@ -1543,9 +1543,12 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         // Get the appropriate Polar client for this user
         const polarClient = await getPolarClient(userId);
         
-        // Verify the checkout session with comprehensive validation
-        console.log('[Subscription Confirm] Verifying checkout session with Polar...');
-        const verification = await polarClient.verifyCheckoutSession(session_id, userData.email);
+        // Validate the checkout session
+        console.log('[Subscription Confirm] Validating checkout session with Polar...');
+        const verification = await polarClient.validateCheckoutSession(session_id);
+        
+        // Check if session belongs to this user (by email)
+        const isAlreadyProcessed = verification.session?.subscription_id ? true : false;
         
         if (!verification.isValid) {
           console.error('[Subscription Confirm] Invalid checkout session:', verification.error);
@@ -1572,7 +1575,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
               message: "The payment for this session failed. Please try again with a different payment method.",
               sessionStatus: 'failed'
             });
-          } else if (verification.isAlreadyProcessed) {
+          } else if (isAlreadyProcessed) {
             // Session was already processed - still success but with different message
             console.log('[Subscription Confirm] Session already processed, returning success');
             
@@ -1624,8 +1627,8 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
           polarSubscriptionId: session.subscription_id || `checkout_${session.id}`,
           polarCustomerId: session.customer?.id || userData.polarCustomerId || '',
           plan: plan as SubscriptionPlan,
-          status: 'active' as SubscriptionStatus, // Successful checkout means active subscription
-          billingInterval: billingInterval as BillingInterval,
+          status: 'active' as const, // Successful checkout means active subscription
+          billingInterval: billingInterval as 'month' | 'year',
           currentPeriodStart: new Date(),
           currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days for monthly
           metadata: {
