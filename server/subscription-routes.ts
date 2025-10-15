@@ -1490,26 +1490,47 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
     }
   });
 
-  // Confirm checkout session after successful payment - REFACTORED
+  // Confirm checkout session after successful payment - ENHANCED WITH FULL VERIFICATION
   app.get("/api/subscription/confirm", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { session_id } = req.query;
       const user = req.user as User;
       const userId = (user as any).claims?.sub || (user as any).id;
 
-      console.log(`[Subscription] Confirming checkout session ${session_id} for user ${userId}`);
+      console.log(`[Subscription Confirm] Starting checkout confirmation for session ${session_id}, user ${userId}`);
 
       if (!session_id || typeof session_id !== 'string') {
-        console.error('[Subscription] Missing or invalid session ID in confirmation request');
+        console.error('[Subscription Confirm] Missing or invalid session ID');
         return res.status(400).json({ 
           error: "Missing session ID",
-          success: false 
+          success: false,
+          message: "Invalid checkout session reference"
+        });
+      }
+
+      // Get user data for processing
+      const userData = await storage.getUserById(userId);
+      if (!userData || !userData.email) {
+        console.error('[Subscription Confirm] User data not found');
+        return res.status(401).json({ 
+          error: "User not found",
+          success: false,
+          message: "Unable to verify user account"
         });
       }
 
       // Check if Polar is configured
-      if (!process.env.POLAR_API_KEY) {
-        // If Polar is not configured, just return success with mock data
+      const isDev = process.env.NODE_ENV === 'development' || 
+                   process.env.NODE_ENV === 'dev' ||
+                   (process.env.NODE_ENV === undefined && process.env.POLAR_SANDBOX_API_KEY !== undefined);
+      
+      const apiKeyConfigured = isDev 
+        ? !!process.env.POLAR_SANDBOX_API_KEY
+        : !!process.env.POLAR_API_KEY;
+
+      if (!apiKeyConfigured) {
+        console.log('[Subscription Confirm] Polar not configured - demo mode');
+        // If Polar is not configured, return demo success
         return res.json({
           success: true,
           plan: 'pro',
@@ -1522,64 +1543,180 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         // Get the appropriate Polar client for this user
         const polarClient = await getPolarClient(userId);
         
-        // Get the checkout session from Polar
-        const session = await polarClient.getCheckoutSession(session_id);
+        // Verify the checkout session with comprehensive validation
+        console.log('[Subscription Confirm] Verifying checkout session with Polar...');
+        const verification = await polarClient.verifyCheckoutSession(session_id, userData.email);
         
-        if (!session) {
-          return res.status(404).json({ 
-            error: "Session not found",
-            success: false 
+        if (!verification.isValid) {
+          console.error('[Subscription Confirm] Invalid checkout session:', verification.error);
+          
+          // Provide specific error messages based on the issue
+          if (verification.session?.status === 'expired') {
+            return res.status(400).json({ 
+              error: "Session expired",
+              success: false,
+              message: "This checkout session has expired. Please start a new subscription.",
+              sessionStatus: 'expired'
+            });
+          } else if (verification.session?.status === 'canceled') {
+            return res.status(400).json({ 
+              error: "Session canceled",
+              success: false,
+              message: "This checkout session was canceled. Please start a new subscription if you'd like to upgrade.",
+              sessionStatus: 'canceled'
+            });
+          } else if (verification.session?.status === 'failed') {
+            return res.status(400).json({ 
+              error: "Payment failed",
+              success: false,
+              message: "The payment for this session failed. Please try again with a different payment method.",
+              sessionStatus: 'failed'
+            });
+          } else if (verification.isAlreadyProcessed) {
+            // Session was already processed - still success but with different message
+            console.log('[Subscription Confirm] Session already processed, returning success');
+            
+            // Extract plan info from session metadata
+            const plan = verification.session?.metadata?.plan || 'pro';
+            const billingInterval = verification.session?.metadata?.billingInterval || 'month';
+            
+            return res.json({
+              success: true,
+              plan,
+              billingInterval,
+              message: 'Your subscription is already active',
+              alreadyProcessed: true
+            });
+          }
+          
+          return res.status(400).json({ 
+            error: verification.error || "Invalid session",
+            success: false,
+            message: verification.error || "Unable to verify checkout session",
+            sessionStatus: verification.session?.status
           });
         }
 
-        // Extract plan info from metadata
-        const plan = session.metadata?.plan || 'pro';
-        const billingInterval = session.metadata?.billingInterval || 'month';
+        // Session is valid and succeeded - process the subscription
+        const session = verification.session!;
+        console.log('[Subscription Confirm] Checkout session verified successfully:', {
+          sessionId: session.id,
+          status: session.status,
+          productId: session.productId,
+          subscriptionId: session.subscription_id
+        });
 
-        // Sync subscription benefits from Polar
-        const userData = await storage.getUserById(userId);
-        if (userData?.email) {
+        // Extract plan and billing info from session metadata and product
+        const plan = session.metadata?.plan || 
+                    (session.productId === SUBSCRIPTION_PLANS.pro.productId ? 'pro' : 
+                     session.productId === SUBSCRIPTION_PLANS.enterprise.productId ? 'enterprise' : 
+                     'free');
+        
+        const billingInterval = session.metadata?.billingInterval || 
+                               session.price?.recurring_interval || 
+                               'month';
+
+        // Create or update subscription record in database
+        console.log('[Subscription Confirm] Creating subscription record in database...');
+        
+        const subscriptionData = {
+          userId,
+          polarSubscriptionId: session.subscription_id || `checkout_${session.id}`,
+          polarCustomerId: session.customer?.id || userData.polarCustomerId || '',
+          plan: plan as SubscriptionPlan,
+          status: 'active' as SubscriptionStatus, // Successful checkout means active subscription
+          billingInterval: billingInterval as BillingInterval,
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days for monthly
+          metadata: {
+            checkoutSessionId: session.id,
+            productId: session.productId,
+            priceId: session.price?.id,
+            amount: session.amount || session.price?.amount,
+            currency: session.currency || session.price?.currency || 'USD'
+          }
+        };
+
+        // Check if subscription already exists for this user
+        const existingSubscription = await storage.getSubscriptionByUserId(userId);
+        
+        if (existingSubscription) {
+          // Update existing subscription
+          await storage.updateSubscription(existingSubscription.id, subscriptionData);
+          console.log('[Subscription Confirm] Updated existing subscription');
+        } else {
+          // Create new subscription
+          await storage.createSubscription(subscriptionData);
+          console.log('[Subscription Confirm] Created new subscription');
+        }
+
+        // Sync subscription benefits from Polar to ensure consistency
+        console.log('[Subscription Confirm] Syncing subscription benefits from Polar...');
+        try {
           const polarData = await polarClient.syncUserSubscriptionBenefits(userData.email);
+          
+          // Update user with Polar customer ID and synced benefits
           await storage.updateUser(userId, {
-            polarCustomerId: polarData.customerId,
+            polarCustomerId: polarData.customerId || session.customer?.id,
             subscriptionBenefits: polarData.benefits,
           });
+          
+          console.log('[Subscription Confirm] Successfully synced benefits from Polar');
+        } catch (syncError: any) {
+          console.warn('[Subscription Confirm] Could not sync from Polar, using local benefits:', syncError.message);
+          
+          // Fall back to local benefits calculation
+          const planConfig = SUBSCRIPTION_PLANS[plan as keyof typeof SUBSCRIPTION_PLANS] || SUBSCRIPTION_PLANS.free;
+          const localBenefits = {
+            plan,
+            quizzesPerDay: planConfig.limits.quizzesPerDay,
+            categoriesAccess: planConfig.limits.categoriesAccess,
+            analyticsAccess: planConfig.limits.analyticsAccess,
+            lastSyncedAt: new Date().toISOString(),
+          };
+          
+          await storage.updateUser(userId, {
+            polarCustomerId: session.customer?.id,
+            subscriptionBenefits: localBenefits,
+          });
         }
 
+        console.log('[Subscription Confirm] Checkout confirmation completed successfully');
+        
         return res.json({
           success: true,
           plan,
           billingInterval,
-          message: 'Subscription activated successfully'
+          message: 'Subscription activated successfully!',
+          subscriptionId: session.subscription_id
         });
+        
       } catch (polarError: any) {
-        console.error('Error confirming Polar session:', polarError);
+        console.error('[Subscription Confirm] Error with Polar API:', polarError);
         
-        // Even if Polar fails, update user to pro for demo purposes
-        const proBenefits = {
-          plan: 'pro',
-          quizzesPerDay: SUBSCRIPTION_PLANS.pro.limits.quizzesPerDay,
-          categoriesAccess: SUBSCRIPTION_PLANS.pro.limits.categoriesAccess,
-          analyticsAccess: SUBSCRIPTION_PLANS.pro.limits.analyticsAccess,
-          lastSyncedAt: new Date().toISOString(),
-        };
+        // Check if this is a network/connection error
+        if (polarError.message?.includes('network') || polarError.message?.includes('fetch')) {
+          return res.status(503).json({ 
+            error: "Service temporarily unavailable",
+            success: false,
+            message: "Unable to connect to payment service. Please try again in a moment."
+          });
+        }
         
-        await storage.updateUser(userId, {
-          subscriptionBenefits: proBenefits,
-        });
-
-        return res.json({
-          success: true,
-          plan: 'pro',
-          billingInterval: 'month',
-          message: 'Subscription confirmed'
+        // For other errors, return generic message
+        return res.status(500).json({ 
+          error: "Verification failed",
+          success: false,
+          message: "Unable to verify your subscription. Please contact support if the issue persists."
         });
       }
+      
     } catch (error: any) {
-      console.error('Error confirming subscription:', error);
+      console.error('[Subscription Confirm] Unexpected error:', error);
       res.status(500).json({ 
         error: "Internal server error",
-        success: false 
+        success: false,
+        message: "An unexpected error occurred. Please contact support."
       });
     }
   });
