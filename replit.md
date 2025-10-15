@@ -94,19 +94,26 @@ The application now supports automatic environment switching between Polar sandb
 #### Sandbox Mode (Development)
 - Automatically activated when NODE_ENV=development
 - Uses `https://sandbox.polar.sh/api/v1` endpoint
-- Reads POLAR_SANDBOX_API_KEY environment variable
 - Shows `🧪 SANDBOX MODE` indicator in console logs
 - Safe for testing payment flows without real money
+- Uses `POLAR_SANDBOX_` prefix for all environment variables
 
 #### Production Mode
 - Activated when NODE_ENV=production
 - Uses `https://api.polar.sh/api/v1` endpoint
-- Reads POLAR_API_KEY environment variable
 - Shows `🚀 PRODUCTION MODE` indicator in console logs
+- Uses `POLAR_` prefix for all environment variables
 
 #### Environment Variables Required
-- **Development**: POLAR_SANDBOX_API_KEY (already set)
-- **Production**: POLAR_API_KEY, POLAR_PRO_PRODUCT_ID, POLAR_ENTERPRISE_PRODUCT_ID
+##### Development (with POLAR_SANDBOX_ prefix):
+- `POLAR_SANDBOX_API_KEY` - Your Polar sandbox API key (already set)
+- `POLAR_SANDBOX_PRO_PRODUCT_ID` - Product ID for Pro plan in sandbox
+- `POLAR_SANDBOX_ENTERPRISE_PRODUCT_ID` - Product ID for Enterprise plan in sandbox
+
+##### Production (with POLAR_ prefix):
+- `POLAR_API_KEY` - Your Polar production API key
+- `POLAR_PRO_PRODUCT_ID` - Product ID for Pro plan in production
+- `POLAR_ENTERPRISE_PRODUCT_ID` - Product ID for Enterprise plan in production
 
 #### 2.2 Subscription Management
 - Implement membership validation via Polar API

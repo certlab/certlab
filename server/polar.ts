@@ -395,11 +395,13 @@ class PolarClient {
     console.log('[Polar] Environment check at checkout time:');
     if (isDev) {
       console.log('  - POLAR_SANDBOX_API_KEY:', process.env.POLAR_SANDBOX_API_KEY ? 'Set' : 'Not set');
+      console.log('  - POLAR_SANDBOX_PRO_PRODUCT_ID:', process.env.POLAR_SANDBOX_PRO_PRODUCT_ID ? process.env.POLAR_SANDBOX_PRO_PRODUCT_ID.substring(0, 8) + '...' : 'Not set');
+      console.log('  - POLAR_SANDBOX_ENTERPRISE_PRODUCT_ID:', process.env.POLAR_SANDBOX_ENTERPRISE_PRODUCT_ID ? process.env.POLAR_SANDBOX_ENTERPRISE_PRODUCT_ID.substring(0, 8) + '...' : 'Not set');
     } else {
       console.log('  - POLAR_API_KEY:', process.env.POLAR_API_KEY ? 'Set' : 'Not set');
+      console.log('  - POLAR_PRO_PRODUCT_ID:', process.env.POLAR_PRO_PRODUCT_ID ? process.env.POLAR_PRO_PRODUCT_ID.substring(0, 8) + '...' : 'Not set');
+      console.log('  - POLAR_ENTERPRISE_PRODUCT_ID:', process.env.POLAR_ENTERPRISE_PRODUCT_ID ? process.env.POLAR_ENTERPRISE_PRODUCT_ID.substring(0, 8) + '...' : 'Not set');
     }
-    console.log('  - POLAR_PRO_PRODUCT_ID:', process.env.POLAR_PRO_PRODUCT_ID ? process.env.POLAR_PRO_PRODUCT_ID.substring(0, 8) + '...' : 'Not set');
-    console.log('  - POLAR_ENTERPRISE_PRODUCT_ID:', process.env.POLAR_ENTERPRISE_PRODUCT_ID ? process.env.POLAR_ENTERPRISE_PRODUCT_ID.substring(0, 8) + '...' : 'Not set');
     
     // Build request body according to Polar API spec
     const requestBody: any = {
@@ -883,10 +885,18 @@ export const SUBSCRIPTION_PLANS = {
   },
   pro: {
     name: 'Pro',
-    // Use getter to read environment variable dynamically
+    // Use getter to read environment variable dynamically based on environment
     get productId() {
-      const productId = process.env.POLAR_PRO_PRODUCT_ID || '';
-      console.log('[Polar] Getting Pro Product ID:', productId ? `${productId.substring(0, 8)}...` : '(empty)');
+      const isDev = process.env.NODE_ENV === 'development' || 
+                   process.env.NODE_ENV === 'dev' ||
+                   (process.env.NODE_ENV === undefined && process.env.POLAR_SANDBOX_API_KEY !== undefined);
+      
+      const productId = isDev 
+        ? process.env.POLAR_SANDBOX_PRO_PRODUCT_ID || ''
+        : process.env.POLAR_PRO_PRODUCT_ID || '';
+      
+      console.log(`[Polar] Getting Pro Product ID (${isDev ? 'SANDBOX' : 'PRODUCTION'}):`, 
+                  productId ? `${productId.substring(0, 8)}...` : '(empty)');
       return productId;
     },
     features: [
@@ -905,10 +915,18 @@ export const SUBSCRIPTION_PLANS = {
   },
   enterprise: {
     name: 'Enterprise',
-    // Use getter to read environment variable dynamically
+    // Use getter to read environment variable dynamically based on environment
     get productId() {
-      const productId = process.env.POLAR_ENTERPRISE_PRODUCT_ID || '';
-      console.log('[Polar] Getting Enterprise Product ID:', productId ? `${productId.substring(0, 8)}...` : '(empty)');
+      const isDev = process.env.NODE_ENV === 'development' || 
+                   process.env.NODE_ENV === 'dev' ||
+                   (process.env.NODE_ENV === undefined && process.env.POLAR_SANDBOX_API_KEY !== undefined);
+      
+      const productId = isDev 
+        ? process.env.POLAR_SANDBOX_ENTERPRISE_PRODUCT_ID || ''
+        : process.env.POLAR_ENTERPRISE_PRODUCT_ID || '';
+      
+      console.log(`[Polar] Getting Enterprise Product ID (${isDev ? 'SANDBOX' : 'PRODUCTION'}):`, 
+                  productId ? `${productId.substring(0, 8)}...` : '(empty)');
       return productId;
     },
     features: [
