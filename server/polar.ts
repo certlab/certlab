@@ -55,7 +55,6 @@ interface PolarCheckoutSession {
 
 class PolarClient {
   private _apiKey?: string;
-  private baseUrl = 'https://api.polar.sh/v1';
   private _organizationId?: string;
   private _webhookSecret?: string;
 
@@ -64,16 +63,56 @@ class PolarClient {
     this._apiKey = config?.apiKey;
     this._organizationId = config?.organizationId;
     this._webhookSecret = config?.webhookSecret;
+    
+    // Log initial environment detection
+    const isDev = this.isDevelopment;
+    if (isDev) {
+      console.log('[Polar] 🧪 SANDBOX MODE - Using Polar sandbox environment');
+    } else {
+      console.log('[Polar] 🚀 PRODUCTION MODE - Using Polar production environment');
+    }
+    console.log('[Polar] API Endpoint:', this.baseUrl);
   }
 
-  // Getter for API key that reads from env vars dynamically
-  private get apiKey(): string {
-    const key = this._apiKey || process.env.POLAR_API_KEY || '';
-    if (!key) {
-      console.log('[Polar] API key not configured (checked at runtime)');
-    } else {
-      console.log('[Polar] API key found:', key.substring(0, 8) + '...');
+  // Check if running in development environment
+  private get isDevelopment(): boolean {
+    return process.env.NODE_ENV === 'development' || 
+           process.env.NODE_ENV === 'dev' ||
+           (process.env.NODE_ENV === undefined && process.env.POLAR_SANDBOX_API_KEY !== undefined);
+  }
+
+  // Dynamic base URL based on environment
+  private get baseUrl(): string {
+    if (this.isDevelopment) {
+      return 'https://sandbox.polar.sh/api/v1';
     }
+    return 'https://api.polar.sh/v1';
+  }
+
+  // Getter for API key that reads from env vars dynamically based on environment
+  private get apiKey(): string {
+    let key: string;
+    const isDev = this.isDevelopment;
+    
+    if (isDev) {
+      // In development, use sandbox API key
+      key = this._apiKey || process.env.POLAR_SANDBOX_API_KEY || '';
+      if (!key) {
+        console.warn('[Polar] ⚠️ SANDBOX API key not configured in development environment!');
+        console.warn('[Polar] Please set POLAR_SANDBOX_API_KEY environment variable');
+      } else {
+        console.log('[Polar] 🧪 Using SANDBOX API key:', key.substring(0, 8) + '...');
+      }
+    } else {
+      // In production, use production API key
+      key = this._apiKey || process.env.POLAR_API_KEY || '';
+      if (!key) {
+        console.log('[Polar] API key not configured (checked at runtime)');
+      } else {
+        console.log('[Polar] 🚀 Using PRODUCTION API key:', key.substring(0, 8) + '...');
+      }
+    }
+    
     return key;
   }
 
@@ -230,7 +269,8 @@ class PolarClient {
     priceId?: string;
     switchAtPeriodEnd?: boolean;
   }): Promise<PolarSubscription> {
-    console.log('[Polar] Switching subscription plan:', {
+    const isDev = this.isDevelopment;
+    console.log(`[Polar] ${isDev ? '🧪 SANDBOX' : '🚀 PRODUCTION'} - Switching subscription plan:`, {
       subscriptionId: params.subscriptionId,
       newProductId: params.newProductId ? params.newProductId.substring(0, 8) + '...' : '(empty)',
       switchAtPeriodEnd: params.switchAtPeriodEnd
@@ -296,9 +336,14 @@ class PolarClient {
     customerEmail?: string;
     metadata?: Record<string, any>;
   }): Promise<PolarCheckoutSession> {
-    console.log('[Polar] Creating checkout session with product ID:', params.productId ? params.productId.substring(0, 8) + '...' : '(empty)');
+    const isDev = this.isDevelopment;
+    console.log(`[Polar] ${isDev ? '🧪 SANDBOX' : '🚀 PRODUCTION'} - Creating checkout session with product ID:`, params.productId ? params.productId.substring(0, 8) + '...' : '(empty)');
     console.log('[Polar] Environment check at checkout time:');
-    console.log('  - POLAR_API_KEY:', process.env.POLAR_API_KEY ? 'Set' : 'Not set');
+    if (isDev) {
+      console.log('  - POLAR_SANDBOX_API_KEY:', process.env.POLAR_SANDBOX_API_KEY ? 'Set' : 'Not set');
+    } else {
+      console.log('  - POLAR_API_KEY:', process.env.POLAR_API_KEY ? 'Set' : 'Not set');
+    }
     console.log('  - POLAR_PRO_PRODUCT_ID:', process.env.POLAR_PRO_PRODUCT_ID ? 'Set' : 'Not set');
     console.log('  - POLAR_ENTERPRISE_PRODUCT_ID:', process.env.POLAR_ENTERPRISE_PRODUCT_ID ? 'Set' : 'Not set');
     
@@ -582,7 +627,6 @@ export async function getPolarClient(userId?: string): Promise<PolarClient> {
 
 // Export singleton instance
 export const polarClient = polarClientInstance;
-console.log('[Polar] Initialized Polar client with dynamic environment variable reading');
 
 // Subscription plans configuration with dynamic environment variable reading
 export const SUBSCRIPTION_PLANS = {

@@ -88,6 +88,26 @@ Core entities include: Users, Categories, Subcategories, Questions, Quizzes, Use
 - Configure POLAR_API_KEY and POLAR_WEBHOOK_SECRET
 - Add database tables: user_subscriptions, subscription_events, membership_features
 
+### Polar Sandbox Integration (Implemented)
+The application now supports automatic environment switching between Polar sandbox and production:
+
+#### Sandbox Mode (Development)
+- Automatically activated when NODE_ENV=development
+- Uses `https://sandbox.polar.sh/api/v1` endpoint
+- Reads POLAR_SANDBOX_API_KEY environment variable
+- Shows `🧪 SANDBOX MODE` indicator in console logs
+- Safe for testing payment flows without real money
+
+#### Production Mode
+- Activated when NODE_ENV=production
+- Uses `https://api.polar.sh/api/v1` endpoint
+- Reads POLAR_API_KEY environment variable
+- Shows `🚀 PRODUCTION MODE` indicator in console logs
+
+#### Environment Variables Required
+- **Development**: POLAR_SANDBOX_API_KEY (already set)
+- **Production**: POLAR_API_KEY, POLAR_PRO_PRODUCT_ID, POLAR_ENTERPRISE_PRODUCT_ID
+
 #### 2.2 Subscription Management
 - Implement membership validation via Polar API
 - Set up 7-day free trial with tracking
