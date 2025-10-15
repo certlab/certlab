@@ -512,7 +512,17 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       
       if (!productId) {
         console.error(`[Checkout] Product ID not configured for plan: ${plan}`);
-        const envVarName = plan === 'pro' ? 'POLAR_PRO_PRODUCT_ID' : 'POLAR_ENTERPRISE_PRODUCT_ID';
+        
+        // Use correct environment variable names based on environment
+        const isDev = process.env.NODE_ENV === 'development' || 
+                     process.env.NODE_ENV === 'dev' ||
+                     (process.env.NODE_ENV === undefined && process.env.POLAR_SANDBOX_API_KEY !== undefined);
+        
+        const prefix = isDev ? 'POLAR_SANDBOX_' : 'POLAR_';
+        const envVarName = plan === 'pro' 
+          ? `${prefix}PRO_PRODUCT_ID` 
+          : `${prefix}ENTERPRISE_PRODUCT_ID`;
+        
         return res.status(500).json({ 
           error: "Configuration error", 
           message: `The ${plan} plan is not properly configured. Product ID is missing.`,
