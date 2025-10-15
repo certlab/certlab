@@ -1490,6 +1490,78 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
     }
   });
 
+  // Redirect to Polar Customer Portal for subscription management
+  app.get("/api/subscription/portal", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = req.user as User;
+      const userId = (user as any).claims?.sub || (user as any).id;
+      
+      console.log(`[Customer Portal] Creating portal session for user ${userId}`);
+      
+      // Get user data
+      const userData = await storage.getUserById(userId);
+      if (!userData) {
+        console.error('[Customer Portal] User not found');
+        return res.status(401).json({ 
+          error: "User not found",
+          message: "Unable to verify user account"
+        });
+      }
+      
+      // Check if user has a Polar customer ID
+      if (!userData.polarCustomerId) {
+        console.log('[Customer Portal] User has no Polar customer ID - may not have subscription');
+        return res.status(400).json({
+          error: "No subscription found",
+          message: "You don't have an active subscription to manage. Please subscribe first."
+        });
+      }
+      
+      // Get the appropriate Polar client
+      const polarClient = await getPolarClient(userId);
+      
+      // Create customer portal session
+      try {
+        console.log('[Customer Portal] Creating portal session for customer:', userData.polarCustomerId);
+        
+        // Get the customer portal URL from Polar
+        // Note: Polar's customer portal is accessed via a direct URL pattern
+        const isDev = process.env.NODE_ENV === 'development' || 
+                     process.env.NODE_ENV === 'dev' ||
+                     (process.env.NODE_ENV === undefined && process.env.POLAR_SANDBOX_API_KEY !== undefined);
+        
+        const baseUrl = isDev ? 'https://sandbox.polar.sh' : 'https://polar.sh';
+        const returnUrl = `${process.env.REPLIT_DOMAINS?.split(',')[0] || 'http://localhost:5000'}/app/subscription`;
+        
+        // Polar customer portal URL pattern
+        const portalUrl = `${baseUrl}/purchases?customer_id=${userData.polarCustomerId}&return_url=${encodeURIComponent(returnUrl)}`;
+        
+        console.log('[Customer Portal] Redirecting to portal:', portalUrl);
+        
+        // Return the portal URL for the frontend to handle redirect
+        res.json({
+          success: true,
+          portalUrl,
+          customerId: userData.polarCustomerId
+        });
+        
+      } catch (portalError: any) {
+        console.error('[Customer Portal] Error creating portal session:', portalError);
+        return res.status(500).json({
+          error: "Portal access failed",
+          message: "Unable to access the customer portal. Please try again later."
+        });
+      }
+      
+    } catch (error: any) {
+      console.error('[Customer Portal] Unexpected error:', error);
+      res.status(500).json({
+        error: "Internal server error",
+        message: "An unexpected error occurred. Please try again later."
+      });
+    }
+  });
+
   // Confirm checkout session after successful payment - ENHANCED WITH FULL VERIFICATION
   app.get("/api/subscription/confirm", isAuthenticated, async (req: Request, res: Response) => {
     try {
