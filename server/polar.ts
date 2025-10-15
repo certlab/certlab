@@ -341,12 +341,23 @@ class PolarClient {
     // Don't send organization_id when using organization token
     
     console.log('Searching for customer with email:', email);
-    const response = await this.request<any>(`/customers?${params}`);
     
-    // Handle paginated response from Polar API
-    const customers = response.items || response || [];
-    console.log('Found customers:', customers.length);
-    return customers.length > 0 ? customers[0] : null;
+    try {
+      const response = await this.request<any>(`/customers?${params}`);
+      
+      // Handle paginated response from Polar API
+      const customers = response.items || response || [];
+      console.log('Found customers:', customers.length);
+      return customers.length > 0 ? customers[0] : null;
+    } catch (error: any) {
+      // If customer not found (404), return null instead of throwing error
+      if (error.message?.includes('404') || error.message?.includes('not found')) {
+        console.log('No customer found with email:', email);
+        return null;
+      }
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   async updateCustomer(customerId: string, updates: Partial<PolarCustomer>): Promise<PolarCustomer> {
