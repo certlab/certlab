@@ -1358,8 +1358,16 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         });
       }
 
-      // Check if Polar is configured
-      if (!process.env.POLAR_API_KEY) {
+      // Check if Polar is configured based on environment
+      const isDev = process.env.NODE_ENV === 'development' || 
+                   process.env.NODE_ENV === 'dev' ||
+                   (process.env.NODE_ENV === undefined && process.env.POLAR_SANDBOX_API_KEY !== undefined);
+      
+      const polarConfigured = isDev 
+        ? !!process.env.POLAR_SANDBOX_API_KEY
+        : !!process.env.POLAR_API_KEY;
+
+      if (!polarConfigured) {
         return res.status(503).json({ 
           error: "Subscription service not configured",
           message: "Subscription switching is currently unavailable. Please contact support."
