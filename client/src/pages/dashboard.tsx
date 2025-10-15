@@ -217,7 +217,7 @@ export default function Dashboard() {
                     
                     {subscription.plan?.toLowerCase() !== 'enterprise' && (
                       <Button
-                        onClick={() => setLocation('/app/subscription-plans')}
+                        onClick={() => setLocation('/app/subscription/plans')}
                         size="sm"
                         className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
                       >

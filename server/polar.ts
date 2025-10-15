@@ -477,8 +477,29 @@ class PolarClient {
     } catch (error: any) {
       // Enhanced error handling with specific error messages
       console.error('[Polar] Failed to create checkout session:', error);
+      console.error('[Polar] Full error details:', {
+        message: error.message,
+        productId: params.productId,
+        isDev: this.isDevelopment,
+      });
       
       if (error.message?.includes('404') || error.message?.includes('not found')) {
+        // For sandbox mode, provide demo checkout URL if products aren't configured
+        if (this.isDevelopment) {
+          console.log('[Polar] Product not found in sandbox - returning demo checkout session');
+          const demoSession: PolarCheckoutSession = {
+            id: `demo_checkout_${Date.now()}`,
+            status: 'open',
+            url: `https://sandbox.polar.sh/checkout/demo?product=${params.productId}&success=${encodeURIComponent(params.successUrl)}`,
+            customer_email: params.customerEmail,
+            product_id: params.productId,
+            expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
+            created_at: new Date().toISOString(),
+            modified_at: new Date().toISOString(),
+          };
+          return demoSession;
+        }
+        
         throw new Error(
           `Product not found: The product ID '${params.productId}' does not exist in your Polar account. ` +
           `Please verify the product ID is correct and that the product is active in your Polar dashboard.`
