@@ -136,12 +136,20 @@ class PolarClient {
     return key;
   }
 
-  // Getter for organization ID that reads from env vars dynamically
+  // Getter for organization ID that reads from env vars dynamically based on environment
   private get organizationId(): string | undefined {
-    const orgId = this._organizationId || process.env.POLAR_ORGANIZATION_ID;
+    const isDev = this.isDevelopment;
+    
+    // Use correct prefix based on environment
+    const envVarName = isDev ? 'POLAR_SANDBOX_ORGANIZATION_ID' : 'POLAR_ORGANIZATION_ID';
+    const orgId = this._organizationId || process.env[envVarName];
+    
     if (orgId) {
-      console.log('[Polar] Organization ID found:', orgId.substring(0, 8) + '...');
+      console.log(`[Polar] Organization ID found (${isDev ? 'SANDBOX' : 'PRODUCTION'}):`, orgId.substring(0, 8) + '...');
+    } else if (this._organizationId === undefined) {
+      console.log(`[Polar] Organization ID not set (checked ${envVarName})`);
     }
+    
     return orgId;
   }
 
