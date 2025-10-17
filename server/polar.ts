@@ -168,13 +168,35 @@ class PolarClient {
 
     const url = `${this.baseUrl}${endpoint}`;
     
+    // Build headers with required Polar headers
+    const headers: HeadersInit = {
+      'Authorization': `Bearer ${this.apiKey}`,
+      'Content-Type': 'application/json',
+    };
+    
+    // Add Polar-Organization header if organization ID is available
+    if (this.organizationId) {
+      (headers as Record<string, string>)['Polar-Organization'] = this.organizationId;
+      console.log(`[Polar] Including Polar-Organization header: ${this.organizationId}`);
+    } else {
+      console.log('[Polar] Warning: No organization ID available for Polar-Organization header');
+    }
+    
+    // Merge with any provided headers
+    if (options.headers) {
+      Object.assign(headers, options.headers);
+    }
+    
+    // Log headers being sent (excluding sensitive auth token)
+    const logHeaders = { ...headers };
+    if ((logHeaders as any)['Authorization']) {
+      (logHeaders as any)['Authorization'] = 'Bearer [REDACTED]';
+    }
+    console.log(`[Polar] Request to ${endpoint} with headers:`, logHeaders);
+    
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
     });
 
     if (!response.ok) {
