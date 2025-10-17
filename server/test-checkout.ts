@@ -9,7 +9,7 @@ async function testCheckout() {
   try {
     // Create a test checkout session
     const session = await client.createCheckoutSession({
-      productId: process.env.POLAR_SANDBOX_PRO_PRICE_ID || '92348638-9f4b-4bc4-9d95-7258a17d4907',
+      productId: process.env.POLAR_SANDBOX_ENTERPRISE_PRICE_ID || '916dbe48-3661-420d-9706-e88a971cb1f2',
       successUrl: 'https://example.com/success?session_id={CHECKOUT_SESSION_ID}',
       cancelUrl: 'https://example.com/cancel',
       customerEmail: 'test@test.com',
