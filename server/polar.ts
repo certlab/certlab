@@ -445,8 +445,9 @@ export class PolarClient {
     }
     
     // Build request body according to Polar API spec
+    // Note: Polar expects product_price_id for checkout, not product_id
     const requestBody: any = {
-      product_id: params.productId,
+      product_price_id: params.productId, // This should be a price ID, not product ID
       success_url: params.successUrl,
     };
     
@@ -938,13 +939,14 @@ export const SUBSCRIPTION_PLANS = {
                    process.env.NODE_ENV === 'dev' ||
                    (process.env.NODE_ENV === undefined && process.env.POLAR_SANDBOX_API_KEY !== undefined);
       
-      const productId = isDev 
-        ? process.env.POLAR_SANDBOX_PRO_PRODUCT_ID || ''
-        : process.env.POLAR_PRO_PRODUCT_ID || '';
+      // Use Price ID for checkout (Polar requires price ID, not product ID)
+      const priceId = isDev 
+        ? (process.env.POLAR_SANDBOX_PRO_PRICE_ID || process.env.POLAR_SANDBOX_PRO_PRODUCT_ID || '')
+        : (process.env.POLAR_PRO_PRICE_ID || process.env.POLAR_PRO_PRODUCT_ID || '');
       
-      console.log(`[Polar] Getting Pro Product ID (${isDev ? 'SANDBOX' : 'PRODUCTION'}):`, 
-                  productId ? `${productId.substring(0, 8)}...` : '(empty)');
-      return productId;
+      console.log(`[Polar] Getting Pro Price/Product ID (${isDev ? 'SANDBOX' : 'PRODUCTION'}):`, 
+                  priceId ? `${priceId.substring(0, 8)}...` : '(empty)');
+      return priceId;
     },
     features: [
       'Access to all certifications',
@@ -968,13 +970,14 @@ export const SUBSCRIPTION_PLANS = {
                    process.env.NODE_ENV === 'dev' ||
                    (process.env.NODE_ENV === undefined && process.env.POLAR_SANDBOX_API_KEY !== undefined);
       
-      const productId = isDev 
-        ? process.env.POLAR_SANDBOX_ENTERPRISE_PRODUCT_ID || ''
-        : process.env.POLAR_ENTERPRISE_PRODUCT_ID || '';
+      // Use Price ID for checkout (Polar requires price ID, not product ID)
+      const priceId = isDev 
+        ? (process.env.POLAR_SANDBOX_ENTERPRISE_PRICE_ID || process.env.POLAR_SANDBOX_ENTERPRISE_PRODUCT_ID || '')
+        : (process.env.POLAR_ENTERPRISE_PRICE_ID || process.env.POLAR_ENTERPRISE_PRODUCT_ID || '');
       
-      console.log(`[Polar] Getting Enterprise Product ID (${isDev ? 'SANDBOX' : 'PRODUCTION'}):`, 
-                  productId ? `${productId.substring(0, 8)}...` : '(empty)');
-      return productId;
+      console.log(`[Polar] Getting Enterprise Price/Product ID (${isDev ? 'SANDBOX' : 'PRODUCTION'}):`, 
+                  priceId ? `${priceId.substring(0, 8)}...` : '(empty)');
+      return priceId;
     },
     features: [
       'Everything in Pro',

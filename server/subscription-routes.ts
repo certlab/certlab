@@ -760,6 +760,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       });
 
       console.log(`[Checkout] Checkout session created successfully: ${session.id}`);
+      console.log(`[Checkout] Full checkout URL: ${session.url}`);
 
       // Prepare database for incoming webhook by creating a pending subscription record
       // This helps track checkout sessions and handle webhook delays
