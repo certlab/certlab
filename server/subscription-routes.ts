@@ -734,12 +734,22 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       
       // Prepare customer name if available
       const customerName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || undefined;
+      
+      // Validate and potentially clean up the email for sandbox mode
+      let customerEmail = user.email;
+      
+      // In sandbox mode, if email ends with @example.com (test email), 
+      // replace with a valid test domain that Polar accepts
+      if (polarClient.isDevelopment && customerEmail.endsWith('@example.com')) {
+        console.log('[Checkout] Detected test email with @example.com, replacing with @test.com for Polar sandbox');
+        customerEmail = customerEmail.replace('@example.com', '@test.com');
+      }
 
       const session = await polarClient.createCheckoutSession({
         productId: productId,
         successUrl: successUrl,
         cancelUrl: cancelUrl,
-        customerEmail: user.email,
+        customerEmail: customerEmail,
         customerName: customerName,
         metadata: {
           userId: userId,
@@ -756,7 +766,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
       const pendingSubscriptionData = {
         userId: userId,
         polarSubscriptionId: session.id, // Store checkout session ID temporarily
-        polarCustomerId: customer.id,
+        polarCustomerId: null, // Customer will be created by Polar during checkout
         productId: productId, // Use the validated productId variable
         status: 'pending_checkout',
         plan: plan,

@@ -73,7 +73,7 @@ interface PolarCheckoutSession {
   subscription_id?: string;
 }
 
-class PolarClient {
+export class PolarClient {
   private _apiKey?: string;
   private _organizationId?: string;
   private _webhookSecret?: string;
@@ -95,7 +95,7 @@ class PolarClient {
   }
 
   // Check if running in development environment
-  private get isDevelopment(): boolean {
+  get isDevelopment(): boolean {
     return process.env.NODE_ENV === 'development' || 
            process.env.NODE_ENV === 'dev' ||
            (process.env.NODE_ENV === undefined && process.env.POLAR_SANDBOX_API_KEY !== undefined);
@@ -104,7 +104,7 @@ class PolarClient {
   // Dynamic base URL based on environment
   private get baseUrl(): string {
     if (this.isDevelopment) {
-      return 'https://sandbox.polar.sh/api/v1';
+      return 'https://sandbox-api.polar.sh/v1';
     }
     return 'https://api.polar.sh/v1';
   }
