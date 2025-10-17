@@ -1655,7 +1655,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         
         if (checkout_id && typeof checkout_id === 'string' && !session_id) {
           // Look up the pending subscription by our custom checkout ID
-          const pendingSubscription = await storage.getSubscriptionByUserId(userId);
+          const pendingSubscription = await storage.getPendingCheckoutByUserId(userId);
           
           if (pendingSubscription && pendingSubscription.metadata) {
             const metadata = pendingSubscription.metadata as any;

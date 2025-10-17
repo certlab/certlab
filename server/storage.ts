@@ -161,6 +161,7 @@ export interface IStorage {
   createSubscription(subscription: InsertSubscription): Promise<SelectSubscription>;
   getSubscriptionById(id: number): Promise<SelectSubscription | null>;
   getSubscriptionByUserId(userId: string): Promise<SelectSubscription | null>;
+  getPendingCheckoutByUserId(userId: string): Promise<SelectSubscription | null>;
   getSubscriptionByPolarId(polarSubscriptionId: string): Promise<SelectSubscription | null>;
   updateSubscription(id: number, updates: Partial<InsertSubscription>): Promise<SelectSubscription | null>;
   updateSubscriptionByPolarId(polarSubscriptionId: string, updates: Partial<InsertSubscription>): Promise<SelectSubscription | null>;
@@ -3579,6 +3580,18 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
           eq(subscriptions.status, 'active'),
           eq(subscriptions.status, 'trialing')
         )
+      ))
+      .orderBy(desc(subscriptions.createdAt))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async getPendingCheckoutByUserId(userId: string): Promise<SelectSubscription | null> {
+    const result = await db.select()
+      .from(subscriptions)
+      .where(and(
+        eq(subscriptions.userId, userId),
+        eq(subscriptions.status, 'pending_checkout')
       ))
       .orderBy(desc(subscriptions.createdAt))
       .limit(1);
