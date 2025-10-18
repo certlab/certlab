@@ -25,6 +25,7 @@ import SubscriptionPlansPage from "@/pages/subscription-plans";
 import SubscriptionManagePage from "@/pages/subscription-manage";
 import SubscriptionSuccessPage from "@/pages/subscription-success";
 import SubscriptionCancelPage from "@/pages/subscription-cancel";
+import CreditsPage from "@/pages/credits";
 import ProfilePage from "@/pages/profile";
 import PracticeTests from "@/pages/practice-tests";
 import { useEffect } from "react";
@@ -81,6 +82,7 @@ function Router() {
               <Route path="/app/subscription/manage" component={SubscriptionManagePage} />
               <Route path="/app/subscription/success" component={SubscriptionSuccessPage} />
               <Route path="/app/subscription/cancel" component={SubscriptionCancelPage} />
+              <Route path="/app/credits" component={CreditsPage} />
               {isAdmin && <Route path="/admin" component={AdminDashboard} />}
               <Route component={NotFound} />
             </Switch>

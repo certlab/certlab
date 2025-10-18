@@ -5,6 +5,7 @@ import adminRoutes from "./admin-routes";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { registerSubscriptionRoutes } from "./subscription-routes";
 import { isCategoryAccessible } from "@shared/categoryAccess";
+import { polarClient } from "./polar";
 import { 
   insertUserSchema, 
   createQuizSchema, 
@@ -153,6 +154,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get credit balance (protected)
+  app.get("/api/credits/balance", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUserById(userId);
+      
+      if (!user || !user.email) {
+        return res.status(400).json({ 
+          error: "User not found",
+          message: "Unable to verify user account" 
+        });
+      }
+
+      try {
+        // Get or create Polar customer
+        const polarCustomer = await polarClient.createOrGetCustomerForUser(
+          user.email,
+          `${user.firstName || ''} ${user.lastName || ''}`.trim()
+        );
+        
+        // Get credit balance from Polar
+        const balance = await polarClient.getCustomerBalance(polarCustomer.id);
+        
+        res.json({
+          availableCredits: balance.availableCredits,
+          totalPurchased: balance.totalPurchased,
+          totalConsumed: balance.totalConsumed,
+          customerId: polarCustomer.id,
+        });
+      } catch (error: any) {
+        console.error('[Credits] Error fetching balance:', error);
+        // Return 0 credits on error to prevent blocking UI
+        res.json({
+          availableCredits: 0,
+          totalPurchased: 0,
+          totalConsumed: 0,
+          error: 'Unable to fetch credit balance',
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        error: "Failed to get credit balance",
+        message: "Please try again later" 
+      });
+    }
+  });
+
+  // Create checkout session for credit purchase (protected)
+  app.post("/api/credits/checkout", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUserById(userId);
+      
+      if (!user || !user.email) {
+        return res.status(400).json({ 
+          error: "User not found",
+          message: "Unable to verify user account" 
+        });
+      }
+
+      const { priceId, packageId, credits } = req.body;
+      
+      if (!priceId) {
+        return res.status(400).json({ 
+          error: "Invalid request",
+          message: "Price ID is required" 
+        });
+      }
+
+      try {
+        // Get or create Polar customer
+        const polarCustomer = await polarClient.createOrGetCustomerForUser(
+          user.email,
+          `${user.firstName || ''} ${user.lastName || ''}`.trim()
+        );
+        
+        console.log('[Credits Checkout] Creating checkout session:', {
+          userId,
+          packageId,
+          credits,
+          priceId,
+        });
+
+        // Get the base URL for success/cancel redirects
+        const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000'}`;
+        
+        // Create Polar checkout session for credit purchase
+        const checkoutSession = await polarClient.createCheckoutSession({
+          priceId,
+          successUrl: `${baseUrl}/app/credits?purchase=success`,
+          cancelUrl: `${baseUrl}/app/credits?purchase=canceled`,
+          customerEmail: user.email,
+          customerName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+          metadata: {
+            userId,
+            packageId,
+            credits: credits.toString(),
+            type: 'credit_purchase',
+          },
+        });
+
+        console.log('[Credits Checkout] Checkout session created:', {
+          sessionId: checkoutSession.id,
+          url: checkoutSession.url,
+        });
+
+        res.json({
+          checkoutUrl: checkoutSession.url,
+          sessionId: checkoutSession.id,
+        });
+      } catch (error: any) {
+        console.error('[Credits Checkout] Error creating checkout session:', error);
+        res.status(500).json({ 
+          error: "Checkout failed",
+          message: error.message || "Unable to create checkout session. Please try again later.",
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        error: "Failed to create checkout",
+        message: "Please try again later" 
+      });
+    }
+  });
+
   // Create quiz with adaptive learning (protected)
   app.post("/api/quiz", isAuthenticated, async (req: any, res) => {
     try {
@@ -160,61 +286,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub; // Get userId from authenticated user
       const isAdaptive = req.body.isAdaptive || false;
       
-      // Check subscription limits
+      // Credit-based billing: check if user has enough credits
+      const CREDITS_PER_QUIZ = 5;
       const user = await storage.getUserById(userId);
-      if (user) {
-        // Check and reset daily quiz count if needed
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const lastReset = user.lastQuizResetDate ? new Date(user.lastQuizResetDate) : null;
-        
-        if (!lastReset || lastReset < today) {
-          // Reset the daily quiz count
-          await storage.updateUser(userId, {
-            dailyQuizCount: 0,
-            lastQuizResetDate: today,
-          });
-          user.dailyQuizCount = 0;
-        }
-        
-        // Get subscription plan limits from subscription benefits
-        const benefits = user.subscriptionBenefits as any || {};
-        const plan = benefits.plan || 'free';
-        const quizLimit = benefits.quizzesPerDay || 5;
-        const categoriesAccess = benefits.categoriesAccess || ['basic'];
-        
-        // Validate category access based on subscription
-        const categories = await storage.getCategories();
-        const selectedCategoryNames = categories
-          .filter(cat => quizData.categoryIds.includes(cat.id))
-          .map(cat => cat.name);
-        
-        // Check if user has access to all selected categories
-        const restrictedCategories = selectedCategoryNames.filter(
-          catName => !isCategoryAccessible(catName, categoriesAccess)
+      
+      if (!user || !user.email) {
+        return res.status(400).json({ 
+          error: "User not found",
+          message: "Unable to verify user account" 
+        });
+      }
+      
+      let polarCustomer;
+      try {
+        // Get or create Polar customer
+        polarCustomer = await polarClient.createOrGetCustomerForUser(
+          user.email,
+          `${user.firstName || ''} ${user.lastName || ''}`.trim()
         );
         
-        if (restrictedCategories.length > 0) {
-          return res.status(403).json({
-            error: "Category access restricted",
-            message: `The following categories require a Pro subscription: ${restrictedCategories.join(', ')}. Upgrade to access advanced certifications!`,
-            restrictedCategories: restrictedCategories,
-            upgradeUrl: "/app/subscription-plans",
-            currentPlan: plan,
-          });
-        }
+        // Check credit balance from Polar
+        const balance = await polarClient.getCustomerBalance(polarCustomer.id);
         
-        // Check if user has reached their daily limit
-        if (quizLimit > 0 && (user.dailyQuizCount || 0) >= quizLimit) {
+        console.log('[Quiz Creation] Credit check:', {
+          userId,
+          email: user.email,
+          availableCredits: balance.availableCredits,
+          requiredCredits: CREDITS_PER_QUIZ,
+        });
+        
+        // Ensure user has enough credits
+        if (balance.availableCredits < CREDITS_PER_QUIZ) {
           return res.status(403).json({ 
-            error: "Daily quiz limit reached",
-            message: `You have reached your daily limit of ${quizLimit} quizzes. Upgrade to Pro for unlimited quizzes!`,
-            upgradeUrl: "/app/subscription-plans",
-            currentCount: user.dailyQuizCount || 0,
-            limit: quizLimit,
+            error: "Insufficient credits",
+            message: `You need ${CREDITS_PER_QUIZ} credits to create a quiz. You currently have ${balance.availableCredits} credits.`,
+            availableCredits: balance.availableCredits,
+            requiredCredits: CREDITS_PER_QUIZ,
+            purchaseUrl: "/app/credits",
           });
         }
+      } catch (error: any) {
+        console.error('[Quiz Creation] Error checking credits:', error);
+        return res.status(500).json({ 
+          error: "Credit check failed",
+          message: "Unable to verify credit balance. Please try again later.",
+        });
       }
       
       // Check available questions for the selected categories
@@ -250,11 +366,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mode: quizData.mode || "study"
       });
       
-      // Increment daily quiz count after successful creation
-      if (user) {
-        await storage.updateUser(userId, {
-          dailyQuizCount: (user.dailyQuizCount || 0) + 1,
+      // Report usage to Polar meter
+      try {
+        await polarClient.reportUsage({
+          customerId: polarCustomer.id,
+          eventName: 'credit_usage',
+          properties: {
+            credits_consumed: CREDITS_PER_QUIZ,
+            quiz_id: quiz.id.toString(),
+            user_id: userId,
+          },
         });
+        
+        console.log('[Quiz Creation] Usage reported to Polar:', {
+          quizId: quiz.id,
+          creditsConsumed: CREDITS_PER_QUIZ,
+        });
+      } catch (error: any) {
+        console.error('[Quiz Creation] Failed to report usage to Polar:', error);
+        // Don't fail quiz creation if usage reporting fails
+        // The quiz has already been created, usage reporting is for billing
       }
       
       res.json(quiz);

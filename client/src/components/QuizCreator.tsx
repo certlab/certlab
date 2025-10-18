@@ -38,11 +38,17 @@ export default function QuizCreator() {
   const createQuizMutation = useMutation({
     mutationFn: async (quizData: any) => {
       const response = await apiRequest({ method: "POST", endpoint: "/api/quiz", data: quizData });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw errorData;
+      }
+      
       return response.json();
     },
     onSuccess: (quiz) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
       
       // Show adaptive learning feedback if applicable
       if (quiz.adaptiveInfo && quiz.adaptiveInfo.increasePercentage > 0) {
@@ -55,10 +61,31 @@ export default function QuizCreator() {
       
       setLocation(`/app/quiz/${quiz.id}`);
     },
-    onError: () => {
+    onError: (error: any) => {
+      // Handle insufficient credits error
+      if (error?.error === "Insufficient credits") {
+        toast({
+          title: "Insufficient Credits",
+          description: error.message || "You don't have enough credits to create a quiz.",
+          variant: "destructive",
+          action: (
+            <Button 
+              size="sm" 
+              onClick={() => setLocation('/app/credits')}
+              className="bg-purple-600 text-white hover:bg-purple-700"
+            >
+              <Sparkles className="w-3 h-3 mr-1" />
+              Buy Credits
+            </Button>
+          ),
+        });
+        return;
+      }
+      
+      // Generic error handler
       toast({
         title: "Error",
-        description: "Failed to create quiz. Please try again.",
+        description: error?.message || "Failed to create quiz. Please try again.",
         variant: "destructive",
       });
     },

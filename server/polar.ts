@@ -907,6 +907,78 @@ export class PolarClient {
       };
     }
   }
+
+  // Usage-Based Billing Methods
+
+  async reportUsage(params: {
+    customerId: string;
+    eventName: string;
+    properties: Record<string, number | string>;
+    timestamp?: string;
+  }): Promise<void> {
+    const { customerId, eventName, properties, timestamp } = params;
+    
+    const isDev = this.isDevelopment;
+    console.log(`[Polar] ${isDev ? '🧪 SANDBOX' : '🚀 PRODUCTION'} - Reporting usage event:`, {
+      customerId: customerId.substring(0, 8) + '...',
+      eventName,
+      properties,
+    });
+
+    await this.request('/meters/events', {
+      method: 'POST',
+      body: JSON.stringify({
+        customer_id: customerId,
+        event_name: eventName,
+        properties,
+        timestamp: timestamp || new Date().toISOString(),
+      }),
+    });
+
+    console.log('[Polar] Usage event reported successfully');
+  }
+
+  async getCustomerBalance(customerId: string): Promise<{
+    availableCredits: number;
+    totalPurchased: number;
+    totalConsumed: number;
+  }> {
+    const isDev = this.isDevelopment;
+    console.log(`[Polar] ${isDev ? '🧪 SANDBOX' : '🚀 PRODUCTION'} - Fetching credit balance for customer:`, customerId.substring(0, 8) + '...');
+
+    try {
+      const response = await this.request<any>(`/customers/${customerId}/balance`);
+      
+      const availableCredits = response.available_credits || 0;
+      const totalPurchased = response.total_purchased || 0;
+      const totalConsumed = response.total_consumed || 0;
+
+      console.log('[Polar] Credit balance retrieved:', {
+        availableCredits,
+        totalPurchased,
+        totalConsumed,
+      });
+
+      return {
+        availableCredits,
+        totalPurchased,
+        totalConsumed,
+      };
+    } catch (error: any) {
+      console.error('[Polar] Failed to fetch credit balance:', error);
+      
+      if (error.message?.includes('404') || error.message?.includes('not found')) {
+        console.log('[Polar] Customer not found or has no balance, returning 0 credits');
+        return {
+          availableCredits: 0,
+          totalPurchased: 0,
+          totalConsumed: 0,
+        };
+      }
+      
+      throw error;
+    }
+  }
 }
 
 // Create singleton instance of Polar client

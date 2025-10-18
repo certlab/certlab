@@ -35,12 +35,11 @@ import {
   User,
   FileText,
   Crown,
-  Sparkles
+  Sparkles,
+  Coins
 } from "lucide-react";
 import MobileNavigationEnhanced from "@/components/MobileNavigationEnhanced";
-import SubscriptionBadge from "@/components/SubscriptionBadge";
 import { useQuery } from "@tanstack/react-query";
-import { normalizePlanName, type SubscriptionPlan } from "@shared/subscriptionUtils";
 
 export default function Header() {
   const [location, setLocation] = useLocation();
@@ -49,9 +48,13 @@ export default function Header() {
   const isAdminArea = location.startsWith('/admin');
   const isAdmin = currentUser?.role === 'admin';
   
-  // Get subscription status
-  const { data: subscription } = useQuery<any>({
-    queryKey: ["/api/subscription/status"],
+  // Get credit balance
+  const { data: creditBalance } = useQuery<{
+    availableCredits: number;
+    totalPurchased: number;
+    totalConsumed: number;
+  }>({
+    queryKey: ["/api/credits/balance"],
     enabled: !!currentUser,
     staleTime: 30 * 1000, // Consider data fresh for 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
@@ -96,25 +99,25 @@ export default function Header() {
     <header className="bg-card shadow-sm border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo and Subscription Badge */}
+          {/* Logo and Credit Balance */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-xl font-semibold text-foreground tracking-tight">Cert Lab</h1>
-              {/* Subscription Badge */}
-              {subscription && currentUser && (
-                <SubscriptionBadge 
-                  plan={normalizePlanName(subscription.plan)}
-                  size="small"
-                  showQuizCount={normalizePlanName(subscription.plan) === 'free'}
-                  dailyQuizCount={subscription.dailyQuizCount}
-                  quizLimit={subscription.limits?.quizzesPerDay}
-                  interactive
-                  onClick={() => setLocation('/app/subscription/plans')}
-                  className="ml-2"
-                />
+              {/* Credit Balance Display */}
+              {creditBalance && currentUser && (
+                <Badge 
+                  variant="secondary" 
+                  className="ml-2 px-3 py-1 cursor-pointer hover:bg-secondary/80 transition-colors"
+                  onClick={() => setLocation('/app/credits')}
+                  data-testid="credit-balance-badge"
+                >
+                  <Coins className="w-4 h-4 mr-1.5 text-amber-500" />
+                  <span className="font-medium">{creditBalance.availableCredits}</span>
+                  <span className="ml-1 text-xs text-muted-foreground">credits</span>
+                </Badge>
               )}
             </div>
           </div>
@@ -322,52 +325,41 @@ export default function Header() {
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-semibold">{getUserDisplayName(currentUser)}</p>
                       <p className="text-xs text-muted-foreground">Certification Student</p>
-                      {/* Subscription Info */}
-                      {subscription && (
+                      {/* Credit Balance Info */}
+                      {creditBalance && (
                         <div className="mt-1">
-                          <SubscriptionBadge 
-                            plan={normalizePlanName(subscription.plan)}
-                            size="small"
-                            showQuizCount={false}
-                          />
+                          <Badge variant="secondary" className="text-xs">
+                            <Coins className="w-3 h-3 mr-1 text-amber-500" />
+                            {creditBalance.availableCredits} credits
+                          </Badge>
                         </div>
                       )}
                     </div>
                   </div>
-                  {/* Subscription Benefits Summary */}
-                  {subscription && (
+                  {/* Credit Summary */}
+                  {creditBalance && (
                     <>
                       <DropdownMenuSeparator className="my-2" />
                       <div className="px-3 py-2">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Your Benefits:</p>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Credit Balance:</p>
                         <div className="space-y-1">
-                          {normalizePlanName(subscription.plan) === 'free' ? (
-                            <>
-                              <div className="flex items-center gap-1.5 text-xs">
-                                <Sparkles className="w-3 h-3 text-muted-foreground" />
-                                <span>{subscription.dailyQuizCount}/{subscription.limits?.quizzesPerDay} quizzes used today</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 text-xs">
-                                <Crown className="w-3 h-3 text-purple-500" />
-                                <button 
-                                  onClick={() => setLocation('/app/subscription/plans')}
-                                  className="text-purple-600 hover:underline"
-                                >
-                                  Upgrade for unlimited access
-                                </button>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex items-center gap-1.5 text-xs text-green-600">
-                                <Sparkles className="w-3 h-3" />
-                                <span>Unlimited quizzes</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 text-xs text-green-600">
-                                <Sparkles className="w-3 h-3" />
-                                <span>All certifications unlocked</span>
-                              </div>
-                            </>
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <Coins className="w-3 h-3 text-amber-500" />
+                            <span>{creditBalance.availableCredits} available credits</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <span>5 credits per quiz</span>
+                          </div>
+                          {creditBalance.availableCredits < 10 && (
+                            <div className="flex items-center gap-1.5 text-xs">
+                              <Sparkles className="w-3 h-3 text-purple-500" />
+                              <button 
+                                onClick={() => setLocation('/app/credits')}
+                                className="text-purple-600 hover:underline"
+                              >
+                                Purchase more credits
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
