@@ -93,9 +93,22 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
         // Use database subscription data as source of truth
         console.log(`[Subscription Status] Using cached database subscription for user ${userId}`);
         
-        const plan = SUBSCRIPTION_PLANS[dbSubscription.plan as keyof typeof SUBSCRIPTION_PLANS] || SUBSCRIPTION_PLANS.free;
+        // Verify the plan matches the product ID (data integrity check)
+        let planName = dbSubscription.plan || 'free';
+        if (dbSubscription.productId) {
+          const planFromProduct = getPlanFromProductId(dbSubscription.productId);
+          if (planFromProduct !== planName) {
+            console.warn(`[Subscription Status] Plan mismatch detected: DB shows '${planName}' but product ID indicates '${planFromProduct}'. Correcting to '${planFromProduct}'.`);
+            planName = planFromProduct;
+            
+            // Fix the database record
+            await storage.updateSubscription(dbSubscription.id, { plan: planFromProduct });
+          }
+        }
+        
+        const plan = SUBSCRIPTION_PLANS[planName as keyof typeof SUBSCRIPTION_PLANS] || SUBSCRIPTION_PLANS.free;
         benefits = {
-          plan: dbSubscription.plan || 'free',
+          plan: planName,
           quizzesPerDay: plan.limits.quizzesPerDay,
           categoriesAccess: plan.limits.categoriesAccess,
           analyticsAccess: plan.limits.analyticsAccess,
@@ -161,14 +174,19 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
                 // Update or create subscription in database
                 // Handle both camelCase and snake_case from Polar API
                 const sub = activeSubscription as any;
+                const productId = sub.productId || sub.product_id;
+                
+                // Determine plan from product ID (source of truth)
+                const planFromProduct = getPlanFromProductId(productId);
+                
                 const subscriptionData = {
                   userId: userId,
                   polarSubscriptionId: sub.id,
                   polarCustomerId: polarData.customerId,
-                  productId: sub.productId || sub.product_id,
+                  productId: productId,
                   priceId: sub.priceId || sub.price_id,
                   status: sub.status,
-                  plan: benefits.plan || 'free',
+                  plan: planFromProduct, // Use product ID as source of truth
                   billingInterval: sub.billingInterval || sub.recurring_interval || 'month',
                   currentPeriodStart: sub.currentPeriodStart || sub.current_period_start ? new Date(sub.currentPeriodStart || sub.current_period_start) : new Date(),
                   currentPeriodEnd: sub.currentPeriodEnd || sub.current_period_end ? new Date(sub.currentPeriodEnd || sub.current_period_end) : new Date(),
@@ -186,6 +204,16 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
                 } else {
                   await storage.createSubscription(subscriptionData);
                 }
+                
+                // Update benefits to match the correct plan from product ID
+                const correctPlan = SUBSCRIPTION_PLANS[planFromProduct as keyof typeof SUBSCRIPTION_PLANS] || SUBSCRIPTION_PLANS.free;
+                benefits = {
+                  plan: planFromProduct,
+                  quizzesPerDay: correctPlan.limits.quizzesPerDay,
+                  categoriesAccess: correctPlan.limits.categoriesAccess,
+                  analyticsAccess: correctPlan.limits.analyticsAccess,
+                  lastSyncedAt: new Date().toISOString(),
+                };
               }
             } catch (err: any) {
               console.error("Error getting detailed subscription status:", err);
@@ -2196,7 +2224,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
                   previousPlan: previousPlan,
                   planSwitchDetectedAt: new Date().toISOString(),
                   planSwitchType: type === 'subscription.updated' ? 'upgrade_or_downgrade' : 'other',
-                };
+                } as any;
               }
               
               console.log(`[Webhook] Updating existing subscription ${existingSubscription.id}`);
