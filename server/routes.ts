@@ -160,7 +160,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('[Credits Products] Fetching products from Polar');
       
       // Fetch all products from Polar
-      const products = await polarClient.getProducts();
+      const productsResponse = await polarClient.getProducts();
+      console.log('[Credits Products] Raw response type:', typeof productsResponse);
+      console.log('[Credits Products] Raw response:', JSON.stringify(productsResponse).substring(0, 200));
+      
+      // Polar API may return { data: [...] } or { items: [...] } or just [...]
+      const products = Array.isArray(productsResponse) 
+        ? productsResponse 
+        : (productsResponse as any).data || (productsResponse as any).items || (productsResponse as any).results || [];
       
       // Filter for credit products and format response
       const creditProducts = products
