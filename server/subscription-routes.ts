@@ -1380,7 +1380,7 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
     }
 
     const switchPlanSchema = z.object({
-      newPlan: z.enum(['pro', 'enterprise']),
+      newPlan: z.enum(['free', 'pro', 'enterprise']),
       billingInterval: z.enum(['monthly', 'yearly']).optional().default('monthly'),
       switchAtPeriodEnd: z.boolean().optional().default(false),
     });
