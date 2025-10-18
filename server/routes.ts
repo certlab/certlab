@@ -210,7 +210,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Find the USD price (or first available price as fallback)
             const prices = product.prices || [];
-            const usdPrice = prices.find((p: any) => p.currency?.toLowerCase() === 'usd');
+            
+            console.log(`[Credits Products] Product ${product.id} prices:`, JSON.stringify(prices));
+            
+            const usdPrice = prices.find((p: any) => p.currency?.toLowerCase() === 'usd' || p.price_currency?.toLowerCase() === 'usd');
             const price = usdPrice || prices[0];
             
             if (!price) {
@@ -218,14 +221,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return null;
             }
             
+            // Extract price amount and currency (handle different possible field names)
+            const priceAmount = price.price_amount || price.amount || 0;
+            const priceCurrency = price.price_currency || price.currency || 'USD';
+            
+            console.log(`[Credits Products] Product ${product.id} selected price:`, { priceAmount, priceCurrency, priceId: price.id });
+            
             // Format price display
             const currencySymbols: Record<string, string> = {
               usd: '$',
               eur: '€',
               gbp: '£',
             };
-            const currencySymbol = currencySymbols[price.currency?.toLowerCase()] || price.currency?.toUpperCase();
-            const formattedPrice = `${currencySymbol}${(price.amount / 100).toFixed(2)}`;
+            const currencySymbol = currencySymbols[priceCurrency?.toLowerCase()] || priceCurrency?.toUpperCase() || '$';
+            const formattedPrice = `${currencySymbol}${((priceAmount || 0) / 100).toFixed(2)}`;
             
             return {
               id: product.id,
@@ -233,8 +242,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               description: product.description || '',
               credits,
               price: {
-                amount: price.amount,
-                currency: price.currency || 'USD',
+                amount: priceAmount,
+                currency: priceCurrency,
                 priceId: price.id,
                 formatted: formattedPrice,
               },
