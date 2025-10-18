@@ -84,12 +84,16 @@ export default function SubscriptionSuccess() {
     );
   }
 
-  if (error) {
+  // Check if confirmation failed (either network error or success:false response)
+  const confirmationFailed = error || (data && !data.success);
+  
+  if (confirmationFailed) {
     // Determine error type for better messaging
-    const errorMessage = (error as any)?.message || "";
+    const errorMessage = data?.message || data?.error || (error as any)?.message || "";
     const isNetworkError = errorMessage.includes("network") || errorMessage.includes("fetch");
     const isVerificationError = errorMessage.includes("verify") || errorMessage.includes("confirm");
     const isTimeoutError = errorMessage.includes("timeout");
+    const isPendingCheckoutNotFound = errorMessage.includes("pending checkout") || errorMessage.includes("No pending");
     
     return (
       <div className="container max-w-2xl mx-auto p-8">
@@ -110,7 +114,9 @@ export default function SubscriptionSuccess() {
                 {isNetworkError 
                   ? "Connection Issue" 
                   : isTimeoutError 
-                  ? "Verification Timeout" 
+                  ? "Verification Timeout"
+                  : isPendingCheckoutNotFound
+                  ? "No Pending Checkout Found"
                   : "Verification Failed"}
               </AlertTitle>
               <AlertDescription className="mt-2 space-y-2">
@@ -119,10 +125,14 @@ export default function SubscriptionSuccess() {
                     ? "We couldn't connect to our servers. Please check your internet connection and try again."
                     : isTimeoutError
                     ? "The verification process took too long. Your payment may still have been processed."
-                    : "We couldn't verify your subscription status. Your payment may still have been processed."}
+                    : isPendingCheckoutNotFound
+                    ? "We couldn't find a pending checkout for your account. This might mean your subscription is already active, or the checkout session expired."
+                    : errorMessage || "We couldn't verify your subscription status. Your payment may still have been processed."}
                 </p>
                 <p className="text-sm font-medium mt-2">
-                  Don't worry - if your payment went through, you'll receive an email confirmation shortly.
+                  {isPendingCheckoutNotFound 
+                    ? "Check your subscription status below to see if you're already subscribed."
+                    : "Don't worry - if your payment went through, you'll receive an email confirmation shortly."}
                 </p>
               </AlertDescription>
             </Alert>
