@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Check,
   X,
@@ -18,7 +19,8 @@ import {
   CreditCard,
   Shield,
   TrendingUp,
-  Users
+  Users,
+  Info
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -60,6 +62,13 @@ export default function SubscriptionPlans() {
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
+
+  // Helper to determine if plans are paid (pro/enterprise)
+  const isPaidPlan = (plan: string | null | undefined): boolean => {
+    if (!plan) return false;
+    const normalized = plan.toLowerCase();
+    return normalized === 'pro' || normalized === 'enterprise';
+  };
 
   const { data: plansData, isLoading: plansLoading } = useQuery<PlansResponse>({
     queryKey: ["/api/subscription/plans"],
@@ -257,10 +266,16 @@ export default function SubscriptionPlans() {
       return;
     }
 
-    // Handle upgrades
+    // Handle upgrades - differentiate between paid-to-paid (instant) and free-to-paid (checkout)
+    const isCurrentPlanPaid = isPaidPlan(currentPlan);
+    const isTargetPlanPaid = isPaidPlan(planId);
+    const isInstantUpgrade = isCurrentPlanPaid && isTargetPlanPaid;
+    
     toast({
-      title: "Starting checkout...",
-      description: "Preparing your subscription upgrade.",
+      title: isInstantUpgrade ? "Upgrading your plan..." : "Starting checkout...",
+      description: isInstantUpgrade 
+        ? "Your plan will be upgraded instantly with automatic proration applied to your next bill."
+        : "You'll be redirected to complete your payment.",
     });
     
     createCheckoutMutation.mutate({
@@ -320,6 +335,18 @@ export default function SubscriptionPlans() {
           <Badge className="bg-green-100 text-green-700" data-testid="savings-badge">Save 17%</Badge>
         )}
       </div>
+
+      {/* Upgrade Flow Information */}
+      {isPaidPlan(currentPlan) && (
+        <Alert className="bg-primary/5 border-primary/20">
+          <Zap className="h-4 w-4 text-primary" />
+          <AlertDescription>
+            <strong>Pro Tip:</strong> Switching between paid plans (Pro ⇄ Enterprise) is instant! 
+            Your subscription will be updated immediately with automatic proration applied to your next bill. 
+            No need to re-enter payment information.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Plans Grid */}
       <div className="grid md:grid-cols-3 gap-6">
@@ -385,7 +412,7 @@ export default function SubscriptionPlans() {
                 </div>
               </CardContent>
 
-              <CardFooter>
+              <CardFooter className="flex-col gap-2">
                 <Button
                   className="w-full"
                   variant={isPopular ? "default" : "outline"}
@@ -411,8 +438,13 @@ export default function SubscriptionPlans() {
                     </>
                   ) : currentPlan === "pro" && plan.id === "enterprise" ? (
                     <>
-                      <Star className="w-4 h-4 mr-2" />
-                      Upgrade to Enterprise
+                      <Zap className="w-4 h-4 mr-2" />
+                      Instant Upgrade ⚡
+                    </>
+                  ) : currentPlan === "enterprise" && plan.id === "pro" ? (
+                    <>
+                      <Zap className="w-4 h-4 mr-2" />
+                      Switch to Pro ⚡
                     </>
                   ) : (
                     <>
@@ -421,6 +453,14 @@ export default function SubscriptionPlans() {
                     </>
                   )}
                 </Button>
+                
+                {/* Show info message for paid-to-paid upgrades */}
+                {isPaidPlan(currentPlan) && isPaidPlan(plan.id) && plan.id !== currentPlan && (
+                  <div className="flex items-start gap-1 text-xs text-muted-foreground">
+                    <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    <span>Instant upgrade with automatic proration</span>
+                  </div>
+                )}
               </CardFooter>
             </Card>
           );
