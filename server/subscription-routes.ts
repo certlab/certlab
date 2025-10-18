@@ -2180,6 +2180,25 @@ export function registerSubscriptionRoutes(app: Express, storage: any, isAuthent
             let savedSubscription;
             
             if (existingSubscription) {
+              const previousPlan = existingSubscription.plan;
+              const newPlan = planName;
+              
+              // Detect plan changes for better observability
+              if (previousPlan !== newPlan) {
+                console.log(`[Webhook] 🔄 PLAN SWITCH DETECTED: ${previousPlan} → ${newPlan}`);
+                console.log(`[Webhook] Event type: ${type}`);
+                console.log(`[Webhook] Product ID changed: ${existingSubscription.productId} → ${subscription.product_id}`);
+                console.log(`[Webhook] Price ID changed: ${existingSubscription.priceId} → ${subscription.price_id}`);
+                
+                // Add plan switch metadata
+                subscriptionData.metadata = {
+                  ...subscriptionData.metadata,
+                  previousPlan: previousPlan,
+                  planSwitchDetectedAt: new Date().toISOString(),
+                  planSwitchType: type === 'subscription.updated' ? 'upgrade_or_downgrade' : 'other',
+                };
+              }
+              
               console.log(`[Webhook] Updating existing subscription ${existingSubscription.id}`);
               // Update existing subscription
               savedSubscription = await storage.updateSubscription(
