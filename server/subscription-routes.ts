@@ -8,7 +8,7 @@ import { subscriptionLockManager } from "./subscriptionLock";
 
 // Request/Response schemas
 const createCheckoutSchema = z.object({
-  plan: z.enum(['free', 'pro', 'enterprise']), // Added 'free' to support downgrades
+  plan: z.enum(['pro', 'enterprise']), // Checkout only for paid plans; free downgrades use /switch endpoint
   billingInterval: z.enum(['monthly', 'yearly']).optional().default('monthly'),
 });
 
