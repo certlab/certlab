@@ -469,22 +469,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Report credit purchase via meter event
-        console.log('[Credits Verify] Reporting credit purchase:', {
+        // Add credits to customer's balance via Polar customer state
+        console.log('[Credits Verify] Adding credits to customer:', {
           customerId: polarCustomer.id,
           credits,
         });
 
         const productId = session.metadata?.packageId || session.productId;
-        await polarClient.reportPurchase({
+        const balance = await polarClient.addCredits({
           customerId: polarCustomer.id,
           amount: credits,
           sessionId: session.id,
           productId,
         });
-
-        // Get updated balance
-        const balance = await polarClient.getCustomerBalance(polarCustomer.id);
 
         console.log('[Credits Verify] Credits granted successfully:', balance);
 
@@ -568,16 +565,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      // Report credit purchase via meter event
+      // Add credits to customer's balance via Polar customer state
       const productId = metadata.packageId || data.product_id;
-      await polarClient.reportPurchase({
+      await polarClient.addCredits({
         customerId: polarCustomer.id,
         amount: credits,
         sessionId: data.id,
         productId,
       });
 
-      console.log('[Polar Webhook] Credit purchase reported via webhook:', {
+      console.log('[Polar Webhook] Credits added via webhook:', {
         customerId: polarCustomer.id,
         credits,
       });
