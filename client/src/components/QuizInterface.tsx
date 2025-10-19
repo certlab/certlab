@@ -576,11 +576,15 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
 
             {/* Immediate Feedback Explanation */}
             {currentQuestion.explanation && (
-              <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                state.showFeedback 
-                  ? 'max-h-96 opacity-100 mt-4 sm:mt-6' 
-                  : 'max-h-0 opacity-0 mt-0'
-              }`}>
+              <div 
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                  state.showFeedback 
+                    ? 'max-h-96 opacity-100 mt-4 sm:mt-6' 
+                    : 'max-h-0 opacity-0 mt-0'
+                }`}
+                aria-hidden={!state.showFeedback}
+                {...(!state.showFeedback && { inert: '' })}
+              >
                 <div className={`p-3 sm:p-4 rounded-lg border-2 ${
                   state.isCorrect 
                     ? 'border-success/20 bg-success/5' 
