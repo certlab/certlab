@@ -653,7 +653,10 @@
   
   /* Quiz Interface Smooth Transitions */
   .quiz-option-base {
-    @apply flex items-start space-x-3 p-3 sm:p-4 border-2 rounded-lg cursor-pointer;
+    @apply flex items-start space-x-3 p-3 sm:p-4 rounded-lg cursor-pointer;
+    border-width: 3px;
+    border-style: solid;
+    border-color: hsl(var(--border));
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     transform: translateZ(0);
     will-change: border-color, background-color, transform;
@@ -692,6 +695,14 @@
     animation: quiz-reveal-fade 0.4s ease-out;
   }
   
+  /* Hide radio buttons - using opacity for accessibility */
+  .quiz-radio-smooth {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+  }
+  
   .quiz-feedback-fade-in {
     animation: fadeInUp 0.3s ease-out;
   }
@@ -700,9 +711,6 @@
     animation: fadeInUp 0.4s ease-out;
   }
   
-  .quiz-radio-smooth {
-    transition: all 0.2s ease-out;
-  }
   
   .quiz-progress-smooth {
     transition: width 0.3s ease-out;
