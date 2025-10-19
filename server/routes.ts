@@ -671,6 +671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Deduct credits from customer balance
+      let updatedBalance;
       try {
         await polarClient.deductCredits({
           customerId: polarCustomer.id,
@@ -678,9 +679,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           reason: `Quiz created (ID: ${quiz.id})`,
         });
         
+        // Get updated balance to return in response
+        updatedBalance = await polarClient.getCustomerBalance(polarCustomer.id);
+        
         console.log('[Quiz Creation] Credits deducted:', {
           quizId: quiz.id,
           creditsConsumed: CREDITS_PER_QUIZ,
+          newBalance: updatedBalance.availableCredits,
         });
       } catch (error: any) {
         console.error('[Quiz Creation] Failed to deduct credits:', error);
@@ -688,7 +693,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // The quiz has already been created
       }
       
-      res.json(quiz);
+      res.json({
+        ...quiz,
+        creditBalance: updatedBalance ? {
+          availableCredits: updatedBalance.availableCredits,
+          totalPurchased: updatedBalance.totalPurchased,
+          totalConsumed: updatedBalance.totalConsumed,
+        } : undefined,
+      });
     } catch (error) {
       res.status(400).json({ message: "Invalid quiz data" });
     }
