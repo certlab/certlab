@@ -551,24 +551,6 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                       className="text-foreground cursor-pointer flex-1 text-sm sm:text-base"
                     >
                       {option.text}
-                      {state.showFeedback && isSelectedAnswer && (
-                        <div className="mt-2 flex items-center space-x-2 quiz-feedback-fade-in">
-                          {state.isCorrect ? (
-                            <i className="fas fa-check-circle text-success"></i>
-                          ) : (
-                            <i className="fas fa-times-circle text-destructive"></i>
-                          )}
-                          <span className={`text-xs sm:text-sm font-medium ${state.isCorrect ? 'text-success' : 'text-destructive'}`}>
-                            {state.isCorrect ? 'Correct!' : 'Incorrect'}
-                          </span>
-                        </div>
-                      )}
-                      {state.showFeedback && isCorrectAnswer && !state.isCorrect && (
-                        <div className="mt-2 flex items-center space-x-2 quiz-feedback-fade-in">
-                          <i className="fas fa-check-circle text-success"></i>
-                          <span className="text-xs sm:text-sm font-medium text-success">Correct Answer</span>
-                        </div>
-                      )}
                     </Label>
                   </div>
                 );
