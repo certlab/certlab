@@ -670,26 +670,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mode: quizData.mode || "study"
       });
       
-      // Report usage to Polar meter
+      // Deduct credits from customer balance
       try {
-        await polarClient.reportUsage({
+        await polarClient.deductCredits({
           customerId: polarCustomer.id,
-          eventName: 'credit_usage',
-          properties: {
-            credits_consumed: CREDITS_PER_QUIZ,
-            quiz_id: quiz.id.toString(),
-            user_id: userId,
-          },
+          amount: CREDITS_PER_QUIZ,
+          reason: `Quiz created (ID: ${quiz.id})`,
         });
         
-        console.log('[Quiz Creation] Usage reported to Polar:', {
+        console.log('[Quiz Creation] Credits deducted:', {
           quizId: quiz.id,
           creditsConsumed: CREDITS_PER_QUIZ,
         });
       } catch (error: any) {
-        console.error('[Quiz Creation] Failed to report usage to Polar:', error);
-        // Don't fail quiz creation if usage reporting fails
-        // The quiz has already been created, usage reporting is for billing
+        console.error('[Quiz Creation] Failed to deduct credits:', error);
+        // Don't fail quiz creation if credit deduction fails
+        // The quiz has already been created
       }
       
       res.json(quiz);
