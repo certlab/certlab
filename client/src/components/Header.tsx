@@ -56,9 +56,8 @@ export default function Header() {
   }>({
     queryKey: ["/api/credits/balance"],
     enabled: !!currentUser,
-    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
+    staleTime: 0, // Always refetch when invalidated
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-    refetchOnWindowFocus: false, // Avoid unnecessary refetches
   });
 
   const handleSignOut = async () => {
