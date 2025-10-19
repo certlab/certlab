@@ -575,33 +575,39 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
             </RadioGroup>
 
             {/* Immediate Feedback Explanation */}
-            {state.showFeedback && currentQuestion.explanation && (
-              <div className={`mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg border-2 quiz-explanation-fade-in ${
-                state.isCorrect 
-                  ? 'border-success/20 bg-success/5' 
-                  : 'border-destructive/20 bg-destructive/5'
+            {currentQuestion.explanation && (
+              <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                state.showFeedback 
+                  ? 'max-h-96 opacity-100 mt-4 sm:mt-6' 
+                  : 'max-h-0 opacity-0 mt-0'
               }`}>
-                <div className="flex items-start space-x-3">
-                  <div className={`flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center ${
-                    state.isCorrect ? 'bg-success/20' : 'bg-destructive/20'
-                  }`}>
-                    <i className={`fas text-xs sm:text-sm ${
-                      state.isCorrect 
-                        ? 'fa-lightbulb text-success' 
-                        : 'fa-info-circle text-destructive'
-                    }`}></i>
-                  </div>
-                  <div className="flex-1">
-                    <h5 className={`font-medium mb-1 sm:mb-2 text-sm sm:text-base ${
-                      state.isCorrect ? 'text-success' : 'text-destructive'
+                <div className={`p-3 sm:p-4 rounded-lg border-2 ${
+                  state.isCorrect 
+                    ? 'border-success/20 bg-success/5' 
+                    : 'border-destructive/20 bg-destructive/5'
+                }`}>
+                  <div className="flex items-start space-x-3">
+                    <div className={`flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center ${
+                      state.isCorrect ? 'bg-success/20' : 'bg-destructive/20'
                     }`}>
-                      {state.isCorrect ? 'Why this is correct:' : 'Why this is incorrect:'}
-                    </h5>
-                    <p className={`text-xs sm:text-sm leading-relaxed ${
-                      state.isCorrect ? 'text-success/80' : 'text-destructive/80'
-                    }`}>
-                      {currentQuestion.explanation}
-                    </p>
+                      <i className={`fas text-xs sm:text-sm ${
+                        state.isCorrect 
+                          ? 'fa-lightbulb text-success' 
+                          : 'fa-info-circle text-destructive'
+                      }`}></i>
+                    </div>
+                    <div className="flex-1">
+                      <h5 className={`font-medium mb-1 sm:mb-2 text-sm sm:text-base ${
+                        state.isCorrect ? 'text-success' : 'text-destructive'
+                      }`}>
+                        {state.isCorrect ? 'Why this is correct:' : 'Why this is incorrect:'}
+                      </h5>
+                      <p className={`text-xs sm:text-sm leading-relaxed ${
+                        state.isCorrect ? 'text-success/80' : 'text-destructive/80'
+                      }`}>
+                        {currentQuestion.explanation}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
