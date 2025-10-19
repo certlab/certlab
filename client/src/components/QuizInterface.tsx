@@ -215,6 +215,11 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   const progress = questions.length > 0 ? ((state.currentQuestionIndex + 1) / questions.length) * 100 : 0;
 
   const handleAnswerChange = (value: string) => {
+    // Prevent changing answer once selected
+    if (state.selectedAnswer !== undefined) {
+      return;
+    }
+    
     const answerValue = parseInt(value);
     
     if (currentQuestion) {
@@ -541,7 +546,8 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                   <div 
                     key={`option-${optionId}`}
                     className={optionClassName}
-                    onClick={() => !state.showFeedback && handleAnswerChange(optionId.toString())}
+                    onClick={() => !state.showFeedback && state.selectedAnswer === undefined && handleAnswerChange(optionId.toString())}
+                    style={{ cursor: state.selectedAnswer !== undefined ? 'default' : 'pointer' }}
                   >
                     <RadioGroupItem 
                       value={optionId.toString()} 

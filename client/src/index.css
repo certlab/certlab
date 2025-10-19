@@ -653,7 +653,7 @@
   
   /* Quiz Interface Smooth Transitions */
   .quiz-option-base {
-    @apply flex items-start space-x-3 p-3 sm:p-4 rounded-lg cursor-pointer;
+    @apply flex items-start space-x-3 p-3 sm:p-4 rounded-lg;
     border-width: 3px;
     border-style: solid;
     border-color: hsl(var(--border));
