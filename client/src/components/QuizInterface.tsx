@@ -220,9 +220,6 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
     if (currentQuestion) {
       const correct = answerValue === currentQuestion.correctAnswer;
       
-      // Only show immediate feedback in Study Mode
-      const shouldShowFeedback = quiz?.mode === 'study';
-      
       // Batch all state updates in a single dispatch
       dispatch({
         type: 'SELECT_ANSWER',
@@ -230,7 +227,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
           questionId: currentQuestion.id,
           answer: answerValue,
           isCorrect: correct,
-          showFeedback: shouldShowFeedback
+          showFeedback: true
         }
       });
     }
