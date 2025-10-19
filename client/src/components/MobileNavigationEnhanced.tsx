@@ -25,8 +25,6 @@ import {
   Sparkles
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import SubscriptionBadge from "@/components/SubscriptionBadge";
 
 interface NavigationItem {
   id: string;
@@ -51,12 +49,6 @@ export default function MobileNavigationEnhanced() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  
-  // Get subscription status
-  const { data: subscription } = useQuery<any>({
-    queryKey: ["/api/subscription/status"],
-    enabled: !!user,
-  });
 
   const navigationSections: NavigationSection[] = [
     {
@@ -177,9 +169,9 @@ export default function MobileNavigationEnhanced() {
               </Button>
             </div>
             
-            {/* User info with subscription */}
+            {/* User info */}
             {user && (
-              <div className="space-y-3 mt-3">
+              <div className="mt-3">
                 <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                   <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
                     {user.email?.[0]?.toUpperCase() || 'U'}
@@ -193,40 +185,6 @@ export default function MobileNavigationEnhanced() {
                     </p>
                   </div>
                 </div>
-                
-                {/* Subscription Badge */}
-                {subscription && (
-                  <div className="px-3">
-                    <SubscriptionBadge 
-                      plan={subscription.plan?.toLowerCase() as 'free' | 'pro' | 'enterprise' || 'free'}
-                      size="small"
-                      showQuizCount={subscription.plan?.toLowerCase() === 'free'}
-                      dailyQuizCount={subscription.dailyQuizCount}
-                      quizLimit={subscription.limits?.quizzesPerDay}
-                      interactive
-                      onClick={() => {
-                        setIsOpen(false);
-                        setLocation('/app/subscription/plans');
-                      }}
-                      className="w-full"
-                    />
-                    
-                    {subscription.plan?.toLowerCase() !== 'enterprise' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full mt-2"
-                        onClick={() => {
-                          setIsOpen(false);
-                          setLocation('/app/subscription/plans');
-                        }}
-                      >
-                        <Crown className="w-3 h-3 mr-1" />
-                        Upgrade Plan
-                      </Button>
-                    )}
-                  </div>
-                )}
               </div>
             )}
           </SheetHeader>

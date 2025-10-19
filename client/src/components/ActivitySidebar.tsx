@@ -6,7 +6,6 @@ import { useLocation } from "wouter";
 import { getScoreColor } from "@/lib/questions";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useSubscriptionQuizSizes } from "@/hooks/useSubscriptionQuizSizes";
 import ImprovedCardSpacing from "@/components/ImprovedCardSpacing";
 import { BarChart3 } from "lucide-react";
 import type { Quiz, Category } from "@shared/schema";
@@ -15,7 +14,6 @@ export default function ActivitySidebar() {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const quizSizes = useSubscriptionQuizSizes();
 
   const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
     queryKey: ['/api/user', currentUser?.id, 'quizzes'],
@@ -64,7 +62,6 @@ export default function ActivitySidebar() {
     },
     onSuccess: (quiz) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
       setLocation(`/app/quiz/${quiz.id}`);
     },
     onError: () => {
@@ -104,21 +101,11 @@ export default function ActivitySidebar() {
       return;
     }
 
-    // Check if user can create more quizzes today
-    if (!quizSizes.canCreateQuiz) {
-      toast({
-        title: "Daily Limit Reached",
-        description: `You've reached your daily quiz limit. ${quizSizes.subscription?.plan === 'free' ? 'Upgrade to Pro for unlimited quizzes!' : 'Try again tomorrow.'}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     const categoryId = getLowestPerformingCategory();
     const quizData = {
       title: "Adaptive Review - Incorrect Answers",
       categoryIds: [categoryId],
-      questionCount: quizSizes.reviewMode, // Use dynamic review mode size based on subscription
+      questionCount: 20,
       isAdaptive: true, // Enable adaptive learning for review sessions
     };
     
@@ -134,7 +121,6 @@ export default function ActivitySidebar() {
       },
       onSuccess: (quiz: any) => {
         queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
         
         if (quiz.adaptiveInfo && quiz.adaptiveInfo.increasePercentage > 0) {
           toast({
@@ -173,16 +159,6 @@ export default function ActivitySidebar() {
       return;
     }
 
-    // Check if user can create more quizzes today
-    if (!quizSizes.canCreateQuiz) {
-      toast({
-        title: "Daily Limit Reached",
-        description: `You've reached your daily quiz limit. ${quizSizes.subscription?.plan === 'free' ? 'Upgrade to Pro for unlimited quizzes!' : 'Try again tomorrow.'}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Select 2-3 random categories
     const shuffledCategories = [...categories].sort(() => 0.5 - Math.random());
     const selectedCategories = shuffledCategories.slice(0, 2).map(c => c.id);
@@ -190,7 +166,7 @@ export default function ActivitySidebar() {
     const quizData = {
       title: "Random Mixed Quiz",
       categoryIds: selectedCategories,
-      questionCount: quizSizes.quickMode, // Use dynamic quick mode size based on subscription
+      questionCount: 15,
     };
     createQuizMutation.mutate(quizData);
   };

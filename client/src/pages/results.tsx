@@ -6,16 +6,12 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DetailedResultsAnalysis from "@/components/DetailedResultsAnalysis";
 import { getScoreColor, getScoreBgColor } from "@/lib/questions";
-import { useAnalyticsAccess, LockedAnalytics } from "@/hooks/useAnalyticsAccess";
 import type { Quiz, Category } from "@shared/schema";
-import { PremiumFeatureBadge } from "@/components/SubscriptionBadge";
-import { Crown, Star, Sparkles } from "lucide-react";
 
 export default function Results() {
   const [, params] = useRoute("/app/results/:id");
   const [, setLocation] = useLocation();
   const quizId = parseInt(params?.id || "0");
-  const { features: analyticsFeatures, canAccess } = useAnalyticsAccess();
 
   const { data: quiz, isLoading } = useQuery<Quiz>({
     queryKey: ['/api/quiz', quizId],
@@ -26,10 +22,6 @@ export default function Results() {
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
-  });
-
-  const { data: subscription } = useQuery<any>({
-    queryKey: ["/api/subscription/status"],
   });
 
   if (isLoading) {
@@ -164,21 +156,10 @@ export default function Results() {
                 <div className="text-sm sm:text-base text-muted-foreground">Correct Answers</div>
               </div>
               <div className="text-center py-3 sm:py-0">
-                {analyticsFeatures.timeAnalysis ? (
-                  <>
-                    <div className="text-3xl sm:text-4xl font-bold text-accent mb-1 sm:mb-2">
-                      {formatDuration(quiz.startedAt!, quiz.completedAt)}
-                    </div>
-                    <div className="text-sm sm:text-base text-muted-foreground">Time Taken</div>
-                  </>
-                ) : (
-                  <LockedAnalytics title="Time Analysis" requiredLevel="advanced">
-                    <div className="space-y-2">
-                      <div className="text-3xl sm:text-4xl font-bold text-muted mb-1 sm:mb-2">--:--</div>
-                      <div className="text-sm sm:text-base text-muted-foreground">Time Taken</div>
-                    </div>
-                  </LockedAnalytics>
-                )}
+                <div className="text-3xl sm:text-4xl font-bold text-accent mb-1 sm:mb-2">
+                  {formatDuration(quiz.startedAt!, quiz.completedAt)}
+                </div>
+                <div className="text-sm sm:text-base text-muted-foreground">Time Taken</div>
               </div>
             </div>
 
@@ -218,52 +199,31 @@ export default function Results() {
               </div>
             </div>
 
-            {/* Category Performance - Pro/Enterprise Feature */}
-            {analyticsFeatures.categoryBreakdown ? (
-              <div className="mb-6 sm:mb-8">
-                <h3 className="text-base sm:text-lg font-medium text-foreground mb-3 sm:mb-4 flex items-center gap-2">
-                  Performance by Category
-                  <PremiumFeatureBadge requiredPlan="pro" feature="Pro analytics" />
-                </h3>
-                <div className="space-y-3 sm:space-y-4">
-                  {(quiz.categoryIds as number[]).map(categoryId => {
-                    const category = categories.find(c => c.id === categoryId);
-                    if (!category) return null;
-                    
-                    // For demo purposes, using overall score
-                    const categoryScore = score;
-                    
-                    return (
-                      <div key={categoryId} className="bg-muted/50 rounded-lg p-3 sm:p-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-medium text-foreground text-sm sm:text-base">{category.name}</span>
-                          <span className="text-xs sm:text-sm text-muted-foreground">{categoryScore}%</span>
-                        </div>
-                        <Progress value={categoryScore} className="h-2" />
+            {/* Category Performance */}
+            <div className="mb-6 sm:mb-8">
+              <h3 className="text-base sm:text-lg font-medium text-foreground mb-3 sm:mb-4 flex items-center gap-2">
+                Performance by Category
+              </h3>
+              <div className="space-y-3 sm:space-y-4">
+                {(quiz.categoryIds as number[]).map(categoryId => {
+                  const category = categories.find(c => c.id === categoryId);
+                  if (!category) return null;
+                  
+                  // For demo purposes, using overall score
+                  const categoryScore = score;
+                  
+                  return (
+                    <div key={categoryId} className="bg-muted/50 rounded-lg p-3 sm:p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium text-foreground text-sm sm:text-base">{category.name}</span>
+                        <span className="text-xs sm:text-sm text-muted-foreground">{categoryScore}%</span>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="mb-6 sm:mb-8">
-                <LockedAnalytics title="Category Performance Breakdown" requiredLevel="advanced">
-                  <div>
-                    <h3 className="text-base sm:text-lg font-medium text-foreground mb-3 sm:mb-4">Performance by Category</h3>
-                    <div className="space-y-3 sm:space-y-4">
-                      <div className="bg-muted/50 rounded-lg p-3 sm:p-4">
-                        <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                        <div className="h-2 bg-muted rounded w-full"></div>
-                      </div>
-                      <div className="bg-muted/50 rounded-lg p-3 sm:p-4">
-                        <div className="h-4 bg-muted rounded w-2/3 mb-2"></div>
-                        <div className="h-2 bg-muted rounded w-full"></div>
-                      </div>
+                      <Progress value={categoryScore} className="h-2" />
                     </div>
-                  </div>
-                </LockedAnalytics>
+                  );
+                })}
               </div>
-            )}
+            </div>
 
             {/* Enhanced Results with Tabs */}
             <Tabs defaultValue="summary" className="mb-6">
@@ -271,9 +231,6 @@ export default function Results() {
                 <TabsTrigger value="summary">Quick Summary</TabsTrigger>
                 <TabsTrigger value="analysis" className="flex items-center gap-1">
                   Detailed Analysis
-                  {analyticsFeatures.detailedMetrics && (
-                    <Crown className="w-3 h-3 text-purple-600" />
-                  )}
                 </TabsTrigger>
               </TabsList>
               
@@ -289,19 +246,7 @@ export default function Results() {
               </TabsContent>
               
               <TabsContent value="analysis" className="mt-6">
-                {analyticsFeatures.detailedMetrics ? (
-                  <DetailedResultsAnalysis quizId={quizId} />
-                ) : (
-                  <LockedAnalytics title="Detailed Performance Analysis" requiredLevel="advanced">
-                    <div className="space-y-4 p-4">
-                      <div className="h-32 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-lg"></div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="h-24 bg-muted rounded-lg"></div>
-                        <div className="h-24 bg-muted rounded-lg"></div>
-                      </div>
-                    </div>
-                  </LockedAnalytics>
-                )}
+                <DetailedResultsAnalysis quizId={quizId} />
               </TabsContent>
             </Tabs>
 

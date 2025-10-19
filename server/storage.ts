@@ -1,15 +1,14 @@
 import { 
   tenants, users, categories, subcategories, questions, quizzes, userProgress, lectures, masteryScores,
   badges, userBadges, userGameStats, challenges, challengeAttempts,
-  studyGroups, studyGroupMembers, practiceTests, practiceTestAttempts, subscriptions,
+  studyGroups, studyGroupMembers, practiceTests, practiceTestAttempts,
   type Tenant, type InsertTenant, type User, type InsertUser, type UpsertUser, type Category, type InsertCategory,
   type Subcategory, type InsertSubcategory, type Question, type InsertQuestion,
   type Quiz, type InsertQuiz, type UserProgress, type InsertUserProgress,
   type MasteryScore, type InsertMasteryScore, type Badge, type UserBadge, type UserGameStats,
   type Challenge, type InsertChallenge, type ChallengeAttempt, type InsertChallengeAttempt,
   type StudyGroup, type InsertStudyGroup, type StudyGroupMember, type InsertStudyGroupMember,
-  type PracticeTest, type InsertPracticeTest, type PracticeTestAttempt, type InsertPracticeTestAttempt,
-  type InsertSubscription, type SelectSubscription
+  type PracticeTest, type InsertPracticeTest, type PracticeTestAttempt, type InsertPracticeTestAttempt
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, inArray, desc, gte, lte, or, isNull } from "drizzle-orm";
@@ -156,16 +155,6 @@ export interface IStorage {
   completePracticeTest(attemptId: number, quizId: number, score: number, timeSpent: number): Promise<PracticeTestAttempt>;
   getUserPracticeTestAttempts(userId: string): Promise<PracticeTestAttempt[]>;
   getPracticeTestAttempts(testId: number): Promise<PracticeTestAttempt[]>;
-  
-  // Subscription methods
-  createSubscription(subscription: InsertSubscription): Promise<SelectSubscription>;
-  getSubscriptionById(id: number): Promise<SelectSubscription | null>;
-  getSubscriptionByUserId(userId: string): Promise<SelectSubscription | null>;
-  getPendingCheckoutByUserId(userId: string): Promise<SelectSubscription | null>;
-  getSubscriptionByPolarId(polarSubscriptionId: string): Promise<SelectSubscription | null>;
-  updateSubscription(id: number, updates: Partial<InsertSubscription>): Promise<SelectSubscription | null>;
-  updateSubscriptionByPolarId(polarSubscriptionId: string, updates: Partial<InsertSubscription>): Promise<SelectSubscription | null>;
-  cancelSubscription(id: number, canceledAt: Date): Promise<SelectSubscription | null>;
   
   // Webhook idempotency tracking
   checkWebhookProcessed(eventId: string): Promise<boolean>;
@@ -3553,85 +3542,6 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
       .from(practiceTestAttempts)
       .where(eq(practiceTestAttempts.testId, testId))
       .orderBy(desc(practiceTestAttempts.startedAt));
-  }
-
-  // Subscription methods implementation
-  async createSubscription(subscription: InsertSubscription): Promise<SelectSubscription> {
-    const [created] = await db.insert(subscriptions)
-      .values(subscription)
-      .returning();
-    return created;
-  }
-
-  async getSubscriptionById(id: number): Promise<SelectSubscription | null> {
-    const result = await db.select()
-      .from(subscriptions)
-      .where(eq(subscriptions.id, id))
-      .limit(1);
-    return result[0] || null;
-  }
-
-  async getSubscriptionByUserId(userId: string): Promise<SelectSubscription | null> {
-    const result = await db.select()
-      .from(subscriptions)
-      .where(and(
-        eq(subscriptions.userId, userId),
-        or(
-          eq(subscriptions.status, 'active'),
-          eq(subscriptions.status, 'trialing')
-        )
-      ))
-      .orderBy(desc(subscriptions.createdAt))
-      .limit(1);
-    return result[0] || null;
-  }
-
-  async getPendingCheckoutByUserId(userId: string): Promise<SelectSubscription | null> {
-    const result = await db.select()
-      .from(subscriptions)
-      .where(and(
-        eq(subscriptions.userId, userId),
-        eq(subscriptions.status, 'pending_checkout')
-      ))
-      .orderBy(desc(subscriptions.createdAt))
-      .limit(1);
-    return result[0] || null;
-  }
-
-  async getSubscriptionByPolarId(polarSubscriptionId: string): Promise<SelectSubscription | null> {
-    const result = await db.select()
-      .from(subscriptions)
-      .where(eq(subscriptions.polarSubscriptionId, polarSubscriptionId))
-      .limit(1);
-    return result[0] || null;
-  }
-
-  async updateSubscription(id: number, updates: Partial<InsertSubscription>): Promise<SelectSubscription | null> {
-    const updated = await db.update(subscriptions)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(subscriptions.id, id))
-      .returning();
-    return updated[0] || null;
-  }
-
-  async updateSubscriptionByPolarId(polarSubscriptionId: string, updates: Partial<InsertSubscription>): Promise<SelectSubscription | null> {
-    const updated = await db.update(subscriptions)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(subscriptions.polarSubscriptionId, polarSubscriptionId))
-      .returning();
-    return updated[0] || null;
-  }
-
-  async cancelSubscription(id: number, canceledAt: Date): Promise<SelectSubscription | null> {
-    const updated = await db.update(subscriptions)
-      .set({
-        status: 'canceled',
-        canceledAt: canceledAt,
-        updatedAt: new Date()
-      })
-      .where(eq(subscriptions.id, id))
-      .returning();
-    return updated[0] || null;
   }
 
   // Webhook idempotency tracking - using in-memory storage for simplicity

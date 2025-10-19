@@ -44,11 +44,7 @@ export default function BreadcrumbNavigation({ className }: { className?: string
       'ui-structure': 'UI Structure',
       'profile': 'Profile',
       'lecture': 'Study Guide',
-      // Subscription pages
-      'subscription/plans': 'Subscription Plans',
-      'subscription-manage': 'Manage Subscription',
-      'subscription-success': 'Payment Success',
-      'subscription-cancel': 'Cancellation',
+      'credits': 'Credits',
       // Login page
       'login': 'Login',
     };

@@ -3,8 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import adminRoutes from "./admin-routes";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { registerSubscriptionRoutes } from "./subscription-routes";
-import { isCategoryAccessible } from "@shared/categoryAccess";
 import { polarClient } from "./polar";
 import { 
   insertUserSchema, 
@@ -1886,9 +1884,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
   }
-
-  // Register subscription routes (protected)
-  registerSubscriptionRoutes(app, storage, isAuthenticated);
 
   // Mount admin routes with authentication
   app.use("/api/admin", isAuthenticated, adminRoutes);

@@ -21,10 +21,6 @@ import StudyGroups from "@/pages/study-groups";
 import AdminDashboard from "@/pages/admin";
 import UIStructurePage from "@/pages/ui-structure";
 import ChallengesPage from "@/pages/challenges";
-import SubscriptionPlansPage from "@/pages/subscription-plans";
-import SubscriptionManagePage from "@/pages/subscription-manage";
-import SubscriptionSuccessPage from "@/pages/subscription-success";
-import SubscriptionCancelPage from "@/pages/subscription-cancel";
 import CreditsPage from "@/pages/credits";
 import ProfilePage from "@/pages/profile";
 import PracticeTests from "@/pages/practice-tests";
@@ -73,15 +69,6 @@ function Router() {
               <Route path="/app/practice-tests" component={PracticeTests} />
               <Route path="/app/challenges" component={ChallengesPage} />
               {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
-              {/* Redirect old URL to new URL */}
-              <Route path="/app/subscription-plans">
-                <Redirect to="/app/subscription/plans" />
-              </Route>
-              <Route path="/app/subscription" component={SubscriptionPlansPage} />
-              <Route path="/app/subscription/plans" component={SubscriptionPlansPage} />
-              <Route path="/app/subscription/manage" component={SubscriptionManagePage} />
-              <Route path="/app/subscription/success" component={SubscriptionSuccessPage} />
-              <Route path="/app/subscription/cancel" component={SubscriptionCancelPage} />
               <Route path="/app/credits" component={CreditsPage} />
               {isAdmin && <Route path="/admin" component={AdminDashboard} />}
               <Route component={NotFound} />

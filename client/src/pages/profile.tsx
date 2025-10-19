@@ -64,15 +64,6 @@ interface UserProfile {
     completedCertifications?: string[];
     motivations?: string[];
   };
-  subscriptionPlan?: string;
-  subscriptionStatus?: string;
-  subscriptionExpiresAt?: string;
-  subscriptionFeatures?: {
-    quizzesPerDay?: number;
-    categoriesAccess?: string[];
-    analyticsAccess?: string;
-    teamMembers?: number;
-  };
 }
 
 export default function ProfilePage() {
@@ -112,19 +103,6 @@ export default function ProfilePage() {
     enabled: !!user?.id,
   });
 
-  // Fetch subscription status
-  const { data: subscriptionStatus } = useQuery<{
-    isConfigured: boolean;
-    plan: string;
-    status: string;
-    features: string[];
-    limits: { quizzesPerDay: number };
-    dailyQuizCount: number;
-    expiresAt?: string;
-  }>({
-    queryKey: ["/api/subscription/status"],
-    enabled: !!user,
-  });
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
@@ -246,12 +224,12 @@ export default function ProfilePage() {
           My Profile
         </h1>
         <p className="text-muted-foreground mt-2">
-          Manage your profile information and subscription settings
+          Manage your profile information and learning preferences
         </p>
       </div>
 
       <Tabs defaultValue="personal" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4" data-testid="profile-tabs">
+        <TabsList className="grid w-full grid-cols-3" data-testid="profile-tabs">
           <TabsTrigger value="personal" className="flex items-center gap-1">
             <User className="h-4 w-4" />
             Personal
@@ -263,10 +241,6 @@ export default function ProfilePage() {
           <TabsTrigger value="skills" className="flex items-center gap-1">
             <Award className="h-4 w-4" />
             Skills
-          </TabsTrigger>
-          <TabsTrigger value="subscription" className="flex items-center gap-1">
-            <CreditCard className="h-4 w-4" />
-            Subscription
           </TabsTrigger>
         </TabsList>
 
@@ -336,8 +310,8 @@ export default function ProfilePage() {
                 />
                 <p className="text-xs text-muted-foreground">
                   {userProfile?.email ? 
-                    "You can update your email address if needed for subscriptions" : 
-                    "Please provide an email address to enable subscription features"}
+                    "You can update your email address if needed" : 
+                    "Please provide an email address to receive notifications"}
                 </p>
                 {profileData.email && !isValidEmail(profileData.email) && (
                   <p className="text-xs text-red-500">Please enter a valid email address</p>
@@ -348,7 +322,7 @@ export default function ProfilePage() {
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Email Required for Subscriptions:</strong> Please add your email address to enable subscription features and access premium content.
+                    <strong>Email Recommended:</strong> Please add your email address to receive important notifications and updates.
                   </AlertDescription>
                 </Alert>
               )}
@@ -632,127 +606,6 @@ export default function ProfilePage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="subscription" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Subscription Details</CardTitle>
-              <CardDescription>
-                Manage your subscription and billing information
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {subscriptionStatus && (
-                <>
-                  <div className="p-6 border rounded-lg">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Crown className="h-5 w-5 text-primary" />
-                        <h3 className="text-lg font-semibold capitalize">
-                          {subscriptionStatus.plan || "Free"} Plan
-                        </h3>
-                        <Badge
-                          variant={
-                            subscriptionStatus.status === "active"
-                              ? "default"
-                              : "secondary"
-                          }
-                          data-testid="subscription-status-badge"
-                        >
-                          {subscriptionStatus.status === "active" ? (
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                          ) : (
-                            <XCircle className="h-3 w-3 mr-1" />
-                          )}
-                          {subscriptionStatus.status}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {subscriptionStatus.features && (
-                      <div className="space-y-3">
-                        <h4 className="font-medium">Plan Features:</h4>
-                        <ul className="space-y-2">
-                          {subscriptionStatus.features.map((feature: string, index: number) => (
-                            <li key={index} className="flex items-center gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-500" />
-                              <span className="text-sm">{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {subscriptionStatus.limits && (
-                      <div className="mt-4 p-4 bg-muted rounded-lg">
-                        <h4 className="font-medium mb-2">Usage Limits:</h4>
-                        <div className="space-y-1 text-sm">
-                          <p>
-                            Daily Quizzes:{" "}
-                            <span className="font-medium">
-                              {subscriptionStatus.limits.quizzesPerDay === -1
-                                ? "Unlimited"
-                                : `${subscriptionStatus.dailyQuizCount || 0} / ${
-                                    subscriptionStatus.limits.quizzesPerDay
-                                  }`}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {subscriptionStatus.expiresAt && (
-                      <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        <span>
-                          Renews on{" "}
-                          {new Date(subscriptionStatus.expiresAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex gap-3">
-                    {subscriptionStatus.plan === "free" ? (
-                      <Link href="/app/subscription/plans">
-                        <Button className="w-full" data-testid="upgrade-button">
-                          <Crown className="h-4 w-4 mr-2" />
-                          Upgrade to Pro
-                        </Button>
-                      </Link>
-                    ) : (
-                      <>
-                        <Link href="/app/subscription/manage">
-                          <Button variant="outline" data-testid="manage-subscription-button">
-                            <Settings className="h-4 w-4 mr-2" />
-                            Manage Subscription
-                          </Button>
-                        </Link>
-                        {subscriptionStatus.plan === "pro" && (
-                          <Link href="/app/subscription/plans">
-                            <Button variant="outline" data-testid="upgrade-enterprise-button">
-                              <ChevronRight className="h-4 w-4 mr-2" />
-                              Upgrade to Enterprise
-                            </Button>
-                          </Link>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {!subscriptionStatus?.isConfigured && (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Subscription features are currently not configured. You're using the
-                    free plan with default limits.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       <div className="mt-6 flex justify-end">

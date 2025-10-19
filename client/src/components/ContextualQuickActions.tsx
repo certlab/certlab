@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useSubscriptionQuizSizes } from "@/hooks/useSubscriptionQuizSizes";
-import { getAccessibleCategories } from "@shared/categoryAccess";
 import { 
   Play, 
   RotateCcw, 
@@ -16,8 +14,7 @@ import {
   Target,
   BookOpen,
   Award,
-  Users,
-  Crown
+  Users
 } from "lucide-react";
 import type { Quiz, UserStats, Category } from "@shared/schema";
 
@@ -25,7 +22,6 @@ export default function ContextualQuickActions() {
   const [location, setLocation] = useLocation();
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
-  const quizSizes = useSubscriptionQuizSizes();
 
   const { data: stats } = useQuery<UserStats>({
     queryKey: [`/api/user/${currentUser?.id}/stats`],
@@ -52,7 +48,6 @@ export default function ContextualQuickActions() {
     },
     onSuccess: (quiz) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
       setLocation(`/app/quiz/${quiz.id}`);
     },
     onError: () => {
@@ -69,9 +64,8 @@ export default function ContextualQuickActions() {
     const actions = [];
     const currentPath = location;
     
-    // Get accessible categories based on subscription
-    const subscriptionAccess = quizSizes.subscription?.limits?.categoriesAccess || ['basic'];
-    const accessibleCategoryIds = getAccessibleCategories(categories, subscriptionAccess);
+    // Use all available categories
+    const accessibleCategoryIds = categories.map(cat => cat.id);
 
     // Universal quick actions
     actions.push({
@@ -81,37 +75,18 @@ export default function ContextualQuickActions() {
       icon: <Play className="w-4 h-4" />,
       variant: 'default' as const,
       onClick: () => {
-        if (!quizSizes.canCreateQuiz) {
-          toast({
-            title: "Daily Limit Reached",
-            description: `You've reached your daily quiz limit. ${quizSizes.subscription?.plan === 'free' ? 'Upgrade to Pro for unlimited quizzes!' : 'Try again tomorrow.'}`,
-            variant: "destructive",
-          });
-          return;
-        }
-        
         if (accessibleCategoryIds.length === 0) {
           toast({
-            title: "No Accessible Categories",
-            description: "Upgrade your subscription to access certification categories.",
+            title: "No Categories Available",
+            description: "Please contact support to add certification categories.",
             variant: "default",
-            action: (
-              <Button 
-                size="sm" 
-                onClick={() => setLocation('/app/subscription/plans')}
-                className="bg-purple-600 text-white hover:bg-purple-700"
-              >
-                <Crown className="w-3 h-3 mr-1" />
-                Upgrade
-              </Button>
-            ),
           });
           return;
         }
         
         if (currentUser?.id) {
           createQuizMutation.mutate({
-            categoryIds: [accessibleCategoryIds[0]], // Use first accessible category
+            categoryIds: [accessibleCategoryIds[0]], // Use first category
             questionCount: 15,
             title: `Quick Session - ${new Date().toLocaleDateString()}`,
           });
@@ -129,14 +104,6 @@ export default function ContextualQuickActions() {
         variant: 'outline' as const,
         badge: (stats?.totalQuizzes || 0) > 0 ? 'Smart' : undefined,
         onClick: () => {
-          if (!quizSizes.canCreateQuiz) {
-            toast({
-              title: "Daily Limit Reached",
-              description: `You've reached your daily quiz limit. ${quizSizes.subscription?.plan === 'free' ? 'Upgrade to Pro for unlimited quizzes!' : 'Try again tomorrow.'}`,
-              variant: "destructive",
-            });
-            return;
-          }
           if (currentUser?.id) {
             // Create a quiz focused on review/weak areas
             createQuizMutation.mutate({
@@ -168,14 +135,6 @@ export default function ContextualQuickActions() {
         variant: 'outline' as const,
         badge: 'Challenge',
         onClick: () => {
-          if (!quizSizes.canCreateQuiz) {
-            toast({
-              title: "Daily Limit Reached",
-              description: `You've reached your daily quiz limit. ${quizSizes.subscription?.plan === 'free' ? 'Upgrade to Pro for unlimited quizzes!' : 'Try again tomorrow.'}`,
-              variant: "destructive",
-            });
-            return;
-          }
           if (currentUser?.id) {
             createQuizMutation.mutate({
               categoryIds: accessibleCategoryIds.length > 0 ? [accessibleCategoryIds[0]] : [],
@@ -196,14 +155,6 @@ export default function ContextualQuickActions() {
         icon: <BookOpen className="w-4 h-4" />,
         variant: 'outline' as const,
         onClick: () => {
-          if (!quizSizes.canCreateQuiz) {
-            toast({
-              title: "Daily Limit Reached",
-              description: `You've reached your daily quiz limit. ${quizSizes.subscription?.plan === 'free' ? 'Upgrade to Pro for unlimited quizzes!' : 'Try again tomorrow.'}`,
-              variant: "destructive",
-            });
-            return;
-          }
           if (currentUser?.id) {
             // Create a quiz for badge earning
             createQuizMutation.mutate({
@@ -223,14 +174,6 @@ export default function ContextualQuickActions() {
           icon: <RotateCcw className="w-4 h-4" />,
           variant: 'ghost' as const,
           onClick: () => {
-            if (!quizSizes.canCreateQuiz) {
-              toast({
-                title: "Daily Limit Reached",
-                description: `You've reached your daily quiz limit. ${quizSizes.subscription?.plan === 'free' ? 'Upgrade to Pro for unlimited quizzes!' : 'Try again tomorrow.'}`,
-                variant: "destructive",
-              });
-              return;
-            }
             const bestQuiz = recentQuizzes
               .filter(quiz => quiz.completedAt && (quiz.score || 0) >= 70)
               .sort((a, b) => (b.score || 0) - (a.score || 0))[0];
@@ -255,14 +198,6 @@ export default function ContextualQuickActions() {
         icon: <BookOpen className="w-4 h-4" />,
         variant: 'outline' as const,
         onClick: () => {
-          if (!quizSizes.canCreateQuiz) {
-            toast({
-              title: "Daily Limit Reached",
-              description: `You've reached your daily quiz limit. ${quizSizes.subscription?.plan === 'free' ? 'Upgrade to Pro for unlimited quizzes!' : 'Try again tomorrow.'}`,
-              variant: "destructive",
-            });
-            return;
-          }
           if (currentUser?.id) {
             // Create a solo practice quiz
             createQuizMutation.mutate({

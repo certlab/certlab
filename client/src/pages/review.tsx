@@ -9,10 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useAnalyticsAccess, LockedAnalytics } from "@/hooks/useAnalyticsAccess";
 import type { Quiz, Category } from "@shared/schema";
-import { PremiumFeatureBadge } from "@/components/SubscriptionBadge";
-import { Crown, Star, Sparkles } from "lucide-react";
 
 interface QuizResult {
   questionId: number;
@@ -48,7 +45,6 @@ export default function Review() {
   const quizId = parseInt(params?.id || "0");
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { features: analyticsFeatures } = useAnalyticsAccess();
 
   const { data: quiz, isLoading: quizLoading } = useQuery<Quiz>({
     queryKey: ['/api/quiz', quizId],
@@ -62,10 +58,6 @@ export default function Review() {
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
-  });
-
-  const { data: subscription } = useQuery<any>({
-    queryKey: ["/api/subscription/status"],
   });
 
   // Mutation for generating lecture notes
@@ -223,12 +215,6 @@ export default function Review() {
                     <>
                       <i className="fas fa-graduation-cap mr-2"></i>
                       Generate Study Notes
-                      {subscription?.plan === 'pro' && (
-                        <Crown className="w-3 h-3 absolute -top-1 -right-1 text-purple-400" />
-                      )}
-                      {subscription?.plan === 'enterprise' && (
-                        <Star className="w-3 h-3 absolute -top-1 -right-1 text-amber-400" />
-                      )}
                     </>
                   )}
                 </Button>
@@ -308,25 +294,14 @@ export default function Review() {
                     })}
                   </div>
 
-                  {/* Explanation - Pro/Enterprise Feature */}
+                  {/* Explanation */}
                   {question.explanation && (
-                    analyticsFeatures.weakAreasIdentification ? (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
-                          Explanation
-                          <PremiumFeatureBadge requiredPlan="pro" feature="Detailed explanations" />
-                        </h4>
-                        <p className="text-blue-800 leading-relaxed">{question.explanation}</p>
-                      </div>
-                    ) : (
-                      <LockedAnalytics title="Detailed Explanations" requiredLevel="advanced">
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <h4 className="font-medium text-blue-900 mb-2">Explanation</h4>
-                          <div className="h-4 bg-blue-100 rounded w-full mb-2"></div>
-                          <div className="h-4 bg-blue-100 rounded w-3/4"></div>
-                        </div>
-                      </LockedAnalytics>
-                    )
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-medium text-blue-900 mb-2">
+                        Explanation
+                      </h4>
+                      <p className="text-blue-800 leading-relaxed">{question.explanation}</p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
