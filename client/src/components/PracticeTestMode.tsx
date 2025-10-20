@@ -52,15 +52,30 @@ export default function PracticeTestMode() {
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to start practice test');
+        throw data;
       }
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      
+      if (data.creditBalance) {
+        queryClient.setQueryData(['/api/credits/balance'], data.creditBalance);
+        queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
+      }
+      
       setLocation(`/app/quiz/${data.quiz.id}`);
     },
     onError: (error: any) => {
+      if (error.error === "Insufficient credits") {
+        toast({
+          title: "Insufficient Credits",
+          description: error.message || "You don't have enough credits to start a practice test.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const message = error.message || "Failed to start practice test. Please try again.";
       toast({
         title: "Cannot Start Practice Test",
@@ -208,14 +223,34 @@ export default function PracticeTestMode() {
                     method: "POST",
                     endpoint: `/api/practice-tests/${test.id}/start`
                   });
+                  
+                  if (!startResponse.ok) {
+                    const errorData = await startResponse.json();
+                    if (errorData.error === "Insufficient credits") {
+                      toast({
+                        title: "Insufficient Credits",
+                        description: errorData.message || "You don't have enough credits to start a practice test.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    throw new Error(errorData.message || 'Failed to start practice test');
+                  }
+                  
                   const data = await startResponse.json();
+                  
+                  // Update credit balance cache
+                  if (data.creditBalance) {
+                    queryClient.setQueryData(['/api/credits/balance'], data.creditBalance);
+                    queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
+                  }
                   
                   queryClient.invalidateQueries({ queryKey: ['/api/practice-tests'] });
                   setLocation(`/app/quiz/${data.quiz.id}`);
-                } catch (error) {
+                } catch (error: any) {
                   toast({
                     title: "Error",
-                    description: "Failed to start quick test. Please try again.",
+                    description: error.message || "Failed to start quick test. Please try again.",
                     variant: "destructive",
                   });
                 } finally {

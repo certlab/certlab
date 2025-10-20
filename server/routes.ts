@@ -1431,11 +1431,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const testId = parseInt(req.params.id);
+      const CREDITS_PER_QUIZ = 5;
       
       // Get the practice test details
       const test = await storage.getPracticeTest(testId);
       if (!test) {
         return res.status(404).json({ message: 'Practice test not found' });
+      }
+      
+      // Credit-based billing: check if user has enough credits
+      const user = await storage.getUserById(userId);
+      
+      if (!user || !user.email) {
+        return res.status(400).json({ 
+          error: "User not found",
+          message: "Unable to verify user account" 
+        });
+      }
+      
+      let polarCustomer;
+      try {
+        // Get or create Polar customer
+        polarCustomer = await polarClient.createOrGetCustomerForUser(
+          user.email,
+          `${user.firstName || ''} ${user.lastName || ''}`.trim()
+        );
+        
+        // Check credit balance from Polar
+        const balance = await polarClient.getCustomerBalance(polarCustomer.id);
+        
+        console.log('[Practice Test] Credit check:', {
+          userId,
+          email: user.email,
+          availableCredits: balance.availableCredits,
+          requiredCredits: CREDITS_PER_QUIZ,
+        });
+        
+        // Ensure user has enough credits
+        if (balance.availableCredits < CREDITS_PER_QUIZ) {
+          return res.status(403).json({ 
+            error: "Insufficient credits",
+            message: `You need ${CREDITS_PER_QUIZ} credits to start a practice test. You currently have ${balance.availableCredits} credits.`,
+            availableCredits: balance.availableCredits,
+            requiredCredits: CREDITS_PER_QUIZ,
+            purchaseUrl: "/app/credits",
+          });
+        }
+      } catch (error: any) {
+        console.error('[Practice Test] Error checking credits:', error);
+        return res.status(500).json({ 
+          error: "Credit check failed",
+          message: "Unable to verify credit balance. Please try again later.",
+        });
+      }
+      
+      // Deduct credits BEFORE creating quiz to prevent free usage
+      let updatedBalance;
+      try {
+        await polarClient.deductCredits({
+          customerId: polarCustomer.id,
+          amount: CREDITS_PER_QUIZ,
+          reason: `Practice test started (ID: ${testId})`,
+        });
+        
+        // Get updated balance to return in response
+        updatedBalance = await polarClient.getCustomerBalance(polarCustomer.id);
+        
+        console.log('[Practice Test] Credits deducted:', {
+          testId,
+          creditsConsumed: CREDITS_PER_QUIZ,
+          newBalance: updatedBalance.availableCredits,
+        });
+      } catch (error: any) {
+        console.error('[Practice Test] Failed to deduct credits:', error);
+        return res.status(500).json({ 
+          error: "Credit deduction failed",
+          message: "Unable to process credits. Please try again later.",
+        });
       }
       
       // Get all subcategories for the selected categories
@@ -1479,7 +1551,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create practice test attempt
       const attempt = await storage.startPracticeTest(testId, userId);
       
-      res.json({ quiz, attempt });
+      console.log('[Practice Test] Quiz and attempt created:', {
+        testId,
+        quizId: quiz.id,
+        attemptId: attempt.id,
+      });
+      
+      res.json({ 
+        quiz, 
+        attempt,
+        creditBalance: updatedBalance ? {
+          availableCredits: updatedBalance.availableCredits,
+          totalPurchased: updatedBalance.totalPurchased,
+          totalConsumed: updatedBalance.totalConsumed,
+        } : undefined,
+      });
     } catch (error) {
       console.error('Error starting practice test:', error);
       res.status(500).json({ message: 'Failed to start practice test' });
