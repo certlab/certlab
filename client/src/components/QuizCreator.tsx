@@ -45,8 +45,18 @@ export default function QuizCreator() {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       
       if (quiz.creditBalance) {
+        console.log('[QuizCreator] Received credit balance:', quiz.creditBalance);
+        console.log('[QuizCreator] Current cache:', queryClient.getQueryData(['/api/credits/balance']));
+        
         queryClient.setQueryData(['/api/credits/balance'], quiz.creditBalance);
+        
+        console.log('[QuizCreator] Updated cache:', queryClient.getQueryData(['/api/credits/balance']));
+        
         queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
+        
+        console.log('[QuizCreator] Invalidated cache');
+      } else {
+        console.log('[QuizCreator] No creditBalance in response:', quiz);
       }
       
       if (quiz.adaptiveInfo && quiz.adaptiveInfo.increasePercentage > 0) {
