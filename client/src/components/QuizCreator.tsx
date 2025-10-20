@@ -46,6 +46,7 @@ export default function QuizCreator() {
       
       if (quiz.creditBalance) {
         queryClient.setQueryData(['/api/credits/balance'], quiz.creditBalance);
+        queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
       }
       
       if (quiz.adaptiveInfo && quiz.adaptiveInfo.increasePercentage > 0) {
