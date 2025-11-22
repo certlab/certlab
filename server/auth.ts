@@ -7,6 +7,9 @@ import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 import { randomUUID } from "crypto";
 
+// Configuration constants
+const BCRYPT_SALT_ROUNDS = 10;
+
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
@@ -117,20 +120,18 @@ export async function setupAuth(app: Express) {
       }
 
       // Hash password
-      const passwordHash = await bcrypt.hash(password, 10);
+      const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
 
       // Create user with a generated UUID
       const userId = randomUUID();
-      const user = await storage.upsertUser({
+      const user = await storage.createUser({
         id: userId,
         email,
+        passwordHash,
         firstName: firstName || null,
         lastName: lastName || null,
         profileImageUrl: null,
       });
-
-      // Update user with password hash
-      await storage.updateUser(userId, { passwordHash });
 
       // Log the user in
       req.login(user, (loginErr) => {
