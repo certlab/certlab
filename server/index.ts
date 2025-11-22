@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration is handled in replitAuth.ts
+// Session configuration is handled in auth.ts
 
 app.use((req, res, next) => {
   const start = Date.now();

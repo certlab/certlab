@@ -21,7 +21,7 @@ export interface IStorage {
   updateTenant(id: number, updates: Partial<InsertTenant>): Promise<Tenant>;
   deleteTenant(id: number): Promise<void>;
   
-  // User management (updated for Replit Auth)
+  // User management
   getUser(id: string): Promise<User | undefined>;
   getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
