@@ -14,11 +14,14 @@ export default defineConfig({
     },
   },
   root: path.resolve(import.meta.dirname, "client"),
+  base: process.env.NODE_ENV === 'production' ? '/certlab/' : '/',
+  publicDir: path.resolve(import.meta.dirname, "client", "public"),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
   },
   server: {
+    port: 5000,
     fs: {
       strict: true,
       deny: ["**/.*"],
