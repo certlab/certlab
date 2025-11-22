@@ -70,17 +70,16 @@ export default function QuizCreator() {
         ...quizData,
       });
       
-      return { quiz, tokenResult };
+      return { quiz, tokenResult, tokenCost };
     },
-    onSuccess: ({ quiz, tokenResult }) => {
+    onSuccess: ({ quiz, tokenResult, tokenCost }) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       queryClient.invalidateQueries({ queryKey: [`/api/user/${currentUser?.id}/token-balance`] });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       
-      const tokensUsed = currentTokenBalance - tokenResult.newBalance;
       toast({
         title: "Quiz Created",
-        description: `Used ${tokensUsed} tokens. New balance: ${tokenResult.newBalance}`,
+        description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
       });
       
       setLocation(`/app/quiz/${quiz.id}`);

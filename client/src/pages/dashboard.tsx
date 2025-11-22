@@ -107,7 +107,11 @@ export default function Dashboard() {
     }
 
     // Create the quiz with first available category
-    const firstCategoryId = categories.length > 0 ? categories[0].id : 1;
+    if (categories.length === 0) {
+      throw new Error('No categories available. Please add categories first.');
+    }
+    
+    const firstCategoryId = categories[0].id;
     const quiz = await clientStorage.createQuiz({
       userId: currentUser.id,
       categoryIds: [firstCategoryId],

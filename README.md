@@ -107,6 +107,17 @@ The app is configured for automatic deployment to GitHub Pages:
 3. Push to `main` branch - automatic deployment via GitHub Actions
 4. Access at `https://[username].github.io/certlab/`
 
+**Note for Forks/Different Repository Names:**
+If you fork this repository or use a different name, update the base path:
+- Set the `VITE_BASE_PATH` environment variable in your build command
+- Or update `vite.config.ts` to change the default `/certlab/` path
+- For custom domains (root path), set `VITE_BASE_PATH=/`
+
+Example:
+```bash
+VITE_BASE_PATH=/my-repo-name/ npm run build
+```
+
 ### Manual Deployment
 
 ```bash

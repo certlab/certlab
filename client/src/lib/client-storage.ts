@@ -57,7 +57,7 @@ class ClientStorage {
       studyPreferences: user.studyPreferences || null,
       skillsAssessment: user.skillsAssessment || null,
       polarCustomerId: user.polarCustomerId || null,
-      tokenBalance: (user as any).tokenBalance ?? 100, // Start with 100 free tokens
+      tokenBalance: user.tokenBalance ?? 100, // Start with 100 free tokens
       createdAt: user.createdAt || new Date(),
       updatedAt: user.updatedAt || new Date(),
     };
@@ -677,17 +677,17 @@ class ClientStorage {
   // Token Management
   async getUserTokenBalance(userId: string): Promise<number> {
     const user = await this.getUser(userId);
-    return (user as any)?.tokenBalance ?? 0;
+    return user?.tokenBalance ?? 0;
   }
 
   async addTokens(userId: string, amount: number): Promise<number> {
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
     
-    const currentBalance = (user as any).tokenBalance ?? 0;
+    const currentBalance = user.tokenBalance ?? 0;
     const newBalance = currentBalance + amount;
     
-    await this.updateUser(userId, { tokenBalance: newBalance } as any);
+    await this.updateUser(userId, { tokenBalance: newBalance });
     return newBalance;
   }
 
@@ -695,7 +695,7 @@ class ClientStorage {
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
     
-    const currentBalance = (user as any).tokenBalance ?? 0;
+    const currentBalance = user.tokenBalance ?? 0;
     
     if (currentBalance < amount) {
       return {
@@ -706,7 +706,7 @@ class ClientStorage {
     }
     
     const newBalance = currentBalance - amount;
-    await this.updateUser(userId, { tokenBalance: newBalance } as any);
+    await this.updateUser(userId, { tokenBalance: newBalance });
     
     return {
       success: true,
