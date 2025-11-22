@@ -11,16 +11,24 @@ import { randomUUID } from "crypto";
 const BCRYPT_SALT_ROUNDS = 10;
 
 export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  // Validate required environment variables
+  if (!process.env.DATABASE_URL) {
+    throw new Error("Environment variable DATABASE_URL is required");
+  }
+  if (!process.env.SESSION_SECRET) {
+    throw new Error("Environment variable SESSION_SECRET is required");
+  }
+
+  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
     createTableIfMissing: true,
-    ttl: sessionTtl,
+    ttl: sessionTtl / 1000, // Convert milliseconds to seconds for connect-pg-simple
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -113,6 +121,17 @@ export async function setupAuth(app: Express) {
         return res.status(400).json({ message: "Email and password are required" });
       }
 
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Invalid email format" });
+      }
+
+      // Validate password strength
+      if (password.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters long" });
+      }
+
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
@@ -131,6 +150,8 @@ export async function setupAuth(app: Express) {
         firstName: firstName || null,
         lastName: lastName || null,
         profileImageUrl: null,
+        tenantId: 1, // Default tenant
+        role: 'user', // Default role
       });
 
       // Log the user in

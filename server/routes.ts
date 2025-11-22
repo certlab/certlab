@@ -758,7 +758,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const quizId = parseInt(req.params.id);
       const { answers } = req.body;
-      const userId = req.user.id;
       
       console.log(`Quiz submission for quiz ${quizId}:`, { answers, answersCount: answers?.length });
       
