@@ -3,7 +3,7 @@
  * Mimics the server storage interface but uses IndexedDB instead of PostgreSQL
  */
 
-import { indexedDB, STORES } from './indexeddb';
+import { indexedDBService, STORES } from './indexeddb';
 import type {
   User, Category, Subcategory, Question, Quiz, UserProgress,
   MasteryScore, Badge, UserBadge, UserGameStats, Challenge, ChallengeAttempt,
@@ -18,21 +18,21 @@ function generateId(): string {
 class ClientStorage {
   // Settings
   async getCurrentUserId(): Promise<string | null> {
-    const setting = await indexedDB.get<{ key: string; value: string }>(STORES.settings, 'currentUserId');
+    const setting = await indexedDBService.get<{ key: string; value: string }>(STORES.settings, 'currentUserId');
     return setting?.value || null;
   }
 
   async setCurrentUserId(userId: string): Promise<void> {
-    await indexedDB.put(STORES.settings, { key: 'currentUserId', value: userId });
+    await indexedDBService.put(STORES.settings, { key: 'currentUserId', value: userId });
   }
 
   async clearCurrentUser(): Promise<void> {
-    await indexedDB.delete(STORES.settings, 'currentUserId');
+    await indexedDBService.delete(STORES.settings, 'currentUserId');
   }
 
   // User management
   async getUser(id: string): Promise<User | undefined> {
-    return await indexedDB.get<User>(STORES.users, id);
+    return await indexedDBService.get<User>(STORES.users, id);
   }
 
   async getUserById(id: string): Promise<User | undefined> {
@@ -40,7 +40,7 @@ class ClientStorage {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return await indexedDB.getOneByIndex<User>(STORES.users, 'email', email);
+    return await indexedDBService.getOneByIndex<User>(STORES.users, 'email', email);
   }
 
   async createUser(user: Partial<User>): Promise<User> {
@@ -60,7 +60,7 @@ class ClientStorage {
       createdAt: user.createdAt || new Date(),
       updatedAt: user.updatedAt || new Date(),
     };
-    await indexedDB.put(STORES.users, newUser);
+    await indexedDBService.put(STORES.users, newUser);
     return newUser;
   }
 
@@ -69,7 +69,7 @@ class ClientStorage {
     if (!user) return null;
     
     const updatedUser = { ...user, ...updates, updatedAt: new Date() };
-    await indexedDB.put(STORES.users, updatedUser);
+    await indexedDBService.put(STORES.users, updatedUser);
     return updatedUser;
   }
 
@@ -83,7 +83,7 @@ class ClientStorage {
 
   // Categories
   async getCategories(tenantId: number = 1): Promise<Category[]> {
-    const all = await indexedDB.getByIndex<Category>(STORES.categories, 'tenantId', tenantId);
+    const all = await indexedDBService.getByIndex<Category>(STORES.categories, 'tenantId', tenantId);
     return all;
   }
 
@@ -94,29 +94,29 @@ class ClientStorage {
       description: category.description || null,
       icon: category.icon || null,
     };
-    const id = await indexedDB.add(STORES.categories, newCategory);
+    const id = await indexedDBService.add(STORES.categories, newCategory);
     return { ...newCategory, id: Number(id) };
   }
 
   async updateCategory(id: number, updates: Partial<Category>): Promise<Category> {
-    const category = await indexedDB.get<Category>(STORES.categories, id);
+    const category = await indexedDBService.get<Category>(STORES.categories, id);
     if (!category) throw new Error('Category not found');
     
     const updated = { ...category, ...updates };
-    await indexedDB.put(STORES.categories, updated);
+    await indexedDBService.put(STORES.categories, updated);
     return updated;
   }
 
   async deleteCategory(id: number): Promise<void> {
-    await indexedDB.delete(STORES.categories, id);
+    await indexedDBService.delete(STORES.categories, id);
   }
 
   // Subcategories
   async getSubcategories(categoryId?: number, tenantId: number = 1): Promise<Subcategory[]> {
     if (categoryId) {
-      return await indexedDB.getByIndex<Subcategory>(STORES.subcategories, 'categoryId', categoryId);
+      return await indexedDBService.getByIndex<Subcategory>(STORES.subcategories, 'categoryId', categoryId);
     }
-    return await indexedDB.getByIndex<Subcategory>(STORES.subcategories, 'tenantId', tenantId);
+    return await indexedDBService.getByIndex<Subcategory>(STORES.subcategories, 'tenantId', tenantId);
   }
 
   async createSubcategory(subcategory: Partial<Subcategory>): Promise<Subcategory> {
@@ -126,21 +126,21 @@ class ClientStorage {
       name: subcategory.name!,
       description: subcategory.description || null,
     };
-    const id = await indexedDB.add(STORES.subcategories, newSubcategory);
+    const id = await indexedDBService.add(STORES.subcategories, newSubcategory);
     return { ...newSubcategory, id: Number(id) };
   }
 
   async updateSubcategory(id: number, updates: Partial<Subcategory>): Promise<Subcategory> {
-    const subcategory = await indexedDB.get<Subcategory>(STORES.subcategories, id);
+    const subcategory = await indexedDBService.get<Subcategory>(STORES.subcategories, id);
     if (!subcategory) throw new Error('Subcategory not found');
     
     const updated = { ...subcategory, ...updates };
-    await indexedDB.put(STORES.subcategories, updated);
+    await indexedDBService.put(STORES.subcategories, updated);
     return updated;
   }
 
   async deleteSubcategory(id: number): Promise<void> {
-    await indexedDB.delete(STORES.subcategories, id);
+    await indexedDBService.delete(STORES.subcategories, id);
   }
 
   // Questions
@@ -150,7 +150,7 @@ class ClientStorage {
     difficultyLevels?: number[],
     tenantId: number = 1
   ): Promise<Question[]> {
-    const allQuestions = await indexedDB.getByIndex<Question>(STORES.questions, 'tenantId', tenantId);
+    const allQuestions = await indexedDBService.getByIndex<Question>(STORES.questions, 'tenantId', tenantId);
     
     return allQuestions.filter(q => {
       const categoryMatch = categoryIds.includes(q.categoryId);
@@ -161,7 +161,7 @@ class ClientStorage {
   }
 
   async getQuestion(id: number): Promise<Question | undefined> {
-    return await indexedDB.get<Question>(STORES.questions, id);
+    return await indexedDBService.get<Question>(STORES.questions, id);
   }
 
   async createQuestion(question: Partial<Question>): Promise<Question> {
@@ -176,25 +176,25 @@ class ClientStorage {
       difficultyLevel: question.difficultyLevel || 1,
       tags: question.tags || null,
     };
-    const id = await indexedDB.add(STORES.questions, newQuestion);
+    const id = await indexedDBService.add(STORES.questions, newQuestion);
     return { ...newQuestion, id: Number(id) };
   }
 
   async updateQuestion(id: number, updates: Partial<Question>): Promise<Question> {
-    const question = await indexedDB.get<Question>(STORES.questions, id);
+    const question = await indexedDBService.get<Question>(STORES.questions, id);
     if (!question) throw new Error('Question not found');
     
     const updated = { ...question, ...updates };
-    await indexedDB.put(STORES.questions, updated);
+    await indexedDBService.put(STORES.questions, updated);
     return updated;
   }
 
   async deleteQuestion(id: number): Promise<void> {
-    await indexedDB.delete(STORES.questions, id);
+    await indexedDBService.delete(STORES.questions, id);
   }
 
   async getQuestionsByTenant(tenantId: number): Promise<Question[]> {
-    return await indexedDB.getByIndex<Question>(STORES.questions, 'tenantId', tenantId);
+    return await indexedDBService.getByIndex<Question>(STORES.questions, 'tenantId', tenantId);
   }
 
   // Quizzes
@@ -220,16 +220,16 @@ class ClientStorage {
       missedTopics: quiz.missedTopics || null,
       mode: quiz.mode || 'study',
     };
-    const id = await indexedDB.add(STORES.quizzes, newQuiz);
+    const id = await indexedDBService.add(STORES.quizzes, newQuiz);
     return { ...newQuiz, id: Number(id) };
   }
 
   async getQuiz(id: number): Promise<Quiz | undefined> {
-    return await indexedDB.get<Quiz>(STORES.quizzes, id);
+    return await indexedDBService.get<Quiz>(STORES.quizzes, id);
   }
 
   async getUserQuizzes(userId: string): Promise<Quiz[]> {
-    const quizzes = await indexedDB.getByIndex<Quiz>(STORES.quizzes, 'userId', userId);
+    const quizzes = await indexedDBService.getByIndex<Quiz>(STORES.quizzes, 'userId', userId);
     return quizzes.sort((a, b) => {
       const aDate = a.startedAt ? new Date(a.startedAt).getTime() : 0;
       const bDate = b.startedAt ? new Date(b.startedAt).getTime() : 0;
@@ -238,17 +238,17 @@ class ClientStorage {
   }
 
   async updateQuiz(id: number, updates: Partial<Quiz>): Promise<Quiz> {
-    const quiz = await indexedDB.get<Quiz>(STORES.quizzes, id);
+    const quiz = await indexedDBService.get<Quiz>(STORES.quizzes, id);
     if (!quiz) throw new Error('Quiz not found');
     
     const updated = { ...quiz, ...updates };
-    await indexedDB.put(STORES.quizzes, updated);
+    await indexedDBService.put(STORES.quizzes, updated);
     return updated;
   }
 
   // User Progress
   async getUserProgress(userId: string): Promise<UserProgress[]> {
-    return await indexedDB.getByIndex<UserProgress>(STORES.userProgress, 'userId', userId);
+    return await indexedDBService.getByIndex<UserProgress>(STORES.userProgress, 'userId', userId);
   }
 
   async updateUserProgress(userId: string, categoryId: number, progress: Partial<UserProgress>): Promise<UserProgress> {
@@ -258,7 +258,7 @@ class ClientStorage {
     
     if (existing) {
       const updated = { ...existing, ...progress };
-      await indexedDB.put(STORES.userProgress, updated);
+      await indexedDBService.put(STORES.userProgress, updated);
       return updated;
     } else {
       const newProgress: any = {
@@ -273,7 +273,7 @@ class ClientStorage {
         consecutiveWrong: progress.consecutiveWrong || 0,
         weakSubcategories: progress.weakSubcategories || null,
       };
-      const id = await indexedDB.add(STORES.userProgress, newProgress);
+      const id = await indexedDBService.add(STORES.userProgress, newProgress);
       return { ...newProgress, id: Number(id) };
     }
   }
@@ -346,12 +346,12 @@ class ClientStorage {
       createdAt: new Date(),
       isRead: false,
     };
-    const id = await indexedDB.add(STORES.lectures, lecture);
+    const id = await indexedDBService.add(STORES.lectures, lecture);
     return { ...lecture, id: Number(id) };
   }
 
   async getUserLectures(userId: string): Promise<any[]> {
-    const lectures = await indexedDB.getByIndex(STORES.lectures, 'userId', userId);
+    const lectures = await indexedDBService.getByIndex(STORES.lectures, 'userId', userId);
     return lectures.sort((a: any, b: any) => {
       const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -360,12 +360,12 @@ class ClientStorage {
   }
 
   async getLecture(id: number): Promise<any> {
-    return await indexedDB.get(STORES.lectures, id);
+    return await indexedDBService.get(STORES.lectures, id);
   }
 
   // Mastery Scores
   async updateMasteryScore(userId: string, categoryId: number, subcategoryId: number, isCorrect: boolean): Promise<void> {
-    const allScores = await indexedDB.getByIndex<MasteryScore>(STORES.masteryScores, 'userId', userId);
+    const allScores = await indexedDBService.getByIndex<MasteryScore>(STORES.masteryScores, 'userId', userId);
     const existing = allScores.find(s => s.categoryId === categoryId && s.subcategoryId === subcategoryId);
     
     if (existing) {
@@ -380,7 +380,7 @@ class ClientStorage {
         rollingAverage,
         lastUpdated: new Date(),
       };
-      await indexedDB.put(STORES.masteryScores, updated);
+      await indexedDBService.put(STORES.masteryScores, updated);
     } else {
       const newScore: any = {
         userId,
@@ -391,12 +391,12 @@ class ClientStorage {
         rollingAverage: isCorrect ? 100 : 0,
         lastUpdated: new Date(),
       };
-      await indexedDB.add(STORES.masteryScores, newScore);
+      await indexedDBService.add(STORES.masteryScores, newScore);
     }
   }
 
   async getUserMasteryScores(userId: string): Promise<MasteryScore[]> {
-    return await indexedDB.getByIndex<MasteryScore>(STORES.masteryScores, 'userId', userId);
+    return await indexedDBService.getByIndex<MasteryScore>(STORES.masteryScores, 'userId', userId);
   }
 
   async calculateOverallMasteryScore(userId: string): Promise<number> {
@@ -427,11 +427,11 @@ class ClientStorage {
 
   // Badges
   async getBadges(): Promise<Badge[]> {
-    return await indexedDB.getAll<Badge>(STORES.badges);
+    return await indexedDBService.getAll<Badge>(STORES.badges);
   }
 
   async getUserBadges(userId: string): Promise<UserBadge[]> {
-    return await indexedDB.getByIndex<UserBadge>(STORES.userBadges, 'userId', userId);
+    return await indexedDBService.getByIndex<UserBadge>(STORES.userBadges, 'userId', userId);
   }
 
   async createUserBadge(userBadge: Partial<UserBadge>): Promise<UserBadge> {
@@ -442,22 +442,22 @@ class ClientStorage {
       progress: userBadge.progress || 0,
       isNotified: userBadge.isNotified || false,
     };
-    const id = await indexedDB.add(STORES.userBadges, newBadge);
+    const id = await indexedDBService.add(STORES.userBadges, newBadge);
     return { ...newBadge, id: Number(id) };
   }
 
   async updateUserBadge(id: number, updates: Partial<UserBadge>): Promise<UserBadge> {
-    const badge = await indexedDB.get<UserBadge>(STORES.userBadges, id);
+    const badge = await indexedDBService.get<UserBadge>(STORES.userBadges, id);
     if (!badge) throw new Error('User badge not found');
     
     const updated = { ...badge, ...updates };
-    await indexedDB.put(STORES.userBadges, updated);
+    await indexedDBService.put(STORES.userBadges, updated);
     return updated;
   }
 
   // Game Stats
   async getUserGameStats(userId: string): Promise<UserGameStats | undefined> {
-    return await indexedDB.getOneByIndex<UserGameStats>(STORES.userGameStats, 'userId', userId);
+    return await indexedDBService.getOneByIndex<UserGameStats>(STORES.userGameStats, 'userId', userId);
   }
 
   async updateUserGameStats(userId: string, updates: Partial<UserGameStats>): Promise<UserGameStats> {
@@ -465,7 +465,7 @@ class ClientStorage {
     
     if (existing) {
       const updated = { ...existing, ...updates, updatedAt: new Date() };
-      await indexedDB.put(STORES.userGameStats, updated);
+      await indexedDBService.put(STORES.userGameStats, updated);
       return updated;
     } else {
       const newStats: any = {
@@ -480,7 +480,7 @@ class ClientStorage {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      const id = await indexedDB.add(STORES.userGameStats, newStats);
+      const id = await indexedDBService.add(STORES.userGameStats, newStats);
       return { ...newStats, id: Number(id) };
     }
   }
@@ -488,13 +488,13 @@ class ClientStorage {
   // Challenges
   async getChallenges(userId?: string): Promise<Challenge[]> {
     if (userId) {
-      return await indexedDB.getByIndex<Challenge>(STORES.challenges, 'userId', userId);
+      return await indexedDBService.getByIndex<Challenge>(STORES.challenges, 'userId', userId);
     }
-    return await indexedDB.getAll<Challenge>(STORES.challenges);
+    return await indexedDBService.getAll<Challenge>(STORES.challenges);
   }
 
   async getChallenge(id: number): Promise<Challenge | undefined> {
-    return await indexedDB.get<Challenge>(STORES.challenges, id);
+    return await indexedDBService.get<Challenge>(STORES.challenges, id);
   }
 
   async createChallenge(challenge: Partial<Challenge>): Promise<Challenge> {
@@ -516,12 +516,12 @@ class ClientStorage {
       expiresAt: challenge.expiresAt || null,
       createdAt: challenge.createdAt || new Date(),
     };
-    const id = await indexedDB.add(STORES.challenges, newChallenge);
+    const id = await indexedDBService.add(STORES.challenges, newChallenge);
     return { ...newChallenge, id: Number(id) };
   }
 
   async getChallengeAttempts(userId: string): Promise<ChallengeAttempt[]> {
-    return await indexedDB.getByIndex<ChallengeAttempt>(STORES.challengeAttempts, 'userId', userId);
+    return await indexedDBService.getByIndex<ChallengeAttempt>(STORES.challengeAttempts, 'userId', userId);
   }
 
   async createChallengeAttempt(attempt: Partial<ChallengeAttempt>): Promise<ChallengeAttempt> {
@@ -538,35 +538,40 @@ class ClientStorage {
       startedAt: attempt.startedAt || new Date(),
       completedAt: attempt.completedAt || null,
     };
-    const id = await indexedDB.add(STORES.challengeAttempts, newAttempt);
+    const id = await indexedDBService.add(STORES.challengeAttempts, newAttempt);
     return { ...newAttempt, id: Number(id) };
   }
 
   // Study Groups
   async getStudyGroups(): Promise<StudyGroup[]> {
-    return await indexedDB.getAll<StudyGroup>(STORES.studyGroups);
+    return await indexedDBService.getAll<StudyGroup>(STORES.studyGroups);
   }
 
   async getStudyGroup(id: number): Promise<StudyGroup | undefined> {
-    return await indexedDB.get<StudyGroup>(STORES.studyGroups, id);
+    return await indexedDBService.get<StudyGroup>(STORES.studyGroups, id);
   }
 
   async createStudyGroup(group: Partial<StudyGroup>): Promise<StudyGroup> {
     const newGroup: any = {
+      tenantId: 1,
       name: group.name!,
       description: group.description || null,
-      creatorId: group.creatorId!,
-      categoryId: group.categoryId || null,
+      categoryIds: (group as any).categoryIds || [],
+      createdBy: (group as any).createdBy!,
+      maxMembers: group.maxMembers || 20,
       isPublic: group.isPublic ?? true,
-      maxMembers: group.maxMembers || null,
+      level: (group as any).level || 'Intermediate',
+      meetingSchedule: (group as any).meetingSchedule || null,
+      isActive: (group as any).isActive ?? true,
       createdAt: group.createdAt || new Date(),
+      updatedAt: (group as any).updatedAt || new Date(),
     };
-    const id = await indexedDB.add(STORES.studyGroups, newGroup);
+    const id = await indexedDBService.add(STORES.studyGroups, newGroup);
     return { ...newGroup, id: Number(id) };
   }
 
   async getUserStudyGroups(userId: string): Promise<StudyGroup[]> {
-    const memberships = await indexedDB.getByIndex<StudyGroupMember>(STORES.studyGroupMembers, 'userId', userId);
+    const memberships = await indexedDBService.getByIndex<StudyGroupMember>(STORES.studyGroupMembers, 'userId', userId);
     const groupIds = memberships.map(m => m.groupId);
     const groups = await this.getStudyGroups();
     return groups.filter(g => groupIds.includes(g.id));
@@ -579,43 +584,50 @@ class ClientStorage {
       joinedAt: new Date(),
       role: 'member',
     };
-    const id = await indexedDB.add(STORES.studyGroupMembers, member);
+    const id = await indexedDBService.add(STORES.studyGroupMembers, member);
     return { ...member, id: Number(id) };
   }
 
   async leaveStudyGroup(userId: string, groupId: number): Promise<void> {
-    const memberships = await indexedDB.getByIndex<StudyGroupMember>(STORES.studyGroupMembers, 'userId', userId);
+    const memberships = await indexedDBService.getByIndex<StudyGroupMember>(STORES.studyGroupMembers, 'userId', userId);
     const membership = memberships.find(m => m.groupId === groupId);
     if (membership) {
-      await indexedDB.delete(STORES.studyGroupMembers, membership.id);
+      await indexedDBService.delete(STORES.studyGroupMembers, membership.id);
     }
   }
 
   // Practice Tests
   async getPracticeTests(): Promise<PracticeTest[]> {
-    return await indexedDB.getAll<PracticeTest>(STORES.practiceTests);
+    return await indexedDBService.getAll<PracticeTest>(STORES.practiceTests);
   }
 
   async getPracticeTest(id: number): Promise<PracticeTest | undefined> {
-    return await indexedDB.get<PracticeTest>(STORES.practiceTests, id);
+    return await indexedDBService.get<PracticeTest>(STORES.practiceTests, id);
   }
 
   async createPracticeTest(test: Partial<PracticeTest>): Promise<PracticeTest> {
     const newTest: any = {
-      title: test.title!,
+      tenantId: 1,
+      name: (test as any).name!,
       description: test.description || null,
-      categoryId: test.categoryId!,
-      questionsCount: test.questionsCount || 50,
-      timeLimit: test.timeLimit || 60,
-      passingScore: test.passingScore || 70,
+      categoryIds: (test as any).categoryIds || [],
+      questionCount: (test as any).questionCount || 50,
+      timeLimit: (test as any).timeLimit || 60,
+      difficulty: (test as any).difficulty || 'Medium',
+      passingScore: (test as any).passingScore || 70,
+      isOfficial: (test as any).isOfficial || false,
+      questionPool: (test as any).questionPool || null,
+      createdBy: (test as any).createdBy || null,
+      isActive: (test as any).isActive ?? true,
       createdAt: test.createdAt || new Date(),
+      updatedAt: (test as any).updatedAt || new Date(),
     };
-    const id = await indexedDB.add(STORES.practiceTests, newTest);
+    const id = await indexedDBService.add(STORES.practiceTests, newTest);
     return { ...newTest, id: Number(id) };
   }
 
   async getPracticeTestAttempts(userId: string, testId?: number): Promise<PracticeTestAttempt[]> {
-    const attempts = await indexedDB.getByIndex<PracticeTestAttempt>(STORES.practiceTestAttempts, 'userId', userId);
+    const attempts = await indexedDBService.getByIndex<PracticeTestAttempt>(STORES.practiceTestAttempts, 'userId', userId);
     if (testId) {
       return attempts.filter(a => a.testId === testId);
     }
@@ -632,32 +644,32 @@ class ClientStorage {
       startedAt: attempt.startedAt || new Date(),
       completedAt: attempt.completedAt || null,
     };
-    const id = await indexedDB.add(STORES.practiceTestAttempts, newAttempt);
+    const id = await indexedDBService.add(STORES.practiceTestAttempts, newAttempt);
     return { ...newAttempt, id: Number(id) };
   }
 
   async updatePracticeTestAttempt(id: number, updates: Partial<PracticeTestAttempt>): Promise<PracticeTestAttempt> {
-    const attempt = await indexedDB.get<PracticeTestAttempt>(STORES.practiceTestAttempts, id);
+    const attempt = await indexedDBService.get<PracticeTestAttempt>(STORES.practiceTestAttempts, id);
     if (!attempt) throw new Error('Practice test attempt not found');
     
     const updated = { ...attempt, ...updates };
-    await indexedDB.put(STORES.practiceTestAttempts, updated);
+    await indexedDBService.put(STORES.practiceTestAttempts, updated);
     return updated;
   }
 
   // Data export/import
   async exportData(): Promise<string> {
-    const data = await indexedDB.exportData();
+    const data = await indexedDBService.exportData();
     return JSON.stringify(data, null, 2);
   }
 
   async importData(jsonData: string): Promise<void> {
     const data = JSON.parse(jsonData);
-    await indexedDB.importData(data);
+    await indexedDBService.importData(data);
   }
 
   async clearAllData(): Promise<void> {
-    await indexedDB.clearAllData();
+    await indexedDBService.clearAllData();
     await this.clearCurrentUser();
   }
 }

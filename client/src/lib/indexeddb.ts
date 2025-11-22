@@ -37,7 +37,7 @@ class IndexedDBService {
     if (this.initPromise) return this.initPromise;
 
     this.initPromise = new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      const request = window.indexedDB.open(DB_NAME, DB_VERSION);
 
       request.onerror = () => {
         reject(new Error('Failed to open IndexedDB'));
@@ -48,7 +48,7 @@ class IndexedDBService {
         resolve();
       };
 
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
         const db = (event.target as IDBOpenDBRequest).result;
 
         // Create stores if they don't exist
@@ -289,5 +289,5 @@ class IndexedDBService {
   }
 }
 
-export const indexedDB = new IndexedDBService();
+export const indexedDBService = new IndexedDBService();
 export { STORES };

@@ -102,6 +102,13 @@ function AppContent() {
 }
 
 function App() {
+  useEffect(() => {
+    // Seed initial data on first load
+    import('./lib/seed-data').then(({ ensureDataSeeded }) => {
+      ensureDataSeeded();
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
