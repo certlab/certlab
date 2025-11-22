@@ -56,7 +56,7 @@ export function TokenBalance() {
     addTokensMutation.mutate(amount);
   };
 
-  const balance = tokenData?.balance ?? 0;
+  const balance = (tokenData as { balance: number } | undefined)?.balance ?? 0;
 
   return (
     <Card className="w-full">
