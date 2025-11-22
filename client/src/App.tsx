@@ -24,9 +24,12 @@ import ChallengesPage from "@/pages/challenges";
 import CreditsPage from "@/pages/credits";
 import ProfilePage from "@/pages/profile";
 import PracticeTests from "@/pages/practice-tests";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 // Get the base path from Vite's configuration
+// For GitHub Pages deployment at /certlab/, BASE_URL is '/certlab/'
+// We remove the trailing slash to match wouter's expected format
+// For root deployments where BASE_URL is '/', we use an empty string
 const BASE_PATH = import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
 
 // Global unhandled rejection handler
