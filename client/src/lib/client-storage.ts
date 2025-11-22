@@ -57,6 +57,7 @@ class ClientStorage {
       studyPreferences: user.studyPreferences || null,
       skillsAssessment: user.skillsAssessment || null,
       polarCustomerId: user.polarCustomerId || null,
+      tokenBalance: (user as any).tokenBalance ?? 100, // Start with 100 free tokens
       createdAt: user.createdAt || new Date(),
       updatedAt: user.updatedAt || new Date(),
     };
@@ -671,6 +672,52 @@ class ClientStorage {
   async clearAllData(): Promise<void> {
     await indexedDBService.clearAllData();
     await this.clearCurrentUser();
+  }
+
+  // Token Management
+  async getUserTokenBalance(userId: string): Promise<number> {
+    const user = await this.getUser(userId);
+    return (user as any)?.tokenBalance ?? 0;
+  }
+
+  async addTokens(userId: string, amount: number): Promise<number> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const currentBalance = (user as any).tokenBalance ?? 0;
+    const newBalance = currentBalance + amount;
+    
+    await this.updateUser(userId, { tokenBalance: newBalance } as any);
+    return newBalance;
+  }
+
+  async consumeTokens(userId: string, amount: number): Promise<{ success: boolean; newBalance: number; message?: string }> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const currentBalance = (user as any).tokenBalance ?? 0;
+    
+    if (currentBalance < amount) {
+      return {
+        success: false,
+        newBalance: currentBalance,
+        message: `Insufficient tokens. You need ${amount} tokens but only have ${currentBalance}.`
+      };
+    }
+    
+    const newBalance = currentBalance - amount;
+    await this.updateUser(userId, { tokenBalance: newBalance } as any);
+    
+    return {
+      success: true,
+      newBalance,
+    };
+  }
+
+  // Calculate token cost based on question count
+  calculateQuizTokenCost(questionCount: number): number {
+    // 1 token per question
+    return questionCount;
   }
 }
 

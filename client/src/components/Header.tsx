@@ -48,14 +48,10 @@ export default function Header() {
   const isAdminArea = location.startsWith('/admin');
   const isAdmin = currentUser?.role === 'admin';
   
-  // Get credit balance
-  const { data: creditBalance } = useQuery<{
-    availableCredits: number;
-    totalPurchased: number;
-    totalConsumed: number;
-  }>({
-    queryKey: ["/api/credits/balance"],
-    enabled: !!currentUser,
+  // Get token balance
+  const { data: tokenData } = useQuery<{ balance: number }>({
+    queryKey: [`/api/user/${currentUser?.id}/token-balance`],
+    enabled: !!currentUser?.id,
     staleTime: 0, // Always refetch when invalidated
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
@@ -105,17 +101,18 @@ export default function Header() {
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-xl font-semibold text-foreground tracking-tight">Cert Lab</h1>
-              {/* Credit Balance Display */}
-              {creditBalance && currentUser && (
+              {/* Token Balance Display */}
+              {tokenData && currentUser && (
                 <Badge 
                   variant="secondary" 
                   className="ml-2 px-3 py-1 cursor-pointer hover:bg-secondary/80 transition-colors"
-                  onClick={() => setLocation('/app/credits')}
-                  data-testid="credit-balance-badge"
+                  onClick={() => setLocation('/app/dashboard')}
+                  data-testid="token-balance-badge"
+                  title="Click to manage tokens"
                 >
                   <Coins className="w-4 h-4 mr-1.5 text-amber-500" />
-                  <span className="font-medium">{creditBalance.availableCredits}</span>
-                  <span className="ml-1 text-xs text-muted-foreground">credits</span>
+                  <span className="font-medium">{tokenData.balance}</span>
+                  <span className="ml-1 text-xs text-muted-foreground">tokens</span>
                 </Badge>
               )}
             </div>
@@ -324,39 +321,39 @@ export default function Header() {
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-semibold">{getUserDisplayName(currentUser)}</p>
                       <p className="text-xs text-muted-foreground">Certification Student</p>
-                      {/* Credit Balance Info */}
-                      {creditBalance && (
+                      {/* Token Balance Info */}
+                      {tokenData && (
                         <div className="mt-1">
                           <Badge variant="secondary" className="text-xs">
                             <Coins className="w-3 h-3 mr-1 text-amber-500" />
-                            {creditBalance.availableCredits} credits
+                            {tokenData.balance} tokens
                           </Badge>
                         </div>
                       )}
                     </div>
                   </div>
-                  {/* Credit Summary */}
-                  {creditBalance && (
+                  {/* Token Summary */}
+                  {tokenData && (
                     <>
                       <DropdownMenuSeparator className="my-2" />
                       <div className="px-3 py-2">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Credit Balance:</p>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Token Balance:</p>
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5 text-xs">
                             <Coins className="w-3 h-3 text-amber-500" />
-                            <span>{creditBalance.availableCredits} available credits</span>
+                            <span>{tokenData.balance} available tokens</span>
                           </div>
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <span>5 credits per quiz</span>
+                            <span>1 token per question</span>
                           </div>
-                          {creditBalance.availableCredits < 10 && (
+                          {tokenData.balance < 20 && (
                             <div className="flex items-center gap-1.5 text-xs">
                               <Sparkles className="w-3 h-3 text-purple-500" />
                               <button 
-                                onClick={() => setLocation('/app/credits')}
+                                onClick={() => setLocation('/app/dashboard')}
                                 className="text-purple-600 hover:underline"
                               >
-                                Purchase more credits
+                                Add more tokens (free)
                               </button>
                             </div>
                           )}

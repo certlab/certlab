@@ -2,10 +2,12 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-provider";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { clientStorage } from "@/lib/client-storage";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { TokenBalance } from "@/components/TokenBalance";
 import { 
   BookOpen, 
   PlayCircle, 
@@ -88,21 +90,40 @@ export default function Dashboard() {
     }
 
     try {
-      const response = await apiRequest({
-        endpoint: "/api/quiz",
-        method: "POST",
-        data: {
-          categoryIds: [35], // Default to first category
-          questionCount: 10,
-          title: `Practice Session - ${new Date().toLocaleDateString()}`,
-        },
+      const questionCount = 10;
+      const tokenCost = clientStorage.calculateQuizTokenCost(questionCount);
+      
+      // Check and consume tokens
+      const tokenResult = await clientStorage.consumeTokens(currentUser.id, tokenCost);
+      
+      if (!tokenResult.success) {
+        toast({
+          title: "Insufficient Tokens",
+          description: tokenResult.message || `You need ${tokenCost} tokens to create this quiz.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create the quiz
+      const quiz = await clientStorage.createQuiz({
+        userId: currentUser.id,
+        categoryIds: [1], // Default to first category
+        questionCount,
+        title: `Practice Session - ${new Date().toLocaleDateString()}`,
       });
 
-      const quiz = await response.json();
       if (quiz?.id) {
-        // Invalidate cache to update subscription status and daily quiz count
+        // Invalidate cache
         queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
+        queryClient.invalidateQueries({ queryKey: [`/api/user/${currentUser.id}/token-balance`] });
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        
+        toast({
+          title: "Quiz Created",
+          description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
+        });
+        
         setLocation(`/app/quiz/${quiz.id}`);
       }
     } catch (error: any) {
@@ -225,6 +246,9 @@ export default function Dashboard() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Token Balance */}
+            <TokenBalance />
 
             {/* Key Stats */}
             <div className="grid grid-cols-2 gap-4">

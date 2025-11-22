@@ -49,6 +49,7 @@ export const users = pgTable("users", {
     motivations?: string[];
   }>(),
   polarCustomerId: varchar("polar_customer_id"), // Used for credits management
+  tokenBalance: integer("token_balance").default(100), // Free tokens for quiz generation
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
