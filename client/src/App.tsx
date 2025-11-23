@@ -24,6 +24,7 @@ import ChallengesPage from "@/pages/challenges";
 import CreditsPage from "@/pages/credits";
 import ProfilePage from "@/pages/profile";
 import PracticeTests from "@/pages/practice-tests";
+import DataImportPage from "@/pages/data-import";
 import { useEffect } from "react";
 
 // Get the base path from Vite's configuration
@@ -76,6 +77,7 @@ function Router() {
               <Route path="/app/challenges" component={ChallengesPage} />
               {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
               <Route path="/app/credits" component={CreditsPage} />
+              <Route path="/app/data-import" component={DataImportPage} />
               {isAdmin && <Route path="/admin" component={AdminDashboard} />}
               <Route component={NotFound} />
             </Switch>

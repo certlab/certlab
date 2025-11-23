@@ -278,6 +278,28 @@ export default function Header() {
                           </NavigationMenuLink>
                           </div>
                         )}
+
+                        {/* Data Import Section - Available to all users */}
+                        <div>
+                          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                            <Database className="w-4 h-4" />
+                            Data Management
+                          </h3>
+                          <NavigationMenuLink 
+                            className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
+                            onClick={() => setLocation("/app/data-import")}
+                          >
+                          <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                              <Database className="w-3 h-3 text-primary" />
+                            </div>
+                            Import Sample Data
+                          </div>
+                          <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                            Load 500+ practice questions per certification
+                          </p>
+                        </NavigationMenuLink>
+                        </div>
                       </div>
                     </NavigationMenuContent>
                   </NavigationMenuItem>
