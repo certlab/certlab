@@ -46,10 +46,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await clientAuth.logout();
       setUser(null);
-      window.location.href = '/';
+      // Redirect to the production URL after sign out
+      window.location.href = 'https://archubbuck.github.io/certlab/';
     } catch (error) {
       console.error('Logout error:', error);
-      window.location.href = '/';
+      // Redirect to the production URL even on error
+      window.location.href = 'https://archubbuck.github.io/certlab/';
     }
   };
 
