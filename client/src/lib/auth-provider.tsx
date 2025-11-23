@@ -66,6 +66,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Import clientStorage dynamically to avoid circular dependencies
       const { clientStorage } = await import('./client-storage');
       
+      // Validate that the tenant exists and is active
+      const tenant = await clientStorage.getTenant(tenantId);
+      if (!tenant) {
+        throw new Error('Tenant not found');
+      }
+      if (!tenant.isActive) {
+        throw new Error('Cannot switch to inactive tenant');
+      }
+      
       // Update user's tenant
       await clientStorage.updateUser(user.id, { tenantId });
       

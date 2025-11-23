@@ -51,7 +51,6 @@ class IndexedDBService {
 
       request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        const oldVersion = event.oldVersion;
 
         // Create tenants store (added in version 2)
         if (!db.objectStoreNames.contains(STORES.tenants)) {
@@ -138,7 +137,8 @@ class IndexedDBService {
         }
 
         if (!db.objectStoreNames.contains(STORES.studyGroups)) {
-          db.createObjectStore(STORES.studyGroups, { keyPath: 'id', autoIncrement: true });
+          const studyGroupStore = db.createObjectStore(STORES.studyGroups, { keyPath: 'id', autoIncrement: true });
+          studyGroupStore.createIndex('tenantId', 'tenantId');
         }
 
         if (!db.objectStoreNames.contains(STORES.studyGroupMembers)) {
@@ -148,7 +148,8 @@ class IndexedDBService {
         }
 
         if (!db.objectStoreNames.contains(STORES.practiceTests)) {
-          db.createObjectStore(STORES.practiceTests, { keyPath: 'id', autoIncrement: true });
+          const practiceTestStore = db.createObjectStore(STORES.practiceTests, { keyPath: 'id', autoIncrement: true });
+          practiceTestStore.createIndex('tenantId', 'tenantId');
         }
 
         if (!db.objectStoreNames.contains(STORES.practiceTestAttempts)) {

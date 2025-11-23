@@ -230,11 +230,14 @@ Potential future improvements to the tenant system:
 
 ## Security Considerations
 
-- Users can only switch to active tenants
-- Data is isolated at the query level
-- All tenant operations respect the current user's permissions
-- Tenant IDs are validated before switching
-- No cross-tenant data leakage in queries
+- **Active Tenant Validation**: Users can only switch to active tenants. Both the UI (TenantSwitcher) and backend (auth-provider) validate that the target tenant is active before allowing the switch.
+- **Data Isolation**: Data is isolated at the query level with tenantId filtering applied to:
+  - Categories and subcategories (queryClient.ts)
+  - Questions (filtered by tenantId index)
+  - Study groups and practice tests (tenantId indices added for future filtering)
+- **Tenant Access Control**: The switchTenant function validates that the tenant exists and is active before allowing the switch
+- **Tenant ID Validation**: All tenant operations validate tenant IDs before processing
+- **Query-Level Protection**: All queries respect the current user's tenantId to prevent cross-tenant data access
 
 ## Support
 

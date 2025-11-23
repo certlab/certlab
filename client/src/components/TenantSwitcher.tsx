@@ -43,6 +43,17 @@ export default function TenantSwitcher() {
   const handleSwitchTenant = async (tenantId: number) => {
     if (tenantId === user?.tenantId || isSwitching) return;
 
+    // Validate that the target tenant is active
+    const targetTenant = tenants.find(t => t.id === tenantId);
+    if (!targetTenant?.isActive) {
+      toast({
+        title: 'Cannot switch to inactive tenant',
+        description: 'This tenant is not currently active',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSwitching(true);
     try {
       await switchTenant(tenantId);

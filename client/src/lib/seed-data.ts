@@ -44,7 +44,7 @@ export async function seedInitialData(): Promise<void> {
       settings: { focusArea: 'CISM' },
       isActive: true,
     });
-    
+
     console.log('Created initial tenants');
   }
 

@@ -79,7 +79,7 @@ export const getQueryFn: <T>(options: {
       if (path === "/api/categories") {
         // Get current user to determine tenantId
         const userId = await clientStorage.getCurrentUserId();
-        if (!userId) return await clientStorage.getCategories(1); // Default to tenant 1
+        if (!userId) return await clientStorage.getCategories(1); // Anonymous users see tenant 1 (default tenant)
         
         const user = await clientStorage.getUser(userId);
         const tenantId = user?.tenantId || 1;
