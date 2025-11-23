@@ -61,17 +61,17 @@ export function LevelProgress({
       <CardContent className="space-y-6">
         {/* Level Title */}
         <div className="text-center">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          <h3 className="text-xl font-semibold text-foreground">
             {getLevelTitle(level)}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             {pointsNeeded} points to next level
           </p>
         </div>
 
         {/* Progress Bar */}
         <div className="space-y-2">
-          <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex justify-between text-sm text-muted-foreground">
             <span>{pointsInCurrentLevel} XP</span>
             <span>{pointsNeededForLevel} XP</span>
           </div>
@@ -84,36 +84,36 @@ export function LevelProgress({
             <div className="flex items-center justify-center mb-2">
               <Star className="w-5 h-5 text-yellow-500" />
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <p className="text-2xl font-bold text-foreground">
               {totalPoints}
             </p>
-            <p className="text-xs text-gray-600 dark:text-gray-400">Total XP</p>
+            <p className="text-xs text-muted-foreground">Total XP</p>
           </div>
           
           <div className="text-center">
             <div className="flex items-center justify-center mb-2">
               <Trophy className="w-5 h-5 text-purple-500" />
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <p className="text-2xl font-bold text-foreground">
               {totalBadgesEarned}
             </p>
-            <p className="text-xs text-gray-600 dark:text-gray-400">Badges</p>
+            <p className="text-xs text-muted-foreground">Badges</p>
           </div>
           
           <div className="text-center">
             <div className="flex items-center justify-center mb-2">
               <TrendingUp className="w-5 h-5 text-orange-500" />
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <p className="text-2xl font-bold text-foreground">
               {currentStreak}
             </p>
-            <p className="text-xs text-gray-600 dark:text-gray-400">Day Streak</p>
+            <p className="text-xs text-muted-foreground">Day Streak</p>
           </div>
         </div>
 
         {/* Motivational Message */}
         <div className="text-center pt-2 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+          <p className="text-sm text-muted-foreground italic">
             {level < 10 && "Keep learning! Every quiz brings you closer to mastery."}
             {level >= 10 && level < 25 && "Great progress! You're building strong foundations."}
             {level >= 25 && level < 50 && "Impressive dedication! Your expertise is growing."}

@@ -167,10 +167,10 @@ export default function QuizCreator() {
       <CardHeader className="p-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl font-medium text-gray-900 mb-2 flex items-center gap-2">
+            <CardTitle className="text-xl font-medium text-foreground mb-2 flex items-center gap-2">
               Create New Quiz
             </CardTitle>
-            <p className="text-gray-600 text-sm">
+            <p className="text-muted-foreground text-sm">
               HELEN - Highly Efficient Learning Engine for Next-Gen Certification
             </p>
           </div>
@@ -255,8 +255,8 @@ export default function QuizCreator() {
           <div className="flex items-center space-x-3 mb-3">
             <i className="fas fa-brain text-blue-600"></i>
             <div>
-              <h4 className="font-medium text-gray-900">Continuous Learning Session</h4>
-              <p className="text-sm text-gray-600">
+              <h4 className="font-medium text-foreground">Continuous Learning Session</h4>
+              <p className="text-sm text-muted-foreground">
                 Start learning with immediate feedback on your selected areas
               </p>
             </div>
