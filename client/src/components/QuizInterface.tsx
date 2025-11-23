@@ -151,12 +151,10 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   });
 
   const submitQuizMutation = useMutation({
-    mutationFn: async (quizAnswers: any[]) => 
-      apiRequest({
-        endpoint: `/api/quiz/${quizId}/submit`,
-        method: "POST",
-        data: { answers: quizAnswers }
-      }),
+    mutationFn: async (quizAnswers: any[]) => {
+      const { clientStorage } = await import('@/lib/client-storage');
+      return await clientStorage.submitQuiz(quizId, quizAnswers);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/quiz', quizId] });

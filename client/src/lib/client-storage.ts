@@ -267,6 +267,33 @@ class ClientStorage {
     return await indexedDBService.get<Quiz>(STORES.quizzes, id);
   }
 
+  async getQuizQuestions(quizId: number): Promise<Question[]> {
+    const quiz = await this.getQuiz(quizId);
+    if (!quiz) {
+      throw new Error(`Quiz with id ${quizId} not found`);
+    }
+
+    // Ensure categoryIds is an array
+    const categoryIds = Array.isArray(quiz.categoryIds) ? quiz.categoryIds : [];
+    const subcategoryIds = Array.isArray(quiz.subcategoryIds) && quiz.subcategoryIds.length > 0 
+      ? quiz.subcategoryIds 
+      : undefined;
+
+    // Get questions based on quiz categories and subcategories
+    const questions = await this.getQuestionsByCategories(
+      categoryIds,
+      subcategoryIds,
+      quiz.difficultyFilter ? [quiz.difficultyFilter] : undefined,
+      quiz.tenantId
+    );
+
+    // Shuffle questions for variety
+    const shuffled = [...questions].sort(() => Math.random() - 0.5);
+    
+    // Return requested number of questions
+    return shuffled.slice(0, quiz.questionCount);
+  }
+
   async getUserQuizzes(userId: string, tenantId?: number): Promise<Quiz[]> {
     const quizzes = await indexedDBService.getByIndex<Quiz>(STORES.quizzes, 'userId', userId);
     // Filter by tenantId if provided (for tenant isolation)
@@ -287,6 +314,39 @@ class ClientStorage {
     const updated = { ...quiz, ...updates };
     await indexedDBService.put(STORES.quizzes, updated);
     return updated;
+  }
+
+  async submitQuiz(quizId: number, answers: { questionId: number; answer: number }[]): Promise<Quiz> {
+    const quiz = await this.getQuiz(quizId);
+    if (!quiz) throw new Error('Quiz not found');
+
+    // Get all questions for the quiz
+    const questions = await this.getQuizQuestions(quizId);
+    
+    // Calculate score
+    let correctAnswers = 0;
+    answers.forEach(answer => {
+      const question = questions.find(q => q.id === answer.questionId);
+      if (question && question.correctAnswer === answer.answer) {
+        correctAnswers++;
+      }
+    });
+
+    const totalQuestions = questions.length;
+    const score = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+    const isPassing = score >= 85;
+
+    // Update quiz with completion data
+    const updatedQuiz = await this.updateQuiz(quizId, {
+      completedAt: new Date(),
+      answers: answers,
+      score: score,
+      correctAnswers: correctAnswers,
+      totalQuestions: totalQuestions,
+      isPassing: isPassing
+    });
+
+    return updatedQuiz;
   }
 
   // User Progress
