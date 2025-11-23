@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { clientAuth } from "@/lib/client-auth";
 import { useLocation } from "wouter";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { User as UserIcon, Info } from "lucide-react";
+
+interface StoredUser {
+  id: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  hasPassword?: boolean;
+}
 
 export default function Login() {
   const [loginEmail, setLoginEmail] = useState("");
@@ -17,28 +27,76 @@ export default function Login() {
   const [registerFirstName, setRegisterFirstName] = useState("");
   const [registerLastName, setRegisterLastName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [availableAccounts, setAvailableAccounts] = useState<StoredUser[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<StoredUser | null>(null);
   const { toast } = useToast();
   const { isAuthenticated, refreshUser } = useAuth();
   const [, setLocation] = useLocation();
+
+  // Load available accounts on mount
+  useEffect(() => {
+    const loadAccounts = async () => {
+      try {
+        const users = await clientAuth.getAllUsers();
+        const accountsWithPasswordStatus = await Promise.all(
+          users.map(async (user) => ({
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            hasPassword: await clientAuth.hasPassword(user.id),
+          }))
+        );
+        setAvailableAccounts(accountsWithPasswordStatus);
+      } catch (error) {
+        console.error('Error loading accounts:', error);
+      }
+    };
+    loadAccounts();
+  }, []);
+
+  const handleAccountSelect = (account: StoredUser) => {
+    setSelectedAccount(account);
+    setLoginEmail(account.email);
+    // Clear password field when selecting account
+    setLoginPassword("");
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const result = await clientAuth.login(loginEmail, loginPassword);
-
-      if (result.success) {
-        // Refresh the auth context to update isAuthenticated state
-        await refreshUser();
-        // Use relative navigation for GitHub Pages compatibility
-        setLocation("/app");
+      // Check if selected account has no password
+      const accountHasPassword = selectedAccount?.hasPassword ?? true;
+      
+      // If account has no password, allow login without password
+      if (!accountHasPassword) {
+        const result = await clientAuth.login(loginEmail, "");
+        if (result.success) {
+          await refreshUser();
+          setLocation("/app");
+        } else {
+          toast({
+            title: "Login Failed",
+            description: result.message || "Unable to login",
+            variant: "destructive",
+          });
+        }
       } else {
-        toast({
-          title: "Login Failed",
-          description: result.message || "Invalid email or password",
-          variant: "destructive",
-        });
+        // Normal password login
+        const result = await clientAuth.login(loginEmail, loginPassword);
+
+        if (result.success) {
+          await refreshUser();
+          setLocation("/app");
+        } else {
+          toast({
+            title: "Login Failed",
+            description: result.message || "Invalid email or password",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       toast({
@@ -116,6 +174,46 @@ export default function Login() {
 
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
+                {/* Available Accounts Section */}
+                {availableAccounts.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Available Accounts</Label>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {availableAccounts.map((account) => (
+                        <button
+                          key={account.id}
+                          type="button"
+                          onClick={() => handleAccountSelect(account)}
+                          className={`w-full p-3 rounded-lg border text-left transition-all hover:border-primary hover:bg-primary/5 ${
+                            selectedAccount?.id === account.id
+                              ? "border-primary bg-primary/10"
+                              : "border-gray-200"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <UserIcon className="h-5 w-5 text-muted-foreground" />
+                            <div className="flex-1">
+                              <div className="font-medium text-sm">
+                                {account.firstName && account.lastName
+                                  ? `${account.firstName} ${account.lastName}`
+                                  : account.email}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {account.firstName && account.lastName ? account.email : ""}
+                              </div>
+                            </div>
+                            {!account.hasPassword && (
+                              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                                No password
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
                   <Input
@@ -123,23 +221,40 @@ export default function Login() {
                     type="email"
                     placeholder="your.email@example.com"
                     value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
+                    onChange={(e) => {
+                      setLoginEmail(e.target.value);
+                      setSelectedAccount(null);
+                    }}
                     required
                     disabled={isLoading}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
+                
+                {/* Only show password field if account requires password */}
+                {(!selectedAccount || selectedAccount.hasPassword) && (
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Password</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      required={!selectedAccount || selectedAccount.hasPassword}
+                      disabled={isLoading}
+                    />
+                  </div>
+                )}
+
+                {selectedAccount && !selectedAccount.hasPassword && (
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      This account has no password. Click login to access.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
@@ -172,17 +287,19 @@ export default function Login() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="register-password">Password</Label>
+                  <Label htmlFor="register-password">Password (Optional)</Label>
                   <Input
                     id="register-password"
                     type="password"
                     placeholder="••••••••"
                     value={registerPassword}
                     onChange={(e) => setRegisterPassword(e.target.value)}
-                    required
                     disabled={isLoading}
                     minLength={8}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    You can set a password later in your profile settings for added security
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="register-firstname">First Name</Label>
