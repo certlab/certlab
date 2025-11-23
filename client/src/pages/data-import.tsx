@@ -4,6 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   Download, 
   Upload, 
@@ -46,6 +56,8 @@ export default function DataImportPage() {
     progress: null,
     result: null,
   });
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [categoryToClear, setCategoryToClear] = useState<string>('');
 
   const handleImportCategory = async (category: 'CISSP' | 'CISM') => {
     const setState = category === 'CISSP' ? setCisspState : setCismState;
@@ -141,16 +153,12 @@ export default function DataImportPage() {
     event.target.value = '';
   };
 
-  const handleClearCategory = async (categoryName: string) => {
-    if (!confirm(`Are you sure you want to delete all ${categoryName} questions? This cannot be undone.`)) {
-      return;
-    }
-
+  const handleClearCategory = async () => {
     try {
-      const deleted = await clearCategoryQuestions(categoryName);
+      const deleted = await clearCategoryQuestions(categoryToClear);
       toast({
         title: "Questions Cleared",
-        description: `Deleted ${deleted} questions from ${categoryName}`,
+        description: `Deleted ${deleted} questions from ${categoryToClear}`,
       });
     } catch (error) {
       toast({
@@ -158,7 +166,15 @@ export default function DataImportPage() {
         description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive",
       });
+    } finally {
+      setClearDialogOpen(false);
+      setCategoryToClear('');
     }
+  };
+
+  const openClearDialog = (categoryName: string) => {
+    setCategoryToClear(categoryName);
+    setClearDialogOpen(true);
   };
 
   const renderImportCard = (
@@ -167,7 +183,7 @@ export default function DataImportPage() {
     category: 'CISSP' | 'CISM',
     state: CategoryImportState
   ) => {
-    const progressPercentage = state.progress 
+    const progressPercentage = state.progress && state.progress.total > 0
       ? (state.progress.current / state.progress.total) * 100 
       : 0;
 
@@ -248,7 +264,7 @@ export default function DataImportPage() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => handleClearCategory(category)}
+              onClick={() => openClearDialog(category)}
               disabled={state.isImporting}
             >
               Clear
@@ -404,6 +420,22 @@ questions:
           </Alert>
         </CardContent>
       </Card>
+
+      <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear {categoryToClear} Questions</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete all {categoryToClear} questions? This action cannot be undone.
+              All imported questions for this certification will be permanently removed from your local database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearCategory}>Delete All Questions</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

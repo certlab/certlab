@@ -306,37 +306,47 @@ const cismBaseQuestions = {
   ]
 };
 
+/**
+ * Generate questions for a certification, distributing them across subcategories.
+ * Questions are distributed equally among subcategories, with any remainder
+ * distributed to earlier subcategories.
+ * 
+ * @param {object} baseQuestions - Map of subcategory to base questions array
+ * @param {number} targetCount - Total number of questions to generate
+ * @param {string} categoryName - Name of the certification/category
+ * @returns {Array} Array of generated question objects
+ */
 function generateQuestions(baseQuestions, targetCount, categoryName) {
   const questions = [];
   const subcategories = Object.keys(baseQuestions);
-  const questionsPerSubcat = Math.ceil(targetCount / subcategories.length);
+  const baseQuestionsPerSubcat = Math.floor(targetCount / subcategories.length);
+  const remainder = targetCount % subcategories.length;
   
-  subcategories.forEach(subcategory => {
+  // Distribute questions across subcategories
+  subcategories.forEach((subcategory, subcatIndex) => {
     const baseQs = baseQuestions[subcategory];
-    for (let i = 0; i < questionsPerSubcat && questions.length < targetCount; i++) {
+    // Give extra question to first subcategories if there's a remainder
+    const numQuestionsForSubcat = baseQuestionsPerSubcat + (subcatIndex < remainder ? 1 : 0);
+    
+    for (let i = 0; i < numQuestionsForSubcat; i++) {
       const baseQ = baseQs[i % baseQs.length];
-      const variation = Math.floor(i / baseQs.length);
-      const questionNumber = questions.length + 1;
       
-      // Create variation text to make questions unique
-      let questionText = baseQ.text;
-      if (variation > 0) {
-        questionText = `[Q${questionNumber}] ${baseQ.text}`;
-      }
-      
+      // Keep original question text without artificial prefixes
+      // Questions repeat naturally when we exceed the base question count
       questions.push({
-        text: questionText,
+        text: baseQ.text,
         options: baseQ.options,
         correctAnswer: baseQ.correctAnswer,
         explanation: baseQ.explanation,
-        difficultyLevel: Math.min(5, baseQ.difficultyLevel + (variation % 3)),
+        // Keep original difficulty - repeated questions have same difficulty as base
+        difficultyLevel: baseQ.difficultyLevel,
         tags: baseQ.tags,
         subcategory: subcategory
       });
     }
   });
   
-  return questions.slice(0, targetCount);
+  return questions;
 }
 
 // Generate CISSP questions

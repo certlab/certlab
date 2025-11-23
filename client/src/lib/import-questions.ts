@@ -128,6 +128,9 @@ export async function importQuestionsFromYAML(
     }
 
     // Import questions in batches
+    // Batch size of 50 was chosen as a balance between IndexedDB transaction performance
+    // and UI responsiveness. Empirically, batches of 50 provide good throughput without
+    // causing UI freezes or exceeding transaction limits.
     const batchSize = 50;
     let imported = 0;
     
@@ -145,6 +148,7 @@ export async function importQuestionsFromYAML(
         try {
           const subcategory = subcategoryMap.get(questionData.subcategory);
           if (!subcategory) {
+            console.error(`Subcategory not found: ${questionData.subcategory}`);
             result.errors.push(`Subcategory not found: ${questionData.subcategory}`);
             continue;
           }
@@ -194,8 +198,9 @@ export async function importFromBundledYAML(
 ): Promise<ImportResult> {
   try {
     // Dynamically import the YAML file from public directory
+    // Use BASE_URL to ensure correct path for GitHub Pages deployment (e.g., /certlab/)
     const fileName = categoryName.toLowerCase();
-    const response = await fetch(`/data/${fileName}-questions.yaml`);
+    const response = await fetch(`${import.meta.env.BASE_URL}data/${fileName}-questions.yaml`);
     
     if (!response.ok) {
       throw new Error(`Failed to load ${categoryName} questions: ${response.statusText}`);
