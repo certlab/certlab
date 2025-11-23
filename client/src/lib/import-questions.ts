@@ -102,7 +102,7 @@ export async function importQuestionsFromYAML(
     const subcategoryMap = new Map<string, Subcategory>();
     const existingSubcategories = await clientStorage.getSubcategories(category.id, tenantId);
     
-    const uniqueSubcategories = [...new Set(data.questions.map(q => q.subcategory))];
+    const uniqueSubcategories = Array.from(new Set(data.questions.map(q => q.subcategory)));
     
     onProgress?.({
       total: data.questions.length,
