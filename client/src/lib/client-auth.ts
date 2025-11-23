@@ -211,9 +211,7 @@ class ClientAuth {
 
   async getAllUsers(): Promise<Omit<User, 'passwordHash'>[]> {
     try {
-      // Import indexedDBService to get all users
-      const { indexedDBService, STORES } = await import('./indexeddb');
-      const users = await indexedDBService.getAll<User>(STORES.users);
+      const users = await clientStorage.getAllUsers();
       
       // Return users without password hashes
       return users.map(user => {
