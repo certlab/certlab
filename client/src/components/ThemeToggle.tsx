@@ -1,4 +1,4 @@
-import { Moon, Sun, Waves, Trees, Sunset, Sparkles, Eye } from "lucide-react";
+import { Moon, Sun, Snowflake, Coffee, Zap, Sparkles, Flower } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,34 +22,34 @@ const themes = [
     description: "Easy on the eyes"
   },
   {
-    name: "Ocean",
-    value: "ocean" as const,
-    icon: Waves,
-    description: "Blue and trustworthy"
+    name: "Nord",
+    value: "nord" as const,
+    icon: Snowflake,
+    description: "Cool arctic palette"
   },
   {
-    name: "Forest",
-    value: "forest" as const,
-    icon: Trees,
-    description: "Natural earth tones"
+    name: "Catppuccin",
+    value: "catppuccin" as const,
+    icon: Coffee,
+    description: "Warm and cozy"
   },
   {
-    name: "Sunset",
-    value: "sunset" as const,
-    icon: Sunset,
-    description: "Warm and energetic"
+    name: "Tokyo Night",
+    value: "tokyo-night" as const,
+    icon: Zap,
+    description: "Vibrant neon dark"
   },
   {
-    name: "Purple",
-    value: "purple" as const,
+    name: "Dracula",
+    value: "dracula" as const,
     icon: Sparkles,
-    description: "Modern and innovative"
+    description: "Bold purple dark"
   },
   {
-    name: "High Contrast",
-    value: "contrast" as const,
-    icon: Eye,
-    description: "Maximum accessibility"
+    name: "Rose Pine",
+    value: "rose-pine" as const,
+    icon: Flower,
+    description: "Soft pastel elegance"
   }
 ];
 

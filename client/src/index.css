@@ -73,114 +73,154 @@
   --info: hsl(210, 100%, 65%);
 }
 
-.ocean {
-  --background: hsl(200, 100%, 91%);
-  --foreground: hsl(200, 80%, 10%);
-  --muted: hsl(200, 50%, 84%);
-  --muted-foreground: hsl(200, 50%, 30%);
-  --popover: hsl(200, 100%, 97%);
-  --popover-foreground: hsl(200, 80%, 10%);
-  --card: hsl(200, 100%, 99%);
-  --card-foreground: hsl(200, 80%, 10%);
-  --border: hsl(200, 50%, 85%);
-  --input: hsl(200, 50%, 90%);
-  --primary: hsl(198, 93%, 50%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(195, 60%, 45%);
-  --secondary-foreground: hsl(0, 0%, 100%);
-  --accent: hsl(188, 80%, 35%);
-  --accent-foreground: hsl(0, 0%, 100%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(198, 93%, 50%);
-}
-
-.forest {
-  --background: hsl(120, 25%, 91%);
-  --foreground: hsl(120, 60%, 10%);
-  --muted: hsl(120, 20%, 84%);
-  --muted-foreground: hsl(120, 45%, 30%);
-  --popover: hsl(120, 25%, 97%);
-  --popover-foreground: hsl(120, 60%, 10%);
-  --card: hsl(120, 30%, 99%);
-  --card-foreground: hsl(120, 60%, 10%);
-  --border: hsl(120, 20%, 85%);
-  --input: hsl(120, 20%, 90%);
-  --primary: hsl(142, 71%, 40%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(84, 60%, 35%);
-  --secondary-foreground: hsl(0, 0%, 100%);
-  --accent: hsl(160, 70%, 35%);
-  --accent-foreground: hsl(0, 0%, 100%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(142, 71%, 40%);
-}
-
-.sunset {
-  --background: hsl(30, 40%, 92%);
-  --foreground: hsl(20, 80%, 10%);
-  --muted: hsl(30, 30%, 86%);
-  --muted-foreground: hsl(25, 60%, 30%);
-  --popover: hsl(30, 40%, 98%);
-  --popover-foreground: hsl(20, 80%, 10%);
-  --card: hsl(30, 50%, 99%);
-  --card-foreground: hsl(20, 80%, 10%);
-  --border: hsl(30, 30%, 87%);
-  --input: hsl(30, 30%, 92%);
-  --primary: hsl(24, 95%, 45%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(20, 85%, 45%);
-  --secondary-foreground: hsl(0, 0%, 100%);
-  --accent: hsl(0, 84%, 50%);
-  --accent-foreground: hsl(0, 0%, 100%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(24, 95%, 45%);
-}
-
-.purple {
-  --background: hsl(270, 30%, 92%);
-  --foreground: hsl(270, 80%, 10%);
-  --muted: hsl(270, 20%, 86%);
-  --muted-foreground: hsl(270, 50%, 30%);
-  --popover: hsl(270, 30%, 98%);
-  --popover-foreground: hsl(270, 80%, 10%);
-  --card: hsl(270, 40%, 99%);
-  --card-foreground: hsl(270, 80%, 10%);
-  --border: hsl(270, 20%, 87%);
-  --input: hsl(270, 20%, 92%);
-  --primary: hsl(262, 83%, 45%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(300, 70%, 40%);
-  --secondary-foreground: hsl(0, 0%, 100%);
-  --accent: hsl(280, 80%, 45%);
-  --accent-foreground: hsl(0, 0%, 100%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(262, 83%, 45%);
-}
-
-.contrast {
-  --background: hsl(0, 0%, 100%);
-  --foreground: hsl(0, 0%, 0%);
-  --muted: hsl(0, 0%, 95%);
-  --muted-foreground: hsl(0, 0%, 15%);
+/* Nord - Cool arctic palette with muted blues and grays */
+.nord {
+  --background: hsl(220, 16%, 96%);
+  --foreground: hsl(220, 16%, 22%);
+  --muted: hsl(220, 16%, 88%);
+  --muted-foreground: hsl(220, 9%, 46%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(0, 0%, 0%);
+  --popover-foreground: hsl(220, 16%, 22%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(0, 0%, 0%);
-  --border: hsl(0, 0%, 0%);
-  --input: hsl(0, 0%, 95%);
-  --primary: hsl(0, 0%, 0%);
+  --card-foreground: hsl(220, 16%, 22%);
+  --border: hsl(220, 13%, 91%);
+  --input: hsl(220, 13%, 91%);
+  --primary: hsl(213, 32%, 52%);
   --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(0, 0%, 30%);
-  --secondary-foreground: hsl(0, 0%, 100%);
-  --accent: hsl(0, 0%, 40%);
-  --accent-foreground: hsl(0, 0%, 100%);
-  --destructive: hsl(0, 0%, 0%);
+  --secondary: hsl(179, 25%, 65%);
+  --secondary-foreground: hsl(220, 16%, 22%);
+  --accent: hsl(210, 34%, 63%);
+  --accent-foreground: hsl(220, 16%, 22%);
+  --destructive: hsl(354, 42%, 56%);
   --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(0, 0%, 0%);
+  --ring: hsl(213, 32%, 52%);
+  
+  /* Custom enhanced colors */
+  --surface: hsl(220, 16%, 96%);
+  --error: hsl(354, 42%, 56%);
+  --success: hsl(92, 28%, 65%);
+  --warning: hsl(40, 71%, 73%);
+  --info: hsl(213, 32%, 52%);
+}
+
+/* Catppuccin Mocha - Warm, cozy dark theme */
+.catppuccin {
+  --background: hsl(240, 21%, 15%);
+  --foreground: hsl(226, 64%, 88%);
+  --muted: hsl(240, 23%, 18%);
+  --muted-foreground: hsl(227, 27%, 72%);
+  --popover: hsl(240, 23%, 18%);
+  --popover-foreground: hsl(226, 64%, 88%);
+  --card: hsl(240, 23%, 18%);
+  --card-foreground: hsl(226, 64%, 88%);
+  --border: hsl(240, 19%, 26%);
+  --input: hsl(240, 19%, 26%);
+  --primary: hsl(217, 92%, 76%);
+  --primary-foreground: hsl(240, 21%, 15%);
+  --secondary: hsl(267, 84%, 81%);
+  --secondary-foreground: hsl(240, 21%, 15%);
+  --accent: hsl(189, 71%, 73%);
+  --accent-foreground: hsl(240, 21%, 15%);
+  --destructive: hsl(343, 81%, 75%);
+  --destructive-foreground: hsl(240, 21%, 15%);
+  --ring: hsl(217, 92%, 76%);
+  
+  /* Custom enhanced colors */
+  --surface: hsl(240, 23%, 18%);
+  --error: hsl(343, 81%, 75%);
+  --success: hsl(115, 54%, 76%);
+  --warning: hsl(40, 62%, 73%);
+  --info: hsl(217, 92%, 76%);
+}
+
+/* Tokyo Night - Modern vibrant neon dark theme */
+.tokyo-night {
+  --background: hsl(220, 13%, 18%);
+  --foreground: hsl(215, 13%, 70%);
+  --muted: hsl(221, 12%, 23%);
+  --muted-foreground: hsl(217, 13%, 57%);
+  --popover: hsl(221, 12%, 23%);
+  --popover-foreground: hsl(215, 13%, 70%);
+  --card: hsl(221, 12%, 23%);
+  --card-foreground: hsl(215, 13%, 70%);
+  --border: hsl(223, 12%, 30%);
+  --input: hsl(223, 12%, 30%);
+  --primary: hsl(209, 100%, 60%);
+  --primary-foreground: hsl(220, 13%, 18%);
+  --secondary: hsl(283, 83%, 72%);
+  --secondary-foreground: hsl(220, 13%, 18%);
+  --accent: hsl(187, 47%, 55%);
+  --accent-foreground: hsl(220, 13%, 18%);
+  --destructive: hsl(2, 66%, 58%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(209, 100%, 60%);
+  
+  /* Custom enhanced colors */
+  --surface: hsl(221, 12%, 23%);
+  --error: hsl(2, 66%, 58%);
+  --success: hsl(158, 64%, 52%);
+  --warning: hsl(29, 81%, 47%);
+  --info: hsl(209, 100%, 60%);
+}
+
+/* Dracula - Bold purple and pink dark theme */
+.dracula {
+  --background: hsl(231, 15%, 18%);
+  --foreground: hsl(60, 30%, 96%);
+  --muted: hsl(232, 14%, 31%);
+  --muted-foreground: hsl(233, 14%, 65%);
+  --popover: hsl(231, 15%, 18%);
+  --popover-foreground: hsl(60, 30%, 96%);
+  --card: hsl(232, 14%, 31%);
+  --card-foreground: hsl(60, 30%, 96%);
+  --border: hsl(233, 14%, 40%);
+  --input: hsl(233, 14%, 40%);
+  --primary: hsl(265, 89%, 78%);
+  --primary-foreground: hsl(231, 15%, 18%);
+  --secondary: hsl(326, 100%, 74%);
+  --secondary-foreground: hsl(231, 15%, 18%);
+  --accent: hsl(191, 97%, 77%);
+  --accent-foreground: hsl(231, 15%, 18%);
+  --destructive: hsl(0, 100%, 67%);
+  --destructive-foreground: hsl(231, 15%, 18%);
+  --ring: hsl(265, 89%, 78%);
+  
+  /* Custom enhanced colors */
+  --surface: hsl(232, 14%, 31%);
+  --error: hsl(0, 100%, 67%);
+  --success: hsl(135, 94%, 65%);
+  --warning: hsl(65, 92%, 76%);
+  --info: hsl(191, 97%, 77%);
+}
+
+/* Rose Pine - Soft, elegant pastel theme */
+.rose-pine {
+  --background: hsl(249, 22%, 12%);
+  --foreground: hsl(245, 50%, 91%);
+  --muted: hsl(247, 23%, 15%);
+  --muted-foreground: hsl(245, 22%, 68%);
+  --popover: hsl(247, 23%, 15%);
+  --popover-foreground: hsl(245, 50%, 91%);
+  --card: hsl(247, 23%, 15%);
+  --card-foreground: hsl(245, 50%, 91%);
+  --border: hsl(248, 25%, 23%);
+  --input: hsl(248, 25%, 23%);
+  --primary: hsl(2, 55%, 83%);
+  --primary-foreground: hsl(249, 22%, 12%);
+  --secondary: hsl(189, 43%, 73%);
+  --secondary-foreground: hsl(249, 22%, 12%);
+  --accent: hsl(35, 88%, 72%);
+  --accent-foreground: hsl(249, 22%, 12%);
+  --destructive: hsl(343, 76%, 68%);
+  --destructive-foreground: hsl(249, 22%, 12%);
+  --ring: hsl(2, 55%, 83%);
+  
+  /* Custom enhanced colors */
+  --surface: hsl(247, 23%, 15%);
+  --error: hsl(343, 76%, 68%);
+  --success: hsl(110, 28%, 70%);
+  --warning: hsl(35, 88%, 72%);
+  --info: hsl(189, 43%, 73%);
 }
 
 @layer base {
