@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="certGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Graduation cap background circle -->
+  <circle cx="32" cy="32" r="28" fill="url(#certGradient)" stroke="#4c1d95" stroke-width="2"/>
+  <!-- Graduation cap -->
+  <g transform="translate(32,32)">
+    <!-- Cap top -->
+    <path d="M-18 -8 L0 -16 L18 -8 L18 -4 L0 -12 L-18 -4 Z" fill="#fbbf24" stroke="#d97706" stroke-width="1"/>
+    <!-- Cap middle -->
+    <path d="M-14 -4 L-14 6 Q-14 10 0 12 Q14 10 14 6 L14 -4" fill="#fcd34d" stroke="#d97706" stroke-width="1"/>
+    <!-- Tassel -->
+    <circle cx="18" cy="-8" r="2" fill="#dc2626"/>
+    <line x1="18" y1="-6" x2="18" y2="0" stroke="#dc2626" stroke-width="1.5"/>
+  </g>
+</svg>
