@@ -243,6 +243,7 @@ class ClientStorage {
       title: quiz.title!,
       categoryIds: quiz.categoryIds!,
       subcategoryIds: quiz.subcategoryIds || [],
+      questionIds: quiz.questionIds || null,
       questionCount: quiz.questionCount!,
       timeLimit: quiz.timeLimit || null,
       startedAt: quiz.startedAt || new Date(),
@@ -273,8 +274,21 @@ class ClientStorage {
       throw new Error(`Quiz with id ${quizId} not found`);
     }
 
+    // If quiz already has questionIds stored, retrieve those specific questions
+    if (quiz.questionIds && Array.isArray(quiz.questionIds) && quiz.questionIds.length > 0) {
+      const questions = await Promise.all(
+        quiz.questionIds.map(id => this.getQuestion(id))
+      );
+      // Filter out any null/undefined questions
+      return questions.filter((q): q is Question => q !== undefined);
+    }
+
     // Ensure categoryIds is an array
     const categoryIds = Array.isArray(quiz.categoryIds) ? quiz.categoryIds : [];
+    if (categoryIds.length === 0) {
+      throw new Error(`Quiz ${quizId} has no category IDs configured`);
+    }
+    
     const subcategoryIds = Array.isArray(quiz.subcategoryIds) && quiz.subcategoryIds.length > 0 
       ? quiz.subcategoryIds 
       : undefined;
@@ -283,15 +297,30 @@ class ClientStorage {
     const questions = await this.getQuestionsByCategories(
       categoryIds,
       subcategoryIds,
-      quiz.difficultyFilter ? [quiz.difficultyFilter] : undefined,
+      quiz.difficultyFilter && Array.isArray(quiz.difficultyFilter) && quiz.difficultyFilter.length > 0
+        ? quiz.difficultyFilter
+        : undefined,
       quiz.tenantId
     );
 
-    // Shuffle questions for variety
-    const shuffled = [...questions].sort(() => Math.random() - 0.5);
+    // Use proper Fisher-Yates shuffle
+    const { shuffleArray } = await import('@/lib/questions');
+    const shuffled = shuffleArray(questions);
     
-    // Return requested number of questions
-    return shuffled.slice(0, quiz.questionCount);
+    // Warn if not enough questions are available
+    if (questions.length < quiz.questionCount) {
+      console.warn(`Only ${questions.length} questions available, but ${quiz.questionCount} were requested for quiz ${quizId}`);
+    }
+    
+    // Return requested number of questions (or as many as available)
+    const selectedQuestions = shuffled.slice(0, Math.min(questions.length, quiz.questionCount));
+    
+    // Store the question IDs in the quiz for consistent scoring
+    await this.updateQuiz(quizId, { 
+      questionIds: selectedQuestions.map(q => q.id) 
+    });
+    
+    return selectedQuestions;
   }
 
   async getUserQuizzes(userId: string, tenantId?: number): Promise<Quiz[]> {
@@ -320,7 +349,8 @@ class ClientStorage {
     const quiz = await this.getQuiz(quizId);
     if (!quiz) throw new Error('Quiz not found');
 
-    // Get all questions for the quiz
+    // Get all questions for the quiz - this will use stored questionIds if available
+    // ensuring we score against the same questions that were presented
     const questions = await this.getQuizQuestions(quizId);
     
     // Calculate score

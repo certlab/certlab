@@ -109,7 +109,7 @@ export const getQueryFn: <T>(options: {
       // Handle quiz queries
       if (path.startsWith("/api/quiz/")) {
         // Check for quiz questions endpoint first
-        const questionsMatch = path.match(/\/api\/quiz\/(\d+)\/questions/);
+        const questionsMatch = path.match(/\/api\/quiz\/(\d+)\/questions$/);
         if (questionsMatch) {
           const quizId = parseInt(questionsMatch[1]);
           return await clientStorage.getQuizQuestions(quizId);

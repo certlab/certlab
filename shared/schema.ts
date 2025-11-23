@@ -91,6 +91,7 @@ export const quizzes = pgTable("quizzes", {
   title: text("title").notNull(),
   categoryIds: jsonb("category_ids").notNull(), // Array of category IDs
   subcategoryIds: jsonb("subcategory_ids").notNull(), // Array of subcategory IDs
+  questionIds: jsonb("question_ids"), // Array of specific question IDs for this quiz (for consistent scoring)
   questionCount: integer("question_count").notNull(),
   timeLimit: integer("time_limit"), // in minutes, null for no limit
   startedAt: timestamp("started_at").defaultNow(),

@@ -151,7 +151,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   });
 
   const submitQuizMutation = useMutation({
-    mutationFn: async (quizAnswers: any[]) => {
+    mutationFn: async (quizAnswers: { questionId: number; answer: number }[]) => {
       const { clientStorage } = await import('@/lib/client-storage');
       return await clientStorage.submitQuiz(quizId, quizAnswers);
     },
