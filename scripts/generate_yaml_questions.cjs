@@ -348,7 +348,7 @@ const cisspData = {
   questions: cisspQuestions
 };
 
-const cisspPath = path.join(__dirname, '../client/src/data/cissp-questions.yaml');
+const cisspPath = path.join(__dirname, '../client/public/data/cissp-questions.yaml');
 fs.writeFileSync(cisspPath, yaml.dump(cisspData, { lineWidth: -1, noRefs: true }));
 console.log(`✓ Generated ${cisspQuestions.length} CISSP questions -> ${cisspPath}`);
 
@@ -361,7 +361,7 @@ const cismData = {
   questions: cismQuestions
 };
 
-const cismPath = path.join(__dirname, '../client/src/data/cism-questions.yaml');
+const cismPath = path.join(__dirname, '../client/public/data/cism-questions.yaml');
 fs.writeFileSync(cismPath, yaml.dump(cismData, { lineWidth: -1, noRefs: true }));
 console.log(`✓ Generated ${cismQuestions.length} CISM questions -> ${cismPath}`);
 

@@ -193,9 +193,9 @@ export async function importFromBundledYAML(
   onProgress?: ProgressCallback
 ): Promise<ImportResult> {
   try {
-    // Dynamically import the YAML file
+    // Dynamically import the YAML file from public directory
     const fileName = categoryName.toLowerCase();
-    const response = await fetch(`/src/data/${fileName}-questions.yaml`);
+    const response = await fetch(`/data/${fileName}-questions.yaml`);
     
     if (!response.ok) {
       throw new Error(`Failed to load ${categoryName} questions: ${response.statusText}`);
