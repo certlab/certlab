@@ -6,7 +6,7 @@
 import { clientStorage } from './client-storage';
 import { indexedDBService } from './indexeddb';
 
-const SEED_VERSION = 1;
+const SEED_VERSION = 2;
 
 export async function seedInitialData(): Promise<void> {
   // Check if data already exists and version
@@ -20,6 +20,33 @@ export async function seedInitialData(): Promise<void> {
   }
 
   console.log('Seeding initial data (version', SEED_VERSION, ')...');
+
+  // Create tenants
+  const existingTenants = await clientStorage.getTenants();
+  if (existingTenants.length === 0) {
+    await clientStorage.createTenant({
+      name: 'Default Organization',
+      domain: null,
+      settings: {},
+      isActive: true,
+    });
+
+    await clientStorage.createTenant({
+      name: 'CISSP Training Center',
+      domain: null,
+      settings: { focusArea: 'CISSP' },
+      isActive: true,
+    });
+
+    await clientStorage.createTenant({
+      name: 'CISM Academy',
+      domain: null,
+      settings: { focusArea: 'CISM' },
+      isActive: true,
+    });
+
+    console.log('Created initial tenants');
+  }
 
   // Create categories
   const cissp = await clientStorage.createCategory({

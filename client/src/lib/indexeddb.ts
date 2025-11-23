@@ -4,10 +4,11 @@
  */
 
 const DB_NAME = 'certlab';
-const DB_VERSION = 1;
+const DB_VERSION = 3;
 
 // Define all stores (tables)
 const STORES = {
+  tenants: 'tenants',
   users: 'users',
   categories: 'categories',
   subcategories: 'subcategories',
@@ -51,6 +52,12 @@ class IndexedDBService {
       request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
         const db = (event.target as IDBOpenDBRequest).result;
 
+        // Create tenants store (added in version 2)
+        if (!db.objectStoreNames.contains(STORES.tenants)) {
+          const tenantStore = db.createObjectStore(STORES.tenants, { keyPath: 'id', autoIncrement: true });
+          tenantStore.createIndex('domain', 'domain', { unique: false });
+        }
+
         // Create stores if they don't exist
         if (!db.objectStoreNames.contains(STORES.users)) {
           const userStore = db.createObjectStore(STORES.users, { keyPath: 'id' });
@@ -79,26 +86,34 @@ class IndexedDBService {
         if (!db.objectStoreNames.contains(STORES.quizzes)) {
           const quizStore = db.createObjectStore(STORES.quizzes, { keyPath: 'id', autoIncrement: true });
           quizStore.createIndex('userId', 'userId');
+          quizStore.createIndex('tenantId', 'tenantId');
+          quizStore.createIndex('userTenant', ['userId', 'tenantId']);
         }
 
         if (!db.objectStoreNames.contains(STORES.userProgress)) {
           const progressStore = db.createObjectStore(STORES.userProgress, { keyPath: 'id', autoIncrement: true });
           progressStore.createIndex('userId', 'userId');
+          progressStore.createIndex('tenantId', 'tenantId');
           progressStore.createIndex('categoryId', 'categoryId');
           progressStore.createIndex('userCategory', ['userId', 'categoryId'], { unique: true });
+          progressStore.createIndex('userTenantCategory', ['userId', 'tenantId', 'categoryId'], { unique: true });
         }
 
         if (!db.objectStoreNames.contains(STORES.lectures)) {
           const lectureStore = db.createObjectStore(STORES.lectures, { keyPath: 'id', autoIncrement: true });
           lectureStore.createIndex('userId', 'userId');
+          lectureStore.createIndex('tenantId', 'tenantId');
           lectureStore.createIndex('quizId', 'quizId');
+          lectureStore.createIndex('userTenant', ['userId', 'tenantId']);
         }
 
         if (!db.objectStoreNames.contains(STORES.masteryScores)) {
           const masteryStore = db.createObjectStore(STORES.masteryScores, { keyPath: 'id', autoIncrement: true });
           masteryStore.createIndex('userId', 'userId');
+          masteryStore.createIndex('tenantId', 'tenantId');
           masteryStore.createIndex('categoryId', 'categoryId');
           masteryStore.createIndex('userCategorySubcategory', ['userId', 'categoryId', 'subcategoryId'], { unique: true });
+          masteryStore.createIndex('userTenantCategorySubcategory', ['userId', 'tenantId', 'categoryId', 'subcategoryId'], { unique: true });
         }
 
         if (!db.objectStoreNames.contains(STORES.badges)) {
@@ -108,13 +123,17 @@ class IndexedDBService {
         if (!db.objectStoreNames.contains(STORES.userBadges)) {
           const userBadgeStore = db.createObjectStore(STORES.userBadges, { keyPath: 'id', autoIncrement: true });
           userBadgeStore.createIndex('userId', 'userId');
+          userBadgeStore.createIndex('tenantId', 'tenantId');
           userBadgeStore.createIndex('badgeId', 'badgeId');
           userBadgeStore.createIndex('userBadge', ['userId', 'badgeId']);
+          userBadgeStore.createIndex('userTenantBadge', ['userId', 'tenantId', 'badgeId']);
         }
 
         if (!db.objectStoreNames.contains(STORES.userGameStats)) {
           const gameStatsStore = db.createObjectStore(STORES.userGameStats, { keyPath: 'id', autoIncrement: true });
           gameStatsStore.createIndex('userId', 'userId', { unique: true });
+          gameStatsStore.createIndex('tenantId', 'tenantId');
+          gameStatsStore.createIndex('userTenant', ['userId', 'tenantId'], { unique: true });
         }
 
         if (!db.objectStoreNames.contains(STORES.challenges)) {
@@ -126,11 +145,14 @@ class IndexedDBService {
         if (!db.objectStoreNames.contains(STORES.challengeAttempts)) {
           const attemptStore = db.createObjectStore(STORES.challengeAttempts, { keyPath: 'id', autoIncrement: true });
           attemptStore.createIndex('userId', 'userId');
+          attemptStore.createIndex('tenantId', 'tenantId');
           attemptStore.createIndex('challengeId', 'challengeId');
+          attemptStore.createIndex('userTenant', ['userId', 'tenantId']);
         }
 
         if (!db.objectStoreNames.contains(STORES.studyGroups)) {
-          db.createObjectStore(STORES.studyGroups, { keyPath: 'id', autoIncrement: true });
+          const studyGroupStore = db.createObjectStore(STORES.studyGroups, { keyPath: 'id', autoIncrement: true });
+          studyGroupStore.createIndex('tenantId', 'tenantId');
         }
 
         if (!db.objectStoreNames.contains(STORES.studyGroupMembers)) {
@@ -140,13 +162,16 @@ class IndexedDBService {
         }
 
         if (!db.objectStoreNames.contains(STORES.practiceTests)) {
-          db.createObjectStore(STORES.practiceTests, { keyPath: 'id', autoIncrement: true });
+          const practiceTestStore = db.createObjectStore(STORES.practiceTests, { keyPath: 'id', autoIncrement: true });
+          practiceTestStore.createIndex('tenantId', 'tenantId');
         }
 
         if (!db.objectStoreNames.contains(STORES.practiceTestAttempts)) {
           const testAttemptStore = db.createObjectStore(STORES.practiceTestAttempts, { keyPath: 'id', autoIncrement: true });
           testAttemptStore.createIndex('userId', 'userId');
+          testAttemptStore.createIndex('tenantId', 'tenantId');
           testAttemptStore.createIndex('testId', 'testId');
+          testAttemptStore.createIndex('userTenant', ['userId', 'tenantId']);
         }
 
         if (!db.objectStoreNames.contains(STORES.settings)) {

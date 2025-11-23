@@ -39,6 +39,7 @@ import {
   Coins
 } from "lucide-react";
 import MobileNavigationEnhanced from "@/components/MobileNavigationEnhanced";
+import TenantSwitcher from "@/components/TenantSwitcher";
 import { useQuery } from "@tanstack/react-query";
 
 export default function Header() {
@@ -116,6 +117,12 @@ export default function Header() {
                 </Badge>
               )}
             </div>
+            {/* Tenant Switcher - Desktop only */}
+            {!isAdminArea && (
+              <div className="hidden md:block">
+                <TenantSwitcher />
+              </div>
+            )}
           </div>
           
           {/* Mobile Navigation */}

@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/lib/auth-provider";
+import TenantSwitcher from "@/components/TenantSwitcher";
 import { 
   Menu, 
   Search, 
@@ -171,7 +172,7 @@ export default function MobileNavigationEnhanced() {
             
             {/* User info */}
             {user && (
-              <div className="mt-3">
+              <div className="mt-3 space-y-2">
                 <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                   <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
                     {user.email?.[0]?.toUpperCase() || 'U'}
@@ -185,6 +186,8 @@ export default function MobileNavigationEnhanced() {
                     </p>
                   </div>
                 </div>
+                {/* Tenant Switcher for Mobile */}
+                <TenantSwitcher />
               </div>
             )}
           </SheetHeader>

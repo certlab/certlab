@@ -83,9 +83,11 @@ export const questions = pgTable("questions", {
   tags: jsonb("tags"), // Array of topic tags for lecture generation
 });
 
+// User quizzes - isolated per tenant (user data does not transfer between tenants)
 export const quizzes = pgTable("quizzes", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
+  tenantId: integer("tenant_id").notNull().default(1), // Isolates quiz history per tenant
   title: text("title").notNull(),
   categoryIds: jsonb("category_ids").notNull(), // Array of category IDs
   subcategoryIds: jsonb("subcategory_ids").notNull(), // Array of subcategory IDs
@@ -131,6 +133,7 @@ export const challenges = pgTable("challenges", {
 export const challengeAttempts = pgTable("challenge_attempts", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
+  tenantId: integer("tenant_id").notNull().default(1),
   challengeId: integer("challenge_id").notNull(),
   quizId: integer("quiz_id"), // Links to the actual quiz attempt
   score: integer("score"), // Percentage score
@@ -146,6 +149,7 @@ export const challengeAttempts = pgTable("challenge_attempts", {
 export const userProgress = pgTable("user_progress", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
+  tenantId: integer("tenant_id").notNull().default(1),
   categoryId: integer("category_id").notNull(),
   questionsCompleted: integer("questions_completed").notNull().default(0),
   totalQuestions: integer("total_questions").notNull().default(0),
@@ -161,6 +165,7 @@ export const userProgress = pgTable("user_progress", {
 export const masteryScores = pgTable("mastery_scores", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
+  tenantId: integer("tenant_id").notNull().default(1),
   categoryId: integer("category_id").notNull(),
   subcategoryId: integer("subcategory_id").notNull(),
   correctAnswers: integer("correct_answers").notNull().default(0),
@@ -173,6 +178,7 @@ export const masteryScores = pgTable("mastery_scores", {
 export const lectures = pgTable("lectures", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
+  tenantId: integer("tenant_id").notNull().default(1),
   quizId: integer("quiz_id"),
   title: text("title").notNull(),
   content: text("content").notNull(), // Generated lecture content
@@ -243,6 +249,7 @@ export const badges = pgTable("badges", {
 export const userBadges = pgTable("user_badges", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
+  tenantId: integer("tenant_id").notNull().default(1),
   badgeId: integer("badge_id").notNull(),
   earnedAt: timestamp("earned_at").defaultNow(),
   progress: integer("progress").default(0), // For progressive badges
@@ -253,6 +260,7 @@ export const userBadges = pgTable("user_badges", {
 export const userGameStats = pgTable("user_game_stats", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
+  tenantId: integer("tenant_id").notNull().default(1),
   totalPoints: integer("total_points").default(0),
   currentStreak: integer("current_streak").default(0),
   longestStreak: integer("longest_streak").default(0),

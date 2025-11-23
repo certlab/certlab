@@ -5,7 +5,7 @@
 
 import { indexedDBService, STORES } from './indexeddb';
 import type {
-  User, Category, Subcategory, Question, Quiz, UserProgress,
+  Tenant, User, Category, Subcategory, Question, Quiz, UserProgress,
   MasteryScore, Badge, UserBadge, UserGameStats, Challenge, ChallengeAttempt,
   StudyGroup, StudyGroupMember, PracticeTest, PracticeTestAttempt
 } from '@shared/schema';
@@ -28,6 +28,40 @@ class ClientStorage {
 
   async clearCurrentUser(): Promise<void> {
     await indexedDBService.delete(STORES.settings, 'currentUserId');
+  }
+
+  // Tenant management
+  async getTenants(): Promise<Tenant[]> {
+    return await indexedDBService.getAll<Tenant>(STORES.tenants);
+  }
+
+  async getTenant(id: number): Promise<Tenant | undefined> {
+    return await indexedDBService.get<Tenant>(STORES.tenants, id);
+  }
+
+  async createTenant(tenant: Partial<Tenant>): Promise<Tenant> {
+    const newTenant: any = {
+      name: tenant.name!,
+      domain: tenant.domain || null,
+      settings: tenant.settings || {},
+      isActive: tenant.isActive !== undefined ? tenant.isActive : true,
+      createdAt: tenant.createdAt || new Date(),
+    };
+    const id = await indexedDBService.add(STORES.tenants, newTenant);
+    return { ...newTenant, id: Number(id) };
+  }
+
+  async updateTenant(id: number, updates: Partial<Tenant>): Promise<Tenant | null> {
+    const tenant = await this.getTenant(id);
+    if (!tenant) return null;
+    
+    const updatedTenant = { ...tenant, ...updates };
+    await indexedDBService.put(STORES.tenants, updatedTenant);
+    return updatedTenant;
+  }
+
+  async getUsersByTenant(tenantId: number): Promise<User[]> {
+    return await indexedDBService.getByIndex<User>(STORES.users, 'tenantId', tenantId);
   }
 
   // User management
@@ -115,7 +149,10 @@ class ClientStorage {
   // Subcategories
   async getSubcategories(categoryId?: number, tenantId: number = 1): Promise<Subcategory[]> {
     if (categoryId) {
-      return await indexedDBService.getByIndex<Subcategory>(STORES.subcategories, 'categoryId', categoryId);
+      // Filter by both categoryId and tenantId to maintain data isolation
+      // Using in-memory filter since IndexedDB doesn't support compound index queries directly
+      const allForCategory = await indexedDBService.getByIndex<Subcategory>(STORES.subcategories, 'categoryId', categoryId);
+      return allForCategory.filter(sub => sub.tenantId === tenantId);
     }
     return await indexedDBService.getByIndex<Subcategory>(STORES.subcategories, 'tenantId', tenantId);
   }
@@ -202,6 +239,7 @@ class ClientStorage {
   async createQuiz(quiz: Partial<Quiz>): Promise<Quiz> {
     const newQuiz: any = {
       userId: quiz.userId!,
+      tenantId: quiz.tenantId || 1,
       title: quiz.title!,
       categoryIds: quiz.categoryIds!,
       subcategoryIds: quiz.subcategoryIds || [],
@@ -229,9 +267,13 @@ class ClientStorage {
     return await indexedDBService.get<Quiz>(STORES.quizzes, id);
   }
 
-  async getUserQuizzes(userId: string): Promise<Quiz[]> {
+  async getUserQuizzes(userId: string, tenantId?: number): Promise<Quiz[]> {
     const quizzes = await indexedDBService.getByIndex<Quiz>(STORES.quizzes, 'userId', userId);
-    return quizzes.sort((a, b) => {
+    // Filter by tenantId if provided (for tenant isolation)
+    const filtered = tenantId !== undefined 
+      ? quizzes.filter(q => q.tenantId === tenantId)
+      : quizzes;
+    return filtered.sort((a, b) => {
       const aDate = a.startedAt ? new Date(a.startedAt).getTime() : 0;
       const bDate = b.startedAt ? new Date(b.startedAt).getTime() : 0;
       return bDate - aDate;
@@ -248,14 +290,18 @@ class ClientStorage {
   }
 
   // User Progress
-  async getUserProgress(userId: string): Promise<UserProgress[]> {
-    return await indexedDBService.getByIndex<UserProgress>(STORES.userProgress, 'userId', userId);
+  async getUserProgress(userId: string, tenantId?: number): Promise<UserProgress[]> {
+    const allProgress = await indexedDBService.getByIndex<UserProgress>(STORES.userProgress, 'userId', userId);
+    // Filter by tenantId if provided (for tenant isolation)
+    return tenantId !== undefined 
+      ? allProgress.filter(p => p.tenantId === tenantId)
+      : allProgress;
   }
 
-  async updateUserProgress(userId: string, categoryId: number, progress: Partial<UserProgress>): Promise<UserProgress> {
-    // Try to find existing progress
-    const allProgress = await this.getUserProgress(userId);
-    const existing = allProgress.find(p => p.categoryId === categoryId);
+  async updateUserProgress(userId: string, categoryId: number, progress: Partial<UserProgress>, tenantId: number = 1): Promise<UserProgress> {
+    // Try to find existing progress for this user, tenant, and category
+    const allProgress = await this.getUserProgress(userId, tenantId);
+    const existing = allProgress.find(p => p.categoryId === categoryId && p.tenantId === tenantId);
     
     if (existing) {
       const updated = { ...existing, ...progress };
@@ -264,6 +310,7 @@ class ClientStorage {
     } else {
       const newProgress: any = {
         userId,
+        tenantId,
         categoryId,
         questionsCompleted: progress.questionsCompleted || 0,
         totalQuestions: progress.totalQuestions || 0,
@@ -279,7 +326,7 @@ class ClientStorage {
     }
   }
 
-  async getUserStats(userId: string): Promise<{
+  async getUserStats(userId: string, tenantId: number = 1): Promise<{
     totalQuizzes: number;
     averageScore: number;
     studyStreak: number;
@@ -287,7 +334,7 @@ class ClientStorage {
     passingRate: number;
     masteryScore: number;
   }> {
-    const quizzes = await this.getUserQuizzes(userId);
+    const quizzes = await this.getUserQuizzes(userId, tenantId);
     const completedQuizzes = quizzes.filter(q => q.completedAt);
     
     const totalQuizzes = completedQuizzes.length;
@@ -322,7 +369,7 @@ class ClientStorage {
       }
     }
     
-    const masteryScore = await this.calculateOverallMasteryScore(userId);
+    const masteryScore = await this.calculateOverallMasteryScore(userId, tenantId);
     
     return {
       totalQuizzes,
@@ -335,9 +382,10 @@ class ClientStorage {
   }
 
   // Lectures
-  async createLecture(userId: string, quizId: number, title: string, content: string, topics: string[], categoryId: number): Promise<any> {
+  async createLecture(userId: string, quizId: number, title: string, content: string, topics: string[], categoryId: number, tenantId: number = 1): Promise<any> {
     const lecture: any = {
       userId,
+      tenantId,
       quizId,
       title,
       content,
@@ -351,9 +399,13 @@ class ClientStorage {
     return { ...lecture, id: Number(id) };
   }
 
-  async getUserLectures(userId: string): Promise<any[]> {
+  async getUserLectures(userId: string, tenantId?: number): Promise<any[]> {
     const lectures = await indexedDBService.getByIndex(STORES.lectures, 'userId', userId);
-    return lectures.sort((a: any, b: any) => {
+    // Filter by tenantId if provided (for tenant isolation)
+    const filtered = tenantId !== undefined 
+      ? lectures.filter((l: any) => l.tenantId === tenantId)
+      : lectures;
+    return filtered.sort((a: any, b: any) => {
       const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return bDate - aDate;
@@ -396,20 +448,24 @@ class ClientStorage {
     }
   }
 
-  async getUserMasteryScores(userId: string): Promise<MasteryScore[]> {
-    return await indexedDBService.getByIndex<MasteryScore>(STORES.masteryScores, 'userId', userId);
+  async getUserMasteryScores(userId: string, tenantId?: number): Promise<MasteryScore[]> {
+    const allScores = await indexedDBService.getByIndex<MasteryScore>(STORES.masteryScores, 'userId', userId);
+    // Filter by tenantId if provided (for tenant isolation)
+    return tenantId !== undefined 
+      ? allScores.filter(s => s.tenantId === tenantId)
+      : allScores;
   }
 
-  async calculateOverallMasteryScore(userId: string): Promise<number> {
-    const scores = await this.getUserMasteryScores(userId);
+  async calculateOverallMasteryScore(userId: string, tenantId?: number): Promise<number> {
+    const scores = await this.getUserMasteryScores(userId, tenantId);
     if (scores.length === 0) return 0;
     
     const totalAverage = scores.reduce((sum, s) => sum + s.rollingAverage, 0);
     return Math.round(totalAverage / scores.length);
   }
 
-  async getCertificationMasteryScores(userId: string): Promise<{ categoryId: number; masteryScore: number }[]> {
-    const scores = await this.getUserMasteryScores(userId);
+  async getCertificationMasteryScores(userId: string, tenantId?: number): Promise<{ categoryId: number; masteryScore: number }[]> {
+    const scores = await this.getUserMasteryScores(userId, tenantId);
     const categoryScores = new Map<number, { total: number; count: number }>();
     
     for (const score of scores) {
@@ -431,13 +487,18 @@ class ClientStorage {
     return await indexedDBService.getAll<Badge>(STORES.badges);
   }
 
-  async getUserBadges(userId: string): Promise<UserBadge[]> {
-    return await indexedDBService.getByIndex<UserBadge>(STORES.userBadges, 'userId', userId);
+  async getUserBadges(userId: string, tenantId?: number): Promise<UserBadge[]> {
+    const allBadges = await indexedDBService.getByIndex<UserBadge>(STORES.userBadges, 'userId', userId);
+    // Filter by tenantId if provided (for tenant isolation)
+    return tenantId !== undefined 
+      ? allBadges.filter(b => b.tenantId === tenantId)
+      : allBadges;
   }
 
   async createUserBadge(userBadge: Partial<UserBadge>): Promise<UserBadge> {
     const newBadge: any = {
       userId: userBadge.userId!,
+      tenantId: userBadge.tenantId || 1,
       badgeId: userBadge.badgeId!,
       earnedAt: userBadge.earnedAt || new Date(),
       progress: userBadge.progress || 0,

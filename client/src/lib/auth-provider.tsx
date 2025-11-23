@@ -8,6 +8,7 @@ interface User {
   lastName?: string | null;
   profileImageUrl?: string | null;
   role: string;
+  tenantId: number;
 }
 
 interface AuthContextType {
@@ -16,6 +17,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  switchTenant: (tenantId: number) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,12 +57,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadUser();
   };
 
+  const switchTenant = async (tenantId: number) => {
+    if (!user) {
+      throw new Error('No user logged in');
+    }
+    
+    try {
+      // Import clientStorage dynamically to avoid circular dependencies
+      const { clientStorage } = await import('./client-storage');
+      
+      // Validate that the tenant exists and is active
+      const tenant = await clientStorage.getTenant(tenantId);
+      if (!tenant) {
+        throw new Error('Tenant not found');
+      }
+      if (!tenant.isActive) {
+        throw new Error('Cannot switch to inactive tenant');
+      }
+      
+      // Update user's tenant
+      await clientStorage.updateUser(user.id, { tenantId });
+      
+      // Reload user to get updated tenant
+      await loadUser();
+    } catch (error) {
+      console.error('Error switching tenant:', error);
+      throw error;
+    }
+  };
+
   const contextValue: AuthContextType = {
     user,
     isLoading,
     isAuthenticated: !!user,
     logout,
     refreshUser,
+    switchTenant,
   };
 
   return (

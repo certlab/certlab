@@ -29,23 +29,27 @@ export const getQueryFn: <T>(options: {
         const userId = await clientStorage.getCurrentUserId();
         if (!userId) throw new Error("Not authenticated");
 
+        // Get user's current tenant for data isolation
+        const user = await clientStorage.getUser(userId);
+        const tenantId = user?.tenantId || 1;
+
         if (path.includes("/stats")) {
-          return await clientStorage.getUserStats(userId);
+          return await clientStorage.getUserStats(userId, tenantId);
         }
         if (path.includes("/quizzes")) {
-          return await clientStorage.getUserQuizzes(userId);
+          return await clientStorage.getUserQuizzes(userId, tenantId);
         }
         if (path.includes("/progress")) {
-          return await clientStorage.getUserProgress(userId);
+          return await clientStorage.getUserProgress(userId, tenantId);
         }
         if (path.includes("/mastery")) {
-          return await clientStorage.getCertificationMasteryScores(userId);
+          return await clientStorage.getCertificationMasteryScores(userId, tenantId);
         }
         if (path.includes("/lectures")) {
-          return await clientStorage.getUserLectures(userId);
+          return await clientStorage.getUserLectures(userId, tenantId);
         }
         if (path.includes("/achievements")) {
-          return await clientStorage.getUserBadges(userId);
+          return await clientStorage.getUserBadges(userId, tenantId);
         }
         if (path.includes("/study-groups")) {
           return await clientStorage.getUserStudyGroups(userId);
@@ -61,14 +65,40 @@ export const getQueryFn: <T>(options: {
         }
       }
 
+      // Handle tenants
+      if (path === "/api/tenants") {
+        return await clientStorage.getTenants();
+      }
+      
+      // Handle specific tenant query
+      if (path.startsWith("/api/tenants/")) {
+        const match = path.match(/\/api\/tenants\/(\d+)/);
+        if (match) {
+          const tenantId = parseInt(match[1]);
+          return await clientStorage.getTenant(tenantId);
+        }
+      }
+
       // Handle categories
       if (path === "/api/categories") {
-        return await clientStorage.getCategories();
+        // Get current user to determine tenantId
+        const userId = await clientStorage.getCurrentUserId();
+        if (!userId) return await clientStorage.getCategories(1); // Anonymous users see tenant 1 (default tenant)
+        
+        const user = await clientStorage.getUser(userId);
+        const tenantId = user?.tenantId || 1;
+        return await clientStorage.getCategories(tenantId);
       }
 
       // Handle subcategories
       if (path === "/api/subcategories") {
-        return await clientStorage.getSubcategories();
+        // Get current user to determine tenantId
+        const userId = await clientStorage.getCurrentUserId();
+        if (!userId) return await clientStorage.getSubcategories(undefined, 1);
+        
+        const user = await clientStorage.getUser(userId);
+        const tenantId = user?.tenantId || 1;
+        return await clientStorage.getSubcategories(undefined, tenantId);
       }
 
       // Handle badges
