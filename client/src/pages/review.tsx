@@ -8,8 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import type { Quiz, Category } from "@shared/schema";
+import { generateStudyNotes } from "@/lib/study-notes";
+import type { Quiz, Category, Question as SchemaQuestion } from "@shared/schema";
 
 interface QuizResult {
   questionId: number;
@@ -60,30 +60,41 @@ export default function Review() {
     queryKey: ['/api/categories'],
   });
 
-  // Mutation for generating lecture notes
+  // Mutation for generating lecture notes (client-side)
   const generateLectureMutation = useMutation({
     mutationFn: async () => {
-      console.log('Frontend: Making generate lecture request');
-      console.log('Frontend: Cookies available:', document.cookie);
+      if (!quiz || !questions || questions.length === 0) {
+        throw new Error("Quiz data not available");
+      }
       
-      const response = await apiRequest({
-        method: 'POST',
-        endpoint: `/api/quiz/${quizId}/generate-lecture`
+      // Get the category name for the study notes
+      const categoryIds = (quiz.categoryIds as number[]) || [];
+      const categoryName = categoryIds
+        .map(id => categories?.find(cat => cat.id === id)?.name)
+        .filter(Boolean)
+        .join(", ") || "Mixed Quiz";
+      
+      // Generate study notes using client-side function
+      const studyNotes = generateStudyNotes({
+        quiz,
+        questions: questions as SchemaQuestion[],
+        categoryName
       });
-      return response.json();
+      
+      return studyNotes;
     },
-    onSuccess: (data: any) => {
-      setGeneratedLecture(data.lecture.content);
+    onSuccess: (studyNotes: string) => {
+      setGeneratedLecture(studyNotes);
       setShowLectureDialog(true);
       toast({
-        title: "Lecture Notes Generated!",
+        title: "Study Notes Generated!",
         description: "Your comprehensive study notes are ready to review.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Generation Failed",
-        description: error.message || "Unable to generate lecture notes. Please try again.",
+        description: error.message || "Unable to generate study notes. Please try again.",
         variant: "destructive",
       });
     }
@@ -220,7 +231,7 @@ export default function Review() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setLocation(`/results/${quizId}`)}
+                  onClick={() => setLocation(`/app/results/${quizId}`)}
                   size="sm"
                 >
                   <i className="fas fa-chart-bar mr-2"></i>

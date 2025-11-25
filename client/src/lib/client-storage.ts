@@ -870,6 +870,11 @@ class ClientStorage {
     // 1 token per question
     return questionCount;
   }
+
+  // Get all users (for account selection on login)
+  async getAllUsers(): Promise<User[]> {
+    return await indexedDBService.getAll<User>(STORES.users);
+  }
 }
 
 export const clientStorage = new ClientStorage();

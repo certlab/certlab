@@ -36,7 +36,6 @@ export default function BreadcrumbNavigation({ className }: { className?: string
       'achievements': 'Achievements',
       'review': 'Review Sessions',
       'results': 'Results',
-      'study-groups': 'Study Groups',
       'practice-tests': 'Practice Tests',
       'challenges': 'Challenges',
       'accessibility': 'Accessibility',

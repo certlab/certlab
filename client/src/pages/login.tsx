@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { clientAuth } from "@/lib/client-auth";
 import { useLocation } from "wouter";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { User as UserIcon, Info, AlertTriangle } from "lucide-react";
+
+interface StoredUser {
+  id: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  hasPassword: boolean;
+}
 
 export default function Login() {
   const [loginEmail, setLoginEmail] = useState("");
@@ -17,26 +27,71 @@ export default function Login() {
   const [registerFirstName, setRegisterFirstName] = useState("");
   const [registerLastName, setRegisterLastName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [availableAccounts, setAvailableAccounts] = useState<StoredUser[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<StoredUser | null>(null);
   const { toast } = useToast();
   const { isAuthenticated, refreshUser } = useAuth();
   const [, setLocation] = useLocation();
+
+  // Load available accounts on mount
+  useEffect(() => {
+    const loadAccounts = async () => {
+      try {
+        // getAllUsers now returns hasPassword in each user object
+        const users = await clientAuth.getAllUsers();
+        setAvailableAccounts(users);
+      } catch (error) {
+        console.error('Error loading accounts:', error);
+      }
+    };
+    loadAccounts();
+  }, []);
+
+  // Check if manually entered email matches a password-less account
+  const getMatchingAccount = (email: string): StoredUser | undefined => {
+    return availableAccounts.find(
+      (account) => account.email.toLowerCase() === email.toLowerCase()
+    );
+  };
+
+  const handleAccountSelect = (account: StoredUser) => {
+    setSelectedAccount(account);
+    setLoginEmail(account.email);
+    // Clear password field when selecting account
+    setLoginPassword("");
+  };
+
+  const handleEmailChange = (email: string) => {
+    setLoginEmail(email);
+    // Check if the entered email matches any account
+    const matchingAccount = getMatchingAccount(email);
+    if (matchingAccount) {
+      setSelectedAccount(matchingAccount);
+    } else {
+      setSelectedAccount(null);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const result = await clientAuth.login(loginEmail, loginPassword);
+      // Determine if account requires password
+      const accountHasPassword = selectedAccount?.hasPassword ?? true;
+      
+      // Use appropriate login method
+      const result = !accountHasPassword 
+        ? await clientAuth.loginPasswordless(loginEmail)
+        : await clientAuth.login(loginEmail, loginPassword);
 
       if (result.success) {
-        // Refresh the auth context to update isAuthenticated state
         await refreshUser();
-        // Use relative navigation for GitHub Pages compatibility
         setLocation("/app");
       } else {
         toast({
           title: "Login Failed",
-          description: result.message || "Invalid email or password",
+          description: result.message || "Unable to login",
           variant: "destructive",
         });
       }
@@ -116,6 +171,52 @@ export default function Login() {
 
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
+                {/* Available Accounts Section */}
+                {availableAccounts.length > 0 && (
+                  <div className="space-y-2">
+                    <Label id="accounts-label">Available Accounts</Label>
+                    <div 
+                      className="space-y-2 max-h-60 overflow-y-auto border rounded-md p-2"
+                      role="radiogroup"
+                      aria-labelledby="accounts-label"
+                    >
+                      {availableAccounts.map((account) => (
+                        <button
+                          key={account.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={selectedAccount?.id === account.id}
+                          onClick={() => handleAccountSelect(account)}
+                          className={`w-full p-3 rounded-lg border text-left transition-all hover:border-primary hover:bg-primary/5 ${
+                            selectedAccount?.id === account.id
+                              ? "border-primary bg-primary/10"
+                              : "border-gray-200 dark:border-gray-700"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <UserIcon className="h-5 w-5 text-muted-foreground" />
+                            <div className="flex-1">
+                              <div className="font-medium text-sm">
+                                {account.firstName && account.lastName
+                                  ? `${account.firstName} ${account.lastName}`
+                                  : account.email}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {account.firstName && account.lastName ? account.email : ""}
+                              </div>
+                            </div>
+                            {!account.hasPassword && (
+                              <span className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100 px-2 py-1 rounded">
+                                No password
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
                   <Input
@@ -123,23 +224,37 @@ export default function Login() {
                     type="email"
                     placeholder="your.email@example.com"
                     value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
+                    onChange={(e) => handleEmailChange(e.target.value)}
                     required
                     disabled={isLoading}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
+                
+                {/* Only show password field if account requires password */}
+                {(!selectedAccount || selectedAccount.hasPassword) && (
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Password</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      required={!selectedAccount || selectedAccount.hasPassword}
+                      disabled={isLoading}
+                    />
+                  </div>
+                )}
+
+                {selectedAccount && !selectedAccount.hasPassword && (
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      This account has no password. Click login to access.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
@@ -172,18 +287,31 @@ export default function Login() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="register-password">Password</Label>
+                  <Label htmlFor="register-password">Password (Optional)</Label>
                   <Input
                     id="register-password"
                     type="password"
                     placeholder="••••••••"
                     value={registerPassword}
                     onChange={(e) => setRegisterPassword(e.target.value)}
-                    required
                     disabled={isLoading}
-                    minLength={8}
+                    minLength={registerPassword ? 8 : undefined}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    You can set a password later in your profile settings for added security
+                  </p>
                 </div>
+                
+                {/* Security warning for password-less accounts */}
+                {!registerPassword && (
+                  <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <AlertDescription className="text-amber-800 dark:text-amber-200">
+                      <strong>Security Notice:</strong> Without a password, anyone with access to this device can login to your account. Consider setting a password for added security.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
                 <div className="space-y-2">
                   <Label htmlFor="register-firstname">First Name</Label>
                   <Input

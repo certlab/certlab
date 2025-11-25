@@ -31,8 +31,8 @@ class ClientAuth {
         return { success: false, message: 'Invalid email format' };
       }
 
-      // Validate password length
-      if (password.length < 8) {
+      // Validate password length if password is provided
+      if (password && password.length > 0 && password.length < 8) {
         return { success: false, message: 'Password must be at least 8 characters' };
       }
 
@@ -42,8 +42,8 @@ class ClientAuth {
         return { success: false, message: 'User with this email already exists' };
       }
 
-      // Create user
-      const passwordHash = await hashPassword(password);
+      // Create user with optional password
+      const passwordHash = password && password.length > 0 ? await hashPassword(password) : null;
       const user = await clientStorage.createUser({
         email,
         passwordHash,
@@ -73,7 +73,17 @@ class ClientAuth {
         return { success: false, message: 'Invalid email or password' };
       }
 
-      // Verify password
+      // If user has no password set, allow password-less login
+      if (!user.passwordHash) {
+        // Set as current user
+        await clientStorage.setCurrentUserId(user.id);
+
+        // Return without password hash
+        const { passwordHash: _, ...sanitizedUser } = user;
+        return { success: true, user: sanitizedUser };
+      }
+
+      // Verify password if user has one
       const passwordHash = await hashPassword(password);
       if (user.passwordHash !== passwordHash) {
         return { success: false, message: 'Invalid email or password' };
@@ -155,6 +165,24 @@ class ClientAuth {
         return { success: false, message: 'User not found' };
       }
 
+      // If user has no password, allow setting one without current password
+      if (!user.passwordHash) {
+        // Validate new password
+        if (newPassword.length < 8) {
+          return { success: false, message: 'Password must be at least 8 characters' };
+        }
+
+        // Set password
+        const newHash = await hashPassword(newPassword);
+        const updatedUser = await clientStorage.updateUser(userId, { passwordHash: newHash });
+        if (!updatedUser) {
+          return { success: false, message: 'Password setup failed' };
+        }
+
+        const { passwordHash: _, ...sanitizedUser } = updatedUser;
+        return { success: true, user: sanitizedUser, message: 'Password set successfully' };
+      }
+
       // Verify current password
       const currentHash = await hashPassword(currentPassword);
       if (user.passwordHash !== currentHash) {
@@ -178,6 +206,56 @@ class ClientAuth {
     } catch (error) {
       console.error('Password change error:', error);
       return { success: false, message: 'Password change failed' };
+    }
+  }
+
+  async getAllUsers(): Promise<(Omit<User, 'passwordHash'> & { hasPassword: boolean })[]> {
+    try {
+      const users = await clientStorage.getAllUsers();
+      
+      // Return users without password hashes, but include hasPassword flag
+      return users.map(user => {
+        const { passwordHash, ...sanitizedUser } = user;
+        return { ...sanitizedUser, hasPassword: !!passwordHash };
+      });
+    } catch (error) {
+      console.error('Error getting all users:', error);
+      return [];
+    }
+  }
+
+  async hasPassword(userId: string): Promise<boolean> {
+    try {
+      const user = await clientStorage.getUser(userId);
+      return !!user?.passwordHash;
+    } catch (error) {
+      console.error('Error checking password:', error);
+      return false;
+    }
+  }
+
+  async loginPasswordless(email: string): Promise<AuthResponse> {
+    try {
+      // Find user by email
+      const user = await clientStorage.getUserByEmail(email);
+      if (!user) {
+        return { success: false, message: 'Account not found' };
+      }
+
+      // Verify account has no password (is password-less)
+      if (user.passwordHash) {
+        return { success: false, message: 'This account requires a password' };
+      }
+
+      // Set as current user
+      await clientStorage.setCurrentUserId(user.id);
+
+      // Return without password hash
+      const { passwordHash: _, ...sanitizedUser } = user;
+      return { success: true, user: sanitizedUser };
+    } catch (error) {
+      console.error('Password-less login error:', error);
+      return { success: false, message: 'Login failed' };
     }
   }
 }

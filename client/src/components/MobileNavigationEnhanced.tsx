@@ -14,7 +14,6 @@ import {
   Home, 
   BookOpen, 
   Trophy, 
-  Users, 
   Settings,
   ChevronRight,
   X,
@@ -76,15 +75,6 @@ export default function MobileNavigationEnhanced() {
       id: "learning",
       title: "Learning Features",
       items: [
-        {
-          id: "study-groups",
-          label: "Study Groups",
-          icon: <Users className="w-4 h-4" />,
-          href: "/study-groups",
-          badge: "Soon",
-          description: "Collaborative learning",
-          comingSoon: true
-        },
         {
           id: "challenges",
           label: "Daily Challenges",
