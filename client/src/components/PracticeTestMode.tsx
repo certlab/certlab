@@ -61,6 +61,7 @@ async function startPracticeTest(
     userId: userId,
     testId: test.id,
     quizId: quiz.id,
+    tenantId: tenantId,
   });
 
   return { quiz, test };
