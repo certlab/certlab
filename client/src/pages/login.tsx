@@ -9,14 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { clientAuth } from "@/lib/client-auth";
 import { useLocation } from "wouter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { User as UserIcon, Info } from "lucide-react";
+import { User as UserIcon, Info, AlertTriangle } from "lucide-react";
 
 interface StoredUser {
   id: string;
   email: string;
   firstName?: string | null;
   lastName?: string | null;
-  hasPassword?: boolean;
+  hasPassword: boolean;
 }
 
 export default function Login() {
@@ -37,23 +37,22 @@ export default function Login() {
   useEffect(() => {
     const loadAccounts = async () => {
       try {
+        // getAllUsers now returns hasPassword in each user object
         const users = await clientAuth.getAllUsers();
-        const accountsWithPasswordStatus = await Promise.all(
-          users.map(async (user) => ({
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            hasPassword: await clientAuth.hasPassword(user.id),
-          }))
-        );
-        setAvailableAccounts(accountsWithPasswordStatus);
+        setAvailableAccounts(users);
       } catch (error) {
         console.error('Error loading accounts:', error);
       }
     };
     loadAccounts();
   }, []);
+
+  // Check if manually entered email matches a password-less account
+  const getMatchingAccount = (email: string): StoredUser | undefined => {
+    return availableAccounts.find(
+      (account) => account.email.toLowerCase() === email.toLowerCase()
+    );
+  };
 
   const handleAccountSelect = (account: StoredUser) => {
     setSelectedAccount(account);
@@ -62,41 +61,39 @@ export default function Login() {
     setLoginPassword("");
   };
 
+  const handleEmailChange = (email: string) => {
+    setLoginEmail(email);
+    // Check if the entered email matches any account
+    const matchingAccount = getMatchingAccount(email);
+    if (matchingAccount) {
+      setSelectedAccount(matchingAccount);
+    } else {
+      setSelectedAccount(null);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Check if selected account has no password
+      // Determine if account requires password
       const accountHasPassword = selectedAccount?.hasPassword ?? true;
       
-      // If account has no password, allow login without password
-      if (!accountHasPassword) {
-        const result = await clientAuth.login(loginEmail, "");
-        if (result.success) {
-          await refreshUser();
-          setLocation("/app");
-        } else {
-          toast({
-            title: "Login Failed",
-            description: result.message || "Unable to login",
-            variant: "destructive",
-          });
-        }
-      } else {
-        // Normal password login
-        const result = await clientAuth.login(loginEmail, loginPassword);
+      // Use appropriate login method
+      const result = !accountHasPassword 
+        ? await clientAuth.loginPasswordless(loginEmail)
+        : await clientAuth.login(loginEmail, loginPassword);
 
-        if (result.success) {
-          await refreshUser();
-          setLocation("/app");
-        } else {
-          toast({
-            title: "Login Failed",
-            description: result.message || "Invalid email or password",
-            variant: "destructive",
-          });
-        }
+      if (result.success) {
+        await refreshUser();
+        setLocation("/app");
+      } else {
+        toast({
+          title: "Login Failed",
+          description: result.message || "Unable to login",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       toast({
@@ -177,17 +174,23 @@ export default function Login() {
                 {/* Available Accounts Section */}
                 {availableAccounts.length > 0 && (
                   <div className="space-y-2">
-                    <Label>Available Accounts</Label>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                    <Label id="accounts-label">Available Accounts</Label>
+                    <div 
+                      className="space-y-2 max-h-60 overflow-y-auto border rounded-md p-2"
+                      role="radiogroup"
+                      aria-labelledby="accounts-label"
+                    >
                       {availableAccounts.map((account) => (
                         <button
                           key={account.id}
                           type="button"
+                          role="radio"
+                          aria-checked={selectedAccount?.id === account.id}
                           onClick={() => handleAccountSelect(account)}
                           className={`w-full p-3 rounded-lg border text-left transition-all hover:border-primary hover:bg-primary/5 ${
                             selectedAccount?.id === account.id
                               ? "border-primary bg-primary/10"
-                              : "border-gray-200"
+                              : "border-gray-200 dark:border-gray-700"
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -203,7 +206,7 @@ export default function Login() {
                               </div>
                             </div>
                             {!account.hasPassword && (
-                              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                              <span className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100 px-2 py-1 rounded">
                                 No password
                               </span>
                             )}
@@ -221,10 +224,7 @@ export default function Login() {
                     type="email"
                     placeholder="your.email@example.com"
                     value={loginEmail}
-                    onChange={(e) => {
-                      setLoginEmail(e.target.value);
-                      setSelectedAccount(null);
-                    }}
+                    onChange={(e) => handleEmailChange(e.target.value)}
                     required
                     disabled={isLoading}
                   />
@@ -295,12 +295,23 @@ export default function Login() {
                     value={registerPassword}
                     onChange={(e) => setRegisterPassword(e.target.value)}
                     disabled={isLoading}
-                    minLength={8}
+                    minLength={registerPassword ? 8 : undefined}
                   />
                   <p className="text-xs text-muted-foreground">
                     You can set a password later in your profile settings for added security
                   </p>
                 </div>
+                
+                {/* Security warning for password-less accounts */}
+                {!registerPassword && (
+                  <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <AlertDescription className="text-amber-800 dark:text-amber-200">
+                      <strong>Security Notice:</strong> Without a password, anyone with access to this device can login to your account. Consider setting a password for added security.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
                 <div className="space-y-2">
                   <Label htmlFor="register-firstname">First Name</Label>
                   <Input

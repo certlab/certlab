@@ -198,7 +198,7 @@ export default function ProfilePage() {
       // Validate new password
       if (newPassword.length < 8) {
         toast({
-          title: "Invalid Password",
+          title: "Password Too Short",
           description: "Password must be at least 8 characters long.",
           variant: "destructive",
         });

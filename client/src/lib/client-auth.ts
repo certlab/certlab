@@ -209,14 +209,14 @@ class ClientAuth {
     }
   }
 
-  async getAllUsers(): Promise<Omit<User, 'passwordHash'>[]> {
+  async getAllUsers(): Promise<(Omit<User, 'passwordHash'> & { hasPassword: boolean })[]> {
     try {
       const users = await clientStorage.getAllUsers();
       
-      // Return users without password hashes
+      // Return users without password hashes, but include hasPassword flag
       return users.map(user => {
         const { passwordHash, ...sanitizedUser } = user;
-        return sanitizedUser;
+        return { ...sanitizedUser, hasPassword: !!passwordHash };
       });
     } catch (error) {
       console.error('Error getting all users:', error);
@@ -231,6 +231,31 @@ class ClientAuth {
     } catch (error) {
       console.error('Error checking password:', error);
       return false;
+    }
+  }
+
+  async loginPasswordless(email: string): Promise<AuthResponse> {
+    try {
+      // Find user by email
+      const user = await clientStorage.getUserByEmail(email);
+      if (!user) {
+        return { success: false, message: 'Account not found' };
+      }
+
+      // Verify account has no password (is password-less)
+      if (user.passwordHash) {
+        return { success: false, message: 'This account requires a password' };
+      }
+
+      // Set as current user
+      await clientStorage.setCurrentUserId(user.id);
+
+      // Return without password hash
+      const { passwordHash: _, ...sanitizedUser } = user;
+      return { success: true, user: sanitizedUser };
+    } catch (error) {
+      console.error('Password-less login error:', error);
+      return { success: false, message: 'Login failed' };
     }
   }
 }
