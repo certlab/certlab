@@ -13,8 +13,7 @@ import {
   Clock,
   Target,
   BookOpen,
-  Award,
-  Users
+  Award
 } from "lucide-react";
 import type { Quiz, UserStats, Category } from "@shared/schema";
 
@@ -188,41 +187,6 @@ export default function ContextualQuickActions() {
           }
         });
       }
-    }
-
-    if (currentPath === '/app/study-groups') {
-      actions.push({
-        key: 'solo-practice',
-        label: 'Practice Solo',
-        description: 'Individual learning session',
-        icon: <BookOpen className="w-4 h-4" />,
-        variant: 'outline' as const,
-        onClick: () => {
-          if (currentUser?.id) {
-            // Create a solo practice quiz
-            createQuizMutation.mutate({
-              categoryIds: accessibleCategoryIds.length > 0 ? [accessibleCategoryIds[0]] : [],
-              questionCount: 15,
-              title: `Solo Practice - ${new Date().toLocaleDateString()}`,
-            });
-          }
-        }
-      });
-
-      actions.push({
-        key: 'group-challenge',
-        label: 'Group Challenge',
-        description: 'Compete with study partners',
-        icon: <Users className="w-4 h-4" />,
-        variant: 'ghost' as const,
-        badge: 'Coming Soon',
-        onClick: () => {
-          toast({
-            title: "Coming Soon",
-            description: "Group challenges will be available soon!",
-          });
-        }
-      });
     }
 
     return actions.slice(0, 3); // Limit to 3 actions to avoid clutter

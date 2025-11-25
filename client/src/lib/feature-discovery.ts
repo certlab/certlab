@@ -61,16 +61,6 @@ export const FEATURES: Feature[] = [
       quizzesCompleted: 2,
     },
   },
-  {
-    id: 'study-groups',
-    name: 'Study Groups',
-    description: 'Collaborate with other learners',
-    requiredLevel: 2,
-    unlockCriteria: {
-      quizzesCompleted: 5,
-      achievementsEarned: 2,
-    },
-  },
   
   // Level 3 - Advanced Features
   {
