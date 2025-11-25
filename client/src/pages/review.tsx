@@ -220,7 +220,7 @@ export default function Review() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setLocation(`/results/${quizId}`)}
+                  onClick={() => setLocation(`/app/results/${quizId}`)}
                   size="sm"
                 >
                   <i className="fas fa-chart-bar mr-2"></i>
