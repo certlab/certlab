@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { clientStorage } from "@/lib/client-storage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -291,6 +291,13 @@ export default function AdminDashboard() {
   const { data: tenants = [], isLoading: tenantsLoading } = useQuery<Tenant[]>({
     queryKey: ["/api/admin/tenants"],
   });
+
+  // Auto-select the first tenant when tenants are loaded
+  useEffect(() => {
+    if (tenants.length > 0 && selectedTenant === null) {
+      setSelectedTenant(tenants[0].id);
+    }
+  }, [tenants, selectedTenant]);
 
   // Get the currently selected tenant data
   const currentTenant = tenants.find(t => t.id === selectedTenant);
