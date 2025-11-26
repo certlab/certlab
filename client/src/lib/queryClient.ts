@@ -2,6 +2,31 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { clientStorage } from "./client-storage";
 import { clientAuth } from "./client-auth";
 
+// Helper function to fetch shared achievement data from multiple IndexedDB stores
+// Used by both /achievement-progress and /achievements endpoints to reduce duplication
+async function getAchievementData(userId: string, tenantId: number) {
+  const allBadges = await clientStorage.getBadges();
+  const userBadges = await clientStorage.getUserBadges(userId, tenantId);
+  const gameStats = await clientStorage.getUserGameStats(userId);
+  const userQuizzes = await clientStorage.getUserQuizzes(userId, tenantId);
+  return { allBadges, userBadges, gameStats, userQuizzes };
+}
+
+// Placeholder badge for when badge details are not found in the database.
+// This can happen if a badge is deleted while users still have references to it,
+// or if there's a data integrity issue between userBadges and badges stores.
+const createUnknownBadge = (badgeId: number) => ({
+  id: badgeId,
+  name: "Unknown Badge",
+  description: "",
+  icon: "🏆",
+  category: "special",
+  requirement: null,
+  color: "blue",
+  rarity: "common",
+  points: 0
+});
+
 // Client-side query handler that uses IndexedDB
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
@@ -50,13 +75,11 @@ export const getQueryFn: <T>(options: {
         }
         if (path.includes("/achievement-progress")) {
           // Return achievement progress data with all badges and user's progress
-          const allBadges = await clientStorage.getBadges();
-          const userBadges = await clientStorage.getUserBadges(userId, tenantId);
+          const { allBadges, userBadges, gameStats, userQuizzes } = await getAchievementData(userId, tenantId);
+          
           // Create lookup Maps for O(1) access instead of O(n) find operations
           const userBadgeLookup = new Map(userBadges.map(ub => [ub.badgeId, ub]));
           const userBadgeIds = new Set(userBadges.map(ub => ub.badgeId));
-          const gameStats = await clientStorage.getUserGameStats(userId);
-          const userQuizzes = await clientStorage.getUserQuizzes(userId, tenantId);
           const completedQuizzes = userQuizzes.filter(q => q.completedAt).length;
           // Get user's best quiz score for score-based achievements
           // Use Math.max(0, ...) to ensure we get 0 instead of -Infinity if no valid scores exist
@@ -109,27 +132,10 @@ export const getQueryFn: <T>(options: {
         }
         if (path.includes("/achievements")) {
           // Return full achievement data with badges, game stats, and new badge count
-          const userBadges = await clientStorage.getUserBadges(userId, tenantId);
-          const allBadges = await clientStorage.getBadges();
-          const gameStats = await clientStorage.getUserGameStats(userId, tenantId);
+          const { allBadges, userBadges, gameStats } = await getAchievementData(userId, tenantId);
           
           // Create badge lookup Map for O(1) access instead of O(n) find operations
           const badgeLookup = new Map(allBadges.map(b => [b.id, b]));
-          
-          // Placeholder badge for when badge details are not found in the database.
-          // This can happen if a badge is deleted while users still have references to it,
-          // or if there's a data integrity issue between userBadges and badges stores.
-          const createUnknownBadge = (badgeId: number) => ({
-            id: badgeId,
-            name: "Unknown Badge",
-            description: "",
-            icon: "🏆",
-            category: "special",
-            requirement: null,
-            color: "blue",
-            rarity: "common",
-            points: 0
-          });
           
           // Map user badges with full badge details
           const badgesWithDetails = userBadges.map(userBadge => {
