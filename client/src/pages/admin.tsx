@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PlusCircle, Edit, Trash2, Users, FileText, FolderOpen, Building, Home, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -86,13 +87,18 @@ function QuestionForm({
   const createQuestionMutation = useMutation({
     mutationFn: async (data: any) => {
       if (!tenantId) throw new Error("No tenant selected");
+      // Validate correctAnswer is a valid 1-based index (1-4)
+      const correctAnswer = data.correctAnswer;
+      if (typeof correctAnswer !== 'number' || correctAnswer < 1 || correctAnswer > 4) {
+        throw new Error("Invalid correct answer: must be between 1 and 4");
+      }
       return await clientStorage.createQuestion({
         tenantId,
         categoryId: data.categoryId,
         subcategoryId: data.subcategoryId,
         text: data.text,
         options: data.options.map((text: string, index: number) => ({ id: index, text })),
-        correctAnswer: data.correctAnswer - 1, // Convert 1-based to 0-based
+        correctAnswer: correctAnswer - 1, // Convert 1-based to 0-based
         explanation: data.explanation,
         difficultyLevel: data.difficultyLevel,
         tags: data.tags,
@@ -299,6 +305,7 @@ export default function AdminDashboard() {
   const [newTenantDialog, setNewTenantDialog] = useState(false);
   const [editTenantDialog, setEditTenantDialog] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+  const [editIsActive, setEditIsActive] = useState(true);
   const [newCategoryDialog, setNewCategoryDialog] = useState(false);
   const [newSubcategoryDialog, setNewSubcategoryDialog] = useState(false);
   const [newQuestionDialog, setNewQuestionDialog] = useState(false);
@@ -422,7 +429,7 @@ export default function AdminDashboard() {
     const updates = {
       name: formData.get("name") as string,
       domain: formData.get("domain") as string || null,
-      isActive: formData.get("isActive") === "on",
+      isActive: editIsActive,
     };
     updateTenantMutation.mutate({ tenantId: editingTenant.id, updates });
   };
@@ -516,12 +523,10 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <input 
-                    type="checkbox" 
+                  <Checkbox 
                     id="edit-isActive" 
-                    name="isActive" 
-                    defaultChecked={editingTenant?.isActive ?? true}
-                    className="h-4 w-4 rounded border-gray-300"
+                    checked={editIsActive}
+                    onCheckedChange={(checked) => setEditIsActive(checked === true)}
                   />
                   <Label htmlFor="edit-isActive">Active</Label>
                 </div>
@@ -905,6 +910,7 @@ export default function AdminDashboard() {
                           onClick={() => {
                             if (currentTenant) {
                               setEditingTenant(currentTenant);
+                              setEditIsActive(currentTenant.isActive);
                               setEditTenantDialog(true);
                             }
                           }}
@@ -962,11 +968,11 @@ export default function AdminDashboard() {
                         <Button
                           variant="destructive"
                           onClick={() => {
-                            if (confirm("Are you sure you want to deactivate this tenant? Users will no longer be able to access it.")) {
-                              deleteTenantMutation.mutate(selectedTenant!);
+                            if (selectedTenant && confirm("Are you sure you want to deactivate this tenant? Users will no longer be able to access it.")) {
+                              deleteTenantMutation.mutate(selectedTenant);
                             }
                           }}
-                          disabled={!currentTenant?.isActive || deleteTenantMutation.isPending}
+                          disabled={!selectedTenant || !currentTenant?.isActive || deleteTenantMutation.isPending}
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Deactivate Tenant
