@@ -58,7 +58,7 @@ export const getQueryFn: <T>(options: {
           const completedQuizzes = userQuizzes.filter(q => q.completedAt).length;
           // Get user's best quiz score for score-based achievements
           const bestScore = completedQuizzes > 0 
-            ? Math.max(...userQuizzes.filter(q => q.completedAt && q.score !== null).map(q => q.score || 0))
+            ? Math.max(0, ...userQuizzes.filter(q => q.completedAt && q.score !== null).map(q => q.score!))
             : 0;
           
           const progressData = allBadges.map(badge => {
