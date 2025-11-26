@@ -10,8 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PlusCircle, Edit, Trash2, Users, FileText, FolderOpen, Building, Home, Settings } from "lucide-react";
-import { useLocation } from "wouter";
+import { PlusCircle, Edit, Trash2, Users, FileText, FolderOpen, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -276,30 +275,6 @@ function UserManagement({ selectedTenant }: { selectedTenant: number | null }) {
   );
 }
 
-// Admin Navigation Breadcrumb
-function AdminBreadcrumb() {
-  const [, setLocation] = useLocation();
-  
-  return (
-    <div className="flex items-center space-x-2 mb-6 p-4 bg-muted/50 rounded-lg border">
-      <Button 
-        variant="ghost" 
-        size="sm"
-        onClick={() => setLocation("/app")}
-        className="text-muted-foreground hover:text-primary"
-      >
-        <Home className="w-4 h-4 mr-1" />
-        Learning App
-      </Button>
-      <span className="text-muted-foreground">/</span>
-      <Badge variant="secondary" className="font-medium">
-        <Settings className="w-3 h-3 mr-1" />
-        Admin Dashboard
-      </Badge>
-    </div>
-  );
-}
-
 export default function AdminDashboard() {
   const [selectedTenant, setSelectedTenant] = useState<number | null>(null);
   const [newTenantDialog, setNewTenantDialog] = useState(false);
@@ -451,8 +426,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
-      <AdminBreadcrumb />
-      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
