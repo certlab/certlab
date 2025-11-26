@@ -108,7 +108,7 @@ export const getQueryFn: <T>(options: {
           // Return full achievement data with badges, game stats, and new badge count
           const userBadges = await clientStorage.getUserBadges(userId, tenantId);
           const allBadges = await clientStorage.getBadges();
-          const gameStats = await clientStorage.getUserGameStats(userId);
+          const gameStats = await clientStorage.getUserGameStats(userId, tenantId);
           
           // Fallback badge for when badge details are not found
           const createFallbackBadge = (badgeId: number) => ({
