@@ -48,8 +48,110 @@ export const getQueryFn: <T>(options: {
         if (path.includes("/lectures")) {
           return await clientStorage.getUserLectures(userId, tenantId);
         }
+        if (path.includes("/achievement-progress")) {
+          // Return achievement progress data with all badges and user's progress
+          const allBadges = await clientStorage.getBadges();
+          const userBadges = await clientStorage.getUserBadges(userId, tenantId);
+          const userBadgeIds = userBadges.map(ub => ub.badgeId);
+          const gameStats = await clientStorage.getUserGameStats(userId);
+          const userQuizzes = await clientStorage.getUserQuizzes(userId, tenantId);
+          const completedQuizzes = userQuizzes.filter(q => q.completedAt).length;
+          // Get user's best quiz score for score-based achievements
+          const bestScore = completedQuizzes > 0 
+            ? Math.max(...userQuizzes.filter(q => q.completedAt && q.score !== null).map(q => q.score || 0))
+            : 0;
+          
+          const progressData = allBadges.map(badge => {
+            const userBadge = userBadges.find(ub => ub.badgeId === badge.id);
+            const earned = userBadgeIds.includes(badge.id);
+            
+            // Calculate progress based on badge requirements
+            let progress = 0;
+            let progressText = "";
+            
+            if (earned) {
+              progress = 100;
+              progressText = "Completed!";
+            } else if (badge.requirement) {
+              // Try to calculate progress based on requirement type
+              const req = badge.requirement;
+              if (req.type === "quiz_count") {
+                progress = Math.min(100, Math.round((completedQuizzes / req.value) * 100));
+                progressText = `${completedQuizzes}/${req.value} quizzes completed`;
+              } else if (req.type === "streak") {
+                const currentStreak = gameStats?.currentStreak || 0;
+                progress = Math.min(100, Math.round((currentStreak / req.value) * 100));
+                progressText = `${currentStreak}/${req.value} day streak`;
+              } else if (req.type === "score") {
+                // Calculate progress based on user's best quiz score vs target
+                progress = Math.min(100, Math.round((bestScore / req.value) * 100));
+                progressText = bestScore > 0 
+                  ? `Best score: ${bestScore}% (target: ${req.value}%)`
+                  : `Achieve ${req.value}% on a quiz`;
+              }
+            }
+            
+            return {
+              badge,
+              earned,
+              progress: userBadge?.progress || progress,
+              progressText
+            };
+          });
+          
+          return {
+            unlockedBadges: userBadgeIds,
+            progressData
+          };
+        }
         if (path.includes("/achievements")) {
-          return await clientStorage.getUserBadges(userId, tenantId);
+          // Return full achievement data with badges, game stats, and new badge count
+          const userBadges = await clientStorage.getUserBadges(userId, tenantId);
+          const allBadges = await clientStorage.getBadges();
+          const gameStats = await clientStorage.getUserGameStats(userId);
+          
+          // Fallback badge for when badge details are not found
+          const createFallbackBadge = (badgeId: number) => ({
+            id: badgeId,
+            name: "Unknown Badge",
+            description: "",
+            icon: "🏆",
+            category: "special",
+            requirement: null,
+            color: "blue",
+            rarity: "common",
+            points: 0
+          });
+          
+          // Map user badges with full badge details
+          const badgesWithDetails = userBadges.map(userBadge => {
+            const badge = allBadges.find(b => b.id === userBadge.badgeId);
+            return {
+              id: userBadge.id,
+              badgeId: userBadge.badgeId,
+              userId: userBadge.userId,
+              earnedAt: userBadge.earnedAt,
+              progress: userBadge.progress,
+              isNotified: userBadge.isNotified,
+              badge: badge || createFallbackBadge(userBadge.badgeId)
+            };
+          });
+          
+          // Count new (unnotified) badges
+          const newBadges = userBadges.filter(ub => !ub.isNotified).length;
+          
+          return {
+            badges: badgesWithDetails,
+            gameStats: gameStats || {
+              totalPoints: 0,
+              currentStreak: 0,
+              longestStreak: 0,
+              totalBadgesEarned: userBadges.length,
+              level: 1,
+              nextLevelPoints: 100
+            },
+            newBadges
+          };
         }
         if (path.includes("/practice-test-attempts")) {
           return await clientStorage.getPracticeTestAttempts(userId);
