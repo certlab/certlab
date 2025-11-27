@@ -94,19 +94,23 @@ const STORAGE_KEY = 'debug';
 /**
  * Parse debug configuration from a string (URL param or localStorage value)
  * Supports: 'info', 'warn', 'error', 'all', '*', 'none', or feature names like 'auth', 'quiz'
+ * Note: 'none' takes priority and ignores other categories in the same string
  */
 function parseDebugString(debugStr: string): Partial<DebugConfig> {
   const parts = debugStr.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   const result: Partial<DebugConfig> & { features: Set<string> } = { features: new Set<string>() };
   
+  // Check for 'none' first - it takes priority and ignores other categories
+  if (parts.includes('none')) {
+    result.all = false;
+    result.info = false;
+    result.warn = false;
+    // Error logging is not affected by 'none' - it remains at default (true)
+    return result;
+  }
+  
   for (const part of parts) {
-    if (part === 'none') {
-      // Special value indicating all optional debug output is explicitly disabled
-      result.all = false;
-      result.info = false;
-      result.warn = false;
-      // Error logging is not affected by 'none' - it remains at default (true)
-    } else if (part === '*' || part === 'all') {
+    if (part === '*' || part === 'all') {
       result.all = true;
       result.info = true;
       result.warn = true;
@@ -248,7 +252,12 @@ export const debug = {
     if (category === 'info') config.info = true;
     else if (category === 'warn') config.warn = true;
     else if (category === 'error') config.error = true;
-    else if (category === 'all' || category === '*') config.all = true;
+    else if (category === 'all' || category === '*') {
+      config.all = true;
+      config.info = true;
+      config.warn = true;
+      config.error = true;
+    }
     else config.features.add(category.toLowerCase());
     
     saveConfig();
@@ -261,7 +270,13 @@ export const debug = {
     if (category === 'info') config.info = false;
     else if (category === 'warn') config.warn = false;
     else if (category === 'error') config.error = false;
-    else if (category === 'all' || category === '*') config.all = false;
+    else if (category === 'all' || category === '*') {
+      config.all = false;
+      config.info = false;
+      config.warn = false;
+      config.features.clear();
+      // Error logging is preserved when disabling 'all'
+    }
     else config.features.delete(category.toLowerCase());
     
     saveConfig();
