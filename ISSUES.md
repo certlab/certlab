@@ -630,6 +630,8 @@ This code review identified 35+ issues across 15 categories:
 | State Management | 2 | Low |
 | Scripts/Tooling | 2 | Low |
 
+> **Note:** See [Section 16. User Feedback](#16-user-feedback) for additional issues reported by users.
+
 **Priority Recommendations:**
 
 1. **Immediate (Security/Quality):**
@@ -654,4 +656,136 @@ This code review identified 35+ issues across 15 categories:
 
 ---
 
+## 16. User Feedback
+
+The following issues have been reported by users during testing and evaluation of the platform.
+
+### Issue: Study Groups Feature Incomplete
+
+**Files:** Study groups related components
+
+**Description:**
+The Study Groups feature is incomplete and requires additional work:
+- "Open Chat" functionality is not working
+- "Schedule" functionality is not working
+- Enrollment system needs to be implemented first before Study Groups can be fully functional
+- Users cannot add new categories beyond the default CISM and CISSP
+
+**Recommendation:**
+- Implement enrollment system as a prerequisite
+- Complete "Open Chat" functionality
+- Complete "Schedule" functionality
+- Add ability to create and manage custom categories
+- Consider moving this feature to future roadmap until prerequisites are complete
+
+**Priority:** Medium
+
+---
+
+### Issue: Quick Practice Certification Selection Unclear
+
+**Files:** `client/src/pages/dashboard.tsx`, Quick Practice components
+
+**Description:**
+When users click "Quick Practice" on the dashboard, the quiz starts immediately without allowing them to select which certification they want to practice. Users don't know how to select or identify which certification is being used for the practice session.
+
+**Recommendation:**
+- Add a certification selection step before starting Quick Practice
+- Display the currently selected certification clearly
+- Allow users to change certification before starting
+- Consider remembering user's last selection
+
+**Priority:** High (UX)
+
+---
+
+### Issue: AI Study Notes Generation and Export
+
+**Files:** Study notes generation components, results page
+
+**Description:**
+The "Generate Study Notes" feature currently generates an AI prompt but doesn't complete the full workflow. Users expect the feature to:
+- Generate comprehensive study notes from quiz results
+- Save the notes as a downloadable PDF
+- Store notes for later access by the student
+
+**Recommendation:**
+- Implement full AI note generation using the prompt
+- Add PDF export functionality for generated notes
+- Create a student notes library where saved notes can be accessed
+- Consider adding note organization by topic/category
+
+**Priority:** Medium
+
+---
+
+### Issue: Custom Organizations Missing Categories
+
+**Files:** Organization/Tenant management, category seeding
+
+**Description:**
+The Default Organization has categories (CISM, CISSP), but custom organizations like "CISM Academy" and "CISSP Training Center" do not have any categories assigned. Users cannot add categories to these organizations.
+
+**Recommendation:**
+- Add category management functionality for organizations
+- Seed default categories when creating new organizations
+- Allow organization admins to create custom categories
+- Provide UI for managing categories within tenant settings
+
+**Priority:** High
+
+---
+
+## Summary (Updated)
+
+This code review identified 35+ issues across 15 categories, plus 4 additional issues from user feedback:
+
+| Category | Issues | Priority |
+|----------|--------|----------|
+| Security | 3 | High |
+| TypeScript | 2 | High |
+| Code Organization | 3 | Medium |
+| Performance | 4 | Medium |
+| Accessibility | 2 | Medium |
+| Error Handling | 3 | Medium |
+| Testing | 1 | High |
+| Documentation | 2 | Low |
+| Dependencies | 3 | Medium |
+| UI/UX | 3 | Low |
+| Build/Deploy | 2 | Medium |
+| Database | 2 | Medium |
+| API Design | 2 | Low |
+| State Management | 2 | Low |
+| Scripts/Tooling | 2 | Low |
+| **User Feedback** | **4** | **High/Medium** |
+
+**Priority Recommendations:**
+
+1. **Immediate (Security/Quality):**
+   - Fix TypeScript errors
+   - Improve password hashing
+   - Add test infrastructure
+
+2. **Short-term (Performance/UX):**
+   - Reduce bundle size
+   - Add error boundaries
+   - Clean up legacy code
+   - **Fix Quick Practice certification selection**
+   - **Add category management for organizations**
+
+3. **Medium-term (Maintainability):**
+   - Add linting and formatting
+   - Improve documentation
+   - Update dependencies
+   - **Complete AI Study Notes generation**
+
+4. **Long-term (Architecture):**
+   - Restructure codebase
+   - Add comprehensive testing
+   - Implement proper CI/CD
+   - **Complete Study Groups feature (after enrollment system)**
+
+---
+
 *Generated: Code Review for CertLab Repository*
+*Updated: User Feedback Added*
