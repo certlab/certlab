@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { clientAuth } from "./client-auth";
+import { logError } from "./errors";
 
 interface User {
   id: string;
@@ -31,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = await clientAuth.getCurrentUser();
       setUser(currentUser);
     } catch (error) {
-      console.error('Error loading user:', error);
+      logError('loadUser', error);
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -51,12 +52,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const LOGOUT_DELAY_MS = 1000;
     
     try {
-      await clientAuth.logout();
+      const result = await clientAuth.logout();
+      if (!result.success) {
+        logError('logout', new Error(result.message || 'Logout failed'));
+      }
       setUser(null);
       // Wait briefly to allow any toast notifications to be visible
       await new Promise((resolve) => setTimeout(resolve, LOGOUT_DELAY_MS));
     } catch (error) {
-      console.error('Logout error:', error);
+      logError('logout', error);
     } finally {
       // Always redirect to the landing page, even on error
       window.location.href = logoutUrl;
@@ -91,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Reload user to get updated tenant
       await loadUser();
     } catch (error) {
-      console.error('Error switching tenant:', error);
+      logError('switchTenant', error, { tenantId });
       throw error;
     }
   };

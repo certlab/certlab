@@ -30,21 +30,21 @@ export type AuthErrorCode = (typeof AuthErrorCode)[keyof typeof AuthErrorCode];
  * User-friendly messages for each error code
  */
 const AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
-  [AuthErrorCode.INVALID_EMAIL]: 'Please enter a valid email address',
-  [AuthErrorCode.INVALID_PASSWORD]: 'Password is incorrect',
-  [AuthErrorCode.USER_EXISTS]: 'An account with this email already exists',
-  [AuthErrorCode.USER_NOT_FOUND]: 'No account found with this email',
-  [AuthErrorCode.INVALID_CREDENTIALS]: 'Invalid email or password',
-  [AuthErrorCode.PASSWORD_REQUIRED]: 'This account requires a password',
-  [AuthErrorCode.PASSWORD_TOO_SHORT]: 'Password must be at least 8 characters',
-  [AuthErrorCode.NOT_AUTHENTICATED]: 'Please log in to continue',
-  [AuthErrorCode.REGISTRATION_FAILED]: 'Unable to create account. Please try again',
-  [AuthErrorCode.LOGIN_FAILED]: 'Unable to log in. Please try again',
-  [AuthErrorCode.LOGOUT_FAILED]: 'Unable to log out. Please try again',
-  [AuthErrorCode.PROFILE_UPDATE_FAILED]: 'Unable to update profile. Please try again',
-  [AuthErrorCode.PASSWORD_CHANGE_FAILED]: 'Unable to change password. Please try again',
-  [AuthErrorCode.STORAGE_ERROR]: 'Unable to access local storage. Please check browser settings',
-  [AuthErrorCode.UNKNOWN_ERROR]: 'An unexpected error occurred. Please try again',
+  [AuthErrorCode.INVALID_EMAIL]: 'Please enter a valid email address.',
+  [AuthErrorCode.INVALID_PASSWORD]: 'Password is incorrect.',
+  [AuthErrorCode.USER_EXISTS]: 'An account with this email already exists.',
+  [AuthErrorCode.USER_NOT_FOUND]: 'No account found with this email.',
+  [AuthErrorCode.INVALID_CREDENTIALS]: 'Invalid email or password.',
+  [AuthErrorCode.PASSWORD_REQUIRED]: 'This account requires a password.',
+  [AuthErrorCode.PASSWORD_TOO_SHORT]: 'Password must be at least 8 characters.',
+  [AuthErrorCode.NOT_AUTHENTICATED]: 'Please log in to continue.',
+  [AuthErrorCode.REGISTRATION_FAILED]: 'Unable to create account. Please try again.',
+  [AuthErrorCode.LOGIN_FAILED]: 'Unable to log in. Please try again.',
+  [AuthErrorCode.LOGOUT_FAILED]: 'Unable to log out. Please try again.',
+  [AuthErrorCode.PROFILE_UPDATE_FAILED]: 'Unable to update profile. Please try again.',
+  [AuthErrorCode.PASSWORD_CHANGE_FAILED]: 'Unable to change password. Please try again.',
+  [AuthErrorCode.STORAGE_ERROR]: 'Unable to access local storage. Please check browser settings.',
+  [AuthErrorCode.UNKNOWN_ERROR]: 'An unexpected error occurred. Please try again.',
 };
 
 /**
@@ -60,17 +60,17 @@ export class AuthError extends Error {
     this.code = code;
     this.context = context;
   }
-
-  /**
-   * Get user-friendly message for display
-   */
-  get userMessage(): string {
-    return this.message;
-  }
 }
 
 /**
- * Log an error with context for debugging
+ * Log an error with context for debugging.
+ * 
+ * @param operation - The name of the operation that failed (e.g., 'login', 'register')
+ * @param error - The error object to log
+ * @param context - Additional context about the operation (e.g., { email: 'user@example.com' })
+ * 
+ * @example
+ * logError('login', error, { email: 'user@example.com', hasPassword: true });
  */
 export function logError(
   operation: string,
@@ -99,7 +99,7 @@ export function logError(
  */
 export function getUserFriendlyMessage(error: unknown): string {
   if (error instanceof AuthError) {
-    return error.userMessage;
+    return error.message;
   }
   
   if (error instanceof Error) {
@@ -120,12 +120,58 @@ export function getUserFriendlyMessage(error: unknown): string {
  */
 export function isStorageError(error: unknown): boolean {
   if (error instanceof Error) {
+    const messageLower = error.message.toLowerCase();
     return (
       error.name === 'QuotaExceededError' ||
       error.name === 'SecurityError' ||
-      error.message.includes('IndexedDB') ||
-      error.message.includes('storage')
+      messageLower.includes('indexeddb') ||
+      messageLower.includes('storage')
     );
   }
   return false;
+}
+
+/**
+ * Get a user-friendly error title based on the error code.
+ * Used for displaying toast notifications and error messages.
+ * 
+ * @param errorCode - The error code to get a title for
+ * @param defaultTitle - The default title to return if the error code is not recognized
+ * @returns A user-friendly error title
+ */
+export function getErrorTitle(errorCode: AuthErrorCode | undefined, defaultTitle: string): string {
+  switch (errorCode) {
+    case AuthErrorCode.INVALID_CREDENTIALS:
+      return "Invalid Credentials";
+    case AuthErrorCode.INVALID_EMAIL:
+      return "Invalid Email";
+    case AuthErrorCode.INVALID_PASSWORD:
+      return "Invalid Password";
+    case AuthErrorCode.PASSWORD_TOO_SHORT:
+      return "Password Too Short";
+    case AuthErrorCode.USER_EXISTS:
+      return "Account Exists";
+    case AuthErrorCode.USER_NOT_FOUND:
+      return "Account Not Found";
+    case AuthErrorCode.PASSWORD_REQUIRED:
+      return "Password Required";
+    case AuthErrorCode.NOT_AUTHENTICATED:
+      return "Not Authenticated";
+    case AuthErrorCode.STORAGE_ERROR:
+      return "Storage Error";
+    case AuthErrorCode.REGISTRATION_FAILED:
+      return "Registration Failed";
+    case AuthErrorCode.LOGIN_FAILED:
+      return "Login Failed";
+    case AuthErrorCode.LOGOUT_FAILED:
+      return "Logout Failed";
+    case AuthErrorCode.PROFILE_UPDATE_FAILED:
+      return "Profile Update Failed";
+    case AuthErrorCode.PASSWORD_CHANGE_FAILED:
+      return "Password Change Failed";
+    case AuthErrorCode.UNKNOWN_ERROR:
+      return "Error";
+    default:
+      return defaultTitle;
+  }
 }

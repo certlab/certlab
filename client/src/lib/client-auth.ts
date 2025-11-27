@@ -7,6 +7,12 @@ import { clientStorage } from './client-storage';
 import type { User } from '@shared/schema';
 import { AuthError, AuthErrorCode, logError, isStorageError } from './errors';
 
+/** Email validation regex pattern */
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Minimum required password length */
+const MIN_PASSWORD_LENGTH = 8;
+
 // Simple client-side password hashing (NOT cryptographically secure, but sufficient for local storage)
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -15,6 +21,16 @@ async function hashPassword(password: string): Promise<string> {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   return hashHex;
+}
+
+/**
+ * Validate password length and return an AuthError if invalid
+ */
+function validatePasswordLength(password: string): AuthError | null {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return new AuthError(AuthErrorCode.PASSWORD_TOO_SHORT, { passwordLength: password.length });
+  }
+  return null;
 }
 
 export interface AuthResponse {
@@ -28,23 +44,24 @@ class ClientAuth {
   async register(email: string, password: string, firstName?: string, lastName?: string): Promise<AuthResponse> {
     try {
       // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
+      if (!EMAIL_REGEX.test(email)) {
         const error = new AuthError(AuthErrorCode.INVALID_EMAIL, { email });
-        return { success: false, message: error.userMessage, errorCode: error.code };
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       // Validate password length if password is provided
-      if (password && password.length > 0 && password.length < 8) {
-        const error = new AuthError(AuthErrorCode.PASSWORD_TOO_SHORT, { passwordLength: password.length });
-        return { success: false, message: error.userMessage, errorCode: error.code };
+      if (password && password.length > 0) {
+        const passwordError = validatePasswordLength(password);
+        if (passwordError) {
+          return { success: false, message: passwordError.message, errorCode: passwordError.code };
+        }
       }
 
       // Check if user already exists
       const existingUser = await clientStorage.getUserByEmail(email);
       if (existingUser) {
         const error = new AuthError(AuthErrorCode.USER_EXISTS, { email });
-        return { success: false, message: error.userMessage, errorCode: error.code };
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       // Create user with optional password
@@ -69,11 +86,11 @@ class ClientAuth {
       
       if (isStorageError(error)) {
         const authError = new AuthError(AuthErrorCode.STORAGE_ERROR);
-        return { success: false, message: authError.userMessage, errorCode: authError.code };
+        return { success: false, message: authError.message, errorCode: authError.code };
       }
       
       const authError = new AuthError(AuthErrorCode.REGISTRATION_FAILED);
-      return { success: false, message: authError.userMessage, errorCode: authError.code };
+      return { success: false, message: authError.message, errorCode: authError.code };
     }
   }
 
@@ -83,7 +100,7 @@ class ClientAuth {
       const user = await clientStorage.getUserByEmail(email);
       if (!user) {
         const error = new AuthError(AuthErrorCode.INVALID_CREDENTIALS, { email });
-        return { success: false, message: error.userMessage, errorCode: error.code };
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       // If user has no password set, allow password-less login
@@ -100,7 +117,7 @@ class ClientAuth {
       const passwordHash = await hashPassword(password);
       if (user.passwordHash !== passwordHash) {
         const error = new AuthError(AuthErrorCode.INVALID_CREDENTIALS, { email });
-        return { success: false, message: error.userMessage, errorCode: error.code };
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       // Set as current user
@@ -114,20 +131,22 @@ class ClientAuth {
       
       if (isStorageError(error)) {
         const authError = new AuthError(AuthErrorCode.STORAGE_ERROR);
-        return { success: false, message: authError.userMessage, errorCode: authError.code };
+        return { success: false, message: authError.message, errorCode: authError.code };
       }
       
       const authError = new AuthError(AuthErrorCode.LOGIN_FAILED);
-      return { success: false, message: authError.userMessage, errorCode: authError.code };
+      return { success: false, message: authError.message, errorCode: authError.code };
     }
   }
 
-  async logout(): Promise<void> {
+  async logout(): Promise<AuthResponse> {
     try {
       await clientStorage.clearCurrentUser();
+      return { success: true };
     } catch (error) {
       logError('logout', error);
-      throw new AuthError(AuthErrorCode.LOGOUT_FAILED);
+      const authError = new AuthError(AuthErrorCode.LOGOUT_FAILED);
+      return { success: false, message: authError.message, errorCode: authError.code };
     }
   }
 
@@ -161,7 +180,7 @@ class ClientAuth {
       const userId = await clientStorage.getCurrentUserId();
       if (!userId) {
         const error = new AuthError(AuthErrorCode.NOT_AUTHENTICATED);
-        return { success: false, message: error.userMessage, errorCode: error.code };
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       // Don't allow updating password through this method
@@ -170,7 +189,7 @@ class ClientAuth {
       const updatedUser = await clientStorage.updateUser(userId, safeUpdates);
       if (!updatedUser) {
         const error = new AuthError(AuthErrorCode.USER_NOT_FOUND, { userId });
-        return { success: false, message: error.userMessage, errorCode: error.code };
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       const { passwordHash: _, ...sanitizedUser } = updatedUser;
@@ -180,11 +199,11 @@ class ClientAuth {
       
       if (isStorageError(error)) {
         const authError = new AuthError(AuthErrorCode.STORAGE_ERROR);
-        return { success: false, message: authError.userMessage, errorCode: authError.code };
+        return { success: false, message: authError.message, errorCode: authError.code };
       }
       
       const authError = new AuthError(AuthErrorCode.PROFILE_UPDATE_FAILED);
-      return { success: false, message: authError.userMessage, errorCode: authError.code };
+      return { success: false, message: authError.message, errorCode: authError.code };
     }
   }
 
@@ -193,21 +212,21 @@ class ClientAuth {
       const userId = await clientStorage.getCurrentUserId();
       if (!userId) {
         const error = new AuthError(AuthErrorCode.NOT_AUTHENTICATED);
-        return { success: false, message: error.userMessage, errorCode: error.code };
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       const user = await clientStorage.getUser(userId);
       if (!user) {
         const error = new AuthError(AuthErrorCode.USER_NOT_FOUND, { userId });
-        return { success: false, message: error.userMessage, errorCode: error.code };
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       // If user has no password, allow setting one without current password
       if (!user.passwordHash) {
         // Validate new password
-        if (newPassword.length < 8) {
-          const error = new AuthError(AuthErrorCode.PASSWORD_TOO_SHORT, { passwordLength: newPassword.length });
-          return { success: false, message: error.userMessage, errorCode: error.code };
+        const passwordError = validatePasswordLength(newPassword);
+        if (passwordError) {
+          return { success: false, message: passwordError.message, errorCode: passwordError.code };
         }
 
         // Set password
@@ -215,7 +234,7 @@ class ClientAuth {
         const updatedUser = await clientStorage.updateUser(userId, { passwordHash: newHash });
         if (!updatedUser) {
           const error = new AuthError(AuthErrorCode.PASSWORD_CHANGE_FAILED);
-          return { success: false, message: error.userMessage, errorCode: error.code };
+          return { success: false, message: error.message, errorCode: error.code };
         }
 
         const { passwordHash: _, ...sanitizedUser } = updatedUser;
@@ -226,13 +245,13 @@ class ClientAuth {
       const currentHash = await hashPassword(currentPassword);
       if (user.passwordHash !== currentHash) {
         const error = new AuthError(AuthErrorCode.INVALID_PASSWORD, { userId });
-        return { success: false, message: error.userMessage, errorCode: error.code };
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       // Validate new password
-      if (newPassword.length < 8) {
-        const error = new AuthError(AuthErrorCode.PASSWORD_TOO_SHORT, { passwordLength: newPassword.length });
-        return { success: false, message: error.userMessage, errorCode: error.code };
+      const passwordError = validatePasswordLength(newPassword);
+      if (passwordError) {
+        return { success: false, message: passwordError.message, errorCode: passwordError.code };
       }
 
       // Update password
@@ -240,7 +259,7 @@ class ClientAuth {
       const updatedUser = await clientStorage.updateUser(userId, { passwordHash: newHash });
       if (!updatedUser) {
         const error = new AuthError(AuthErrorCode.PASSWORD_CHANGE_FAILED);
-        return { success: false, message: error.userMessage, errorCode: error.code };
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       const { passwordHash: _, ...sanitizedUser } = updatedUser;
@@ -250,11 +269,11 @@ class ClientAuth {
       
       if (isStorageError(error)) {
         const authError = new AuthError(AuthErrorCode.STORAGE_ERROR);
-        return { success: false, message: authError.userMessage, errorCode: authError.code };
+        return { success: false, message: authError.message, errorCode: authError.code };
       }
       
       const authError = new AuthError(AuthErrorCode.PASSWORD_CHANGE_FAILED);
-      return { success: false, message: authError.userMessage, errorCode: authError.code };
+      return { success: false, message: authError.message, errorCode: authError.code };
     }
   }
 
@@ -289,13 +308,13 @@ class ClientAuth {
       const user = await clientStorage.getUserByEmail(email);
       if (!user) {
         const error = new AuthError(AuthErrorCode.USER_NOT_FOUND, { email });
-        return { success: false, message: error.userMessage, errorCode: error.code };
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       // Verify account has no password (is password-less)
       if (user.passwordHash) {
         const error = new AuthError(AuthErrorCode.PASSWORD_REQUIRED, { email });
-        return { success: false, message: error.userMessage, errorCode: error.code };
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       // Set as current user
@@ -309,11 +328,11 @@ class ClientAuth {
       
       if (isStorageError(error)) {
         const authError = new AuthError(AuthErrorCode.STORAGE_ERROR);
-        return { success: false, message: authError.userMessage, errorCode: authError.code };
+        return { success: false, message: authError.message, errorCode: authError.code };
       }
       
       const authError = new AuthError(AuthErrorCode.LOGIN_FAILED);
-      return { success: false, message: authError.userMessage, errorCode: authError.code };
+      return { success: false, message: authError.message, errorCode: authError.code };
     }
   }
 }
