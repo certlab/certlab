@@ -10,31 +10,7 @@ import { clientAuth } from "@/lib/client-auth";
 import { useLocation } from "wouter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User as UserIcon, Info, AlertTriangle } from "lucide-react";
-import { logError, getUserFriendlyMessage, AuthErrorCode } from "@/lib/errors";
-
-/**
- * Get a user-friendly error title based on the error code
- */
-function getErrorTitle(errorCode: AuthErrorCode | undefined, defaultTitle: string): string {
-  switch (errorCode) {
-    case AuthErrorCode.INVALID_CREDENTIALS:
-      return "Invalid Credentials";
-    case AuthErrorCode.INVALID_EMAIL:
-      return "Invalid Email";
-    case AuthErrorCode.PASSWORD_TOO_SHORT:
-      return "Password Too Short";
-    case AuthErrorCode.USER_EXISTS:
-      return "Account Exists";
-    case AuthErrorCode.STORAGE_ERROR:
-      return "Storage Error";
-    case AuthErrorCode.USER_NOT_FOUND:
-      return "Account Not Found";
-    case AuthErrorCode.PASSWORD_REQUIRED:
-      return "Password Required";
-    default:
-      return defaultTitle;
-  }
-}
+import { logError, getUserFriendlyMessage, getErrorTitle } from "@/lib/errors";
 
 interface StoredUser {
   id: string;
