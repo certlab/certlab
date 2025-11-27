@@ -23,6 +23,37 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunk for React core
+          'vendor-react': ['react', 'react-dom'],
+          // Vendor chunk for UI libraries
+          'vendor-ui': [
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-alert-dialog',
+            '@radix-ui/react-avatar',
+            '@radix-ui/react-checkbox',
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-label',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-progress',
+            '@radix-ui/react-select',
+            '@radix-ui/react-separator',
+            '@radix-ui/react-slot',
+            '@radix-ui/react-switch',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-tooltip',
+          ],
+          // Vendor chunk for data/charting libraries
+          'vendor-charts': ['recharts'],
+          // Vendor chunk for other utilities
+          'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge', 'wouter'],
+        },
+      },
+    },
   },
   server: {
     port: 5000,
