@@ -91,21 +91,21 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-card shadow-sm border-b border-border sticky top-0 z-50">
+    <header className="bg-card shadow-sm border-b border-border sticky top-0 z-50 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-16 min-w-0">
           {/* Logo and Credit Balance */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 flex-shrink-0">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-xl font-semibold text-foreground tracking-tight">Cert Lab</h1>
-              {/* Token Balance Display */}
+              {/* Token Balance Display - Hidden on medium screens to save space */}
               {tokenData && currentUser && (
                 <Badge 
                   variant="secondary" 
-                  className="ml-2 px-3 py-1 cursor-pointer hover:bg-secondary/80 transition-colors"
+                  className="hidden lg:flex ml-2 px-3 py-1 cursor-pointer hover:bg-secondary/80 transition-colors"
                   onClick={() => setLocation('/app/dashboard')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -125,9 +125,9 @@ export default function Header() {
                 </Badge>
               )}
             </div>
-            {/* Tenant Switcher - Desktop only */}
+            {/* Tenant Switcher - Large screens only */}
             {!isAdminArea && (
-              <div className="hidden md:block">
+              <div className="hidden lg:block">
                 <TenantSwitcher />
               </div>
             )}
@@ -139,7 +139,7 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center">
+          <nav className="hidden md:flex items-center min-w-0 shrink">
             {isAdminArea ? (
               <div className="flex items-center space-x-4">
                 <Badge variant="secondary" className="text-xs">
@@ -310,7 +310,7 @@ export default function Header() {
           </nav>
 
           {/* User Profile & Theme Toggle */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 min-w-0 flex-shrink-0">
             {/* Desktop Theme Toggle */}
             <div className="hidden md:block">
               <ThemeToggle />
@@ -331,7 +331,7 @@ export default function Header() {
                           {getInitials(currentUser.firstName, currentUser.lastName)}
                         </span>
                       </div>
-                      <span className="hidden md:block text-foreground text-sm font-medium">
+                      <span className="hidden lg:block text-foreground text-sm font-medium max-w-[120px] truncate">
                         {getUserDisplayName(currentUser)}
                       </span>
                       <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
