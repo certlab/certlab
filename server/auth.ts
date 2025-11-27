@@ -1,3 +1,26 @@
+/**
+ * LEGACY SERVER AUTHENTICATION MODULE
+ * 
+ * ⚠️ IMPORTANT: This file is part of the legacy server-based architecture and is NOT used
+ * in the current client-only version of CertLab. The application now runs entirely in the
+ * browser using IndexedDB for storage and Web Crypto API for password hashing.
+ * 
+ * This code is preserved for potential future server-side deployment scenarios, such as:
+ * - Multi-user environments requiring centralized data
+ * - Enterprise deployments with PostgreSQL backend
+ * - Syncing data across devices
+ * 
+ * For the current client-only implementation, see:
+ * - client/src/lib/client-auth.ts (browser-based authentication)
+ * - client/src/lib/client-storage.ts (IndexedDB storage)
+ * 
+ * SECURITY NOTES FOR SERVER MODE:
+ * - Uses bcrypt for password hashing (industry standard)
+ * - Salt rounds set to 12 (provides ~300ms hash time on modern hardware)
+ * - Higher salt rounds increase security but also increase CPU usage during login/registration
+ * - Consider rate limiting login attempts in production to prevent brute-force attacks
+ */
+
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
@@ -7,8 +30,19 @@ import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 import { randomUUID } from "crypto";
 
-// Configuration constants
-const BCRYPT_SALT_ROUNDS = 10;
+/**
+ * Bcrypt salt rounds configuration.
+ * 
+ * Security trade-offs:
+ * - 10 rounds: ~100ms hash time (minimum recommended)
+ * - 12 rounds: ~300ms hash time (recommended for most applications)
+ * - 14 rounds: ~1.2s hash time (high-security applications)
+ * 
+ * 12 rounds provides a good balance between security and user experience.
+ * Increase this value if brute-force attacks become a concern, but be aware
+ * of the impact on server CPU and user login/registration times.
+ */
+const BCRYPT_SALT_ROUNDS = 12;
 
 export function getSession() {
   // Validate required environment variables
