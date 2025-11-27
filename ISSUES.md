@@ -46,16 +46,18 @@ The application allows password-less account creation and login. While convenien
 
 ---
 
-### Issue: Server-Side bcrypt Usage in Legacy Code
+### ~~Issue: Server-Side bcrypt Usage in Legacy Code~~ (RESOLVED)
 
-**File:** `server/auth.ts`
+**Status:** Resolved - Server code has been removed.
+
+**File:** ~~`server/auth.ts`~~ (deleted)
 
 **Description:**
-The server-side code uses bcrypt with salt rounds of 10, which is acceptable but could be increased. More importantly, this code is legacy and not used in the client-side version, creating confusion.
+The server-side code used bcrypt with salt rounds of 10. This code was legacy and not used in the client-side version.
 
-**Recommendation:**
-- Either remove unused server code or clearly document it as legacy
-- If server mode is planned for future, increase BCRYPT_SALT_ROUNDS to at least 12
+**Resolution:**
+- Server code including `server/auth.ts` has been completely removed
+- Client-side only uses Web Crypto API for password hashing
 
 ---
 
@@ -63,19 +65,18 @@ The server-side code uses bcrypt with salt rounds of 10, which is acceptable but
 
 ### Issue: Pre-existing TypeScript Errors
 
-**Files:** Multiple files (8 files with 19 errors as documented in copilot-instructions.md)
+**Files:** Multiple files (5 files with 17 errors - reduced after server code removal)
 
 **Description:**
-The codebase has 19 pre-existing TypeScript errors that are ignored during build because Vite's esbuild is more lenient than tsc. These include:
+The codebase has 17 pre-existing TypeScript errors that are ignored during build because Vite's esbuild is more lenient than tsc. These include:
 
 - `client/src/components/Header.tsx` (2 errors)
-- `client/src/components/StudyGroupCard.tsx` (6 errors)
+- `client/src/lib/queryClient.ts` (10 errors)
 - `client/src/pages/achievements.tsx` (1 error)
+- `client/src/pages/admin.tsx` (2 errors)
 - `client/src/pages/challenges.tsx` (3 errors)
-- `client/src/pages/study-groups.tsx` (2 errors)
-- `server/routes.ts` (1 error)
-- `server/test-checkout.ts` (1 error)
-- `server/test-polar-redirect.ts` (3 errors)
+
+*Note: Server-related errors in `server/routes.ts`, `server/test-checkout.ts`, and `server/test-polar-redirect.ts` have been eliminated by removing the server directory.*
 
 **Recommendation:**
 - Fix all TypeScript errors to ensure type safety
@@ -86,16 +87,13 @@ The codebase has 19 pre-existing TypeScript errors that are ignored during build
 
 ### Issue: Extensive Use of `any` Type
 
-**Files:** `server/storage.ts`, `client/src/lib/client-storage.ts`, `client/src/lib/queryClient.ts`
+**Files:** `client/src/lib/client-storage.ts`, `client/src/lib/queryClient.ts`
 
 **Description:**
 Many functions use `any` type, especially in storage operations. This bypasses TypeScript's type checking and can lead to runtime errors.
 
 **Examples from the codebase:**
 ```typescript
-// server/storage.ts Line 190
-let insertedCategories: any[] = existingCategories;
-
 // client/src/lib/client-storage.ts Line 43
 const newTenant: any = {...}
 ```
@@ -103,53 +101,56 @@ const newTenant: any = {...}
 **Recommendation:**
 - Replace `any` with proper types using the existing schema types
 - Use TypeScript generics where appropriate
-- Add strict typing for all API responses and database operations
+- Add strict typing for all API responses and storage operations
 
 ---
 
 ## 3. Code Organization and Architecture
 
-### Issue: Dead/Legacy Server Code
+### ~~Issue: Dead/Legacy Server Code~~ (RESOLVED)
 
-**Files:** `server/` directory
+**Status:** Resolved - The `server/` directory has been removed.
+
+**Files:** ~~`server/` directory~~ (deleted)
 
 **Description:**
-The application has migrated to a client-side only architecture, but the server directory still contains significant amounts of code including:
+The application has migrated to a client-side only architecture. The server directory previously contained:
 - `server/storage.ts` - Full database storage implementation (3500+ lines)
 - `server/routes.ts` - Express routes
 - `server/auth.ts` - Server-side authentication
 - `server/polar.ts` - Payment integration (1000+ lines)
 - `server/openai-service.ts` - AI lecture generation
 
-This creates confusion about what code is active and increases maintenance burden.
-
-**Recommendation:**
-- Move legacy server code to a separate branch or archive directory
-- Add clear documentation about what is active vs legacy
-- Consider using a monorepo structure if both client and server modes are supported
+**Resolution:**
+- Server code has been completely removed from the repository
+- `tsconfig.json` has been updated to exclude server from includes
+- `drizzle.config.ts` has been removed (database config for legacy server)
 
 ---
 
-### Issue: Duplicate Code Between Client and Server Storage
+### ~~Issue: Duplicate Code Between Client and Server Storage~~ (RESOLVED)
 
-**Files:** `server/storage.ts`, `client/src/lib/client-storage.ts`
+**Status:** Resolved - Server storage code has been removed.
+
+**Files:** ~~`server/storage.ts`~~, `client/src/lib/client-storage.ts`
 
 **Description:**
-There's significant code duplication between the server storage implementation (~3500 lines) and the client storage implementation (~880 lines). Both implement similar interfaces but for different backends.
+There was significant code duplication between the server storage implementation (~3500 lines) and the client storage implementation (~880 lines). Both implemented similar interfaces but for different backends.
 
-**Recommendation:**
-- Create a shared interface file for storage operations
-- Use the adapter pattern to abstract storage implementations
-- Consider generating client storage from server storage interface
+**Resolution:**
+- Server storage code has been removed
+- Only client-side IndexedDB storage remains in `client/src/lib/client-storage.ts`
 
 ---
 
 ### Issue: Large Component Files
 
-**Files:** `client/src/components/QuizInterface.tsx` (755 lines), `server/storage.ts` (3592 lines)
+**Files:** `client/src/components/QuizInterface.tsx` (755 lines)
 
 **Description:**
 Some files are excessively long, making them difficult to maintain and test. QuizInterface.tsx contains multiple concerns including state management, UI rendering, and quiz logic.
+
+*Note: `server/storage.ts` (3592 lines) has been removed with the server code cleanup.*
 
 **Recommendation:**
 - Split QuizInterface into smaller components (QuestionDisplay, QuestionNavigator, QuizTimer)
@@ -312,7 +313,7 @@ The codebase has no test files or test configuration. There's no `*.test.ts`, `*
 **Files:** Various
 
 **Description:**
-Some files have excellent documentation (like the header in `server/polar.ts`), while others have minimal or no comments. Critical algorithms lack explanation.
+Some files have excellent documentation, while others have minimal or no comments. Critical algorithms lack explanation.
 
 **Recommendation:**
 - Add JSDoc comments to all public functions
@@ -373,16 +374,16 @@ The package.json contains both server-side dependencies (express, passport, bcry
 **Description:**
 Several dependencies appear to be unused or only used in legacy server code:
 - `openai` - AI features removed
-- `bcrypt` - Server auth not used
-- `express`, `express-session` - Server not used
-- `passport`, `passport-local` - Server auth not used
-- `connect-pg-simple` - Database sessions not used
-- `drizzle-orm`, `@neondatabase/serverless` - Database not used client-side
+- `bcrypt` - Server auth removed
+- `express`, `express-session` - Server removed
+- `passport`, `passport-local` - Server auth removed
+- `connect-pg-simple` - Database sessions removed
+
+*Note: `drizzle-orm` and `drizzle-zod` are still required for TypeScript type definitions in `shared/schema.ts`, even though the database functionality is not used.*
 
 **Recommendation:**
-- Remove unused dependencies
-- Document which dependencies are for which build target
-- Use bundler tree-shaking analysis to identify dead code
+- Remove unused server dependencies
+- Consider auditing dependencies for further cleanup
 
 ---
 
@@ -442,10 +443,12 @@ Loading states are implemented inconsistently across the application. Some use s
 
 ### Issue: Missing Environment Variable Validation
 
-**Files:** `vite.config.ts`, `drizzle.config.ts`
+**Files:** `vite.config.ts`
 
 **Description:**
-Environment variables are accessed without proper validation or defaults. The drizzle.config.ts throws if DATABASE_URL is missing, but other configurations silently fail.
+Environment variables are accessed without proper validation or defaults.
+
+*Note: `drizzle.config.ts` has been removed as part of the server code cleanup.*
 
 **Recommendation:**
 - Use a schema validation library like zod for env vars
@@ -471,18 +474,19 @@ The build script only runs `vite build`, which uses esbuild and doesn't enforce 
 
 ## 12. Database Schema and Data
 
-### Issue: Hardcoded Question Data in Storage
+### ~~Issue: Hardcoded Question Data in Storage~~ (RESOLVED)
 
-**File:** `server/storage.ts`
+**Status:** Resolved - Server storage code has been removed.
+
+**File:** ~~`server/storage.ts`~~ (deleted)
 
 **Description:**
-The storage.ts file contains thousands of lines of hardcoded question data (Lines 315-1290). This makes the file difficult to maintain and increases build size.
+The server storage.ts file previously contained thousands of lines of hardcoded question data (Lines 315-1290). This has been removed with the server code cleanup.
 
-**Recommendation:**
-- Move seed data to separate JSON files
-- Implement a proper seeding mechanism
-- Use a script to generate and validate question data
-- Consider using a headless CMS for content management
+**Resolution:**
+- Server code including hardcoded question data has been removed
+- Client-side uses `client/src/lib/seed-data.ts` for initial data seeding
+- Questions are stored in IndexedDB on the client-side
 
 ---
 
@@ -612,25 +616,30 @@ The project lacks ESLint configuration for consistent code style. While TypeScri
 
 This code review identified 35+ issues across 15 categories:
 
-| Category | Issues | Priority |
-|----------|--------|----------|
-| Security | 3 | High |
-| TypeScript | 2 | High |
-| Code Organization | 3 | Medium |
-| Performance | 4 | Medium |
-| Accessibility | 2 | Medium |
-| Error Handling | 3 | Medium |
-| Testing | 1 | High |
-| Documentation | 2 | Low |
-| Dependencies | 3 | Medium |
-| UI/UX | 3 | Low |
-| Build/Deploy | 2 | Medium |
-| Database | 2 | Medium |
-| API Design | 2 | Low |
-| State Management | 2 | Low |
-| Scripts/Tooling | 2 | Low |
+| Category | Issues | Priority | Status |
+|----------|--------|----------|--------|
+| Security | 3 (1 resolved) | High | Partially resolved |
+| TypeScript | 2 | High | |
+| Code Organization | 3 (2 resolved) | Medium | Mostly resolved |
+| Performance | 4 | Medium | |
+| Accessibility | 2 | Medium | |
+| Error Handling | 3 | Medium | |
+| Testing | 1 | High | |
+| Documentation | 2 | Low | |
+| Dependencies | 3 | Medium | |
+| UI/UX | 3 | Low | |
+| Build/Deploy | 2 | Medium | |
+| Database | 2 (1 resolved) | Medium | Partially resolved |
+| API Design | 2 | Low | |
+| State Management | 2 | Low | |
+| Scripts/Tooling | 2 | Low | |
 
 > **Note:** See [Section 16. User Feedback](#16-user-feedback) for additional issues reported by users.
+
+**Recent Changes:**
+- Legacy server code (`server/` directory) has been removed
+- TypeScript errors reduced from 22 to 17 (5 server-related errors eliminated)
+- `drizzle.config.ts` removed (database config for legacy server)
 
 **Priority Recommendations:**
 
@@ -642,7 +651,7 @@ This code review identified 35+ issues across 15 categories:
 2. **Short-term (Performance/UX):**
    - Reduce bundle size
    - Add error boundaries
-   - Clean up legacy code
+   - ~~Clean up legacy code~~ (DONE)
 
 3. **Medium-term (Maintainability):**
    - Add linting and formatting
@@ -740,24 +749,29 @@ The Default Organization has categories (CISM, CISSP), but custom organizations 
 
 This code review identified 35+ issues across 15 categories, plus 4 additional issues from user feedback:
 
-| Category | Issues | Priority |
-|----------|--------|----------|
-| Security | 3 | High |
-| TypeScript | 2 | High |
-| Code Organization | 3 | Medium |
-| Performance | 4 | Medium |
-| Accessibility | 2 | Medium |
-| Error Handling | 3 | Medium |
-| Testing | 1 | High |
-| Documentation | 2 | Low |
-| Dependencies | 3 | Medium |
-| UI/UX | 3 | Low |
-| Build/Deploy | 2 | Medium |
-| Database | 2 | Medium |
-| API Design | 2 | Low |
-| State Management | 2 | Low |
-| Scripts/Tooling | 2 | Low |
-| User Feedback | 4 | Mixed |
+| Category | Issues | Priority | Status |
+|----------|--------|----------|--------|
+| Security | 3 (1 resolved) | High | Partially resolved |
+| TypeScript | 2 | High | |
+| Code Organization | 3 (2 resolved) | Medium | Mostly resolved |
+| Performance | 4 | Medium | |
+| Accessibility | 2 | Medium | |
+| Error Handling | 3 | Medium | |
+| Testing | 1 | High | |
+| Documentation | 2 | Low | |
+| Dependencies | 3 | Medium | |
+| UI/UX | 3 | Low | |
+| Build/Deploy | 2 | Medium | |
+| Database | 2 (1 resolved) | Medium | Partially resolved |
+| API Design | 2 | Low | |
+| State Management | 2 | Low | |
+| Scripts/Tooling | 2 | Low | |
+| User Feedback | 4 | Mixed | |
+
+**Recent Changes:**
+- Legacy server code (`server/` directory) has been removed
+- TypeScript errors reduced from 22 to 17 (5 server-related errors eliminated)
+- `drizzle.config.ts` removed (database config for legacy server)
 
 **Priority Recommendations:**
 
@@ -769,7 +783,7 @@ This code review identified 35+ issues across 15 categories, plus 4 additional i
 2. **Short-term (Performance/UX):**
    - Reduce bundle size
    - Add error boundaries
-   - Clean up legacy code
+   - ~~Clean up legacy code~~ (DONE)
    - Fix Quick Practice certification selection (User Feedback)
    - Add category management for organizations (User Feedback)
 
@@ -788,4 +802,4 @@ This code review identified 35+ issues across 15 categories, plus 4 additional i
 ---
 
 *Generated: Code Review for CertLab Repository*
-*Updated: User Feedback Added*
+*Updated: User Feedback Added, Legacy Server Code Removed*
