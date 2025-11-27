@@ -10,6 +10,12 @@ import { indexedDBService, STORES } from './indexeddb';
 // Session timeout for password-less accounts (24 hours in milliseconds)
 const PASSWORDLESS_SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000;
 
+// Session info structure for type safety
+interface SessionInfo {
+  loginAt: number;
+  isPasswordless: boolean;
+}
+
 // Simple client-side password hashing (NOT cryptographically secure, but sufficient for local storage)
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -20,7 +26,7 @@ async function hashPassword(password: string): Promise<string> {
   return hashHex;
 }
 
-// Audit logging for security events
+// Audit logging for security events (console-based for client-side app)
 function logSecurityEvent(event: string, details: Record<string, unknown>): void {
   const timestamp = new Date().toISOString();
   console.info(`[SECURITY AUDIT] ${timestamp} - ${event}`, {
@@ -39,23 +45,24 @@ export interface AuthResponse {
 class ClientAuth {
   // Session management for password-less accounts
   private async setSessionTimestamp(isPasswordless: boolean): Promise<void> {
+    const sessionInfo: SessionInfo = {
+      loginAt: Date.now(),
+      isPasswordless,
+    };
     await indexedDBService.put(STORES.settings, {
       key: 'sessionInfo',
-      value: JSON.stringify({
-        loginAt: Date.now(),
-        isPasswordless,
-      }),
+      value: JSON.stringify(sessionInfo),
     });
   }
 
-  private async getSessionInfo(): Promise<{ loginAt: number; isPasswordless: boolean } | null> {
+  private async getSessionInfo(): Promise<SessionInfo | null> {
     const setting = await indexedDBService.get<{ key: string; value: string }>(
       STORES.settings,
       'sessionInfo'
     );
     if (!setting?.value) return null;
     try {
-      return JSON.parse(setting.value);
+      return JSON.parse(setting.value) as SessionInfo;
     } catch {
       return null;
     }
@@ -63,6 +70,15 @@ class ClientAuth {
 
   private async clearSessionInfo(): Promise<void> {
     await indexedDBService.delete(STORES.settings, 'sessionInfo');
+  }
+
+  // Helper method to log password-less login events
+  private logPasswordlessLogin(user: User): void {
+    logSecurityEvent('PASSWORDLESS_LOGIN', {
+      userId: user.id,
+      email: user.email,
+      sessionTimeoutMs: PASSWORDLESS_SESSION_TIMEOUT_MS,
+    });
   }
 
   // Check if password-less session has expired
@@ -161,11 +177,7 @@ class ClientAuth {
         await this.setSessionTimestamp(true);
 
         // Log password-less login
-        logSecurityEvent('PASSWORDLESS_LOGIN', {
-          userId: user.id,
-          email: user.email,
-          sessionTimeoutMs: PASSWORDLESS_SESSION_TIMEOUT_MS,
-        });
+        this.logPasswordlessLogin(user);
 
         // Return without password hash
         const { passwordHash: _, ...sanitizedUser } = user;
@@ -403,11 +415,7 @@ class ClientAuth {
       await this.setSessionTimestamp(true);
 
       // Log password-less login
-      logSecurityEvent('PASSWORDLESS_LOGIN', {
-        userId: user.id,
-        email: user.email,
-        sessionTimeoutMs: PASSWORDLESS_SESSION_TIMEOUT_MS,
-      });
+      this.logPasswordlessLogin(user);
 
       // Return without password hash
       const { passwordHash: _, ...sanitizedUser } = user;
