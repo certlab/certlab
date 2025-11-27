@@ -20,24 +20,33 @@ export function QuestionNavigator({ questions, state, onNavigate }: QuestionNavi
 
   return (
     <Card className="shadow-lg border-0 p-3 sm:p-4 bg-card">
-      <h4 className="font-medium text-foreground mb-3 text-sm sm:text-base">Question Navigator</h4>
-      <div className="grid grid-cols-8 sm:grid-cols-10 gap-1.5 sm:gap-2">
+      <h4 className="font-medium text-foreground mb-3 text-sm sm:text-base" id="question-navigator-heading">Question Navigator</h4>
+      <div 
+        className="grid grid-cols-8 sm:grid-cols-10 gap-1.5 sm:gap-2"
+        role="navigation"
+        aria-labelledby="question-navigator-heading"
+      >
         {questions.map((_, index) => {
           const status = getQuestionStatus(index);
           let className = "quiz-nav-button ";
+          let statusLabel = "";
           
           switch (status) {
             case 'current':
               className += "quiz-nav-current";
+              statusLabel = "current question";
               break;
             case 'answered':
               className += "quiz-nav-answered";
+              statusLabel = "answered";
               break;
             case 'flagged':
               className += "quiz-nav-flagged";
+              statusLabel = "flagged for review";
               break;
             default:
               className += "quiz-nav-unanswered";
+              statusLabel = "not answered";
           }
           
           return (
@@ -45,6 +54,8 @@ export function QuestionNavigator({ questions, state, onNavigate }: QuestionNavi
               key={index}
               onClick={() => onNavigate(index)}
               className={className}
+              aria-label={`Go to question ${index + 1}, ${statusLabel}`}
+              aria-current={status === 'current' ? 'step' : undefined}
             >
               {index + 1}
             </button>

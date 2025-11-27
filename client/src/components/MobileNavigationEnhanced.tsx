@@ -171,6 +171,7 @@ export default function MobileNavigationEnhanced() {
                 size="sm"
                 onClick={() => setIsOpen(false)}
                 className="h-8 w-8 p-0"
+                aria-label="Close navigation menu"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -201,12 +202,13 @@ export default function MobileNavigationEnhanced() {
           {/* Search */}
           <div className="p-4 border-b">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 placeholder="Search navigation..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 h-10"
+                aria-label="Search navigation"
               />
             </div>
           </div>
@@ -225,6 +227,8 @@ export default function MobileNavigationEnhanced() {
                       size="sm"
                       onClick={() => toggleSection(section.id)}
                       className="h-6 w-6 p-0"
+                      aria-label={`${activeSection === section.id ? 'Collapse' : 'Expand'} ${section.title}`}
+                      aria-expanded={activeSection === section.id}
                     >
                       <ChevronRight 
                         className={`w-3 h-3 transition-transform ${

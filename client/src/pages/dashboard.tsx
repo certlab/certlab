@@ -328,12 +328,21 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 {completedQuizzes.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-3" role="list" aria-label="Recent completed quizzes">
                     {completedQuizzes.map((quiz) => (
                       <div 
                         key={quiz.id} 
                         className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
                         onClick={() => setLocation(`/app/results/${quiz.id}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setLocation(`/app/results/${quiz.id}`);
+                          }
+                        }}
+                        role="listitem"
+                        tabIndex={0}
+                        aria-label={`${quiz.title}, ${formatDate(quiz.completedAt!)}, Score: ${quiz.score ? `${Math.round(quiz.score)}%` : 'Not available'}, ${quiz.questionCount} questions`}
                       >
                         <div className="flex-1">
                           <p className="font-medium text-sm">{quiz.title}</p>

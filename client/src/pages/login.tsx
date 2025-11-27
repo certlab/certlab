@@ -10,6 +10,7 @@ import { clientAuth } from "@/lib/client-auth";
 import { useLocation } from "wouter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User as UserIcon, Info, AlertTriangle } from "lucide-react";
+import { logError, getUserFriendlyMessage, getErrorTitle } from "@/lib/errors";
 
 interface StoredUser {
   id: string;
@@ -41,7 +42,7 @@ export default function Login() {
         const users = await clientAuth.getAllUsers();
         setAvailableAccounts(users);
       } catch (error) {
-        console.error('Error loading accounts:', error);
+        logError('loadAccounts', error, { component: 'Login' });
       }
     };
     loadAccounts();
@@ -90,15 +91,16 @@ export default function Login() {
         setLocation("/app");
       } else {
         toast({
-          title: "Login Failed",
+          title: getErrorTitle(result.errorCode, "Login Failed"),
           description: result.message || "Unable to login",
           variant: "destructive",
         });
       }
     } catch (error) {
+      logError('handleLogin', error, { email: loginEmail, hasSelectedAccount: !!selectedAccount });
       toast({
         title: "Login Failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: getUserFriendlyMessage(error),
         variant: "destructive",
       });
     } finally {
@@ -125,15 +127,16 @@ export default function Login() {
         setLocation("/app");
       } else {
         toast({
-          title: "Registration Failed",
+          title: getErrorTitle(result.errorCode, "Registration Failed"),
           description: result.message || "Unable to create account",
           variant: "destructive",
         });
       }
     } catch (error) {
+      logError('handleRegister', error, { email: registerEmail });
       toast({
         title: "Registration Failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: getUserFriendlyMessage(error),
         variant: "destructive",
       });
     } finally {

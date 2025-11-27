@@ -34,6 +34,9 @@ import type {
   InsertChallenge,
   InsertStudyGroup,
   InsertPracticeTest,
+  Lecture,
+  QuizAnswer,
+  WebhookDetails,
 } from './schema';
 
 /**
@@ -255,13 +258,13 @@ export interface IStorageAdapter {
     topics: string[],
     categoryId: number,
     tenantId?: number
-  ): Promise<any>;
+  ): Promise<Lecture>;
   
   /** Get all lectures for a user */
-  getUserLectures(userId: string, tenantId?: number): Promise<any[]>;
+  getUserLectures(userId: string, tenantId?: number): Promise<Lecture[]>;
   
   /** Get a specific lecture by ID */
-  getLecture(id: number): Promise<any>;
+  getLecture(id: number): Promise<Lecture | undefined>;
 
   // ==========================================
   // Mastery Scores
@@ -404,7 +407,7 @@ export interface IServerStorage extends IStorageAdapter {
   // ==========================================
   
   /** Create a lecture from quiz results with missed topics */
-  createLectureFromQuiz(userId: string, quizId: number, title: string, content: string, topics: string[], categoryId: number): Promise<any>;
+  createLectureFromQuiz(userId: string, quizId: number, title: string, content: string, topics: string[], categoryId: number): Promise<Lecture>;
 
   // ==========================================
   // Badges (Extended)
@@ -452,7 +455,7 @@ export interface IServerStorage extends IStorageAdapter {
   startChallengeAttempt(userId: string, challengeId: number): Promise<ChallengeAttempt>;
   
   /** Complete a challenge attempt */
-  completeChallengeAttempt(attemptId: number, score: number, answers: any[], timeSpent: number): Promise<ChallengeAttempt>;
+  completeChallengeAttempt(attemptId: number, score: number, answers: QuizAnswer[], timeSpent: number): Promise<ChallengeAttempt>;
   
   /** Get challenge attempts for a user */
   getUserChallengeAttempts(userId: string): Promise<ChallengeAttempt[]>;
@@ -518,7 +521,7 @@ export interface IServerStorage extends IStorageAdapter {
   checkWebhookProcessed(eventId: string): Promise<boolean>;
   
   /** Mark a webhook event as processed */
-  markWebhookProcessed(eventId: string, details: any): Promise<void>;
+  markWebhookProcessed(eventId: string, details: WebhookDetails): Promise<void>;
 }
 
 /**
