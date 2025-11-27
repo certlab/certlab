@@ -79,10 +79,13 @@ async function pbkdf2Hash(password: string, salt: Uint8Array, iterations: number
   );
   
   // Derive bits using PBKDF2
+  // Note: Create a standalone ArrayBuffer from the Uint8Array to satisfy
+  // TypeScript 5.9+ stricter typing (Uint8Array.buffer is ArrayBufferLike, not ArrayBuffer)
+  const saltBuffer = new Uint8Array(salt).buffer;
   const derivedBits = await crypto.subtle.deriveBits(
     {
       name: 'PBKDF2',
-      salt: salt.buffer as ArrayBuffer,
+      salt: saltBuffer,
       iterations: iterations,
       hash: 'SHA-256',
     },
