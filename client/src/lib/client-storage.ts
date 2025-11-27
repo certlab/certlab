@@ -1,21 +1,32 @@
 /**
  * Client-side storage service
- * Mimics the server storage interface but uses IndexedDB instead of PostgreSQL
+ * 
+ * Implements the IClientStorage interface using IndexedDB as the storage backend.
+ * This follows the adapter pattern defined in the shared storage-interface.ts,
+ * allowing the client to use the same data access patterns as the server
+ * while using browser-native storage instead of PostgreSQL.
  */
 
 import { indexedDBService, STORES } from './indexeddb';
 import type {
   Tenant, User, Category, Subcategory, Question, Quiz, UserProgress,
   MasteryScore, Badge, UserBadge, UserGameStats, Challenge, ChallengeAttempt,
-  StudyGroup, StudyGroupMember, PracticeTest, PracticeTestAttempt
+  StudyGroup, StudyGroupMember, PracticeTest, PracticeTestAttempt,
+  InsertCategory, InsertSubcategory, InsertQuestion, InsertUserProgress
 } from '@shared/schema';
+import type {
+  IClientStorage,
+  UserStatsResult,
+  UserGoals,
+  CertificationMasteryScore
+} from '@shared/storage-interface';
 
 // Generate unique IDs using crypto.randomUUID for better uniqueness
 function generateId(): string {
   return crypto.randomUUID();
 }
 
-class ClientStorage {
+class ClientStorage implements IClientStorage {
   // Settings
   async getCurrentUserId(): Promise<string | null> {
     const setting = await indexedDBService.get<{ key: string; value: string }>(STORES.settings, 'currentUserId');
@@ -416,14 +427,7 @@ class ClientStorage {
     }
   }
 
-  async getUserStats(userId: string, tenantId: number = 1): Promise<{
-    totalQuizzes: number;
-    averageScore: number;
-    studyStreak: number;
-    certifications: number;
-    passingRate: number;
-    masteryScore: number;
-  }> {
+  async getUserStats(userId: string, tenantId: number = 1): Promise<UserStatsResult> {
     const quizzes = await this.getUserQuizzes(userId, tenantId);
     const completedQuizzes = quizzes.filter(q => q.completedAt);
     
@@ -554,7 +558,7 @@ class ClientStorage {
     return Math.round(totalAverage / scores.length);
   }
 
-  async getCertificationMasteryScores(userId: string, tenantId?: number): Promise<{ categoryId: number; masteryScore: number }[]> {
+  async getCertificationMasteryScores(userId: string, tenantId?: number): Promise<CertificationMasteryScore[]> {
     const scores = await this.getUserMasteryScores(userId, tenantId);
     const categoryScores = new Map<number, { total: number; count: number }>();
     
