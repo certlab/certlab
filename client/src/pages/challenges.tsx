@@ -57,12 +57,27 @@ export default function ChallengesPage() {
     mutationFn: async (challengeId: number) => {
       // Using deprecated apiRequest - this returns a mock response
       // TODO: Replace with clientStorage.createChallengeAttempt when implementing challenges
-      const response = await apiRequest({
+      await apiRequest({
         endpoint: `/api/challenge/${challengeId}/start`,
         method: "POST",
         data: { userId: currentUser?.id },
       });
-      return response.json();
+      // Return a mock ChallengeAttempt since the API is deprecated
+      return {
+        id: 0,
+        tenantId: 1,
+        userId: currentUser?.id ?? '',
+        quizId: null,
+        challengeId,
+        startedAt: new Date(),
+        completedAt: null,
+        score: null,
+        answers: null,
+        pointsEarned: 0,
+        timeSpent: null,
+        isCompleted: false,
+        isPassed: false,
+      } as ChallengeAttempt;
     },
     onSuccess: (attempt: ChallengeAttempt) => {
       // Redirect to quiz interface with challenge mode
