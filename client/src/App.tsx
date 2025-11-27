@@ -9,6 +9,7 @@ import { AchievementNotification } from "@/components/AchievementNotification";
 import Header from "@/components/Header";
 import BreadcrumbNavigation from "@/components/BreadcrumbNavigation";
 import PageLoader from "@/components/PageLoader";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 // Landing page is eagerly loaded for fast first paint (initial route)
 import Landing from "@/pages/landing";
 import { lazy, Suspense, useEffect } from "react";
@@ -66,39 +67,43 @@ function Router() {
             <BreadcrumbNavigation />
           </div>
           <main>
-            <Suspense fallback={<PageLoader />}>
-              <Switch>
-                <Route path="/" component={Landing} />
-                <Route path="/app" component={Dashboard} />
-                <Route path="/app/dashboard" component={Dashboard} />
-                <Route path="/app/profile" component={ProfilePage} />
-                <Route path="/app/quiz/:id" component={Quiz} />
-                <Route path="/app/results/:id" component={Results} />
-                <Route path="/app/review/:id" component={Review} />
-                <Route path="/app/lecture/:id" component={Lecture} />
-                <Route path="/app/achievements" component={Achievements} />
-                <Route path="/app/accessibility" component={Accessibility} />
-                <Route path="/app/practice-tests" component={PracticeTests} />
-                <Route path="/app/challenges" component={ChallengesPage} />
-                {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
-                <Route path="/app/credits" component={CreditsPage} />
-                <Route path="/app/data-import" component={DataImportPage} />
-                {isAdmin && <Route path="/admin" component={AdminDashboard} />}
-                <Route component={NotFound} />
-              </Switch>
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Switch>
+                  <Route path="/" component={Landing} />
+                  <Route path="/app" component={Dashboard} />
+                  <Route path="/app/dashboard" component={Dashboard} />
+                  <Route path="/app/profile" component={ProfilePage} />
+                  <Route path="/app/quiz/:id" component={Quiz} />
+                  <Route path="/app/results/:id" component={Results} />
+                  <Route path="/app/review/:id" component={Review} />
+                  <Route path="/app/lecture/:id" component={Lecture} />
+                  <Route path="/app/achievements" component={Achievements} />
+                  <Route path="/app/accessibility" component={Accessibility} />
+                  <Route path="/app/practice-tests" component={PracticeTests} />
+                  <Route path="/app/challenges" component={ChallengesPage} />
+                  {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
+                  <Route path="/app/credits" component={CreditsPage} />
+                  <Route path="/app/data-import" component={DataImportPage} />
+                  {isAdmin && <Route path="/admin" component={AdminDashboard} />}
+                  <Route component={NotFound} />
+                </Switch>
+              </Suspense>
+            </ErrorBoundary>
           </main>
         </>
       ) : (
-        <Suspense fallback={<PageLoader />}>
-          <Switch>
-            {/* Landing page is always available at root */}
-            <Route path="/" component={Landing} />
-            {/* Redirect non-authenticated users trying to access protected routes */}
-            <Route path="/app/*" component={Landing} />
-            <Route component={NotFound} />
-          </Switch>
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+            <Switch>
+              {/* Landing page is always available at root */}
+              <Route path="/" component={Landing} />
+              {/* Redirect non-authenticated users trying to access protected routes */}
+              <Route path="/app/*" component={Landing} />
+              <Route component={NotFound} />
+            </Switch>
+          </Suspense>
+        </ErrorBoundary>
       )}
     </div>
   );
