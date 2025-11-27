@@ -10,6 +10,7 @@ import { clientAuth } from "@/lib/client-auth";
 import { useLocation } from "wouter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User as UserIcon, Info, AlertTriangle } from "lucide-react";
+import { logError, getUserFriendlyMessage, AuthErrorCode } from "@/lib/errors";
 
 interface StoredUser {
   id: string;
@@ -41,7 +42,7 @@ export default function Login() {
         const users = await clientAuth.getAllUsers();
         setAvailableAccounts(users);
       } catch (error) {
-        console.error('Error loading accounts:', error);
+        logError('loadAccounts', error, { component: 'Login' });
       }
     };
     loadAccounts();
@@ -89,16 +90,24 @@ export default function Login() {
         await refreshUser();
         setLocation("/app");
       } else {
+        // Use specific message from auth response
+        const title = result.errorCode === AuthErrorCode.INVALID_CREDENTIALS
+          ? "Invalid Credentials"
+          : result.errorCode === AuthErrorCode.STORAGE_ERROR
+            ? "Storage Error"
+            : "Login Failed";
+        
         toast({
-          title: "Login Failed",
+          title,
           description: result.message || "Unable to login",
           variant: "destructive",
         });
       }
     } catch (error) {
+      logError('handleLogin', error, { email: loginEmail, hasSelectedAccount: !!selectedAccount });
       toast({
         title: "Login Failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: getUserFriendlyMessage(error),
         variant: "destructive",
       });
     } finally {
@@ -124,16 +133,28 @@ export default function Login() {
         // Use relative navigation for GitHub Pages compatibility
         setLocation("/app");
       } else {
+        // Use specific title based on error code
+        const title = result.errorCode === AuthErrorCode.INVALID_EMAIL
+          ? "Invalid Email"
+          : result.errorCode === AuthErrorCode.PASSWORD_TOO_SHORT
+            ? "Password Too Short"
+            : result.errorCode === AuthErrorCode.USER_EXISTS
+              ? "Account Exists"
+              : result.errorCode === AuthErrorCode.STORAGE_ERROR
+                ? "Storage Error"
+                : "Registration Failed";
+        
         toast({
-          title: "Registration Failed",
+          title,
           description: result.message || "Unable to create account",
           variant: "destructive",
         });
       }
     } catch (error) {
+      logError('handleRegister', error, { email: registerEmail });
       toast({
         title: "Registration Failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: getUserFriendlyMessage(error),
         variant: "destructive",
       });
     } finally {
