@@ -74,7 +74,6 @@ export function QuestionDisplay({ question, state, onAnswerChange }: QuestionDis
               : 'max-h-0 opacity-0 mt-0'
           }`}
           aria-hidden={!state.showFeedback}
-          {...(!state.showFeedback && { inert: '' })}
         >
           <div className={`p-3 sm:p-4 rounded-lg border-2 ${
             state.isCorrect 

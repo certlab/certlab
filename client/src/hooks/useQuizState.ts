@@ -26,6 +26,8 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
 
   // Ref to hold the submit function to avoid stale closure in timer effect
   const submitQuizRef = useRef<() => void>(() => {});
+  // Ref to track timer to avoid recreating interval every second
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const submitQuizMutation = useMutation({
     mutationFn: async (quizAnswers: { questionId: number; answer: number }[]) => {
@@ -53,38 +55,36 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
     }
   }, [quiz]);
 
-  // Timer countdown
+  // Timer countdown (efficient: only create interval once)
   useEffect(() => {
-    if (timeRemaining === null || timeRemaining <= 0) return;
-
-    const timer = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev === null || prev <= 1) {
-          // Time's up - auto submit using ref to avoid stale closure
-          submitQuizRef.current();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeRemaining]);
-
-  // Load saved answer when question changes
-  useEffect(() => {
-    const currentQuestion = questions[state.currentQuestionIndex];
-    if (currentQuestion) {
-      const savedAnswer = state.answers[currentQuestion.id];
-      dispatch({ 
-        type: 'CHANGE_QUESTION', 
-        payload: { 
-          index: state.currentQuestionIndex,
-          savedAnswer 
-        } 
-      });
+    if (timeRemaining === null || timeRemaining <= 0) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
     }
-  }, [state.currentQuestionIndex, questions]);
+
+    if (!timerRef.current) {
+      timerRef.current = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev === null || prev <= 1) {
+            // Time's up - auto submit using ref to avoid stale closure
+            submitQuizRef.current();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [timeRemaining]);
 
   const currentQuestion = questions[state.currentQuestionIndex];
   const progress = questions.length > 0 ? ((state.currentQuestionIndex + 1) / questions.length) * 100 : 0;
@@ -112,6 +112,29 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
       });
     }
   }, [state.selectedAnswer, currentQuestion]);
+
+  const handleSubmitQuiz = useCallback(() => {
+    // Check if there are flagged questions
+    if (state.flaggedQuestions.size > 0 && !state.isReviewingFlagged) {
+      setShowFlaggedQuestionsDialog(true);
+    } else {
+      // Submit the quiz directly
+      const quizAnswers = questions.map(question => {
+        const answer = state.answers[question.id];
+        return {
+          questionId: question.id,
+          answer: answer !== undefined ? answer : 0,
+        };
+      });
+
+      submitQuizMutation.mutate(quizAnswers);
+    }
+  }, [state.flaggedQuestions, state.isReviewingFlagged, state.answers, questions, submitQuizMutation]);
+
+  // Keep the ref updated with the latest handleSubmitQuiz function
+  useEffect(() => {
+    submitQuizRef.current = handleSubmitQuiz;
+  }, [handleSubmitQuiz]);
 
   const handleNextQuestion = useCallback(() => {
     if (state.isReviewingFlagged) {
@@ -154,7 +177,7 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
         handleSubmitQuiz();
       }
     }
-  }, [state, questions, submitQuizMutation]);
+  }, [state, questions, submitQuizMutation, handleSubmitQuiz]);
 
   const handlePreviousQuestion = useCallback(() => {
     if (state.isReviewingFlagged) {
@@ -194,29 +217,6 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
       });
     }
   }, [currentQuestion]);
-
-  const handleSubmitQuiz = useCallback(() => {
-    // Check if there are flagged questions
-    if (state.flaggedQuestions.size > 0 && !state.isReviewingFlagged) {
-      setShowFlaggedQuestionsDialog(true);
-    } else {
-      // Submit the quiz directly
-      const quizAnswers = questions.map(question => {
-        const answer = state.answers[question.id];
-        return {
-          questionId: question.id,
-          answer: answer !== undefined ? answer : 0,
-        };
-      });
-
-      submitQuizMutation.mutate(quizAnswers);
-    }
-  }, [state, questions, submitQuizMutation]);
-
-  // Keep the ref updated with the latest handleSubmitQuiz function
-  useEffect(() => {
-    submitQuizRef.current = handleSubmitQuiz;
-  }, [handleSubmitQuiz]);
 
   const handleReviewFlaggedQuestions = useCallback(() => {
     setShowFlaggedQuestionsDialog(false);

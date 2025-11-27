@@ -8,12 +8,10 @@ interface QuizHeaderProps {
   questions: { id: number }[];
   state: QuizState;
   timeRemaining: number | null;
+  progress: number;
 }
 
-export function QuizHeader({ quiz, questions, state, timeRemaining }: QuizHeaderProps) {
-  const progress = questions.length > 0 
-    ? ((state.currentQuestionIndex + 1) / questions.length) * 100 
-    : 0;
+export function QuizHeader({ quiz, questions, state, timeRemaining, progress }: QuizHeaderProps) {
 
   return (
     <div className="p-4 sm:p-6 border-b border-border/50 gradient-mesh">

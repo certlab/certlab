@@ -38,6 +38,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
     showFlaggedQuestionsDialog,
     setShowFlaggedQuestionsDialog,
     currentQuestion,
+    progress,
     submitQuizMutation,
     handleAnswerChange,
     handleNextQuestion,
@@ -89,6 +90,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
           questions={questions}
           state={state}
           timeRemaining={timeRemaining}
+          progress={progress}
         />
 
         {/* Question Content */}
