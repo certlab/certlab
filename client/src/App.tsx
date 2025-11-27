@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { AuthProvider, useAuth } from "@/lib/auth-provider";
 import { AchievementNotification } from "@/components/AchievementNotification";
+import { UnhandledRejectionHandler } from "@/components/UnhandledRejectionHandler";
 import Header from "@/components/Header";
 import BreadcrumbNavigation from "@/components/BreadcrumbNavigation";
 import PageLoader from "@/components/PageLoader";
@@ -36,14 +37,6 @@ const DataImportPage = lazy(() => import("@/pages/data-import"));
 // We remove the trailing slash to match wouter's expected format
 // For root deployments where BASE_URL is '/', we use an empty string
 const BASE_PATH = import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
-
-// Global unhandled rejection handler
-if (typeof window !== 'undefined') {
-  window.addEventListener('unhandledrejection', (event) => {
-    console.error('Unhandled promise rejection:', event.reason);
-    event.preventDefault(); // Prevent the default browser error
-  });
-}
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -144,6 +137,7 @@ function App() {
           <TooltipProvider>
             <WouterRouter base={BASE_PATH}>
               <Toaster />
+              <UnhandledRejectionHandler />
               <AppContent />
             </WouterRouter>
           </TooltipProvider>
