@@ -268,7 +268,7 @@ export default function QuizCreator() {
               <li><i className="fas fa-check text-green-500 dark:text-green-400 mr-2"></i>Progress tracking across all areas</li>
               <li><i className="fas fa-check text-green-500 dark:text-green-400 mr-2"></i>Mastery score updates in real-time</li>
               <li>
-                <i className="fas fa-chart-line text-blue-500 mr-2"></i>
+                <i className="fas fa-chart-line text-blue-500 dark:text-blue-400 mr-2"></i>
                 <span className="font-medium">15 questions per session</span>
               </li>
             </ul>
