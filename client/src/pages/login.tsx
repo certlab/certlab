@@ -12,6 +12,30 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User as UserIcon, Info, AlertTriangle } from "lucide-react";
 import { logError, getUserFriendlyMessage, AuthErrorCode } from "@/lib/errors";
 
+/**
+ * Get a user-friendly error title based on the error code
+ */
+function getErrorTitle(errorCode: AuthErrorCode | undefined, defaultTitle: string): string {
+  switch (errorCode) {
+    case AuthErrorCode.INVALID_CREDENTIALS:
+      return "Invalid Credentials";
+    case AuthErrorCode.INVALID_EMAIL:
+      return "Invalid Email";
+    case AuthErrorCode.PASSWORD_TOO_SHORT:
+      return "Password Too Short";
+    case AuthErrorCode.USER_EXISTS:
+      return "Account Exists";
+    case AuthErrorCode.STORAGE_ERROR:
+      return "Storage Error";
+    case AuthErrorCode.USER_NOT_FOUND:
+      return "Account Not Found";
+    case AuthErrorCode.PASSWORD_REQUIRED:
+      return "Password Required";
+    default:
+      return defaultTitle;
+  }
+}
+
 interface StoredUser {
   id: string;
   email: string;
@@ -90,15 +114,8 @@ export default function Login() {
         await refreshUser();
         setLocation("/app");
       } else {
-        // Use specific message from auth response
-        const title = result.errorCode === AuthErrorCode.INVALID_CREDENTIALS
-          ? "Invalid Credentials"
-          : result.errorCode === AuthErrorCode.STORAGE_ERROR
-            ? "Storage Error"
-            : "Login Failed";
-        
         toast({
-          title,
+          title: getErrorTitle(result.errorCode, "Login Failed"),
           description: result.message || "Unable to login",
           variant: "destructive",
         });
@@ -133,19 +150,8 @@ export default function Login() {
         // Use relative navigation for GitHub Pages compatibility
         setLocation("/app");
       } else {
-        // Use specific title based on error code
-        const title = result.errorCode === AuthErrorCode.INVALID_EMAIL
-          ? "Invalid Email"
-          : result.errorCode === AuthErrorCode.PASSWORD_TOO_SHORT
-            ? "Password Too Short"
-            : result.errorCode === AuthErrorCode.USER_EXISTS
-              ? "Account Exists"
-              : result.errorCode === AuthErrorCode.STORAGE_ERROR
-                ? "Storage Error"
-                : "Registration Failed";
-        
         toast({
-          title,
+          title: getErrorTitle(result.errorCode, "Registration Failed"),
           description: result.message || "Unable to create account",
           variant: "destructive",
         });
