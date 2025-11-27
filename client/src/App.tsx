@@ -9,11 +9,12 @@ import { AchievementNotification } from "@/components/AchievementNotification";
 import Header from "@/components/Header";
 import BreadcrumbNavigation from "@/components/BreadcrumbNavigation";
 import PageLoader from "@/components/PageLoader";
-import NotFound from "@/pages/not-found";
+// Landing page is eagerly loaded for fast first paint (initial route)
 import Landing from "@/pages/landing";
 import { lazy, Suspense, useEffect } from "react";
 
 // Lazy load page components for code splitting
+const NotFound = lazy(() => import("@/pages/not-found"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const Quiz = lazy(() => import("@/pages/quiz"));
 const Results = lazy(() => import("@/pages/results"));
@@ -89,13 +90,15 @@ function Router() {
           </main>
         </>
       ) : (
-        <Switch>
-          {/* Landing page is always available at root */}
-          <Route path="/" component={Landing} />
-          {/* Redirect non-authenticated users trying to access protected routes */}
-          <Route path="/app/*" component={Landing} />
-          <Route component={NotFound} />
-        </Switch>
+        <Suspense fallback={<PageLoader />}>
+          <Switch>
+            {/* Landing page is always available at root */}
+            <Route path="/" component={Landing} />
+            {/* Redirect non-authenticated users trying to access protected routes */}
+            <Route path="/app/*" component={Landing} />
+            <Route component={NotFound} />
+          </Switch>
+        </Suspense>
       )}
     </div>
   );
