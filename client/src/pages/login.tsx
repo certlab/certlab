@@ -247,10 +247,15 @@ export default function Login() {
                 )}
 
                 {selectedAccount && !selectedAccount.hasPassword && (
-                  <Alert>
-                    <Info className="h-4 w-4" />
-                    <AlertDescription>
-                      This account has no password. Click login to access.
+                  <Alert className="border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <AlertDescription className="text-amber-800 dark:text-amber-200">
+                      <strong>Security Warning:</strong> This account has no password protection. 
+                      Anyone with access to this browser can login. 
+                      Your session will automatically expire after 24 hours for security.
+                      <span className="block mt-1 text-xs">
+                        Consider setting a password in your profile settings for added security.
+                      </span>
                     </AlertDescription>
                   </Alert>
                 )}

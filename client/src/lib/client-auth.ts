@@ -5,6 +5,10 @@
 
 import { clientStorage } from './client-storage';
 import type { User } from '@shared/schema';
+import { indexedDBService, STORES } from './indexeddb';
+
+// Session timeout for password-less accounts (24 hours in milliseconds)
+const PASSWORDLESS_SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000;
 
 // Simple client-side password hashing (NOT cryptographically secure, but sufficient for local storage)
 async function hashPassword(password: string): Promise<string> {
@@ -16,6 +20,16 @@ async function hashPassword(password: string): Promise<string> {
   return hashHex;
 }
 
+// Audit logging for security events
+function logSecurityEvent(event: string, details: Record<string, unknown>): void {
+  const timestamp = new Date().toISOString();
+  console.info(`[SECURITY AUDIT] ${timestamp} - ${event}`, {
+    ...details,
+    userAgent: navigator.userAgent,
+    timestamp,
+  });
+}
+
 export interface AuthResponse {
   success: boolean;
   user?: Omit<User, 'passwordHash'>;
@@ -23,6 +37,56 @@ export interface AuthResponse {
 }
 
 class ClientAuth {
+  // Session management for password-less accounts
+  private async setSessionTimestamp(isPasswordless: boolean): Promise<void> {
+    await indexedDBService.put(STORES.settings, {
+      key: 'sessionInfo',
+      value: JSON.stringify({
+        loginAt: Date.now(),
+        isPasswordless,
+      }),
+    });
+  }
+
+  private async getSessionInfo(): Promise<{ loginAt: number; isPasswordless: boolean } | null> {
+    const setting = await indexedDBService.get<{ key: string; value: string }>(
+      STORES.settings,
+      'sessionInfo'
+    );
+    if (!setting?.value) return null;
+    try {
+      return JSON.parse(setting.value);
+    } catch {
+      return null;
+    }
+  }
+
+  private async clearSessionInfo(): Promise<void> {
+    await indexedDBService.delete(STORES.settings, 'sessionInfo');
+  }
+
+  // Check if password-less session has expired
+  async isSessionValid(): Promise<boolean> {
+    const sessionInfo = await this.getSessionInfo();
+    if (!sessionInfo) return true; // No session info means normal session
+
+    // Password-protected accounts don't expire
+    if (!sessionInfo.isPasswordless) return true;
+
+    // Check if password-less session has expired
+    const elapsed = Date.now() - sessionInfo.loginAt;
+    if (elapsed > PASSWORDLESS_SESSION_TIMEOUT_MS) {
+      logSecurityEvent('SESSION_EXPIRED', {
+        reason: 'Password-less session timeout exceeded',
+        elapsedMs: elapsed,
+        timeoutMs: PASSWORDLESS_SESSION_TIMEOUT_MS,
+      });
+      return false;
+    }
+
+    return true;
+  }
+
   async register(email: string, password: string, firstName?: string, lastName?: string): Promise<AuthResponse> {
     try {
       // Validate email format
@@ -43,7 +107,8 @@ class ClientAuth {
       }
 
       // Create user with optional password
-      const passwordHash = password && password.length > 0 ? await hashPassword(password) : null;
+      const isPasswordless = !password || password.length === 0;
+      const passwordHash = isPasswordless ? null : await hashPassword(password);
       const user = await clientStorage.createUser({
         email,
         passwordHash,
@@ -55,6 +120,16 @@ class ClientAuth {
 
       // Set as current user
       await clientStorage.setCurrentUserId(user.id);
+      
+      // Set session timestamp
+      await this.setSessionTimestamp(isPasswordless);
+
+      // Log registration event
+      logSecurityEvent('USER_REGISTERED', {
+        userId: user.id,
+        email: user.email,
+        isPasswordless,
+      });
 
       // Return without password hash
       const { passwordHash: _, ...sanitizedUser } = user;
@@ -70,6 +145,10 @@ class ClientAuth {
       // Find user by email
       const user = await clientStorage.getUserByEmail(email);
       if (!user) {
+        logSecurityEvent('LOGIN_FAILED', {
+          email,
+          reason: 'User not found',
+        });
         return { success: false, message: 'Invalid email or password' };
       }
 
@@ -77,6 +156,16 @@ class ClientAuth {
       if (!user.passwordHash) {
         // Set as current user
         await clientStorage.setCurrentUserId(user.id);
+        
+        // Set session timestamp for password-less account
+        await this.setSessionTimestamp(true);
+
+        // Log password-less login
+        logSecurityEvent('PASSWORDLESS_LOGIN', {
+          userId: user.id,
+          email: user.email,
+          sessionTimeoutMs: PASSWORDLESS_SESSION_TIMEOUT_MS,
+        });
 
         // Return without password hash
         const { passwordHash: _, ...sanitizedUser } = user;
@@ -86,11 +175,26 @@ class ClientAuth {
       // Verify password if user has one
       const passwordHash = await hashPassword(password);
       if (user.passwordHash !== passwordHash) {
+        logSecurityEvent('LOGIN_FAILED', {
+          userId: user.id,
+          email: user.email,
+          reason: 'Invalid password',
+        });
         return { success: false, message: 'Invalid email or password' };
       }
 
       // Set as current user
       await clientStorage.setCurrentUserId(user.id);
+      
+      // Set session timestamp for password-protected account
+      await this.setSessionTimestamp(false);
+
+      // Log successful login
+      logSecurityEvent('LOGIN_SUCCESS', {
+        userId: user.id,
+        email: user.email,
+        isPasswordless: false,
+      });
 
       // Return without password hash
       const { passwordHash: _, ...sanitizedUser } = user;
@@ -102,7 +206,10 @@ class ClientAuth {
   }
 
   async logout(): Promise<void> {
+    const userId = await clientStorage.getCurrentUserId();
+    logSecurityEvent('LOGOUT', { userId });
     await clientStorage.clearCurrentUser();
+    await this.clearSessionInfo();
   }
 
   async getCurrentUser(): Promise<Omit<User, 'passwordHash'> | null> {
@@ -114,6 +221,18 @@ class ClientAuth {
       if (!user) {
         // Clear invalid session
         await clientStorage.clearCurrentUser();
+        await this.clearSessionInfo();
+        return null;
+      }
+
+      // Check if password-less session has expired
+      if (!await this.isSessionValid()) {
+        logSecurityEvent('PASSWORDLESS_SESSION_TIMEOUT', {
+          userId: user.id,
+          email: user.email,
+        });
+        await clientStorage.clearCurrentUser();
+        await this.clearSessionInfo();
         return null;
       }
 
@@ -179,6 +298,16 @@ class ClientAuth {
           return { success: false, message: 'Password setup failed' };
         }
 
+        // Log security upgrade from password-less to password-protected
+        logSecurityEvent('PASSWORD_SET', {
+          userId: user.id,
+          email: user.email,
+          previouslyPasswordless: true,
+        });
+
+        // Update session to reflect password-protected status
+        await this.setSessionTimestamp(false);
+
         const { passwordHash: _, ...sanitizedUser } = updatedUser;
         return { success: true, user: sanitizedUser, message: 'Password set successfully' };
       }
@@ -186,6 +315,11 @@ class ClientAuth {
       // Verify current password
       const currentHash = await hashPassword(currentPassword);
       if (user.passwordHash !== currentHash) {
+        logSecurityEvent('PASSWORD_CHANGE_FAILED', {
+          userId: user.id,
+          email: user.email,
+          reason: 'Incorrect current password',
+        });
         return { success: false, message: 'Current password is incorrect' };
       }
 
@@ -200,6 +334,12 @@ class ClientAuth {
       if (!updatedUser) {
         return { success: false, message: 'Password update failed' };
       }
+
+      // Log password change
+      logSecurityEvent('PASSWORD_CHANGED', {
+        userId: user.id,
+        email: user.email,
+      });
 
       const { passwordHash: _, ...sanitizedUser } = updatedUser;
       return { success: true, user: sanitizedUser };
@@ -239,16 +379,35 @@ class ClientAuth {
       // Find user by email
       const user = await clientStorage.getUserByEmail(email);
       if (!user) {
+        logSecurityEvent('PASSWORDLESS_LOGIN_FAILED', {
+          email,
+          reason: 'Account not found',
+        });
         return { success: false, message: 'Account not found' };
       }
 
       // Verify account has no password (is password-less)
       if (user.passwordHash) {
+        logSecurityEvent('PASSWORDLESS_LOGIN_FAILED', {
+          userId: user.id,
+          email: user.email,
+          reason: 'Account has password',
+        });
         return { success: false, message: 'This account requires a password' };
       }
 
       // Set as current user
       await clientStorage.setCurrentUserId(user.id);
+      
+      // Set session timestamp for password-less account
+      await this.setSessionTimestamp(true);
+
+      // Log password-less login
+      logSecurityEvent('PASSWORDLESS_LOGIN', {
+        userId: user.id,
+        email: user.email,
+        sessionTimeoutMs: PASSWORDLESS_SESSION_TIMEOUT_MS,
+      });
 
       // Return without password hash
       const { passwordHash: _, ...sanitizedUser } = user;
