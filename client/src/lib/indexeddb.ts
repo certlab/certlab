@@ -1,6 +1,68 @@
 /**
- * IndexedDB wrapper for CertLab
- * Provides a storage layer that mirrors the PostgreSQL schema
+ * IndexedDB Service for CertLab
+ * 
+ * This module provides a low-level IndexedDB wrapper that serves as the
+ * persistent storage layer for the client-side application. It mirrors
+ * the PostgreSQL schema used in the server version, allowing for
+ * consistent data structures across both architectures.
+ * 
+ * ## Architecture Overview
+ * 
+ * IndexedDBService <-- ClientStorage <-- TanStack Query <-- React Components
+ * 
+ * - IndexedDBService: Low-level CRUD operations on IndexedDB stores
+ * - ClientStorage (client-storage.ts): Business logic and API abstraction
+ * - TanStack Query (queryClient.ts): Caching and async state management
+ * - React Components: UI layer
+ * 
+ * ## Database Schema
+ * 
+ * Current version: 3
+ * 
+ * Stores:
+ * - tenants: Multi-tenant organization data
+ * - users: User accounts with credentials and preferences
+ * - categories: Certification categories (e.g., CISSP, CISM)
+ * - subcategories: Topic areas within categories
+ * - questions: Question bank with options and explanations
+ * - quizzes: Quiz attempts with scores and answers
+ * - userProgress: Learning progress per category
+ * - masteryScores: Performance tracking per subcategory
+ * - lectures: Study materials and notes
+ * - badges: Achievement definitions
+ * - userBadges: Earned badges per user
+ * - userGameStats: Gamification stats (points, streaks, levels)
+ * - challenges: Daily/quick challenges
+ * - challengeAttempts: Challenge completion records
+ * - studyGroups: Study group definitions
+ * - studyGroupMembers: Group membership records
+ * - practiceTests: Practice test configurations
+ * - practiceTestAttempts: Practice test results
+ * - settings: App settings (including currentUserId)
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * import { indexedDBService, STORES } from './indexeddb';
+ * 
+ * // Get a single record
+ * const user = await indexedDBService.get<User>(STORES.users, 'user-id');
+ * 
+ * // Get all records
+ * const categories = await indexedDBService.getAll<Category>(STORES.categories);
+ * 
+ * // Query by index
+ * const userQuizzes = await indexedDBService.getByIndex<Quiz>(
+ *   STORES.quizzes, 
+ *   'userId', 
+ *   'user-id'
+ * );
+ * 
+ * // Add/update records
+ * await indexedDBService.put(STORES.users, user);
+ * ```
+ * 
+ * @module indexeddb
  */
 
 const DB_NAME = 'certlab';

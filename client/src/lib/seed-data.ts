@@ -1,6 +1,52 @@
 /**
- * Seed data for IndexedDB
- * Provides initial categories, subcategories, questions, and badges
+ * Seed Data Module for CertLab
+ * 
+ * This module handles the initial data seeding for new CertLab installations.
+ * When a user first loads the application, this module ensures that essential
+ * data exists in IndexedDB, including:
+ * 
+ * - Default tenants (organizations)
+ * - Certification categories (CISSP, CISM)
+ * - Topic subcategories
+ * - Sample questions
+ * - Achievement badges
+ * 
+ * ## Versioning
+ * 
+ * The seed data is versioned using `SEED_VERSION`. When this version is
+ * incremented, the seeding process will run again to update the data.
+ * Currently at version 2.
+ * 
+ * ## Seeding Process
+ * 
+ * 1. Check if data already exists and matches current version
+ * 2. If not, create tenants, categories, subcategories
+ * 3. Add sample questions for each category
+ * 4. Create achievement badges
+ * 5. Save the seed version to prevent re-seeding
+ * 
+ * ## Usage
+ * 
+ * The seeding is called automatically in App.tsx on first load:
+ * 
+ * ```typescript
+ * import { ensureDataSeeded } from './lib/seed-data';
+ * 
+ * useEffect(() => {
+ *   ensureDataSeeded();
+ * }, []);
+ * ```
+ * 
+ * ## Customization
+ * 
+ * To add new seed data:
+ * 1. Increment SEED_VERSION
+ * 2. Add your data creation code in seedInitialData()
+ * 3. The new data will be created on next app load
+ * 
+ * Note: Existing user data is preserved. Only new seed data is added.
+ * 
+ * @module seed-data
  */
 
 import { clientStorage } from './client-storage';
