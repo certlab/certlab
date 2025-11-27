@@ -21,6 +21,7 @@
 
 export type DebugCategory = 'info' | 'warn' | 'error';
 export type FeatureCategory = string;
+export type DebugCategoryInput = DebugCategory | FeatureCategory | 'all' | '*';
 
 interface DebugConfig {
   /** Enable info-level messages */
@@ -41,15 +42,20 @@ interface DebugConfig {
  * - localhost or 127.0.0.1
  * - .local domains
  * - Common development ports (3000, 5000, 5173, 8080)
- * - NODE_ENV environment variable
+ * - import.meta.env.MODE for Vite applications
  */
 function detectDevelopment(): boolean {
   if (typeof window === 'undefined') {
-    return process.env.NODE_ENV !== 'production';
+    return import.meta.env.MODE !== 'production';
   }
   
   const hostname = window.location.hostname;
   const port = window.location.port;
+  
+  // Check for known production domains first (takes priority over port checks)
+  const prodDomains = ['github.io', 'githubusercontent.com', 'netlify.app', 'vercel.app'];
+  const isProdDomain = prodDomains.some(d => hostname.endsWith(d));
+  if (isProdDomain) return false;
   
   // Check hostname patterns
   const devHostnames = [
@@ -87,14 +93,20 @@ const STORAGE_KEY = 'debug';
 
 /**
  * Parse debug configuration from a string (URL param or localStorage value)
- * Supports: 'info', 'warn', 'error', 'all', '*', or feature names like 'auth', 'quiz'
+ * Supports: 'info', 'warn', 'error', 'all', '*', 'none', or feature names like 'auth', 'quiz'
  */
 function parseDebugString(debugStr: string): Partial<DebugConfig> {
   const parts = debugStr.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   const result: Partial<DebugConfig> & { features: Set<string> } = { features: new Set<string>() };
   
   for (const part of parts) {
-    if (part === '*' || part === 'all') {
+    if (part === 'none') {
+      // Special value indicating all optional debug output is explicitly disabled
+      result.all = false;
+      result.info = false;
+      result.warn = false;
+      // Error logging is not affected by 'none' - it remains at default (true)
+    } else if (part === '*' || part === 'all') {
       result.all = true;
       result.info = true;
       result.warn = true;
@@ -127,6 +139,7 @@ function loadRuntimeConfig(): void {
   if (urlDebug) {
     const parsed = parseDebugString(urlDebug);
     mergeConfig(parsed);
+    saveConfig(); // Persist URL params to localStorage
     return;
   }
   
@@ -213,7 +226,7 @@ export const debug = {
   
   /**
    * Log feature-specific message
-   * @param feature - Feature category name (e.g., 'auth', 'quiz', 'storage')
+   * @param feature - Feature category name (e.g., 'auth', 'quiz', 'storage'). Case-insensitive.
    * @param message - The message to log
    * @param args - Additional arguments to log
    */
@@ -231,7 +244,7 @@ export const debug = {
   /**
    * Enable a debug category at runtime
    */
-  enable: (category: DebugCategory | FeatureCategory): void => {
+  enable: (category: DebugCategoryInput): void => {
     if (category === 'info') config.info = true;
     else if (category === 'warn') config.warn = true;
     else if (category === 'error') config.error = true;
@@ -244,7 +257,7 @@ export const debug = {
   /**
    * Disable a debug category at runtime
    */
-  disable: (category: DebugCategory | FeatureCategory): void => {
+  disable: (category: DebugCategoryInput): void => {
     if (category === 'info') config.info = false;
     else if (category === 'warn') config.warn = false;
     else if (category === 'error') config.error = false;
@@ -264,14 +277,14 @@ export const debug = {
   
   /**
    * Disable all optional debug output.
-   * Note: Error logging remains enabled as it defaults to true and is critical for issue diagnosis.
+   * Note: Does not modify the error flag - error logging state is preserved.
    */
   disableAll: (): void => {
     config.all = false;
     config.info = false;
     config.warn = false;
     config.features.clear();
-    // Keep config.error at its current value (defaults to true)
+    // Does not modify config.error - error logging state is preserved
     saveConfig();
   },
   
@@ -303,6 +316,7 @@ export const debug = {
 
 /**
  * Save current configuration to localStorage
+ * Note: The 'error' flag is not persisted; error logging is always enabled by default on load
  */
 function saveConfig(): void {
   if (typeof window === 'undefined') return;
@@ -313,14 +327,15 @@ function saveConfig(): void {
     else {
       if (config.info) parts.push('info');
       if (config.warn) parts.push('warn');
-      if (config.error) parts.push('error');
+      // Do not persist 'error' flag; error logging is always enabled by default
       config.features.forEach(f => parts.push(f));
     }
     
     if (parts.length > 0) {
       localStorage.setItem(STORAGE_KEY, parts.join(','));
     } else {
-      localStorage.removeItem(STORAGE_KEY);
+      // Store a special value to indicate all optional debug output is explicitly disabled
+      localStorage.setItem(STORAGE_KEY, 'none');
     }
   } catch {
     // localStorage may not be available
