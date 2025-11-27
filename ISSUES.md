@@ -2,11 +2,22 @@
 
 This document contains a comprehensive code review of the CertLab repository. Each section identifies specific issues, improvements, and recommendations organized by area of the codebase.
 
+## Status Legend
+
+Each issue is marked with one of the following statuses:
+
+| Status | Description |
+|--------|-------------|
+| **Open** | Issue has been identified and is pending action |
+| **In Progress** | Issue is currently being worked on |
+| **Resolved** | Issue has been fixed or addressed |
+| **Closed** | Issue has been closed (won't fix, duplicate, or no longer applicable) |
+
 ---
 
 ## 1. Security Improvements
 
-### Issue: Weak Client-Side Password Hashing
+### Issue: Weak Client-Side Password Hashing (Open)
 
 **File:** `client/src/lib/client-auth.ts`
 
@@ -31,7 +42,7 @@ async function hashPassword(password: string): Promise<string> {
 
 ---
 
-### Issue: Password-less Login Security Warning
+### Issue: Password-less Login Security Warning (Open)
 
 **File:** `client/src/pages/login.tsx`
 
@@ -46,7 +57,7 @@ The application allows password-less account creation and login. While convenien
 
 ---
 
-### Issue: Server-Side bcrypt Usage in Legacy Code
+### Issue: Server-Side bcrypt Usage in Legacy Code (Open)
 
 **File:** `server/auth.ts`
 
@@ -61,7 +72,7 @@ The server-side code uses bcrypt with salt rounds of 10, which is acceptable but
 
 ## 2. TypeScript Type Safety
 
-### Issue: Pre-existing TypeScript Errors
+### Issue: Pre-existing TypeScript Errors (Open)
 
 **Files:** Multiple files (8 files with 19 errors as documented in copilot-instructions.md)
 
@@ -84,7 +95,7 @@ The codebase has 19 pre-existing TypeScript errors that are ignored during build
 
 ---
 
-### Issue: Extensive Use of `any` Type
+### Issue: Extensive Use of `any` Type (Open)
 
 **Files:** `server/storage.ts`, `client/src/lib/client-storage.ts`, `client/src/lib/queryClient.ts`
 
@@ -130,7 +141,7 @@ This creates confusion about what code is active and increases maintenance burde
 
 ---
 
-### Issue: Duplicate Code Between Client and Server Storage
+### Issue: Duplicate Code Between Client and Server Storage (Open)
 
 **Files:** `server/storage.ts`, `client/src/lib/client-storage.ts`
 
@@ -144,7 +155,7 @@ There's significant code duplication between the server storage implementation (
 
 ---
 
-### Issue: Large Component Files
+### Issue: Large Component Files (Open)
 
 **Files:** `client/src/components/QuizInterface.tsx` (755 lines), `server/storage.ts` (3592 lines)
 
@@ -161,7 +172,7 @@ Some files are excessively long, making them difficult to maintain and test. Qui
 
 ## 4. Performance Optimizations
 
-### Issue: Large Bundle Size Warning
+### Issue: Large Bundle Size Warning (Open)
 
 **Build Output:**
 ```
@@ -181,7 +192,7 @@ The main JavaScript bundle exceeds 500 kB, which impacts initial load time and u
 
 ---
 
-### Issue: Static vs Dynamic Import Conflict
+### Issue: Static vs Dynamic Import Conflict (Open)
 
 **Build Warning:**
 ```
@@ -198,7 +209,7 @@ client/src/lib/client-storage.ts is dynamically imported by some files but also 
 
 ---
 
-### Issue: No Query Caching Strategy
+### Issue: No Query Caching Strategy (Open)
 
 **File:** `client/src/lib/queryClient.ts`
 
@@ -214,7 +225,7 @@ TanStack Query is configured with `staleTime: Infinity` and `refetchOnWindowFocu
 
 ## 5. Accessibility Improvements
 
-### Issue: Missing ARIA Labels and Roles
+### Issue: Missing ARIA Labels and Roles (Open)
 
 **Files:** Various component files
 
@@ -230,7 +241,7 @@ While some accessibility features are implemented (like aria-labelledby in login
 
 ---
 
-### Issue: Color Contrast Concerns
+### Issue: Color Contrast Concerns (Open)
 
 **File:** `client/src/pages/results.tsx`, component style files
 
@@ -246,7 +257,7 @@ Score colors and feedback colors may not meet WCAG contrast requirements, especi
 
 ## 6. Error Handling
 
-### Issue: Generic Error Messages
+### Issue: Generic Error Messages (Open)
 
 **Files:** `client/src/lib/client-auth.ts`, `client/src/pages/login.tsx`
 
@@ -261,7 +272,7 @@ Error handling often returns generic messages like "An unexpected error occurred
 
 ---
 
-### Issue: Missing Error Boundaries
+### Issue: Missing Error Boundaries (Open)
 
 **File:** `client/src/App.tsx`
 
@@ -275,7 +286,7 @@ There are no React error boundaries to gracefully handle component crashes. A si
 
 ---
 
-### Issue: Unhandled Promise Rejections
+### Issue: Unhandled Promise Rejections (Open)
 
 **File:** `client/src/App.tsx` (Lines 36-40)
 
@@ -291,7 +302,7 @@ While there's a global handler for unhandled rejections, it only logs and preven
 
 ## 7. Testing
 
-### Issue: No Test Infrastructure
+### Issue: No Test Infrastructure (Open)
 
 **Description:**
 The codebase has no test files or test configuration. There's no `*.test.ts`, `*.spec.ts`, or test config files present. The copilot-instructions.md explicitly states "No test framework configured."
@@ -307,7 +318,7 @@ The codebase has no test files or test configuration. There's no `*.test.ts`, `*
 
 ## 8. Documentation
 
-### Issue: Inconsistent Code Comments
+### Issue: Inconsistent Code Comments (Open)
 
 **Files:** Various
 
@@ -322,7 +333,7 @@ Some files have excellent documentation (like the header in `server/polar.ts`), 
 
 ---
 
-### Issue: Outdated README References
+### Issue: Outdated README References (Open)
 
 **File:** `README.md`
 
@@ -339,7 +350,7 @@ README mentions "Helen's AI-powered learning lab" but AI features have been remo
 
 ## 9. Dependency Management
 
-### Issue: npm Audit Vulnerabilities
+### Issue: npm Audit Vulnerabilities (Open)
 
 **Description:**
 Running `npm install` shows 10 vulnerabilities (1 low, 8 moderate, 1 high). While these are in development dependencies, they should be addressed.
@@ -352,7 +363,7 @@ Running `npm install` shows 10 vulnerabilities (1 low, 8 moderate, 1 high). Whil
 
 ---
 
-### Issue: Mixed Server and Client Dependencies
+### Issue: Mixed Server and Client Dependencies (Open)
 
 **File:** `package.json`
 
@@ -366,7 +377,7 @@ The package.json contains both server-side dependencies (express, passport, bcry
 
 ---
 
-### Issue: Unused Dependencies
+### Issue: Unused Dependencies (Open)
 
 **File:** `package.json`
 
@@ -388,7 +399,7 @@ Several dependencies appear to be unused or only used in legacy server code:
 
 ## 10. UI/UX Improvements
 
-### Issue: Debug Information Displayed to Users
+### Issue: Debug Information Displayed to Users (Open)
 
 **File:** `client/src/pages/results.tsx` (Lines 66-69)
 
@@ -409,7 +420,7 @@ Debug information is displayed to users when a quiz isn't completed:
 
 ---
 
-### Issue: Hardcoded Motivational Messages
+### Issue: Hardcoded Motivational Messages (Open)
 
 **File:** `client/src/pages/dashboard.tsx`
 
@@ -423,7 +434,7 @@ Motivational messages are hardcoded as an array. This makes them difficult to ma
 
 ---
 
-### Issue: Inconsistent Loading States
+### Issue: Inconsistent Loading States (Open)
 
 **Files:** Various page components
 
@@ -440,7 +451,7 @@ Loading states are implemented inconsistently across the application. Some use s
 
 ## 11. Build and Deployment
 
-### Issue: Missing Environment Variable Validation
+### Issue: Missing Environment Variable Validation (Open)
 
 **Files:** `vite.config.ts`, `drizzle.config.ts`
 
@@ -455,7 +466,7 @@ Environment variables are accessed without proper validation or defaults. The dr
 
 ---
 
-### Issue: No Build-time Type Checking
+### Issue: No Build-time Type Checking (Open)
 
 **File:** `package.json`
 
@@ -471,7 +482,7 @@ The build script only runs `vite build`, which uses esbuild and doesn't enforce 
 
 ## 12. Database Schema and Data
 
-### Issue: Hardcoded Question Data in Storage
+### Issue: Hardcoded Question Data in Storage (Open)
 
 **File:** `server/storage.ts`
 
@@ -486,7 +497,7 @@ The storage.ts file contains thousands of lines of hardcoded question data (Line
 
 ---
 
-### Issue: Question Schema Validation
+### Issue: Question Schema Validation (Open)
 
 **Files:** `shared/schema.ts`, seed data files
 
@@ -503,7 +514,7 @@ Questions have inconsistent option ID handling. Some use 0-indexed IDs, others u
 
 ## 13. API Design
 
-### Issue: Deprecated API Pattern
+### Issue: Deprecated API Pattern (Open)
 
 **File:** `client/src/lib/queryClient.ts` (Lines 310-331)
 
@@ -523,7 +534,7 @@ console.warn(
 
 ---
 
-### Issue: Inconsistent Query Key Patterns
+### Issue: Inconsistent Query Key Patterns (Open)
 
 **File:** `client/src/lib/queryClient.ts`
 
@@ -542,7 +553,7 @@ Query keys use inconsistent patterns:
 
 ## 14. State Management
 
-### Issue: Mixed State Management Approaches
+### Issue: Mixed State Management Approaches (Open)
 
 **Files:** Various component files
 
@@ -560,7 +571,7 @@ The application uses multiple state management approaches inconsistently:
 
 ---
 
-### Issue: Context Re-render Issues
+### Issue: Context Re-render Issues (Open)
 
 **File:** `client/src/lib/auth-provider.tsx`
 
@@ -576,7 +587,7 @@ The AuthContext value object is recreated on every render, potentially causing u
 
 ## 15. Scripts and Tooling
 
-### Issue: Incomplete Generate Scripts
+### Issue: Incomplete Generate Scripts (Open)
 
 **File:** `scripts/generate_questions.js`
 
@@ -595,7 +606,7 @@ The script logs information but doesn't actually generate usable output.
 
 ---
 
-### Issue: No Linting Configuration
+### Issue: No Linting Configuration (Open)
 
 **Description:**
 The project lacks ESLint configuration for consistent code style. While TypeScript provides some checking, there's no linting for style, unused imports, or best practices.
@@ -612,23 +623,23 @@ The project lacks ESLint configuration for consistent code style. While TypeScri
 
 This code review identified 35+ issues across 15 categories:
 
-| Category | Issues | Priority |
-|----------|--------|----------|
-| Security | 3 | High |
-| TypeScript | 2 | High |
-| Code Organization | 3 | Medium |
-| Performance | 4 | Medium |
-| Accessibility | 2 | Medium |
-| Error Handling | 3 | Medium |
-| Testing | 1 | High |
-| Documentation | 2 | Low |
-| Dependencies | 3 | Medium |
-| UI/UX | 3 | Low |
-| Build/Deploy | 2 | Medium |
-| Database | 2 | Medium |
-| API Design | 2 | Low |
-| State Management | 2 | Low |
-| Scripts/Tooling | 2 | Low |
+| Category | Issues | Open | Resolved | Priority |
+|----------|--------|------|----------|----------|
+| Security | 3 | 3 | 0 | High |
+| TypeScript | 2 | 2 | 0 | High |
+| Code Organization | 3 | 2 | 1 | Medium |
+| Performance | 4 | 4 | 0 | Medium |
+| Accessibility | 2 | 2 | 0 | Medium |
+| Error Handling | 3 | 3 | 0 | Medium |
+| Testing | 1 | 1 | 0 | High |
+| Documentation | 2 | 2 | 0 | Low |
+| Dependencies | 3 | 3 | 0 | Medium |
+| UI/UX | 3 | 3 | 0 | Low |
+| Build/Deploy | 2 | 2 | 0 | Medium |
+| Database | 2 | 2 | 0 | Medium |
+| API Design | 2 | 2 | 0 | Low |
+| State Management | 2 | 2 | 0 | Low |
+| Scripts/Tooling | 2 | 2 | 0 | Low |
 
 > **Note:** See [Section 16. User Feedback](#16-user-feedback) for additional issues reported by users.
 
@@ -660,7 +671,7 @@ This code review identified 35+ issues across 15 categories:
 
 The following issues have been reported by users during testing and evaluation of the platform.
 
-### Issue: Study Groups Feature Incomplete
+### Issue: Study Groups Feature Incomplete (Open)
 
 **Files:** Study groups related components
 
@@ -682,7 +693,7 @@ The Study Groups feature is incomplete and requires additional work:
 
 ---
 
-### Issue: Quick Practice Certification Selection Unclear
+### Issue: Quick Practice Certification Selection Unclear (Open)
 
 **Files:** `client/src/pages/dashboard.tsx`, Quick Practice components
 
@@ -699,7 +710,7 @@ When users click "Quick Practice" on the dashboard, the quiz starts immediately 
 
 ---
 
-### Issue: AI Study Notes Generation and Export
+### Issue: AI Study Notes Generation and Export (Open)
 
 **Files:** Study notes generation components, results page
 
@@ -719,7 +730,7 @@ The "Generate Study Notes" feature currently generates an AI prompt but doesn't 
 
 ---
 
-### Issue: Custom Organizations Missing Categories
+### Issue: Custom Organizations Missing Categories (Open)
 
 **Files:** Organization/Tenant management, category seeding
 
@@ -740,24 +751,24 @@ The Default Organization has categories (CISM, CISSP), but custom organizations 
 
 This code review identified 35+ issues across 15 categories, plus 4 additional issues from user feedback:
 
-| Category | Issues | Priority |
-|----------|--------|----------|
-| Security | 3 | High |
-| TypeScript | 2 | High |
-| Code Organization | 3 | Medium |
-| Performance | 4 | Medium |
-| Accessibility | 2 | Medium |
-| Error Handling | 3 | Medium |
-| Testing | 1 | High |
-| Documentation | 2 | Low |
-| Dependencies | 3 | Medium |
-| UI/UX | 3 | Low |
-| Build/Deploy | 2 | Medium |
-| Database | 2 | Medium |
-| API Design | 2 | Low |
-| State Management | 2 | Low |
-| Scripts/Tooling | 2 | Low |
-| User Feedback | 4 | Mixed |
+| Category | Issues | Open | Resolved | Priority |
+|----------|--------|------|----------|----------|
+| Security | 3 | 3 | 0 | High |
+| TypeScript | 2 | 2 | 0 | High |
+| Code Organization | 3 | 2 | 1 | Medium |
+| Performance | 4 | 4 | 0 | Medium |
+| Accessibility | 2 | 2 | 0 | Medium |
+| Error Handling | 3 | 3 | 0 | Medium |
+| Testing | 1 | 1 | 0 | High |
+| Documentation | 2 | 2 | 0 | Low |
+| Dependencies | 3 | 3 | 0 | Medium |
+| UI/UX | 3 | 3 | 0 | Low |
+| Build/Deploy | 2 | 2 | 0 | Medium |
+| Database | 2 | 2 | 0 | Medium |
+| API Design | 2 | 2 | 0 | Low |
+| State Management | 2 | 2 | 0 | Low |
+| Scripts/Tooling | 2 | 2 | 0 | Low |
+| User Feedback | 4 | 4 | 0 | Mixed |
 
 **Priority Recommendations:**
 
