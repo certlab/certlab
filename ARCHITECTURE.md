@@ -73,6 +73,7 @@ CertLab is a **client-side only** web application designed for certification exa
 | React | 18.x | UI framework |
 | TypeScript | 5.6.x | Type safety |
 | Vite | 5.4.x | Build tool |
+| Vitest | 2.x | Unit testing |
 | TailwindCSS | 3.4.x | Styling |
 | Radix UI | Latest | Component primitives |
 | TanStack Query | 5.x | Async state management |
@@ -94,6 +95,9 @@ client/src/
 │   ├── quiz.tsx         # Quiz taking
 │   ├── results.tsx      # Quiz results
 │   └── ...              # Other pages
+├── hooks/               # Custom React hooks
+├── test/                # Test setup and utilities
+│   └── setup.ts         # Vitest test configuration
 └── lib/                 # Core services
     ├── client-storage.ts # Storage API
     ├── indexeddb.ts      # IndexedDB service
@@ -328,6 +332,23 @@ The build uses manual chunks for optimal loading:
 | `vendor-utils` | date-fns, clsx, wouter |
 | `index` | Main application code |
 | Page chunks | Lazy-loaded page components |
+
+### Testing
+
+The project uses Vitest for unit and component testing:
+
+```bash
+# Run tests in watch mode
+npm test
+
+# Run tests once
+npm run test:run
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+Test configuration is in `vitest.config.ts` with jsdom environment for React component testing.
 
 ### Deployment (GitHub Pages)
 

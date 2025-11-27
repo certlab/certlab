@@ -83,17 +83,21 @@ certlab/
 │   │   │   └── theme-provider.tsx   # Theme management
 │   │   ├── hooks/             # Custom React hooks
 │   │   ├── data/              # Static data files
+│   │   ├── test/              # Test setup and utilities
+│   │   │   └── setup.ts       # Vitest test setup
 │   │   ├── App.tsx            # Main application component
 │   │   ├── main.tsx           # Entry point
 │   │   └── index.css          # Global styles
 │   └── public/                # Static assets
 ├── shared/                    # Shared TypeScript types
-│   └── schema.ts              # Data model definitions
+│   ├── schema.ts              # Data model definitions
+│   └── storage-interface.ts   # Storage API interface
 ├── scripts/                   # Utility scripts
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml         # GitHub Actions deployment
 ├── vite.config.ts             # Vite build configuration
+├── vitest.config.ts           # Vitest test configuration
 ├── tailwind.config.ts         # Tailwind CSS configuration
 └── tsconfig.json              # TypeScript configuration
 ```
@@ -103,7 +107,8 @@ certlab/
 - **`client/src/components/`**: Reusable UI components organized by feature
 - **`client/src/pages/`**: Page-level components mapped to routes
 - **`client/src/lib/`**: Core services including storage, authentication, and queries
-- **`shared/`**: TypeScript types shared across the application
+- **`client/src/test/`**: Test setup and utilities for Vitest
+- **`shared/`**: TypeScript types and interfaces shared across the application
 
 ## Making Changes
 

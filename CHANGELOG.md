@@ -11,9 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive documentation for developers (CONTRIBUTING.md, ARCHITECTURE.md)
 - Code comments for complex logic in key files
 - Developer onboarding instructions
+- Test infrastructure documentation
 
 ### Changed
 - Updated README with expanded installation and setup instructions
+- Updated project structure documentation to include test directory and vitest configuration
+- Added Vitest to technology stack documentation
 
 ## [2.0.0] - 2024-01
 
