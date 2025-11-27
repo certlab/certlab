@@ -12,7 +12,8 @@ import type {
   Tenant, User, Category, Subcategory, Question, Quiz, UserProgress,
   MasteryScore, Badge, UserBadge, UserGameStats, Challenge, ChallengeAttempt,
   StudyGroup, StudyGroupMember, PracticeTest, PracticeTestAttempt,
-  InsertCategory, InsertSubcategory, InsertQuestion, InsertUserProgress
+  InsertCategory, InsertSubcategory, InsertQuestion, InsertUserProgress,
+  Lecture, InsertLecture
 } from '@shared/schema';
 import type {
   IClientStorage,
@@ -51,7 +52,7 @@ class ClientStorage implements IClientStorage {
   }
 
   async createTenant(tenant: Partial<Tenant>): Promise<Tenant> {
-    const newTenant: any = {
+    const newTenant: Omit<Tenant, 'id'> = {
       name: tenant.name!,
       domain: tenant.domain || null,
       settings: tenant.settings || {},
@@ -130,7 +131,7 @@ class ClientStorage implements IClientStorage {
   }
 
   async createCategory(category: Partial<Category>): Promise<Category> {
-    const newCategory: any = {
+    const newCategory: Omit<Category, 'id'> = {
       tenantId: category.tenantId || 1,
       name: category.name!,
       description: category.description || null,
@@ -165,7 +166,7 @@ class ClientStorage implements IClientStorage {
   }
 
   async createSubcategory(subcategory: Partial<Subcategory>): Promise<Subcategory> {
-    const newSubcategory: any = {
+    const newSubcategory: Omit<Subcategory, 'id'> = {
       tenantId: subcategory.tenantId || 1,
       categoryId: subcategory.categoryId!,
       name: subcategory.name!,
@@ -210,7 +211,7 @@ class ClientStorage implements IClientStorage {
   }
 
   async createQuestion(question: Partial<Question>): Promise<Question> {
-    const newQuestion: any = {
+    const newQuestion: Omit<Question, 'id'> = {
       tenantId: question.tenantId || 1,
       categoryId: question.categoryId!,
       subcategoryId: question.subcategoryId!,
@@ -244,7 +245,7 @@ class ClientStorage implements IClientStorage {
 
   // Quizzes
   async createQuiz(quiz: Partial<Quiz>): Promise<Quiz> {
-    const newQuiz: any = {
+    const newQuiz: Omit<Quiz, 'id'> = {
       userId: quiz.userId!,
       tenantId: quiz.tenantId || 1,
       title: quiz.title!,
@@ -405,7 +406,7 @@ class ClientStorage implements IClientStorage {
       await indexedDBService.put(STORES.userProgress, updated);
       return updated;
     } else {
-      const newProgress: any = {
+      const newProgress: Omit<UserProgress, 'id'> = {
         userId,
         tenantId,
         categoryId,
@@ -472,8 +473,8 @@ class ClientStorage implements IClientStorage {
   }
 
   // Lectures
-  async createLecture(userId: string, quizId: number, title: string, content: string, topics: string[], categoryId: number, tenantId: number = 1): Promise<any> {
-    const lecture: any = {
+  async createLecture(userId: string, quizId: number, title: string, content: string, topics: string[], categoryId: number, tenantId: number = 1): Promise<Lecture> {
+    const lecture: Omit<Lecture, 'id'> = {
       userId,
       tenantId,
       quizId,
@@ -489,21 +490,21 @@ class ClientStorage implements IClientStorage {
     return { ...lecture, id: Number(id) };
   }
 
-  async getUserLectures(userId: string, tenantId?: number): Promise<any[]> {
-    const lectures = await indexedDBService.getByIndex(STORES.lectures, 'userId', userId);
+  async getUserLectures(userId: string, tenantId?: number): Promise<Lecture[]> {
+    const lectures = await indexedDBService.getByIndex<Lecture>(STORES.lectures, 'userId', userId);
     // Filter by tenantId if provided (for tenant isolation)
     const filtered = tenantId !== undefined 
-      ? lectures.filter((l: any) => l.tenantId === tenantId)
+      ? lectures.filter((l) => l.tenantId === tenantId)
       : lectures;
-    return filtered.sort((a: any, b: any) => {
+    return filtered.sort((a, b) => {
       const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return bDate - aDate;
     });
   }
 
-  async getLecture(id: number): Promise<any> {
-    return await indexedDBService.get(STORES.lectures, id);
+  async getLecture(id: number): Promise<Lecture | undefined> {
+    return await indexedDBService.get<Lecture>(STORES.lectures, id);
   }
 
   // Mastery Scores
@@ -525,8 +526,9 @@ class ClientStorage implements IClientStorage {
       };
       await indexedDBService.put(STORES.masteryScores, updated);
     } else {
-      const newScore: any = {
+      const newScore: Omit<MasteryScore, 'id'> = {
         userId,
+        tenantId: 1,
         categoryId,
         subcategoryId,
         correctAnswers: isCorrect ? 1 : 0,
@@ -586,7 +588,7 @@ class ClientStorage implements IClientStorage {
   }
 
   async createUserBadge(userBadge: Partial<UserBadge>): Promise<UserBadge> {
-    const newBadge: any = {
+    const newBadge: Omit<UserBadge, 'id'> = {
       userId: userBadge.userId!,
       tenantId: userBadge.tenantId || 1,
       badgeId: userBadge.badgeId!,
@@ -620,8 +622,9 @@ class ClientStorage implements IClientStorage {
       await indexedDBService.put(STORES.userGameStats, updated);
       return updated;
     } else {
-      const newStats: any = {
+      const newStats: Omit<UserGameStats, 'id'> = {
         userId,
+        tenantId: 1,
         totalPoints: updates.totalPoints || 0,
         currentStreak: updates.currentStreak || 0,
         longestStreak: updates.longestStreak || 0,
@@ -650,7 +653,7 @@ class ClientStorage implements IClientStorage {
   }
 
   async createChallenge(challenge: Partial<Challenge>): Promise<Challenge> {
-    const newChallenge: any = {
+    const newChallenge: Omit<Challenge, 'id'> = {
       userId: challenge.userId!,
       type: challenge.type!,
       title: challenge.title!,
@@ -677,8 +680,9 @@ class ClientStorage implements IClientStorage {
   }
 
   async createChallengeAttempt(attempt: Partial<ChallengeAttempt>): Promise<ChallengeAttempt> {
-    const newAttempt: any = {
+    const newAttempt: Omit<ChallengeAttempt, 'id'> = {
       userId: attempt.userId!,
+      tenantId: attempt.tenantId || 1,
       challengeId: attempt.challengeId!,
       quizId: attempt.quizId || null,
       score: attempt.score || null,
@@ -704,19 +708,19 @@ class ClientStorage implements IClientStorage {
   }
 
   async createStudyGroup(group: Partial<StudyGroup>): Promise<StudyGroup> {
-    const newGroup: any = {
+    const newGroup: Omit<StudyGroup, 'id'> = {
       tenantId: 1,
       name: group.name!,
       description: group.description || null,
-      categoryIds: (group as any).categoryIds || [],
-      createdBy: (group as any).createdBy!,
+      categoryIds: group.categoryIds || [],
+      createdBy: group.createdBy!,
       maxMembers: group.maxMembers || 20,
       isPublic: group.isPublic ?? true,
-      level: (group as any).level || 'Intermediate',
-      meetingSchedule: (group as any).meetingSchedule || null,
-      isActive: (group as any).isActive ?? true,
+      level: group.level || 'Intermediate',
+      meetingSchedule: group.meetingSchedule || null,
+      isActive: group.isActive ?? true,
       createdAt: group.createdAt || new Date(),
-      updatedAt: (group as any).updatedAt || new Date(),
+      updatedAt: group.updatedAt || new Date(),
     };
     const id = await indexedDBService.add(STORES.studyGroups, newGroup);
     return { ...newGroup, id: Number(id) };
@@ -730,11 +734,13 @@ class ClientStorage implements IClientStorage {
   }
 
   async joinStudyGroup(userId: string, groupId: number): Promise<StudyGroupMember> {
-    const member: any = {
+    const member: Omit<StudyGroupMember, 'id'> = {
       userId,
       groupId,
       joinedAt: new Date(),
       role: 'member',
+      lastActiveAt: null,
+      contributionScore: 0,
     };
     const id = await indexedDBService.add(STORES.studyGroupMembers, member);
     return { ...member, id: Number(id) };
@@ -758,21 +764,21 @@ class ClientStorage implements IClientStorage {
   }
 
   async createPracticeTest(test: Partial<PracticeTest>): Promise<PracticeTest> {
-    const newTest: any = {
+    const newTest: Omit<PracticeTest, 'id'> = {
       tenantId: 1,
-      name: (test as any).name!,
+      name: test.name!,
       description: test.description || null,
-      categoryIds: (test as any).categoryIds || [],
-      questionCount: (test as any).questionCount || 50,
-      timeLimit: (test as any).timeLimit || 60,
-      difficulty: (test as any).difficulty || 'Medium',
-      passingScore: (test as any).passingScore || 70,
-      isOfficial: (test as any).isOfficial || false,
-      questionPool: (test as any).questionPool || null,
-      createdBy: (test as any).createdBy || null,
-      isActive: (test as any).isActive ?? true,
+      categoryIds: test.categoryIds || [],
+      questionCount: test.questionCount || 50,
+      timeLimit: test.timeLimit || 60,
+      difficulty: test.difficulty || 'Medium',
+      passingScore: test.passingScore || 70,
+      isOfficial: test.isOfficial || false,
+      questionPool: test.questionPool || null,
+      createdBy: test.createdBy || null,
+      isActive: test.isActive ?? true,
       createdAt: test.createdAt || new Date(),
-      updatedAt: (test as any).updatedAt || new Date(),
+      updatedAt: test.updatedAt || new Date(),
     };
     const id = await indexedDBService.add(STORES.practiceTests, newTest);
     return { ...newTest, id: Number(id) };
@@ -787,13 +793,14 @@ class ClientStorage implements IClientStorage {
   }
 
   async createPracticeTestAttempt(attempt: Partial<PracticeTestAttempt>): Promise<PracticeTestAttempt> {
-    const newAttempt: any = {
+    const newAttempt: Omit<PracticeTestAttempt, 'id'> = {
       userId: attempt.userId!,
       testId: attempt.testId!,
-      quizId: attempt.quizId!,
-      tenantId: attempt.tenantId!,
+      quizId: attempt.quizId || null,
+      tenantId: attempt.tenantId || 1,
       score: attempt.score || null,
       isPassed: attempt.isPassed || false,
+      timeSpent: attempt.timeSpent || null,
       startedAt: attempt.startedAt || new Date(),
       completedAt: attempt.completedAt || null,
     };

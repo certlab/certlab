@@ -317,6 +317,64 @@ export const submitAnswerSchema = z.object({
   answer: z.number(),
 });
 
+/**
+ * Represents a single quiz answer with question ID and the selected answer
+ */
+export interface QuizAnswer {
+  questionId: number;
+  answer: number;
+}
+
+/**
+ * Webhook details stored when marking webhooks as processed
+ */
+export interface WebhookDetails {
+  eventType?: string;
+  timestamp?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Performance analysis result for a user's weakest areas
+ */
+export interface WeakAreaPerformance {
+  categoryId: number;
+  percentage: number;
+  questionsAnswered: number;
+  correctAnswers: number;
+  categoryName?: string;
+}
+
+/**
+ * Overall statistics from performance analysis
+ */
+export interface OverallPerformanceStats {
+  totalQuizzes: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  overallPercentage: number;
+  averageQuizScore: number;
+}
+
+/**
+ * Full performance analysis result
+ */
+export interface PerformanceAnalysis {
+  weakestAreas: WeakAreaPerformance[];
+  overallStats: OverallPerformanceStats;
+  focusTopics: string[];
+  recommendations: string[];
+}
+
+/**
+ * Quiz result used for adaptive progress updates
+ */
+export interface QuizResult {
+  questionId: number;
+  isCorrect: boolean;
+  subcategoryId?: number;
+}
+
 // Types
 export type InsertTenant = z.infer<typeof insertTenantSchema>;
 export type Tenant = typeof tenants.$inferSelect;
@@ -343,6 +401,8 @@ export type InsertUserBadge = z.infer<typeof insertUserBadgeSchema>;
 export type UserBadge = typeof userBadges.$inferSelect;
 export type InsertUserGameStats = z.infer<typeof insertUserGameStatsSchema>;
 export type UserGameStats = typeof userGameStats.$inferSelect;
+export type InsertLecture = z.infer<typeof insertLectureSchema>;
+export type Lecture = typeof lectures.$inferSelect;
 
 // Challenge schemas and types
 export const insertChallengeSchema = createInsertSchema(challenges).omit({

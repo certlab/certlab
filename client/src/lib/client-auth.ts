@@ -23,6 +23,12 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /** Minimum required password length */
 const MIN_PASSWORD_LENGTH = 8;
 
+/** Email validation regex pattern */
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Minimum required password length */
+const MIN_PASSWORD_LENGTH = 8;
+
 // PBKDF2 configuration
 const PBKDF2_ITERATIONS = 100000;
 const SALT_LENGTH = 16; // 128 bits
@@ -174,6 +180,16 @@ function validatePasswordLength(password: string): AuthError | null {
   return null;
 }
 
+/**
+ * Validate password length and return an AuthError if invalid
+ */
+function validatePasswordLength(password: string): AuthError | null {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return new AuthError(AuthErrorCode.PASSWORD_TOO_SHORT, { passwordLength: password.length });
+  }
+  return null;
+}
+
 export interface AuthResponse {
   success: boolean;
   user?: Omit<User, 'passwordHash'>;
@@ -266,6 +282,11 @@ class ClientAuth {
       if (needsRehash) {
         const newHash = await hashPassword(password);
         await clientStorage.updateUser(user.id, { passwordHash: newHash });
+      // Verify password if user has one
+      const passwordHash = await hashPassword(password);
+      if (user.passwordHash !== passwordHash) {
+        const error = new AuthError(AuthErrorCode.INVALID_CREDENTIALS, { email });
+        return { success: false, message: error.message, errorCode: error.code };
       }
 
       // Set as current user
@@ -392,6 +413,9 @@ class ClientAuth {
       // Verify current password using the secure verification function
       const { valid } = await verifyPassword(currentPassword, user.passwordHash);
       if (!valid) {
+      // Verify current password
+      const currentHash = await hashPassword(currentPassword);
+      if (user.passwordHash !== currentHash) {
         const error = new AuthError(AuthErrorCode.INVALID_PASSWORD, { userId });
         return { success: false, message: error.message, errorCode: error.code };
       }

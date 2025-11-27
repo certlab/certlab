@@ -107,10 +107,19 @@ export default function Header() {
                   variant="secondary" 
                   className="ml-2 px-3 py-1 cursor-pointer hover:bg-secondary/80 transition-colors"
                   onClick={() => setLocation('/app/dashboard')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setLocation('/app/dashboard');
+                    }
+                  }}
                   data-testid="token-balance-badge"
                   title="Click to manage tokens"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${tokenData.balance} tokens available. Click to manage tokens.`}
                 >
-                  <Coins className="w-4 h-4 mr-1.5 text-amber-500" />
+                  <Coins className="w-4 h-4 mr-1.5 text-amber-500" aria-hidden="true" />
                   <span className="font-medium">{tokenData.balance}</span>
                   <span className="ml-1 text-xs text-muted-foreground">tokens</span>
                 </Badge>
@@ -311,9 +320,13 @@ export default function Header() {
             {currentUser && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 rounded-full px-2 hover:bg-accent/10">
+                  <Button 
+                    variant="ghost" 
+                    className="relative h-10 rounded-full px-2 hover:bg-accent/10"
+                    aria-label={`User menu for ${getUserDisplayName(currentUser)}`}
+                  >
                     <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center shadow-glow">
+                      <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center shadow-glow" aria-hidden="true">
                         <span className="text-primary-foreground text-sm font-semibold">
                           {getInitials(currentUser.firstName, currentUser.lastName)}
                         </span>
@@ -321,7 +334,7 @@ export default function Header() {
                       <span className="hidden md:block text-foreground text-sm font-medium">
                         {getUserDisplayName(currentUser)}
                       </span>
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     </div>
                   </Button>
                 </DropdownMenuTrigger>

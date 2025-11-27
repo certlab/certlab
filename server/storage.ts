@@ -8,8 +8,11 @@ import {
   type MasteryScore, type InsertMasteryScore, type Badge, type UserBadge, type UserGameStats,
   type Challenge, type InsertChallenge, type ChallengeAttempt, type InsertChallengeAttempt,
   type StudyGroup, type InsertStudyGroup, type StudyGroupMember, type InsertStudyGroupMember,
-  type PracticeTest, type InsertPracticeTest, type PracticeTestAttempt, type InsertPracticeTestAttempt
+  type PracticeTest, type InsertPracticeTest, type PracticeTestAttempt, type InsertPracticeTestAttempt,
+  type Lecture, type InsertLecture, type QuizAnswer, type WebhookDetails,
+  type WeakAreaPerformance, type OverallPerformanceStats, type PerformanceAnalysis, type QuizResult
 } from "@shared/schema";
+import type { StudyPreferences, SkillsAssessment } from "@shared/storage-interface";
 import { db } from "./db";
 import { eq, and, inArray, desc, gte, lte, or, isNull } from "drizzle-orm";
 
@@ -30,8 +33,8 @@ export interface IStorage {
   updateUser(id: string, updates: Partial<User>): Promise<User | null>;
   updateUserGoals(id: string, goals: {
     certificationGoals: string[];
-    studyPreferences: any;
-    skillsAssessment: any;
+    studyPreferences: StudyPreferences | null;
+    skillsAssessment: SkillsAssessment | null;
   }): Promise<User | null>;
   getUsersByTenant(tenantId: number): Promise<User[]>;
   getUserByPolarCustomerId(polarCustomerId: string): Promise<User[]>;
@@ -73,10 +76,10 @@ export interface IStorage {
   }>;
   
   // Lectures
-  createLecture(userId: string, quizId: number, missedTopics: string[]): Promise<any>;
-  getUserLectures(userId: string): Promise<any[]>;
-  getLecture(id: number): Promise<any>;
-  createLectureFromQuiz(userId: string, quizId: number, title: string, content: string, topics: string[], categoryId: number): Promise<any>;
+  createLecture(userId: string, quizId: number, missedTopics: string[]): Promise<Lecture>;
+  getUserLectures(userId: string): Promise<Lecture[]>;
+  getLecture(id: number): Promise<Lecture | undefined>;
+  createLectureFromQuiz(userId: string, quizId: number, title: string, content: string, topics: string[], categoryId: number): Promise<Lecture>;
   
   // Mastery scores
   updateMasteryScore(userId: string, categoryId: number, subcategoryId: number, isCorrect: boolean): Promise<void>;
@@ -129,7 +132,7 @@ export interface IStorage {
   getChallenge(id: number): Promise<Challenge | undefined>;
   generateDailyChallenges(userId: string): Promise<Challenge[]>;
   startChallengeAttempt(userId: string, challengeId: number): Promise<ChallengeAttempt>;
-  completeChallengeAttempt(attemptId: number, score: number, answers: any[], timeSpent: number): Promise<ChallengeAttempt>;
+  completeChallengeAttempt(attemptId: number, score: number, answers: QuizAnswer[], timeSpent: number): Promise<ChallengeAttempt>;
   getUserChallengeAttempts(userId: string): Promise<ChallengeAttempt[]>;
   getChallengeAttempt(id: number): Promise<ChallengeAttempt | undefined>;
   
@@ -158,7 +161,7 @@ export interface IStorage {
   
   // Webhook idempotency tracking
   checkWebhookProcessed(eventId: string): Promise<boolean>;
-  markWebhookProcessed(eventId: string, details: any): Promise<void>;
+  markWebhookProcessed(eventId: string, details: WebhookDetails): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -187,7 +190,7 @@ export class DatabaseStorage implements IStorage {
     console.log("Preparing to import 57,672 authentic certification questions from provided dataset");
     
     // Get or create categories
-    let insertedCategories: any[] = existingCategories;
+    let insertedCategories: Category[] = existingCategories;
     
     if (existingCategories.length === 0) {
       // Seed categories based on authentic certification data structure
@@ -280,7 +283,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Get or create subcategories
-    let insertedSubcategories: any[] = [];
+    let insertedSubcategories: Subcategory[] = [];
     const existingSubcategories = await db.select().from(subcategories);
     
     if (existingSubcategories.length === 0 && subcategoriesData.length > 0) {
@@ -291,16 +294,16 @@ export class DatabaseStorage implements IStorage {
 
     // Generate authentic-scale question database based on uploaded CSV with 57,672 questions
     // Authentic counts: CC(8,375), CISSP(15,582), Cloud+(20,763), CISM(5,259), CGRC(6,153), CISA(1,540)
-    const sampleQuestions: any[] = [];
+    const sampleQuestions: Partial<InsertQuestion>[] = [];
     
     console.log("Generating comprehensive question database based on authentic dataset structure...");
 
     // Helper function to find subcategory and add questions
-    const addQuestionsForSubcategory = (certName: string, subcatName: string, questionsArray: any[]) => {
+    const addQuestionsForSubcategory = (certName: string, subcatName: string, questionsArray: Partial<InsertQuestion>[]) => {
       const subcategory = insertedSubcategories.find(sub => sub.name === subcatName);
       const category = insertedCategories.find(cat => cat.name === certName);
       if (subcategory && category) {
-        questionsArray.forEach((q: any) => {
+        questionsArray.forEach((q) => {
           sampleQuestions.push({
             tenantId: 1,
             categoryId: category.id,
@@ -1812,10 +1815,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    // Ensure proper array format for values
-    const userData: any = {
+    // Ensure proper array format for values - use explicit cast for drizzle compatibility
+    const userData = {
       ...insertUser,
-      certificationGoals: insertUser.certificationGoals || [],
+      certificationGoals: (insertUser.certificationGoals || []) as string[],
     };
     const [user] = await db.insert(users).values([userData]).returning();
     return user;
@@ -1823,8 +1826,8 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserGoals(id: string, goals: {
     certificationGoals: string[];
-    studyPreferences: any;
-    skillsAssessment: any;
+    studyPreferences: StudyPreferences | null;
+    skillsAssessment: SkillsAssessment | null;
   }): Promise<User | null> {
     try {
       const [user] = await db
@@ -2007,7 +2010,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Adaptive Learning Methods
-  async updateAdaptiveProgress(userId: string, categoryId: number, quizResults: any[]): Promise<void> {
+  async updateAdaptiveProgress(userId: string, categoryId: number, quizResults: QuizResult[]): Promise<void> {
     const [existingProgress] = await db
       .select()
       .from(userProgress)
@@ -2024,7 +2027,7 @@ export class DatabaseStorage implements IStorage {
     // Analyze recent answers (last 10)
     const recentResults = quizResults.slice(-10);
     for (let i = recentResults.length - 1; i >= 0; i--) {
-      const isCorrect = recentResults[i].correct;
+      const isCorrect = recentResults[i].isCorrect;
       if (i === recentResults.length - 1) {
         isCorrectStreak = isCorrect;
         currentStreak = 1;
@@ -2042,15 +2045,15 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Identify weak subcategories
-    const subcategoryPerformance = new Map();
-    quizResults.forEach((result: any) => {
+    const subcategoryPerformance = new Map<number, { correct: number; total: number }>();
+    quizResults.forEach((result) => {
       if (result.subcategoryId) {
         if (!subcategoryPerformance.has(result.subcategoryId)) {
           subcategoryPerformance.set(result.subcategoryId, { correct: 0, total: 0 });
         }
-        const perf = subcategoryPerformance.get(result.subcategoryId);
+        const perf = subcategoryPerformance.get(result.subcategoryId)!;
         perf.total++;
-        if (result.correct) perf.correct++;
+        if (result.isCorrect) perf.correct++;
       }
     });
 
@@ -2109,14 +2112,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Lecture generation methods
-  async createLecture(userId: string, quizId: number, missedTopics: string[]): Promise<any> {
+  async createLecture(userId: string, quizId: number, missedTopics: string[]): Promise<Lecture> {
     // Get quiz details for context
     const quiz = await this.getQuiz(quizId);
-    if (!quiz) return null;
+    if (!quiz) throw new Error('Quiz not found');
 
     // Get category information
     const [category] = await db.select().from(categories).where(eq(categories.id, (quiz.categoryIds as number[])[0]));
-    if (!category) return null;
+    if (!category) throw new Error('Category not found');
 
     // Generate lecture content based on missed topics
     const lectureContent = this.generateLectureContent(category.name, missedTopics);
@@ -2134,19 +2137,19 @@ export class DatabaseStorage implements IStorage {
     return lecture;
   }
 
-  async getUserLectures(userId: string): Promise<any[]> {
+  async getUserLectures(userId: string): Promise<Lecture[]> {
     return await db.select().from(lectures)
       .where(eq(lectures.userId, userId))
       .orderBy(desc(lectures.createdAt));
   }
 
-  async getLecture(lectureId: number): Promise<any> {
+  async getLecture(lectureId: number): Promise<Lecture | undefined> {
     const [lecture] = await db.select().from(lectures)
       .where(eq(lectures.id, lectureId));
     return lecture;
   }
 
-  async createLectureFromQuiz(userId: string, quizId: number, title: string, content: string, topics: string[], categoryId: number): Promise<any> {
+  async createLectureFromQuiz(userId: string, quizId: number, title: string, content: string, topics: string[], categoryId: number): Promise<Lecture> {
     const [lecture] = await db.insert(lectures).values({
       userId,
       quizId,
@@ -2211,7 +2214,7 @@ ${missedTopics.map((topic, index) => `
   }
 
   // Performance-based lecture generation
-  async generatePerformanceLecture(userId: string): Promise<any> {
+  async generatePerformanceLecture(userId: string): Promise<Lecture> {
     // Get user's completed quizzes
     const userQuizzes = await this.getUserQuizzes(userId);
     const completedQuizzes = userQuizzes.filter(quiz => quiz.completedAt && quiz.answers);
@@ -2253,12 +2256,7 @@ ${missedTopics.map((topic, index) => `
     return lecture;
   }
 
-  private async analyzeUserPerformance(userId: string, completedQuizzes: any[]): Promise<{
-    weakestAreas: any[];
-    overallStats: any;
-    focusTopics: string[];
-    recommendations: string[];
-  }> {
+  private async analyzeUserPerformance(userId: string, completedQuizzes: Quiz[]): Promise<PerformanceAnalysis> {
     // Get all questions from completed quizzes to analyze performance
     const categoryPerformance = new Map<number, { correct: number; total: number; subcategories: Map<number, { correct: number; total: number }> }>();
 
@@ -2272,7 +2270,7 @@ ${missedTopics.map((topic, index) => `
 
       for (let i = 0; i < quiz.answers.length && i < questions.length; i++) {
         const question = questions[i];
-        const answer = quiz.answers[i];
+        const answer = quiz.answers[i] as { correct?: boolean };
         const isCorrect = answer.correct === true;
 
         // Track category performance
@@ -2342,8 +2340,8 @@ ${missedTopics.map((topic, index) => `
   }
 
   private generatePerformanceBasedLecture(
-    weakestCategories: any[], 
-    overallStats: any, 
+    weakestCategories: WeakAreaPerformance[], 
+    overallStats: OverallPerformanceStats, 
     recommendations: string[]
   ): string {
     const content = `
@@ -3257,7 +3255,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     return attempt;
   }
 
-  async completeChallengeAttempt(attemptId: number, score: number, answers: any[], timeSpent: number): Promise<ChallengeAttempt> {
+  async completeChallengeAttempt(attemptId: number, score: number, answers: QuizAnswer[], timeSpent: number): Promise<ChallengeAttempt> {
     const attempt = await this.getChallengeAttempt(attemptId);
     if (!attempt) throw new Error('Challenge attempt not found');
 
@@ -3334,10 +3332,10 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
   }
 
   async createStudyGroup(group: InsertStudyGroup): Promise<StudyGroup> {
-    // Ensure categoryIds is a proper array
-    const groupData: any = {
+    // Ensure categoryIds is a proper array - use explicit cast for drizzle compatibility
+    const groupData = {
       ...group,
-      categoryIds: Array.isArray(group.categoryIds) ? group.categoryIds : []
+      categoryIds: (Array.isArray(group.categoryIds) ? group.categoryIds : []) as number[]
     };
     const [newGroup] = await db.insert(studyGroups).values([groupData]).returning();
     
@@ -3351,12 +3349,12 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
   }
 
   async updateStudyGroup(id: number, updates: Partial<InsertStudyGroup>): Promise<StudyGroup | null> {
-    // Fix categoryIds if present - ensure it's a proper array
-    const processedUpdates: any = { ...updates };
+    // Fix categoryIds if present - ensure it's a proper array with explicit type
+    const processedUpdates = { ...updates };
     if (updates.categoryIds) {
-      processedUpdates.categoryIds = Array.isArray(updates.categoryIds) 
+      processedUpdates.categoryIds = (Array.isArray(updates.categoryIds) 
         ? updates.categoryIds 
-        : Object.values(updates.categoryIds).map((id: any) => Number(id));
+        : Object.values(updates.categoryIds as Record<string, unknown>).map((id) => Number(id))) as number[];
     }
     
     const [updated] = await db.update(studyGroups)
@@ -3450,22 +3448,22 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
   }
 
   async createPracticeTest(test: InsertPracticeTest): Promise<PracticeTest> {
-    // Ensure categoryIds is a proper array
-    const testData: any = {
+    // Ensure categoryIds is a proper array - use explicit cast for drizzle compatibility
+    const testData = {
       ...test,
-      categoryIds: Array.isArray(test.categoryIds) ? test.categoryIds : []
+      categoryIds: (Array.isArray(test.categoryIds) ? test.categoryIds : []) as number[]
     };
     const [newTest] = await db.insert(practiceTests).values([testData]).returning();
     return newTest;
   }
 
   async updatePracticeTest(id: number, updates: Partial<InsertPracticeTest>): Promise<PracticeTest | null> {
-    // Fix categoryIds if present - ensure it's a proper array
-    const processedUpdates: any = { ...updates };
+    // Fix categoryIds if present - ensure it's a proper array with explicit type
+    const processedUpdates = { ...updates };
     if (updates.categoryIds) {
-      processedUpdates.categoryIds = Array.isArray(updates.categoryIds) 
+      processedUpdates.categoryIds = (Array.isArray(updates.categoryIds) 
         ? updates.categoryIds 
-        : Object.values(updates.categoryIds).map((id: any) => Number(id));
+        : Object.values(updates.categoryIds as Record<string, unknown>).map((id) => Number(id))) as number[];
     }
     
     const [updated] = await db.update(practiceTests)
@@ -3546,7 +3544,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
 
   // Webhook idempotency tracking - using in-memory storage for simplicity
   // In production, this should be stored in database or Redis
-  private processedWebhooks = new Map<string, { timestamp: Date; details: any }>();
+  private processedWebhooks = new Map<string, { timestamp: Date; details: WebhookDetails }>();
   private readonly WEBHOOK_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
   async checkWebhookProcessed(eventId: string): Promise<boolean> {
@@ -3556,7 +3554,7 @@ ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
     return this.processedWebhooks.has(eventId);
   }
 
-  async markWebhookProcessed(eventId: string, details: any): Promise<void> {
+  async markWebhookProcessed(eventId: string, details: WebhookDetails): Promise<void> {
     this.processedWebhooks.set(eventId, {
       timestamp: new Date(),
       details
