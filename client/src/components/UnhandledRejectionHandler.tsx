@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 
@@ -103,26 +103,9 @@ function getErrorInfo(category: ErrorCategory): {
  * This component should be mounted once at the app level.
  */
 export function UnhandledRejectionHandler() {
-  // Track failed operations for potential retry
-  const failedOperationsRef = useRef<Map<string, () => void>>(new Map());
-
-  // Handle retry action
+  // Handle retry action by reloading the page as a recovery strategy
   const handleRetry = useCallback(() => {
-    // Attempt to retry the most recent failed operation if available
-    const operations = failedOperationsRef.current;
-    if (operations.size > 0) {
-      const lastKey = Array.from(operations.keys()).pop();
-      if (lastKey) {
-        const retryFn = operations.get(lastKey);
-        operations.delete(lastKey);
-        if (retryFn) {
-          retryFn();
-        }
-      }
-    } else {
-      // If no specific retry function, reload the page as a recovery strategy
-      window.location.reload();
-    }
+    window.location.reload();
   }, []);
 
   useEffect(() => {
