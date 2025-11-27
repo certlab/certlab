@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated README with expanded installation and setup instructions
 
-## [2.0.0] - 2024
+## [2.0.0] - 2024-01
 
 ### Changed
 - Complete migration to client-side only architecture

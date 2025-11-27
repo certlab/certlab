@@ -102,7 +102,7 @@ CertLab runs entirely in your browser using:
 
 | Technology | Purpose |
 |------------|---------|
-| **React 18** | UI framework |
+| **React** | UI framework |
 | **TypeScript** | Type safety |
 | **IndexedDB** | Data persistence |
 | **TanStack Query** | State management |
@@ -251,14 +251,14 @@ For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE
 
 | Category | Technology | Purpose |
 |----------|------------|---------|
-| **Framework** | React 18 | UI framework |
-| **Language** | TypeScript 5.6 | Type safety |
-| **Build Tool** | Vite 5.4 | Fast builds and HMR |
-| **Styling** | TailwindCSS 3.4 | Utility-first CSS |
+| **Framework** | React | UI framework |
+| **Language** | TypeScript | Type safety |
+| **Build Tool** | Vite | Fast builds and HMR |
+| **Styling** | TailwindCSS | Utility-first CSS |
 | **Components** | Radix UI | Accessible component primitives |
-| **State** | TanStack Query 5 | Async state management |
+| **State** | TanStack Query | Async state management |
 | **Storage** | IndexedDB | Browser data persistence |
-| **Routing** | Wouter 3 | Lightweight client-side routing |
+| **Routing** | Wouter | Lightweight client-side routing |
 | **Validation** | Zod | Schema validation |
 | **Animation** | Framer Motion | UI animations |
 | **Charts** | Recharts | Data visualization |
