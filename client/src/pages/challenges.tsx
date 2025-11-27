@@ -31,7 +31,8 @@ export default function ChallengesPage() {
   // Mutation to generate daily challenges
   const generateDailyChallengesMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest(`/api/user/${currentUser?.id}/generate-daily-challenges`, {
+      return await apiRequest({
+        endpoint: `/api/user/${currentUser?.id}/generate-daily-challenges`,
         method: "POST",
       });
     },
@@ -52,12 +53,16 @@ export default function ChallengesPage() {
   });
 
   // Mutation to start a challenge
-  const startChallengeMutation = useMutation({
+  const startChallengeMutation = useMutation<ChallengeAttempt, Error, number>({
     mutationFn: async (challengeId: number) => {
-      return await apiRequest(`/api/challenge/${challengeId}/start`, {
+      // Using deprecated apiRequest - this returns a mock response
+      // TODO: Replace with clientStorage.createChallengeAttempt when implementing challenges
+      const response = await apiRequest({
+        endpoint: `/api/challenge/${challengeId}/start`,
         method: "POST",
-        body: { userId: currentUser?.id },
+        data: { userId: currentUser?.id },
       });
+      return response.json();
     },
     onSuccess: (attempt: ChallengeAttempt) => {
       // Redirect to quiz interface with challenge mode

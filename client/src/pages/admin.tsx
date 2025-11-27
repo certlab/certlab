@@ -14,15 +14,7 @@ import { PlusCircle, Edit, Trash2, Users, FileText, FolderOpen, Building } from 
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-interface Tenant {
-  id: number;
-  name: string;
-  domain?: string;
-  settings: Record<string, any>;
-  isActive: boolean;
-  createdAt: string;
-}
+import type { Tenant } from "@shared/schema";
 
 interface Category {
   id: number;
@@ -890,7 +882,7 @@ export default function AdminDashboard() {
                           onClick={() => {
                             if (currentTenant) {
                               setEditingTenant(currentTenant);
-                              setEditIsActive(currentTenant.isActive);
+                              setEditIsActive(currentTenant.isActive ?? true);
                               setEditTenantDialog(true);
                             }
                           }}

@@ -27,13 +27,19 @@ const createUnknownBadge = (badgeId: number) => ({
   points: 0
 });
 
+// Type for badge requirements
+interface BadgeRequirement {
+  type: "quiz_count" | "streak" | "score";
+  value: number;
+}
+
 // Client-side query handler that uses IndexedDB
 type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
+export function getQueryFn<T>(options: {
   on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
+}): QueryFunction<T> {
+  const { on401: unauthorizedBehavior } = options;
+  return async ({ queryKey }) => {
     const key = queryKey as string[];
     const path = key.join("/");
 
@@ -43,7 +49,7 @@ export const getQueryFn: <T>(options: {
       if (!user && unauthorizedBehavior === "throw") {
         throw new Error("Unauthorized");
       }
-      return user;
+      return user as T;
     }
 
     // Parse the path to determine what data to fetch
@@ -59,19 +65,19 @@ export const getQueryFn: <T>(options: {
         const tenantId = user?.tenantId || 1;
 
         if (path.includes("/stats")) {
-          return await clientStorage.getUserStats(userId, tenantId);
+          return await clientStorage.getUserStats(userId, tenantId) as T;
         }
         if (path.includes("/quizzes")) {
-          return await clientStorage.getUserQuizzes(userId, tenantId);
+          return await clientStorage.getUserQuizzes(userId, tenantId) as T;
         }
         if (path.includes("/progress")) {
-          return await clientStorage.getUserProgress(userId, tenantId);
+          return await clientStorage.getUserProgress(userId, tenantId) as T;
         }
         if (path.includes("/mastery")) {
-          return await clientStorage.getCertificationMasteryScores(userId, tenantId);
+          return await clientStorage.getCertificationMasteryScores(userId, tenantId) as T;
         }
         if (path.includes("/lectures")) {
-          return await clientStorage.getUserLectures(userId, tenantId);
+          return await clientStorage.getUserLectures(userId, tenantId) as T;
         }
         if (path.includes("/achievement-progress")) {
           // Return achievement progress data with all badges and user's progress
@@ -100,7 +106,7 @@ export const getQueryFn: <T>(options: {
               progressText = "Completed!";
             } else if (badge.requirement) {
               // Try to calculate progress based on requirement type
-              const req = badge.requirement;
+              const req = badge.requirement as BadgeRequirement;
               if (req.type === "quiz_count") {
                 progress = Math.min(100, Math.round((completedQuizzes / req.value) * 100));
                 progressText = `${completedQuizzes}/${req.value} quizzes completed`;
@@ -128,7 +134,7 @@ export const getQueryFn: <T>(options: {
           return {
             unlockedBadges: Array.from(userBadgeIds),
             progressData
-          };
+          } as T;
         }
         if (path.includes("/achievements")) {
           // Return full achievement data with badges, game stats, and new badge count
@@ -165,25 +171,25 @@ export const getQueryFn: <T>(options: {
               nextLevelPoints: 100
             },
             newBadges
-          };
+          } as T;
         }
         if (path.includes("/practice-test-attempts")) {
-          return await clientStorage.getPracticeTestAttempts(userId);
+          return await clientStorage.getPracticeTestAttempts(userId) as T;
         }
         if (path.includes("/token-balance") || path.includes("/tokens")) {
-          return { balance: await clientStorage.getUserTokenBalance(userId) };
+          return { balance: await clientStorage.getUserTokenBalance(userId) } as T;
         }
         // Default to getting user
         const match = path.match(/\/api\/user\/([^\/]+)$/);
         if (match) {
           const uid = match[1];
-          return await clientStorage.getUser(uid);
+          return await clientStorage.getUser(uid) as T;
         }
       }
 
       // Handle tenants
       if (path === "/api/tenants") {
-        return await clientStorage.getTenants();
+        return await clientStorage.getTenants() as T;
       }
       
       // Handle specific tenant query
@@ -191,7 +197,7 @@ export const getQueryFn: <T>(options: {
         const match = path.match(/\/api\/tenants\/(\d+)/);
         if (match) {
           const tenantId = parseInt(match[1]);
-          return await clientStorage.getTenant(tenantId);
+          return await clientStorage.getTenant(tenantId) as T;
         }
       }
 
@@ -199,27 +205,27 @@ export const getQueryFn: <T>(options: {
       if (path === "/api/categories") {
         // Get current user to determine tenantId
         const userId = await clientStorage.getCurrentUserId();
-        if (!userId) return await clientStorage.getCategories(1); // Anonymous users see tenant 1 (default tenant)
+        if (!userId) return await clientStorage.getCategories(1) as T; // Anonymous users see tenant 1 (default tenant)
         
         const user = await clientStorage.getUser(userId);
         const tenantId = user?.tenantId || 1;
-        return await clientStorage.getCategories(tenantId);
+        return await clientStorage.getCategories(tenantId) as T;
       }
 
       // Handle subcategories
       if (path === "/api/subcategories") {
         // Get current user to determine tenantId
         const userId = await clientStorage.getCurrentUserId();
-        if (!userId) return await clientStorage.getSubcategories(undefined, 1);
+        if (!userId) return await clientStorage.getSubcategories(undefined, 1) as T;
         
         const user = await clientStorage.getUser(userId);
         const tenantId = user?.tenantId || 1;
-        return await clientStorage.getSubcategories(undefined, tenantId);
+        return await clientStorage.getSubcategories(undefined, tenantId) as T;
       }
 
       // Handle badges
       if (path === "/api/badges") {
-        return await clientStorage.getBadges();
+        return await clientStorage.getBadges() as T;
       }
 
       // Handle quiz queries
@@ -228,14 +234,14 @@ export const getQueryFn: <T>(options: {
         const questionsMatch = path.match(/\/api\/quiz\/(\d+)\/questions$/);
         if (questionsMatch) {
           const quizId = parseInt(questionsMatch[1]);
-          return await clientStorage.getQuizQuestions(quizId);
+          return await clientStorage.getQuizQuestions(quizId) as T;
         }
         
         // Then check for quiz details
         const match = path.match(/\/api\/quiz\/(\d+)$/);
         if (match) {
           const quizId = parseInt(match[1]);
-          return await clientStorage.getQuiz(quizId);
+          return await clientStorage.getQuiz(quizId) as T;
         }
       }
 
@@ -244,18 +250,18 @@ export const getQueryFn: <T>(options: {
         const match = path.match(/\/api\/lecture\/(\d+)/);
         if (match) {
           const lectureId = parseInt(match[1]);
-          return await clientStorage.getLecture(lectureId);
+          return await clientStorage.getLecture(lectureId) as T;
         }
       }
 
       // Handle practice tests
       if (path === "/api/practice-tests") {
-        return await clientStorage.getPracticeTests();
+        return await clientStorage.getPracticeTests() as T;
       }
 
       // Handle admin tenant queries
       if (path === "/api/admin/tenants") {
-        return await clientStorage.getTenants();
+        return await clientStorage.getTenants() as T;
       }
 
       // Handle admin tenant stats
@@ -271,41 +277,42 @@ export const getQueryFn: <T>(options: {
           subcategories: subcategories.length,
           questions: questions.length,
           users: users.length,
-        };
+        } as T;
       }
 
       // Handle admin tenant categories
       const tenantCategoriesMatch = path.match(/\/api\/admin\/tenants\/(\d+)\/categories/);
       if (tenantCategoriesMatch) {
         const tenantId = parseInt(tenantCategoriesMatch[1]);
-        return await clientStorage.getCategories(tenantId);
+        return await clientStorage.getCategories(tenantId) as T;
       }
 
       // Handle admin tenant questions
       const tenantQuestionsMatch = path.match(/\/api\/admin\/tenants\/(\d+)\/questions/);
       if (tenantQuestionsMatch) {
         const tenantId = parseInt(tenantQuestionsMatch[1]);
-        return await clientStorage.getQuestionsByTenant(tenantId);
+        return await clientStorage.getQuestionsByTenant(tenantId) as T;
       }
 
       // Handle admin tenant users
       const tenantUsersMatch = path.match(/\/api\/admin\/tenants\/(\d+)\/users/);
       if (tenantUsersMatch) {
         const tenantId = parseInt(tenantUsersMatch[1]);
-        return await clientStorage.getUsersByTenant(tenantId);
+        return await clientStorage.getUsersByTenant(tenantId) as T;
       }
 
       // Default: return null for unsupported queries
       console.warn(`Unsupported query path: ${path}`);
-      return null;
+      return null as T;
     } catch (error) {
       console.error(`Query error for ${path}:`, error);
       if (unauthorizedBehavior === "returnNull") {
-        return null;
+        return null as T;
       }
       throw error;
     }
   };
+}
 
 export async function apiRequest({
   method,

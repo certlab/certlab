@@ -40,7 +40,7 @@ interface AchievementData {
 }
 
 interface AchievementBadgesProps {
-  userId: number;
+  userId: string;
 }
 
 // Badge color mappings
