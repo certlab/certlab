@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark" | "nord" | "catppuccin" | "tokyo-night" | "dracula" | "rose-pine";
+type Theme = "light" | "dark" | "nord" | "catppuccin" | "tokyo-night" | "dracula" | "rose-pine" | "high-contrast";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -34,7 +34,7 @@ export function ThemeProvider({
     const root = window.document.documentElement;
 
     // Remove all theme classes
-    root.classList.remove("light", "dark", "nord", "catppuccin", "tokyo-night", "dracula", "rose-pine");
+    root.classList.remove("light", "dark", "nord", "catppuccin", "tokyo-night", "dracula", "rose-pine", "high-contrast");
 
     if (theme === "light") {
       // Light is the default, no class needed

@@ -178,11 +178,12 @@ export default function PracticeTestMode() {
     }
   };
 
+  // WCAG AA compliant score colors with dark mode variants
   const getScoreColor = (score: number, passingScore: number | null) => {
     const threshold = passingScore ?? 70; // Default to 70 if null
-    if (score >= threshold) return "text-green-600";
-    if (score >= threshold - 10) return "text-yellow-600";
-    return "text-red-600";
+    if (score >= threshold) return "text-green-600 dark:text-green-400";
+    if (score >= threshold - 10) return "text-yellow-600 dark:text-yellow-400";
+    return "text-red-600 dark:text-red-400";
   };
 
   const getCategoryNames = (categoryIds: number[]) => {

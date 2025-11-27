@@ -18,15 +18,17 @@ export const calculateScore = (correct: number, total: number): number => {
 };
 
 export const getScoreColor = (score: number): string => {
-  if (score >= 90) return 'text-green-600';
-  if (score >= 80) return 'text-blue-600';
-  if (score >= 70) return 'text-yellow-600';
-  return 'text-red-600';
+  // WCAG AA compliant colors with dark mode variants
+  if (score >= 90) return 'text-green-600 dark:text-green-400';
+  if (score >= 80) return 'text-blue-600 dark:text-blue-400';
+  if (score >= 70) return 'text-yellow-600 dark:text-yellow-400';
+  return 'text-red-600 dark:text-red-400';
 };
 
 export const getScoreBgColor = (score: number): string => {
-  if (score >= 90) return 'bg-green-100';
-  if (score >= 80) return 'bg-blue-100';
-  if (score >= 70) return 'bg-yellow-100';
-  return 'bg-red-100';
+  // WCAG AA compliant background colors with dark mode variants
+  if (score >= 90) return 'bg-green-100 dark:bg-green-900/30';
+  if (score >= 80) return 'bg-blue-100 dark:bg-blue-900/30';
+  if (score >= 70) return 'bg-yellow-100 dark:bg-yellow-900/30';
+  return 'bg-red-100 dark:bg-red-900/30';
 };

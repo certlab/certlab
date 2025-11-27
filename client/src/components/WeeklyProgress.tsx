@@ -68,11 +68,11 @@ export default function WeeklyProgress() {
         {/* Weekly Stats */}
         <div className="grid grid-cols-2 gap-4 text-center">
           <div className="space-y-1">
-            <p className="text-2xl font-bold text-blue-600">{totalQuizzesThisWeek}</p>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalQuizzesThisWeek}</p>
             <p className="text-xs text-muted-foreground">Sessions</p>
           </div>
           <div className="space-y-1">
-            <p className="text-2xl font-bold text-green-600">{averageScoreThisWeek}%</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{averageScoreThisWeek}%</p>
             <p className="text-xs text-muted-foreground">Avg Score</p>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function WeeklyProgress() {
         {/* Streak Info */}
         {weeklyData.filter(day => day.quizCount > 0).length >= 3 && (
           <div className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
             <span className="text-sm text-green-700 dark:text-green-300">
               Strong weekly momentum!
             </span>

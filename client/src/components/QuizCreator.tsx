@@ -251,9 +251,9 @@ export default function QuizCreator() {
           </Select>
         </div>
 
-        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
           <div className="flex items-center space-x-3 mb-3">
-            <i className="fas fa-brain text-blue-600"></i>
+            <i className="fas fa-brain text-blue-600 dark:text-blue-400"></i>
             <div>
               <h4 className="font-medium text-foreground">Continuous Learning Session</h4>
               <p className="text-sm text-muted-foreground">
@@ -261,12 +261,12 @@ export default function QuizCreator() {
               </p>
             </div>
           </div>
-          <div className="bg-white p-3 rounded border border-blue-100">
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li><i className="fas fa-check text-green-500 mr-2"></i>Questions from your selected certifications</li>
-              <li><i className="fas fa-check text-green-500 mr-2"></i>Immediate feedback with explanations</li>
-              <li><i className="fas fa-check text-green-500 mr-2"></i>Progress tracking across all areas</li>
-              <li><i className="fas fa-check text-green-500 mr-2"></i>Mastery score updates in real-time</li>
+          <div className="bg-white dark:bg-gray-900/50 p-3 rounded border border-blue-100 dark:border-blue-800">
+            <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+              <li><i className="fas fa-check text-green-500 dark:text-green-400 mr-2"></i>Questions from your selected certifications</li>
+              <li><i className="fas fa-check text-green-500 dark:text-green-400 mr-2"></i>Immediate feedback with explanations</li>
+              <li><i className="fas fa-check text-green-500 dark:text-green-400 mr-2"></i>Progress tracking across all areas</li>
+              <li><i className="fas fa-check text-green-500 dark:text-green-400 mr-2"></i>Mastery score updates in real-time</li>
               <li>
                 <i className="fas fa-chart-line text-blue-500 mr-2"></i>
                 <span className="font-medium">15 questions per session</span>

@@ -73,7 +73,7 @@ export default function AchievementsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-                  <Star className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
+                  <Star className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
                 </div>
                 Performance
               </CardTitle>
@@ -89,7 +89,7 @@ export default function AchievementsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                  <Flame className="w-4 h-4 text-orange-600 dark:text-orange-500" />
+                  <Flame className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                 </div>
                 Streak
               </CardTitle>
@@ -105,7 +105,7 @@ export default function AchievementsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                  <Target className="w-4 h-4 text-purple-600 dark:text-purple-500" />
+                  <Target className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                 </div>
                 Mastery
               </CardTitle>
@@ -121,7 +121,7 @@ export default function AchievementsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
-                  <Award className="w-4 h-4 text-green-600 dark:text-green-500" />
+                  <Award className="w-4 h-4 text-green-600 dark:text-green-400" />
                 </div>
                 Special
               </CardTitle>

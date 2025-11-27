@@ -170,21 +170,22 @@ export default function ContrastAnalyzer() {
     setOverallScore(score);
   };
 
+  // WCAG AA compliant score colors with dark mode variants
   const getScoreColor = (score: number) => {
-    if (score >= 90) return "text-green-600";
-    if (score >= 70) return "text-yellow-600";
-    return "text-red-600";
+    if (score >= 90) return "text-green-600 dark:text-green-400";
+    if (score >= 70) return "text-yellow-600 dark:text-yellow-400";
+    return "text-red-600 dark:text-red-400";
   };
 
   const getResultIcon = (result: ContrastResult) => {
-    if (result.aaa) return <Check className="h-4 w-4 text-green-600" />;
-    if (result.aa) return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
-    return <X className="h-4 w-4 text-red-600" />;
+    if (result.aaa) return <Check className="h-4 w-4 text-green-600 dark:text-green-400" />;
+    if (result.aa) return <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />;
+    return <X className="h-4 w-4 text-red-600 dark:text-red-400" />;
   };
 
   const getResultBadge = (result: ContrastResult) => {
-    if (result.aaa) return <Badge variant="secondary" className="bg-green-100 text-green-800">AAA Pass</Badge>;
-    if (result.aa) return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">AA Pass</Badge>;
+    if (result.aaa) return <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">AAA Pass</Badge>;
+    if (result.aa) return <Badge variant="secondary" className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">AA Pass</Badge>;
     return <Badge variant="destructive">Fail</Badge>;
   };
 

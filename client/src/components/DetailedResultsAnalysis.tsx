@@ -45,12 +45,12 @@ export default function DetailedResultsAnalysis({ quizId }: DetailedResultsAnaly
   const averageTimePerQuestion = totalQuestions > 0 ? Math.round(timeSpent / totalQuestions) : 0;
   const timeEfficiency = quiz.timeLimit ? Math.round((timeSpent / (quiz.timeLimit * 60)) * 100) : 100;
 
-  // Performance categorization
+  // Performance categorization - WCAG AA compliant colors with dark mode variants
   const getPerformanceLevel = (score: number) => {
-    if (score >= 85) return { level: "Excellent", color: "text-green-600", bgColor: "bg-green-100 dark:bg-green-900/20" };
-    if (score >= 70) return { level: "Good", color: "text-blue-600", bgColor: "bg-blue-100 dark:bg-blue-900/20" };
-    if (score >= 60) return { level: "Fair", color: "text-orange-600", bgColor: "bg-orange-100 dark:bg-orange-900/20" };
-    return { level: "Needs Improvement", color: "text-red-600", bgColor: "bg-red-100 dark:bg-red-900/20" };
+    if (score >= 85) return { level: "Excellent", color: "text-green-600 dark:text-green-400", bgColor: "bg-green-100 dark:bg-green-900/20" };
+    if (score >= 70) return { level: "Good", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-100 dark:bg-blue-900/20" };
+    if (score >= 60) return { level: "Fair", color: "text-orange-600 dark:text-orange-400", bgColor: "bg-orange-100 dark:bg-orange-900/20" };
+    return { level: "Needs Improvement", color: "text-red-600 dark:text-red-400", bgColor: "bg-red-100 dark:bg-red-900/20" };
   };
 
   const performance = getPerformanceLevel(quiz.score || 0);
@@ -122,19 +122,19 @@ export default function DetailedResultsAnalysis({ quizId }: DetailedResultsAnaly
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{correctAnswers}</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{correctAnswers}</div>
               <div className="text-sm text-muted-foreground">Correct</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{incorrectAnswers}</div>
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400">{incorrectAnswers}</div>
               <div className="text-sm text-muted-foreground">Incorrect</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{accuracy}%</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{accuracy}%</div>
               <div className="text-sm text-muted-foreground">Accuracy</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{averageTimePerQuestion}s</div>
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{averageTimePerQuestion}s</div>
               <div className="text-sm text-muted-foreground">Avg Time</div>
             </div>
           </div>

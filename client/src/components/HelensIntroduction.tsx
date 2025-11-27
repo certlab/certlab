@@ -86,20 +86,20 @@ const introSteps = [
         <div className="bg-card border border-border rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium">Recent Performance</span>
-            <TrendingUp className="w-4 h-4 text-green-500" />
+            <TrendingUp className="w-4 h-4 text-green-500 dark:text-green-400" />
           </div>
           <div className="space-y-2">
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Security Fundamentals</span>
-              <span className="text-green-600 font-medium">+12%</span>
+              <span className="text-green-600 dark:text-green-400 font-medium">+12%</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Network Security</span>
-              <span className="text-blue-600 font-medium">+8%</span>
+              <span className="text-blue-600 dark:text-blue-400 font-medium">+8%</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Risk Management</span>
-              <span className="text-orange-600 font-medium">Focus Area</span>
+              <span className="text-orange-600 dark:text-orange-400 font-medium">Focus Area</span>
             </div>
           </div>
         </div>

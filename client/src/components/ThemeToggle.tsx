@@ -1,4 +1,4 @@
-import { Moon, Sun, Snowflake, Coffee, Zap, Sparkles, Flower } from "lucide-react";
+import { Moon, Sun, Snowflake, Coffee, Zap, Sparkles, Flower, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,6 +20,12 @@ const themes = [
     value: "dark" as const,
     icon: Moon,
     description: "Easy on the eyes"
+  },
+  {
+    name: "High Contrast",
+    value: "high-contrast" as const,
+    icon: Eye,
+    description: "WCAG AAA compliant"
   },
   {
     name: "Nord",

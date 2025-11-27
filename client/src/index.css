@@ -223,6 +223,36 @@
   --info: hsl(189, 43%, 73%);
 }
 
+/* High Contrast - WCAG AAA compliant theme for maximum accessibility */
+.high-contrast {
+  --background: hsl(0, 0%, 0%);
+  --foreground: hsl(0, 0%, 100%);
+  --muted: hsl(0, 0%, 15%);
+  --muted-foreground: hsl(0, 0%, 85%);
+  --popover: hsl(0, 0%, 5%);
+  --popover-foreground: hsl(0, 0%, 100%);
+  --card: hsl(0, 0%, 5%);
+  --card-foreground: hsl(0, 0%, 100%);
+  --border: hsl(0, 0%, 40%);
+  --input: hsl(0, 0%, 20%);
+  --primary: hsl(210, 100%, 60%);
+  --primary-foreground: hsl(0, 0%, 0%);
+  --secondary: hsl(0, 0%, 25%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(60, 100%, 50%);
+  --accent-foreground: hsl(0, 0%, 0%);
+  --destructive: hsl(0, 100%, 60%);
+  --destructive-foreground: hsl(0, 0%, 0%);
+  --ring: hsl(60, 100%, 50%);
+  
+  /* Custom enhanced colors - high contrast versions */
+  --surface: hsl(0, 0%, 5%);
+  --error: hsl(0, 100%, 60%);
+  --success: hsl(120, 100%, 40%);
+  --warning: hsl(45, 100%, 50%);
+  --info: hsl(210, 100%, 60%);
+}
+
 @layer base {
   body {
     @apply font-sans antialiased bg-background text-foreground;

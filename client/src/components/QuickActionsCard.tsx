@@ -167,7 +167,7 @@ export default function QuickActionsCard() {
       title: 'Focus Practice',
       description: 'Study your weakest areas',
       icon: Zap,
-      color: 'bg-red-50 dark:bg-red-900/20 text-red-600',
+      color: 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400',
       disabled: masteryScores.length === 0
     },
     {
@@ -175,7 +175,7 @@ export default function QuickActionsCard() {
       title: 'Random Quiz',
       description: 'Mixed practice session',
       icon: Shuffle,
-      color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600',
+      color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
       disabled: false
     },
     {
@@ -183,7 +183,7 @@ export default function QuickActionsCard() {
       title: 'Quick Review',
       description: '10-minute study session',
       icon: RotateCcw,
-      color: 'bg-green-50 dark:bg-green-900/20 text-green-600',
+      color: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400',
       disabled: false
     },
     {
@@ -191,7 +191,7 @@ export default function QuickActionsCard() {
       title: 'Practice Exam',
       description: 'Full 50-question test',
       icon: BarChart3,
-      color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600',
+      color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
       disabled: false
     }
   ];

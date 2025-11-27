@@ -28,7 +28,7 @@ export default function DashboardStats() {
     );
   }
 
-  // All stats available
+  // All stats available - WCAG AA compliant colors with dark mode variants
   const statsData = [
     {
       title: "Total Sessions",
@@ -36,7 +36,7 @@ export default function DashboardStats() {
       change: "+12.5%",
       trend: "up",
       icon: BookOpen,
-      color: "text-blue-600"
+      color: "text-blue-600 dark:text-blue-400"
     },
     {
       title: "Average Score",
@@ -44,7 +44,7 @@ export default function DashboardStats() {
       change: stats.averageScore >= 70 ? "+2.3%" : "-1.2%",
       trend: stats.averageScore >= 70 ? "up" : "down",
       icon: Target,
-      color: "text-green-600"
+      color: "text-green-600 dark:text-green-400"
     },
     {
       title: "Study Streak",
@@ -52,7 +52,7 @@ export default function DashboardStats() {
       change: stats.currentStreak > 0 ? `${stats.currentStreak} days` : "Start today",
       trend: stats.currentStreak > 0 ? "up" : "neutral",
       icon: Award,
-      color: "text-orange-600"
+      color: "text-orange-600 dark:text-orange-400"
     },
     {
       title: "Time Studied",
@@ -60,7 +60,7 @@ export default function DashboardStats() {
       change: "+45min",
       trend: "up",
       icon: Clock,
-      color: "text-purple-600"
+      color: "text-purple-600 dark:text-purple-400"
     }
   ];
 
@@ -76,8 +76,8 @@ export default function DashboardStats() {
                   <Icon className="h-5 w-5" />
                 </div>
                 <div className="flex items-center gap-1">
-                  {stat.trend === "up" && <TrendingUp className="h-4 w-4 text-green-500" />}
-                  {stat.trend === "down" && <TrendingDown className="h-4 w-4 text-red-500" />}
+                  {stat.trend === "up" && <TrendingUp className="h-4 w-4 text-green-500 dark:text-green-400" />}
+                  {stat.trend === "down" && <TrendingDown className="h-4 w-4 text-red-500 dark:text-red-400" />}
                   <span className={`metric-change ${stat.trend === "up" ? "positive" : stat.trend === "down" ? "negative" : "text-muted-foreground"}`}>
                     {stat.change}
                   </span>

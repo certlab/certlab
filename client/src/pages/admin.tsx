@@ -572,7 +572,7 @@ export default function AdminDashboard() {
                   <Card>
                     <CardContent className="p-6">
                       <div className="flex items-center">
-                        <FolderOpen className="w-8 h-8 text-blue-600" />
+                        <FolderOpen className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                         <div className="ml-4">
                           <div className="text-2xl font-bold">{tenantStats?.categories || 0}</div>
                           <div className="text-sm text-muted-foreground">Categories</div>
@@ -584,7 +584,7 @@ export default function AdminDashboard() {
                   <Card>
                     <CardContent className="p-6">
                       <div className="flex items-center">
-                        <FileText className="w-8 h-8 text-green-600" />
+                        <FileText className="w-8 h-8 text-green-600 dark:text-green-400" />
                         <div className="ml-4">
                           <div className="text-2xl font-bold">{tenantStats?.questions || 0}</div>
                           <div className="text-sm text-muted-foreground">Questions</div>
@@ -596,7 +596,7 @@ export default function AdminDashboard() {
                   <Card>
                     <CardContent className="p-6">
                       <div className="flex items-center">
-                        <Users className="w-8 h-8 text-purple-600" />
+                        <Users className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                         <div className="ml-4">
                           <div className="text-2xl font-bold">{tenantStats?.users || 0}</div>
                           <div className="text-sm text-muted-foreground">Users</div>
@@ -608,7 +608,7 @@ export default function AdminDashboard() {
                   <Card>
                     <CardContent className="p-6">
                       <div className="flex items-center">
-                        <FolderOpen className="w-8 h-8 text-orange-600" />
+                        <FolderOpen className="w-8 h-8 text-orange-600 dark:text-orange-400" />
                         <div className="ml-4">
                           <div className="text-2xl font-bold">{tenantStats?.subcategories || 0}</div>
                           <div className="text-sm text-muted-foreground">Subcategories</div>
