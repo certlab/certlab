@@ -35,10 +35,43 @@ interface DebugConfig {
   all: boolean;
 }
 
-// Default configuration based on environment
-const isProduction = typeof window !== 'undefined' 
-  ? window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')
-  : process.env.NODE_ENV === 'production';
+/**
+ * Detect if running in development environment
+ * Checks for common development patterns:
+ * - localhost or 127.0.0.1
+ * - .local domains
+ * - Common development ports (3000, 5000, 5173, 8080)
+ * - NODE_ENV environment variable
+ */
+function detectDevelopment(): boolean {
+  if (typeof window === 'undefined') {
+    return process.env.NODE_ENV !== 'production';
+  }
+  
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+  
+  // Check hostname patterns
+  const devHostnames = [
+    'localhost',
+    '127.0.0.1',
+    '0.0.0.0',
+  ];
+  
+  const isDevHostname = devHostnames.some(h => hostname === h) ||
+    hostname.endsWith('.local') ||
+    hostname.endsWith('.localhost') ||
+    /^192\.168\.\d+\.\d+$/.test(hostname) ||  // Private IP range
+    /^10\.\d+\.\d+\.\d+$/.test(hostname);     // Private IP range
+  
+  // Check for development ports
+  const devPorts = ['3000', '5000', '5173', '8080', '8000', '4200', '3001'];
+  const isDevPort = port !== '' && devPorts.includes(port);
+  
+  return isDevHostname || isDevPort;
+}
+
+const isProduction = !detectDevelopment();
 
 const defaultConfig: DebugConfig = {
   info: !isProduction,
@@ -230,13 +263,15 @@ export const debug = {
   },
   
   /**
-   * Disable all debug output (except errors which remain based on config.error)
+   * Disable all optional debug output.
+   * Note: Error logging remains enabled as it defaults to true and is critical for issue diagnosis.
    */
   disableAll: (): void => {
     config.all = false;
     config.info = false;
     config.warn = false;
     config.features.clear();
+    // Keep config.error at its current value (defaults to true)
     saveConfig();
   },
   
