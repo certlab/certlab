@@ -221,6 +221,15 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
               disabled={submitQuizMutation.isPending}
               size="sm"
               className="w-full sm:w-auto bg-primary text-white hover:bg-primary/90"
+              aria-label={
+                state.isReviewingFlagged
+                  ? state.currentFlaggedIndex === state.flaggedQuestionIndices.length - 1
+                    ? 'Finish review and submit quiz'
+                    : `Next flagged question (${state.currentFlaggedIndex + 2} of ${state.flaggedQuestionIndices.length})`
+                  : state.currentQuestionIndex === questions.length - 1
+                    ? 'Submit quiz'
+                    : `Next question (${state.currentQuestionIndex + 2} of ${questions.length})`
+              }
             >
               {state.isReviewingFlagged ? (
                 state.currentFlaggedIndex === state.flaggedQuestionIndices.length - 1 ? (
@@ -229,7 +238,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                   <>
                     <span className="hidden sm:inline">Next Flagged</span>
                     <span className="sm:hidden">Next</span>
-                    <i className="fas fa-chevron-right ml-1 sm:ml-2"></i>
+                    <i className="fas fa-chevron-right ml-1 sm:ml-2" aria-hidden="true"></i>
                   </>
                 )
               ) : (
@@ -239,7 +248,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                   <>
                     <span className="hidden sm:inline">Next</span>
                     <span className="sm:hidden">Next</span>
-                    <i className="fas fa-chevron-right ml-1 sm:ml-2"></i>
+                    <i className="fas fa-chevron-right ml-1 sm:ml-2" aria-hidden="true"></i>
                   </>
                 )
               )}
