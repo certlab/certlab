@@ -508,7 +508,7 @@ class ClientStorage implements IClientStorage {
   }
 
   // Mastery Scores
-  async updateMasteryScore(userId: string, categoryId: number, subcategoryId: number, isCorrect: boolean, tenantId: number = 1): Promise<void> {
+  async updateMasteryScore(userId: string, categoryId: number, subcategoryId: number, isCorrect: boolean): Promise<void> {
     const allScores = await indexedDBService.getByIndex<MasteryScore>(STORES.masteryScores, 'userId', userId);
     const existing = allScores.find(s => s.categoryId === categoryId && s.subcategoryId === subcategoryId);
     
@@ -528,7 +528,7 @@ class ClientStorage implements IClientStorage {
     } else {
       const newScore: Omit<MasteryScore, 'id'> = {
         userId,
-        tenantId,
+        tenantId: 1,
         categoryId,
         subcategoryId,
         correctAnswers: isCorrect ? 1 : 0,
@@ -614,7 +614,7 @@ class ClientStorage implements IClientStorage {
     return await indexedDBService.getOneByIndex<UserGameStats>(STORES.userGameStats, 'userId', userId);
   }
 
-  async updateUserGameStats(userId: string, updates: Partial<UserGameStats>, tenantId: number = 1): Promise<UserGameStats> {
+  async updateUserGameStats(userId: string, updates: Partial<UserGameStats>): Promise<UserGameStats> {
     const existing = await this.getUserGameStats(userId);
     
     if (existing) {
@@ -624,7 +624,7 @@ class ClientStorage implements IClientStorage {
     } else {
       const newStats: Omit<UserGameStats, 'id'> = {
         userId,
-        tenantId,
+        tenantId: 1,
         totalPoints: updates.totalPoints || 0,
         currentStreak: updates.currentStreak || 0,
         longestStreak: updates.longestStreak || 0,
