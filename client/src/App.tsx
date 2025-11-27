@@ -8,23 +8,26 @@ import { AuthProvider, useAuth } from "@/lib/auth-provider";
 import { AchievementNotification } from "@/components/AchievementNotification";
 import Header from "@/components/Header";
 import BreadcrumbNavigation from "@/components/BreadcrumbNavigation";
+import PageLoader from "@/components/PageLoader";
 import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/dashboard";
 import Landing from "@/pages/landing";
-import Quiz from "@/pages/quiz";
-import Results from "@/pages/results";
-import Review from "@/pages/review";
-import Lecture from "@/pages/lecture";
-import Achievements from "@/pages/achievements";
-import Accessibility from "@/pages/accessibility";
-import AdminDashboard from "@/pages/admin";
-import UIStructurePage from "@/pages/ui-structure";
-import ChallengesPage from "@/pages/challenges";
-import CreditsPage from "@/pages/credits";
-import ProfilePage from "@/pages/profile";
-import PracticeTests from "@/pages/practice-tests";
-import DataImportPage from "@/pages/data-import";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
+
+// Lazy load page components for code splitting
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Quiz = lazy(() => import("@/pages/quiz"));
+const Results = lazy(() => import("@/pages/results"));
+const Review = lazy(() => import("@/pages/review"));
+const Lecture = lazy(() => import("@/pages/lecture"));
+const Achievements = lazy(() => import("@/pages/achievements"));
+const Accessibility = lazy(() => import("@/pages/accessibility"));
+const AdminDashboard = lazy(() => import("@/pages/admin"));
+const UIStructurePage = lazy(() => import("@/pages/ui-structure"));
+const ChallengesPage = lazy(() => import("@/pages/challenges"));
+const CreditsPage = lazy(() => import("@/pages/credits"));
+const ProfilePage = lazy(() => import("@/pages/profile"));
+const PracticeTests = lazy(() => import("@/pages/practice-tests"));
+const DataImportPage = lazy(() => import("@/pages/data-import"));
 
 // Get the base path from Vite's configuration
 // For GitHub Pages deployment at /certlab/, BASE_URL is '/certlab/'
@@ -62,25 +65,27 @@ function Router() {
             <BreadcrumbNavigation />
           </div>
           <main>
-            <Switch>
-              <Route path="/" component={Landing} />
-              <Route path="/app" component={Dashboard} />
-              <Route path="/app/dashboard" component={Dashboard} />
-              <Route path="/app/profile" component={ProfilePage} />
-              <Route path="/app/quiz/:id" component={Quiz} />
-              <Route path="/app/results/:id" component={Results} />
-              <Route path="/app/review/:id" component={Review} />
-              <Route path="/app/lecture/:id" component={Lecture} />
-              <Route path="/app/achievements" component={Achievements} />
-              <Route path="/app/accessibility" component={Accessibility} />
-              <Route path="/app/practice-tests" component={PracticeTests} />
-              <Route path="/app/challenges" component={ChallengesPage} />
-              {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
-              <Route path="/app/credits" component={CreditsPage} />
-              <Route path="/app/data-import" component={DataImportPage} />
-              {isAdmin && <Route path="/admin" component={AdminDashboard} />}
-              <Route component={NotFound} />
-            </Switch>
+            <Suspense fallback={<PageLoader />}>
+              <Switch>
+                <Route path="/" component={Landing} />
+                <Route path="/app" component={Dashboard} />
+                <Route path="/app/dashboard" component={Dashboard} />
+                <Route path="/app/profile" component={ProfilePage} />
+                <Route path="/app/quiz/:id" component={Quiz} />
+                <Route path="/app/results/:id" component={Results} />
+                <Route path="/app/review/:id" component={Review} />
+                <Route path="/app/lecture/:id" component={Lecture} />
+                <Route path="/app/achievements" component={Achievements} />
+                <Route path="/app/accessibility" component={Accessibility} />
+                <Route path="/app/practice-tests" component={PracticeTests} />
+                <Route path="/app/challenges" component={ChallengesPage} />
+                {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
+                <Route path="/app/credits" component={CreditsPage} />
+                <Route path="/app/data-import" component={DataImportPage} />
+                {isAdmin && <Route path="/admin" component={AdminDashboard} />}
+                <Route component={NotFound} />
+              </Switch>
+            </Suspense>
           </main>
         </>
       ) : (
