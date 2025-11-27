@@ -32,13 +32,6 @@ interface SessionInfo {
   loginAt: number;
   isPasswordless: boolean;
 }
-import { AuthError, AuthErrorCode, logError, isStorageError } from './errors';
-
-/** Email validation regex pattern */
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** Minimum required password length */
-const MIN_PASSWORD_LENGTH = 8;
 
 // PBKDF2 configuration
 const PBKDF2_ITERATIONS = 100000;
@@ -207,16 +200,6 @@ function logSecurityEvent(event: string, details: Record<string, unknown>): void
   });
 }
 
-/**
- * Validate password length and return an AuthError if invalid
- */
-function validatePasswordLength(password: string): AuthError | null {
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    return new AuthError(AuthErrorCode.PASSWORD_TOO_SHORT, { passwordLength: password.length });
-  }
-  return null;
-}
-
 export interface AuthResponse {
   success: boolean;
   user?: Omit<User, 'passwordHash'>;
@@ -263,7 +246,8 @@ class ClientAuth {
     });
   }
 
-  // Check if password-less session has expired
+  // Check if password-less session has expired (absolute timeout, not idle timeout)
+  // Session expires 24 hours after login, regardless of activity
   async isSessionValid(): Promise<boolean> {
     const sessionInfo = await this.getSessionInfo();
     if (!sessionInfo) return true; // No session info means normal session
@@ -271,7 +255,7 @@ class ClientAuth {
     // Password-protected accounts don't expire
     if (!sessionInfo.isPasswordless) return true;
 
-    // Check if password-less session has expired
+    // Check if 24 hours have elapsed since login (absolute timeout)
     const elapsed = Date.now() - sessionInfo.loginAt;
     if (elapsed > PASSWORDLESS_SESSION_TIMEOUT_MS) {
       logSecurityEvent('SESSION_EXPIRED', {
@@ -378,19 +362,14 @@ class ClientAuth {
         return { success: true, user: sanitizedUser };
       }
 
-      // Verify password if user has one
-      const passwordHash = await hashPassword(password);
-      if (user.passwordHash !== passwordHash) {
+      // Verify password using the secure verification function
+      const { valid, needsRehash } = await verifyPassword(password, user.passwordHash);
+      if (!valid) {
         logSecurityEvent('LOGIN_FAILED', {
           userId: user.id,
           email: user.email,
           reason: 'Invalid password',
         });
-        const error = new AuthError(AuthErrorCode.INVALID_CREDENTIALS, { email });
-        return { success: false, message: error.message, errorCode: error.code };
-      // Verify password using the secure verification function
-      const { valid, needsRehash } = await verifyPassword(password, user.passwordHash);
-      if (!valid) {
         const error = new AuthError(AuthErrorCode.INVALID_CREDENTIALS, { email });
         return { success: false, message: error.message, errorCode: error.code };
       }
@@ -437,7 +416,6 @@ class ClientAuth {
       logSecurityEvent('LOGOUT', { userId });
       await clientStorage.clearCurrentUser();
       await this.clearSessionInfo();
-      await clientStorage.clearCurrentUser();
       return { success: true };
     } catch (error) {
       logError('logout', error);
@@ -460,8 +438,8 @@ class ClientAuth {
       }
 
       // Check if password-less session has expired
-      if (!await this.isSessionValid()) {
-        logSecurityEvent('PASSWORDLESS_SESSION_TIMEOUT', {
+      if (!(await this.isSessionValid())) {
+        logSecurityEvent('SESSION_EXPIRED', {
           userId: user.id,
           email: user.email,
         });
@@ -559,17 +537,14 @@ class ClientAuth {
         return { success: true, user: sanitizedUser, message: 'Password set successfully' };
       }
 
-      // Verify current password
-      const currentHash = await hashPassword(currentPassword);
-      if (user.passwordHash !== currentHash) {
+      // Verify current password using the secure verification function
+      const { valid } = await verifyPassword(currentPassword, user.passwordHash);
+      if (!valid) {
         logSecurityEvent('PASSWORD_CHANGE_FAILED', {
           userId: user.id,
           email: user.email,
           reason: 'Incorrect current password',
         });
-      // Verify current password using the secure verification function
-      const { valid } = await verifyPassword(currentPassword, user.passwordHash);
-      if (!valid) {
         const error = new AuthError(AuthErrorCode.INVALID_PASSWORD, { userId });
         return { success: false, message: error.message, errorCode: error.code };
       }
