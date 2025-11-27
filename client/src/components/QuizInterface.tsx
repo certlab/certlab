@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,6 +49,76 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
     handleSubmitWithoutReview,
     navigateToQuestion,
   } = useQuizState({ quizId, quiz, questions });
+
+  // Keyboard navigation for quiz interface
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    // Don't handle keyboard shortcuts when a dialog is open
+    if (showFlaggedQuestionsDialog) return;
+    
+    // Don't handle shortcuts when focus is on an input or button
+    const activeElement = document.activeElement;
+    if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA') return;
+
+    switch (event.key) {
+      case 'ArrowLeft':
+      case 'p':
+      case 'P':
+        // Previous question
+        if (state.isReviewingFlagged ? state.currentFlaggedIndex > 0 : state.currentQuestionIndex > 0) {
+          event.preventDefault();
+          handlePreviousQuestion();
+        }
+        break;
+      case 'ArrowRight':
+      case 'n':
+      case 'N':
+        // Next question
+        event.preventDefault();
+        handleNextQuestion();
+        break;
+      case 'f':
+      case 'F':
+        // Flag/unflag current question
+        event.preventDefault();
+        handleFlagQuestion();
+        break;
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+        // Quick answer selection (for questions with up to 5 options)
+        if (currentQuestion && state.selectedAnswer === undefined) {
+          const optionIndex = parseInt(event.key) - 1;
+          const options = currentQuestion.options as any[];
+          if (optionIndex < options.length) {
+            event.preventDefault();
+            const optionId = options[optionIndex].id !== undefined ? options[optionIndex].id : optionIndex;
+            handleAnswerChange(optionId.toString());
+          }
+        }
+        break;
+    }
+  }, [
+    showFlaggedQuestionsDialog,
+    state.isReviewingFlagged,
+    state.currentFlaggedIndex,
+    state.currentQuestionIndex,
+    state.selectedAnswer,
+    currentQuestion,
+    handlePreviousQuestion,
+    handleNextQuestion,
+    handleFlagQuestion,
+    handleAnswerChange
+  ]);
+
+  // Set up keyboard event listener
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
 
   // Error handling for no questions
   if (quiz && questions.length === 0 && !isLoadingQuestions) {
@@ -110,8 +181,12 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                 disabled={state.isReviewingFlagged ? state.currentFlaggedIndex === 0 : state.currentQuestionIndex === 0}
                 size="sm"
                 className="flex-1 sm:flex-initial"
+                aria-label={state.isReviewingFlagged 
+                  ? `Previous flagged question (${state.currentFlaggedIndex + 1} of ${state.flaggedQuestionIndices.length})`
+                  : `Previous question (${state.currentQuestionIndex + 1} of ${questions.length})`
+                }
               >
-                <i className="fas fa-chevron-left mr-1 sm:mr-2"></i>
+                <i className="fas fa-chevron-left mr-1 sm:mr-2" aria-hidden="true"></i>
                 <span className="hidden sm:inline">Previous</span>
                 <span className="sm:hidden">Prev</span>
               </Button>
@@ -125,8 +200,13 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                     ? 'bg-accent text-white hover:bg-accent/90' 
                     : ''
                 }`}
+                aria-label={state.flaggedQuestions.has(currentQuestion.id) 
+                  ? 'Remove flag from this question' 
+                  : 'Flag this question for review'
+                }
+                aria-pressed={state.flaggedQuestions.has(currentQuestion.id)}
               >
-                <i className="fas fa-flag mr-1 sm:mr-2"></i>
+                <i className="fas fa-flag mr-1 sm:mr-2" aria-hidden="true"></i>
                 <span className="hidden sm:inline">
                   {state.flaggedQuestions.has(currentQuestion.id) ? 'Unflag' : 'Flag for Review'}
                 </span>

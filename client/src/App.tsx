@@ -60,13 +60,20 @@ function Router() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Skip to main content link for keyboard navigation */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-background focus:text-foreground focus:px-4 focus:py-2 focus:rounded-md focus:border focus:border-primary focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
       {isAuthenticated ? (
         <>
           <Header />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
             <BreadcrumbNavigation />
           </div>
-          <main>
+          <main id="main-content" tabIndex={-1}>
             <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
                 <Switch>
