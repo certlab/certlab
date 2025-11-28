@@ -29,6 +29,9 @@ export const queryKeys = {
   },
   
   // User-specific queries - all prefixed with /api/user/{userId}
+  // Note: `all()` and `detail()` return identical keys intentionally - `all()` is for
+  // prefix-based invalidation of all user queries, while `detail()` is for fetching
+  // user details. Use `all()` when invalidating multiple user-related caches.
   user: {
     all: (userId: string | undefined) => ["/api", "user", userId] as const,
     detail: (userId: string | undefined) => ["/api", "user", userId] as const,
@@ -80,17 +83,17 @@ export const queryKeys = {
   // Tenant queries
   tenants: {
     all: () => ["/api", "tenants"] as const,
-    detail: (tenantId: number | undefined) => ["/api", "tenants", tenantId] as const,
+    detail: (tenantId: number | null | undefined) => ["/api", "tenants", tenantId] as const,
   },
   
   // Admin queries
   admin: {
     tenants: {
       all: () => ["/api", "admin", "tenants"] as const,
-      stats: (tenantId: number | undefined) => ["/api", "admin", "tenants", tenantId, "stats"] as const,
-      categories: (tenantId: number | undefined) => ["/api", "admin", "tenants", tenantId, "categories"] as const,
-      questions: (tenantId: number | undefined) => ["/api", "admin", "tenants", tenantId, "questions"] as const,
-      users: (tenantId: number | undefined) => ["/api", "admin", "tenants", tenantId, "users"] as const,
+      stats: (tenantId: number | null | undefined) => ["/api", "admin", "tenants", tenantId, "stats"] as const,
+      categories: (tenantId: number | null | undefined) => ["/api", "admin", "tenants", tenantId, "categories"] as const,
+      questions: (tenantId: number | null | undefined) => ["/api", "admin", "tenants", tenantId, "questions"] as const,
+      users: (tenantId: number | null | undefined) => ["/api", "admin", "tenants", tenantId, "users"] as const,
     },
   },
   
