@@ -30,7 +30,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { BookOpen, Search, Download, Trash2, Eye, Calendar, Target, Filter } from 'lucide-react';
+import {
+  BookOpen,
+  Search,
+  Download,
+  Trash2,
+  Eye,
+  Calendar,
+  Target,
+  Filter,
+  FileText,
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { queryKeys } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
