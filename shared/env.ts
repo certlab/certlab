@@ -49,9 +49,12 @@ export const serverEnvSchema = z.object({
 
   /**
    * Application base URL.
-   * Defaults to http://localhost:5000 if not set.
+   * Defaults to http://localhost:5000 if not set or empty.
    */
-  APP_URL: z.union([z.string().url(), z.literal("")]).optional().default("http://localhost:5000"),
+  APP_URL: z.preprocess(
+    (val) => (val === "" || val === undefined) ? "http://localhost:5000" : val,
+    z.string().url()
+  ),
 
   /**
    * Polar API key for subscription management.
@@ -149,12 +152,13 @@ export function getBasePath(): string {
 
 /**
  * Validates that required database environment is present.
- * Throws a descriptive error if DATABASE_URL is missing.
+ * Throws a descriptive error if DATABASE_URL is missing or invalid.
  * 
- * @throws Error if DATABASE_URL is not set
+ * @throws Error if DATABASE_URL is not set or is not a valid URL
  */
 export function requireDatabaseUrl(): string {
-  const databaseUrl = process.env.DATABASE_URL;
+  const env = validateServerEnv();
+  const databaseUrl = env.DATABASE_URL;
   
   if (!databaseUrl) {
     throw new Error(

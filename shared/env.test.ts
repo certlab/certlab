@@ -60,6 +60,11 @@ describe('Environment validation schemas', () => {
       expect(result.APP_URL).toBe('http://localhost:5000');
     });
 
+    it('should default APP_URL when empty string is provided', () => {
+      const result = serverEnvSchema.parse({ APP_URL: '' });
+      expect(result.APP_URL).toBe('http://localhost:5000');
+    });
+
     it('should accept any DATABASE_URL string (validation happens in requireDatabaseUrl)', () => {
       const result = serverEnvSchema.safeParse({
         DATABASE_URL: 'any-string-value',
