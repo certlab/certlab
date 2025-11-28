@@ -238,11 +238,13 @@ All remaining vulnerabilities are related to esbuild (GHSA-67mh-4wv8-2f99) in de
 - **Production Impact:** None - vulnerability only affects `vite dev` server, not production builds
 - **Fix Available:** Requires breaking change upgrade to Vite 7.x
 - **Decision:** Accepted risk - development-only vulnerability with no production impact
+- **Re-evaluation Trigger:** Review when Vite 7.x becomes the recommended stable version and @vitejs/plugin-react supports it
 
 **Recommendation:**
 - Monitor for Vite 7.x stable release compatibility with existing plugins
-- Consider upgrading to Vite 7.x when @vitejs/plugin-react and @tailwindcss/vite support it
+- Upgrade to Vite 7.x when @vitejs/plugin-react and @tailwindcss/vite officially support it
 - Continue using automated Dependabot updates for non-breaking dependency updates
+- Re-evaluate this decision by Q2 2025 or when Vite 7.x reaches widespread adoption
 
 ---
 
