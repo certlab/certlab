@@ -1,7 +1,40 @@
+/**
+ * Mobile Detection Hook (Media Query Implementation)
+ * 
+ * Custom React hook that detects whether the current viewport
+ * is considered mobile-sized using CSS media queries.
+ * 
+ * This is an alternative implementation using `matchMedia` for
+ * better performance compared to resize event listeners.
+ * 
+ * @module use-mobile
+ */
+
 import * as React from "react"
 
+/** Mobile breakpoint in pixels (matches Tailwind CSS's `md` breakpoint) */
 const MOBILE_BREAKPOINT = 768
 
+/**
+ * Hook that returns whether the current viewport is mobile-sized.
+ * 
+ * This implementation uses `window.matchMedia` with a CSS media query,
+ * which is more performant than listening to resize events as the
+ * browser handles the matching internally.
+ * 
+ * @returns `true` if viewport width is less than 768px, `false` otherwise.
+ *          Returns `false` initially during SSR/hydration.
+ * 
+ * @example
+ * function ResponsiveComponent() {
+ *   const isMobile = useIsMobile();
+ *   
+ *   if (isMobile) {
+ *     return <MobileNavigation />;
+ *   }
+ *   return <DesktopNavigation />;
+ * }
+ */
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
 
