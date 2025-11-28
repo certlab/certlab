@@ -19,6 +19,7 @@ import { useReducer, useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, queryKeys } from "@/lib/queryClient";
+import { clientStorage } from "@/lib/client-storage";
 import { useToast } from "@/hooks/use-toast";
 import { quizReducer } from "@/components/quiz/quizReducer";
 import type { QuizState, Question, Quiz } from "@/components/quiz/types";
@@ -95,7 +96,6 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
    */
   const submitQuizMutation = useMutation({
     mutationFn: async (quizAnswers: { questionId: number; answer: number }[]) => {
-      const { clientStorage } = await import('@/lib/client-storage');
       return await clientStorage.submitQuiz(quizId, quizAnswers);
     },
     onSuccess: () => {

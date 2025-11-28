@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { clientAuth } from "./client-auth";
+import { clientStorage } from "./client-storage";
 import { logError } from "./errors";
 
 interface User {
@@ -77,9 +78,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     try {
-      // Import clientStorage dynamically to avoid circular dependencies
-      const { clientStorage } = await import('./client-storage');
-      
       // Validate that the tenant exists and is active
       const tenant = await clientStorage.getTenant(tenantId);
       if (!tenant) {
