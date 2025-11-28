@@ -32,15 +32,17 @@ export const shuffleArray = <T>(array: T[]): T[] => {
 };
 
 /**
- * Formats a duration in seconds to a MM:SS string format.
+ * Formats a duration in seconds to a minutes:seconds string format.
  * 
  * @param seconds - The number of seconds to format
- * @returns A string in the format "M:SS" (e.g., "5:03" for 303 seconds)
+ * @returns A string in "M:SS" format where minutes can be any length
+ *          (e.g., "2:05" for 125 seconds, "61:03" for 3663 seconds)
  * 
  * @example
- * formatTime(125); // Returns "2:05"
- * formatTime(60);  // Returns "1:00"
- * formatTime(45);  // Returns "0:45"
+ * formatTime(125);  // Returns "2:05"
+ * formatTime(60);   // Returns "1:00"
+ * formatTime(45);   // Returns "0:45"
+ * formatTime(3663); // Returns "61:03"
  */
 export const formatTime = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60);

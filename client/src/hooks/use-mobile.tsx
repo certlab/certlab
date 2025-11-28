@@ -23,7 +23,8 @@ const MOBILE_BREAKPOINT = 768
  * browser handles the matching internally.
  * 
  * @returns `true` if viewport width is less than 768px, `false` otherwise.
- *          Returns `false` initially during SSR/hydration.
+ *          Returns `false` initially before the effect runs (during first render).
+ *          Note: This hook requires a browser environment with `window` available.
  * 
  * @example
  * function ResponsiveComponent() {

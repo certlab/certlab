@@ -419,10 +419,10 @@ export function getQueryFn<T>(options: {
  * The function is kept for backward compatibility during migration.
  * 
  * @param options - Request options
- * @param options.method - HTTP method (GET, POST, etc.)
- * @param options.endpoint - API endpoint path
- * @param options.data - Request body data (optional)
- * @returns A mock Response indicating deprecation
+ * @param options.method - HTTP method (GET, POST, PUT, DELETE, etc.)
+ * @param options.endpoint - API endpoint path (e.g., "/api/users")
+ * @param options.data - Optional request body data of any serializable type
+ * @returns A mock Response indicating deprecation (status 501)
  * 
  * @see clientStorage for direct data access methods
  */
