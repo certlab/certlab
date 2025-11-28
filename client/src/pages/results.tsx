@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DetailedResultsAnalysis from "@/components/DetailedResultsAnalysis";
 import { getScoreColor, getScoreBgColor } from "@/lib/questions";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Quiz, Category } from "@shared/schema";
 
 export default function Results() {
@@ -29,7 +30,7 @@ export default function Results() {
       <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="flex items-center justify-center min-h-[24rem]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <LoadingSpinner size="lg" label="Loading quiz results..." />
           </div>
         </div>
       </div>

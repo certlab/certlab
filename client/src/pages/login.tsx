@@ -11,6 +11,7 @@ import { useLocation } from "wouter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User as UserIcon, Info, AlertTriangle } from "lucide-react";
 import { logError, getUserFriendlyMessage, getErrorTitle } from "@/lib/errors";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface StoredUser {
   id: string;
@@ -270,7 +271,7 @@ export default function Login() {
                 >
                   {isLoading ? (
                     <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <LoadingSpinner size="sm" variant="white" />
                       <span>Logging in...</span>
                     </div>
                   ) : (
@@ -349,7 +350,7 @@ export default function Login() {
                 >
                   {isLoading ? (
                     <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <LoadingSpinner size="sm" variant="white" />
                       <span>Creating account...</span>
                     </div>
                   ) : (

@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Challenge, ChallengeAttempt } from "@shared/schema";
 
 export default function ChallengesPage() {
@@ -252,8 +253,8 @@ export default function ChallengesPage() {
               >
                 {generateDailyChallengesMutation.isPending ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Generating...
+                    <LoadingSpinner size="sm" variant="white" />
+                    <span className="ml-2">Generating...</span>
                   </>
                 ) : (
                   <>
@@ -324,8 +325,8 @@ export default function ChallengesPage() {
                         >
                           {startChallengeMutation.isPending ? (
                             <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                              Starting...
+                              <LoadingSpinner size="sm" variant="white" />
+                              <span className="ml-2">Starting...</span>
                             </>
                           ) : (
                             <>
