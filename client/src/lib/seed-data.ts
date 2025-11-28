@@ -56,6 +56,8 @@ const SEED_VERSION = 3;
 
 export async function seedInitialData(): Promise<void> {
   // Check if data already exists and version
+  // We check the default tenant (tenantId 1) categories as an indicator that initial seeding was done
+  // If the seed version has changed, re-seeding will occur regardless
   const existingCategories = await clientStorage.getCategories();
 
   // Check seed version
@@ -71,6 +73,7 @@ export async function seedInitialData(): Promise<void> {
   console.log('Seeding initial data (version', SEED_VERSION, ')...');
 
   // Create tenants and track their IDs
+  // Default IDs are used for new installations; existing installations will use actual tenant IDs
   const existingTenants = await clientStorage.getTenants();
   let defaultTenantId = 1;
   let cisspTenantId = 2;
