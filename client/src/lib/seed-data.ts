@@ -55,17 +55,12 @@ import { indexedDBService } from './indexeddb';
 const SEED_VERSION = 3;
 
 export async function seedInitialData(): Promise<void> {
-  // Check if data already exists and version
-  // We check the default tenant (tenantId 1) categories as an indicator that initial seeding was done
-  // If the seed version has changed, re-seeding will occur regardless
-  const existingCategories = await clientStorage.getCategories();
-
-  // Check seed version
+  // Check seed version - this is the primary mechanism for determining whether to reseed
   const versionSetting = await indexedDBService.get<{ key: string; value: number }>(
     'settings',
     'seedVersion'
   );
-  if (existingCategories.length > 0 && versionSetting?.value === SEED_VERSION) {
+  if (versionSetting?.value === SEED_VERSION) {
     console.log('Data already seeded (version', SEED_VERSION, ')');
     return;
   }
@@ -73,11 +68,11 @@ export async function seedInitialData(): Promise<void> {
   console.log('Seeding initial data (version', SEED_VERSION, ')...');
 
   // Create tenants and track their IDs
-  // Default IDs are used for new installations; existing installations will use actual tenant IDs
+  // Use null for tenants that don't exist to avoid seeding categories for non-existent tenants
   const existingTenants = await clientStorage.getTenants();
-  let defaultTenantId = 1;
-  let cisspTenantId = 2;
-  let cismTenantId = 3;
+  let defaultTenantId: number | null = null;
+  let cisspTenantId: number | null = null;
+  let cismTenantId: number | null = null;
 
   if (existingTenants.length === 0) {
     const defaultTenant = await clientStorage.createTenant({
@@ -106,17 +101,40 @@ export async function seedInitialData(): Promise<void> {
 
     console.log('Created initial tenants');
   } else {
-    // Get existing tenant IDs
+    // Get existing tenant IDs - only seed categories for tenants that actually exist
     const defaultTenant = existingTenants.find((t) => t.name === 'Default Organization');
     const cisspTenant = existingTenants.find((t) => t.name === 'CISSP Training Center');
     const cismTenant = existingTenants.find((t) => t.name === 'CISM Academy');
 
-    if (defaultTenant) defaultTenantId = defaultTenant.id;
-    if (cisspTenant) cisspTenantId = cisspTenant.id;
-    if (cismTenant) cismTenantId = cismTenant.id;
+    if (defaultTenant) {
+      defaultTenantId = defaultTenant.id;
+    } else {
+      console.warn('Default Organization tenant not found, skipping category seeding for it');
+    }
+    if (cisspTenant) {
+      cisspTenantId = cisspTenant.id;
+    } else {
+      console.warn('CISSP Training Center tenant not found, skipping category seeding for it');
+    }
+    if (cismTenant) {
+      cismTenantId = cismTenant.id;
+    } else {
+      console.warn('CISM Academy tenant not found, skipping category seeding for it');
+    }
   }
 
-  // Helper function to create categories and subcategories for a tenant
+  /**
+   * Seeds categories and subcategories for a tenant based on their focus area.
+   * This function is idempotent - it checks if categories already exist before creating them.
+   *
+   * @param tenantId - The tenant ID to seed categories for
+   * @param focusArea - Which certifications to include: 'CISSP', 'CISM', or 'both'.
+   *   - 'CISSP': Only CISSP category and subcategories will be created.
+   *   - 'CISM': Only CISM category and subcategories will be created.
+   *   - 'both' or undefined: Both CISSP and CISM categories and subcategories will be created.
+   * @returns {Promise<{cissp: Category | null, cism: Category | null}>}
+   *   Object containing the created or existing CISSP and CISM categories (null if not created).
+   */
   async function seedCategoriesForTenant(tenantId: number, focusArea?: 'CISSP' | 'CISM' | 'both') {
     // Check if tenant already has categories
     const existingCategories = await clientStorage.getCategories(tenantId);
@@ -190,151 +208,171 @@ export async function seedInitialData(): Promise<void> {
     return { cissp: cisspCategory, cism: cismCategory };
   }
 
-  // Seed categories for Default Organization (both CISSP and CISM)
-  const defaultCategories = await seedCategoriesForTenant(defaultTenantId, 'both');
+  // Seed categories for each tenant that exists
+  let defaultCategories: { cissp: any; cism: any } = { cissp: null, cism: null };
 
-  // Seed categories for CISSP Training Center (CISSP only)
-  await seedCategoriesForTenant(cisspTenantId, 'CISSP');
-
-  // Seed categories for CISM Academy (CISM only)
-  await seedCategoriesForTenant(cismTenantId, 'CISM');
-
-  // Use default tenant categories for sample questions
-  const cissp = defaultCategories.cissp;
-  const cism = defaultCategories.cism;
-
-  // Get subcategories for sample questions
-  const allSubcategories = await clientStorage.getSubcategories(undefined, defaultTenantId);
-  const securityGovernance = allSubcategories.find(
-    (s) => s.name === 'Security and Risk Management'
-  );
-  const assetSecurity = allSubcategories.find((s) => s.name === 'Asset Security');
-  const securityArchitecture = allSubcategories.find(
-    (s) => s.name === 'Security Architecture and Engineering'
-  );
-  const infoSecGovernance = allSubcategories.find(
-    (s) => s.name === 'Information Security Governance'
-  );
-  const riskManagement = allSubcategories.find((s) => s.name === 'Information Risk Management');
-
-  // Create sample questions only if categories and subcategories exist
-  if (cissp && securityGovernance) {
-    await clientStorage.createQuestion({
-      tenantId: defaultTenantId,
-      categoryId: cissp.id,
-      subcategoryId: securityGovernance.id,
-      text: 'What is the primary goal of information security?',
-      options: [
-        { id: 0, text: 'Confidentiality' },
-        { id: 1, text: 'Integrity' },
-        { id: 2, text: 'Availability' },
-        { id: 3, text: 'All of the above' },
-      ],
-      correctAnswer: 3,
-      explanation:
-        'Information security aims to maintain the CIA triad: Confidentiality, Integrity, and Availability of information.',
-      difficultyLevel: 1,
-      tags: ['fundamentals', 'CIA triad'],
-    });
-
-    await clientStorage.createQuestion({
-      tenantId: defaultTenantId,
-      categoryId: cissp.id,
-      subcategoryId: securityGovernance.id,
-      text: 'Which of the following is NOT a security control type?',
-      options: [
-        { id: 0, text: 'Administrative' },
-        { id: 1, text: 'Technical' },
-        { id: 2, text: 'Physical' },
-        { id: 3, text: 'Logical' },
-      ],
-      correctAnswer: 3,
-      explanation:
-        'Security controls are typically classified as Administrative, Technical, or Physical. "Logical" is sometimes used synonymously with "Technical" but is not a separate category.',
-      difficultyLevel: 2,
-      tags: ['controls', 'fundamentals'],
-    });
+  if (defaultTenantId !== null) {
+    // Seed categories for Default Organization (both CISSP and CISM)
+    defaultCategories = await seedCategoriesForTenant(defaultTenantId, 'both');
   }
 
-  if (cissp && assetSecurity) {
-    await clientStorage.createQuestion({
-      tenantId: defaultTenantId,
-      categoryId: cissp.id,
-      subcategoryId: assetSecurity.id,
-      text: 'What is the purpose of data classification?',
-      options: [
-        { id: 0, text: 'To organize files alphabetically' },
-        { id: 1, text: 'To determine appropriate security controls' },
-        { id: 2, text: 'To delete old data' },
-        { id: 3, text: 'To encrypt all data' },
-      ],
-      correctAnswer: 1,
-      explanation:
-        'Data classification helps organizations determine the appropriate level of security controls needed based on the sensitivity and criticality of the data.',
-      difficultyLevel: 1,
-      tags: ['data classification', 'asset security'],
-    });
+  if (cisspTenantId !== null) {
+    // Seed categories for CISSP Training Center (CISSP only)
+    await seedCategoriesForTenant(cisspTenantId, 'CISSP');
   }
 
-  if (cissp && securityArchitecture) {
-    await clientStorage.createQuestion({
-      tenantId: defaultTenantId,
-      categoryId: cissp.id,
-      subcategoryId: securityArchitecture.id,
-      text: 'What does "defense in depth" mean?',
-      options: [
-        { id: 0, text: 'Having one strong security control' },
-        { id: 1, text: 'Using multiple layers of security controls' },
-        { id: 2, text: 'Focusing only on perimeter security' },
-        { id: 3, text: 'Relying solely on user training' },
-      ],
-      correctAnswer: 1,
-      explanation:
-        'Defense in depth is a security strategy that uses multiple layers of security controls throughout an IT system to provide redundancy in case one control fails.',
-      difficultyLevel: 2,
-      tags: ['defense in depth', 'architecture'],
-    });
+  if (cismTenantId !== null) {
+    // Seed categories for CISM Academy (CISM only)
+    await seedCategoriesForTenant(cismTenantId, 'CISM');
   }
 
-  // Create sample questions for CISM
-  if (cism && infoSecGovernance) {
-    await clientStorage.createQuestion({
-      tenantId: defaultTenantId,
-      categoryId: cism.id,
-      subcategoryId: infoSecGovernance.id,
-      text: 'What is the primary purpose of an information security governance framework?',
-      options: [
-        { id: 0, text: 'To install firewalls' },
-        { id: 1, text: 'To align security with business objectives' },
-        { id: 2, text: 'To conduct penetration tests' },
-        { id: 3, text: 'To write security policies' },
-      ],
-      correctAnswer: 1,
-      explanation:
-        'Information security governance ensures that security strategies and initiatives support and align with business objectives and requirements.',
-      difficultyLevel: 2,
-      tags: ['governance', 'business alignment'],
-    });
-  }
+  // Validate that default tenant categories were created before proceeding with sample questions
+  if (!defaultCategories.cissp && !defaultCategories.cism) {
+    console.warn(
+      'Default tenant categories could not be created, skipping sample questions and subcategories'
+    );
+    // Still save seed version and create badges
+  } else {
+    // Use default tenant categories for sample questions
+    const cissp = defaultCategories.cissp;
+    const cism = defaultCategories.cism;
 
-  if (cism && riskManagement) {
-    await clientStorage.createQuestion({
-      tenantId: defaultTenantId,
-      categoryId: cism.id,
-      subcategoryId: riskManagement.id,
-      text: 'What is risk appetite?',
-      options: [
-        { id: 0, text: 'The amount of risk an organization is willing to accept' },
-        { id: 1, text: 'The total amount of risk in an organization' },
-        { id: 2, text: 'The cost of implementing security controls' },
-        { id: 3, text: 'The probability of a security breach' },
-      ],
-      correctAnswer: 0,
-      explanation:
-        'Risk appetite is the amount and type of risk that an organization is willing to pursue, retain, or take in pursuit of its objectives.',
-      difficultyLevel: 2,
-      tags: ['risk management', 'risk appetite'],
-    });
+    // Get subcategories for sample questions
+    const allSubcategories = await clientStorage.getSubcategories(
+      undefined,
+      defaultTenantId as number
+    );
+    const securityGovernance = allSubcategories.find(
+      (s) => s.name === 'Security and Risk Management'
+    );
+    const assetSecurity = allSubcategories.find((s) => s.name === 'Asset Security');
+    const securityArchitecture = allSubcategories.find(
+      (s) => s.name === 'Security Architecture and Engineering'
+    );
+    const infoSecGovernance = allSubcategories.find(
+      (s) => s.name === 'Information Security Governance'
+    );
+    const riskManagement = allSubcategories.find((s) => s.name === 'Information Risk Management');
+
+    // Create sample questions only if categories and subcategories exist
+    if (cissp && securityGovernance) {
+      await clientStorage.createQuestion({
+        tenantId: defaultTenantId as number,
+        categoryId: cissp.id,
+        subcategoryId: securityGovernance.id,
+        text: 'What is the primary goal of information security?',
+        options: [
+          { id: 0, text: 'Confidentiality' },
+          { id: 1, text: 'Integrity' },
+          { id: 2, text: 'Availability' },
+          { id: 3, text: 'All of the above' },
+        ],
+        correctAnswer: 3,
+        explanation:
+          'Information security aims to maintain the CIA triad: Confidentiality, Integrity, and Availability of information.',
+        difficultyLevel: 1,
+        tags: ['fundamentals', 'CIA triad'],
+      });
+
+      await clientStorage.createQuestion({
+        tenantId: defaultTenantId as number,
+        categoryId: cissp.id,
+        subcategoryId: securityGovernance.id,
+        text: 'Which of the following is NOT a security control type?',
+        options: [
+          { id: 0, text: 'Administrative' },
+          { id: 1, text: 'Technical' },
+          { id: 2, text: 'Physical' },
+          { id: 3, text: 'Logical' },
+        ],
+        correctAnswer: 3,
+        explanation:
+          'Security controls are typically classified as Administrative, Technical, or Physical. "Logical" is sometimes used synonymously with "Technical" but is not a separate category.',
+        difficultyLevel: 2,
+        tags: ['controls', 'fundamentals'],
+      });
+    }
+
+    if (cissp && assetSecurity) {
+      await clientStorage.createQuestion({
+        tenantId: defaultTenantId as number,
+        categoryId: cissp.id,
+        subcategoryId: assetSecurity.id,
+        text: 'What is the purpose of data classification?',
+        options: [
+          { id: 0, text: 'To organize files alphabetically' },
+          { id: 1, text: 'To determine appropriate security controls' },
+          { id: 2, text: 'To delete old data' },
+          { id: 3, text: 'To encrypt all data' },
+        ],
+        correctAnswer: 1,
+        explanation:
+          'Data classification helps organizations determine the appropriate level of security controls needed based on the sensitivity and criticality of the data.',
+        difficultyLevel: 1,
+        tags: ['data classification', 'asset security'],
+      });
+    }
+
+    if (cissp && securityArchitecture) {
+      await clientStorage.createQuestion({
+        tenantId: defaultTenantId as number,
+        categoryId: cissp.id,
+        subcategoryId: securityArchitecture.id,
+        text: 'What does "defense in depth" mean?',
+        options: [
+          { id: 0, text: 'Having one strong security control' },
+          { id: 1, text: 'Using multiple layers of security controls' },
+          { id: 2, text: 'Focusing only on perimeter security' },
+          { id: 3, text: 'Relying solely on user training' },
+        ],
+        correctAnswer: 1,
+        explanation:
+          'Defense in depth is a security strategy that uses multiple layers of security controls throughout an IT system to provide redundancy in case one control fails.',
+        difficultyLevel: 2,
+        tags: ['defense in depth', 'architecture'],
+      });
+    }
+
+    // Create sample questions for CISM
+    if (cism && infoSecGovernance) {
+      await clientStorage.createQuestion({
+        tenantId: defaultTenantId as number,
+        categoryId: cism.id,
+        subcategoryId: infoSecGovernance.id,
+        text: 'What is the primary purpose of an information security governance framework?',
+        options: [
+          { id: 0, text: 'To install firewalls' },
+          { id: 1, text: 'To align security with business objectives' },
+          { id: 2, text: 'To conduct penetration tests' },
+          { id: 3, text: 'To write security policies' },
+        ],
+        correctAnswer: 1,
+        explanation:
+          'Information security governance ensures that security strategies and initiatives support and align with business objectives and requirements.',
+        difficultyLevel: 2,
+        tags: ['governance', 'business alignment'],
+      });
+    }
+
+    if (cism && riskManagement) {
+      await clientStorage.createQuestion({
+        tenantId: defaultTenantId as number,
+        categoryId: cism.id,
+        subcategoryId: riskManagement.id,
+        text: 'What is risk appetite?',
+        options: [
+          { id: 0, text: 'The amount of risk an organization is willing to accept' },
+          { id: 1, text: 'The total amount of risk in an organization' },
+          { id: 2, text: 'The cost of implementing security controls' },
+          { id: 3, text: 'The probability of a security breach' },
+        ],
+        correctAnswer: 0,
+        explanation:
+          'Risk appetite is the amount and type of risk that an organization is willing to pursue, retain, or take in pursuit of its objectives.',
+        difficultyLevel: 2,
+        tags: ['risk management', 'risk appetite'],
+      });
+    }
   }
 
   // Create achievement badges
