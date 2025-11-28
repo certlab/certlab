@@ -19,7 +19,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const crypto = require('crypto');
+const os = require('os');
+const { spawnSync, execSync } = require('child_process');
 
 const DRY_RUN = process.argv.includes('--dry-run');
 
@@ -27,16 +29,19 @@ const DRY_RUN = process.argv.includes('--dry-run');
 const issuesPath = path.join(__dirname, '..', 'ISSUES.md');
 const issuesContent = fs.readFileSync(issuesPath, 'utf-8');
 
-// Parse issues from the markdown file
+/**
+ * Parse issues from the ISSUES.md markdown file.
+ * 
+ * Extracts issues that are marked with "(Open)" status from sections
+ * formatted as "## N. Section Name" with issues as "### Issue: Title (Open)".
+ * 
+ * @param {string} content - The content of ISSUES.md file
+ * @returns {Array<{title: string, section: string, body: string, priority: string, files: string}>}
+ *          Array of parsed issue objects
+ */
 function parseIssues(content) {
   const issues = [];
-  const sections = content.split(/^## \d+\./m);
   
-  // Also capture section 14 (User Feedback) separately
-  const sectionPattern = /^## (\d+)\. (.+)$/gm;
-  const issuePattern = /^### Issue: (.+?) \(Open\)$/gm;
-  
-  let currentSection = null;
   let currentSectionName = null;
   
   const lines = content.split('\n');
@@ -45,16 +50,15 @@ function parseIssues(content) {
   while (i < lines.length) {
     const line = lines[i];
     
-    // Check for section header
+    // Check for section header (e.g., "## 1. Security Improvements")
     const sectionMatch = line.match(/^## (\d+)\. (.+)$/);
     if (sectionMatch) {
-      currentSection = parseInt(sectionMatch[1]);
       currentSectionName = sectionMatch[2].trim();
       i++;
       continue;
     }
     
-    // Check for issue header
+    // Check for issue header (e.g., "### Issue: Weak Client-Side Password Hashing (Open)")
     const issueMatch = line.match(/^### Issue: (.+?) \(Open\)$/);
     if (issueMatch && currentSectionName) {
       const title = issueMatch[1].trim();
@@ -62,8 +66,6 @@ function parseIssues(content) {
       // Collect the issue body (everything until the next ### or ## or ---)
       let body = '';
       let fileInfo = '';
-      let description = '';
-      let recommendation = '';
       let priority = 'Medium';
       
       i++;
@@ -108,7 +110,12 @@ function parseIssues(content) {
   return issues;
 }
 
-// Get existing issues from GitHub
+/**
+ * Fetch existing issues from GitHub using the gh CLI.
+ * 
+ * @returns {string[]} Array of existing issue titles (lowercase, trimmed)
+ * @throws {Error} If gh CLI is not installed or not authenticated
+ */
 function getExistingIssues() {
   try {
     const result = execSync('gh issue list --state all --limit 500 --json title', {
@@ -124,7 +131,33 @@ function getExistingIssues() {
   }
 }
 
-// Check if an issue already exists (fuzzy matching)
+/**
+ * Extract significant words from text for fuzzy matching.
+ * 
+ * @param {string} text - Text to extract words from
+ * @returns {Set<string>} Set of lowercase words longer than 2 characters
+ */
+function extractWords(text) {
+  return new Set(
+    text.toLowerCase().trim()
+      .replace(/[`'"-]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 2)
+  );
+}
+
+/**
+ * Check if an issue already exists using fuzzy matching.
+ * 
+ * Uses three matching strategies:
+ * 1. Direct title match
+ * 2. Substring containment (either direction)
+ * 3. Word overlap (>= 60% of words match)
+ * 
+ * @param {string} title - The issue title to check
+ * @param {string[]} existingIssues - Array of existing issue titles
+ * @returns {boolean} True if a matching issue exists
+ */
 function issueExists(title, existingIssues) {
   const normalizedTitle = title.toLowerCase().trim();
   
@@ -135,9 +168,9 @@ function issueExists(title, existingIssues) {
     // Check if one contains the other
     if (existing.includes(normalizedTitle) || normalizedTitle.includes(existing)) return true;
     
-    // Check word overlap
-    const titleWords = new Set(normalizedTitle.replace(/[`'"-]/g, ' ').split(/\s+/).filter(w => w.length > 2));
-    const existingWords = new Set(existing.replace(/[`'"-]/g, ' ').split(/\s+/).filter(w => w.length > 2));
+    // Check word overlap using helper function
+    const titleWords = extractWords(normalizedTitle);
+    const existingWords = extractWords(existing);
     
     let matches = 0;
     for (const word of titleWords) {
@@ -150,7 +183,27 @@ function issueExists(title, existingIssues) {
   return false;
 }
 
-// Create a GitHub issue
+/**
+ * Generate a secure random filename for temporary files.
+ * 
+ * @param {string} prefix - Prefix for the filename
+ * @param {string} extension - File extension
+ * @returns {string} Full path to a secure temporary file
+ */
+function secureTempFile(prefix, extension) {
+  const randomPart = crypto.randomBytes(16).toString('hex');
+  return path.join(os.tmpdir(), `${prefix}-${randomPart}.${extension}`);
+}
+
+/**
+ * Create a GitHub issue using the gh CLI.
+ * 
+ * Uses spawnSync with array arguments to avoid shell injection vulnerabilities.
+ * The issue body is written to a temporary file to handle multi-line content.
+ * 
+ * @param {{title: string, section: string, body: string}} issue - Issue to create
+ * @returns {boolean} True if issue was created successfully
+ */
 function createIssue(issue) {
   const title = issue.title;
   const body = `## Category\n${issue.section}\n\n${issue.body}\n\n---\n*This issue was auto-generated from ISSUES.md*`;
@@ -171,25 +224,59 @@ function createIssue(issue) {
     return true;
   }
   
+  // Use secure random filenames for temp files
+  const tempBodyFile = secureTempFile('gh-issue-body', 'md');
+  
   try {
-    // Escape the body for shell
-    const escapedBody = body.replace(/'/g, "'\\''");
-    const escapedTitle = title.replace(/'/g, "'\\''");
+    // Write body to a temp file to safely handle multi-line content
+    fs.writeFileSync(tempBodyFile, body, 'utf-8');
     
-    execSync(`gh issue create --title '${escapedTitle}' --body '${escapedBody}' --label '${label}'`, {
+    // Use spawnSync with array arguments for safe execution (no shell injection)
+    const result = spawnSync('gh', [
+      'issue', 'create',
+      '--title', title,
+      '--body-file', tempBodyFile,
+      '--label', label
+    ], {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe']
     });
+    
+    if (result.status !== 0) {
+      throw new Error(result.stderr || 'Unknown error');
+    }
+    
     console.log(`✓ Created issue: "${title}"`);
     return true;
   } catch (error) {
     console.error(`✗ Failed to create issue: "${title}"`);
     console.error(`  Error: ${error.message}`);
     return false;
+  } finally {
+    // Always clean up temp files
+    try {
+      if (fs.existsSync(tempBodyFile)) {
+        fs.unlinkSync(tempBodyFile);
+      }
+    } catch {
+      // Ignore cleanup errors
+    }
   }
 }
 
-// Main function
+/**
+ * Helper function for rate limiting.
+ * 
+ * @param {number} ms - Milliseconds to sleep
+ * @returns {Promise<void>}
+ */
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Main function that orchestrates the issue creation process.
+ */
 async function main() {
   console.log('='.repeat(60));
   console.log('Create GitHub Issues from ISSUES.md');
@@ -230,9 +317,9 @@ async function main() {
       failed++;
     }
     
-    // Rate limiting - wait a bit between creations
+    // Rate limiting - wait a bit between creations to avoid API limits
     if (!DRY_RUN) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await sleep(1000);
     }
   }
   
