@@ -55,8 +55,9 @@
  * - **Auth data**: 1 minute
  *   Balance between performance and security responsiveness.
  * 
- * Cache is automatically invalidated after mutations using the
- * `invalidateUserQueries` and `invalidateAllUserData` helper functions.
+ * Cache is automatically invalidated after mutations using the provided
+ * helper functions: `invalidateUserQueries`, `invalidateAllUserData`,
+ * `invalidateStaticData`, and `invalidateQuizQueries`.
  * 
  * @module queryClient
  */
@@ -630,7 +631,9 @@ export async function apiRequest({
  * 
  * Configuration:
  * - Uses the custom getQueryFn for IndexedDB-based data fetching
- * - Uses appropriate stale times based on data type (see staleTime constants)
+ * - Default stale time is 30 seconds (staleTime.user) - optimal for frequently changing user data
+ * - Individual queries can override with longer stale times using staleTime.static (5 min),
+ *   staleTime.auth (1 min), or staleTime.quiz (2 min)
  * - Disables window focus refetching (data is local, no need to refresh on focus)
  * - Disables retries (IndexedDB operations are synchronous and deterministic)
  * 
