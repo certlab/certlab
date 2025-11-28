@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { clientAuth } from "./client-auth";
-import { clientStorage } from "./client-storage";
-import { logError } from "./errors";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { clientAuth } from './client-auth';
+import { clientStorage } from './client-storage';
+import { logError } from './errors';
 
 interface User {
   id: string;
@@ -17,6 +17,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  tenantId: number | undefined;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   switchTenant: (tenantId: number) => Promise<void>;
@@ -48,10 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Construct the logout redirect URL dynamically based on environment configuration
     // Uses BASE_URL from vite.config.ts combined with current origin
     const logoutUrl = window.location.origin + (import.meta.env.BASE_URL || '/');
-    
+
     // Delay before redirect to allow toast notifications to be visible
     const LOGOUT_DELAY_MS = 1000;
-    
+
     try {
       const result = await clientAuth.logout();
       if (!result.success) {
@@ -72,52 +73,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadUser();
   }, [loadUser]);
 
-  const switchTenant = useCallback(async (tenantId: number) => {
-    if (!user) {
-      throw new Error('No user logged in');
-    }
-    
-    try {
-      // Validate that the tenant exists and is active
-      const tenant = await clientStorage.getTenant(tenantId);
-      if (!tenant) {
-        throw new Error('Tenant not found');
+  const switchTenant = useCallback(
+    async (tenantId: number) => {
+      if (!user) {
+        throw new Error('No user logged in');
       }
-      if (!tenant.isActive) {
-        throw new Error('Cannot switch to inactive tenant');
+
+      try {
+        // Validate that the tenant exists and is active
+        const tenant = await clientStorage.getTenant(tenantId);
+        if (!tenant) {
+          throw new Error('Tenant not found');
+        }
+        if (!tenant.isActive) {
+          throw new Error('Cannot switch to inactive tenant');
+        }
+
+        // Update user's tenant
+        await clientStorage.updateUser(user.id, { tenantId });
+
+        // Reload user to get updated tenant
+        await loadUser();
+      } catch (error) {
+        logError('switchTenant', error, { tenantId });
+        throw error;
       }
-      
-      // Update user's tenant
-      await clientStorage.updateUser(user.id, { tenantId });
-      
-      // Reload user to get updated tenant
-      await loadUser();
-    } catch (error) {
-      logError('switchTenant', error, { tenantId });
-      throw error;
-    }
-  }, [user, loadUser]);
-
-  const contextValue = useMemo<AuthContextType>(() => ({
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-    logout,
-    refreshUser,
-    switchTenant,
-  }), [user, isLoading, logout, refreshUser, switchTenant]);
-
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
+    },
+    [user, loadUser]
   );
+
+  const contextValue = useMemo<AuthContextType>(
+    () => ({
+      user,
+      isLoading,
+      isAuthenticated: !!user,
+      tenantId: user?.tenantId,
+      logout,
+      refreshUser,
+      switchTenant,
+    }),
+    [user, isLoading, logout, refreshUser, switchTenant]
+  );
+
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }
