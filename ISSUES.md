@@ -402,21 +402,24 @@ Query keys use inconsistent patterns:
 
 ## 12. State Management
 
-### Issue: Mixed State Management Approaches (Open)
+### Issue: Mixed State Management Approaches (Resolved)
 
 **Files:** Various component files
 
 **Description:**
-The application uses multiple state management approaches inconsistently:
+The application uses multiple state management approaches:
 - React useState for local state
 - useReducer for complex state (QuizInterface)
 - TanStack Query for server state
 - Context for auth state
 
-**Recommendation:**
-- Document when to use each approach
-- Consider using a state machine for complex flows
-- Evaluate if a global state solution is needed
+**Resolution:**
+Created comprehensive documentation explaining when to use each approach:
+- [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) - Detailed guide with decision flowchart, examples, and anti-patterns
+- Updated [ARCHITECTURE.md](ARCHITECTURE.md) - Added state management quick reference
+- Updated [CONTRIBUTING.md](CONTRIBUTING.md) - Added state management guidelines for contributors
+
+The mixed approaches are intentional and appropriate for different use cases. The documentation clarifies when to use each.
 
 ---
 
