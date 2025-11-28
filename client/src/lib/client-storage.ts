@@ -613,6 +613,12 @@ class ClientStorage implements IClientStorage {
   }
 
   // Study Notes
+
+  /**
+   * Creates a new study note in the database.
+   * @param studyNote - Partial study note object containing required fields (userId, title, content)
+   * @returns The created study note with generated id and timestamps
+   */
   async createStudyNote(studyNote: Partial<StudyNote>): Promise<StudyNote> {
     const note: Omit<StudyNote, 'id'> = {
       userId: studyNote.userId!,
@@ -629,6 +635,13 @@ class ClientStorage implements IClientStorage {
     return { ...note, id: Number(id) };
   }
 
+  /**
+   * Retrieves all study notes for a specific user.
+   * Results are sorted by creation date (newest first) and filtered by tenant for isolation.
+   * @param userId - The user's unique identifier
+   * @param tenantId - Optional tenant ID for multi-tenant isolation
+   * @returns Array of study notes belonging to the user
+   */
   async getUserStudyNotes(userId: string, tenantId?: number): Promise<StudyNote[]> {
     const notes = await indexedDBService.getByIndex<StudyNote>(STORES.studyNotes, 'userId', userId);
     // Filter by tenantId if provided (for tenant isolation)
@@ -640,10 +653,22 @@ class ClientStorage implements IClientStorage {
     });
   }
 
+  /**
+   * Retrieves a single study note by its ID.
+   * @param id - The study note's unique identifier
+   * @returns The study note if found, undefined otherwise
+   */
   async getStudyNote(id: number): Promise<StudyNote | undefined> {
     return await indexedDBService.get<StudyNote>(STORES.studyNotes, id);
   }
 
+  /**
+   * Updates an existing study note with new values.
+   * Automatically updates the updatedAt timestamp.
+   * @param id - The study note's unique identifier
+   * @param updates - Partial study note object with fields to update
+   * @returns The updated study note, or null if not found
+   */
   async updateStudyNote(id: number, updates: Partial<StudyNote>): Promise<StudyNote | null> {
     const note = await this.getStudyNote(id);
     if (!note) return null;
@@ -653,6 +678,10 @@ class ClientStorage implements IClientStorage {
     return updatedNote;
   }
 
+  /**
+   * Permanently deletes a study note from the database.
+   * @param id - The study note's unique identifier
+   */
   async deleteStudyNote(id: number): Promise<void> {
     await indexedDBService.delete(STORES.studyNotes, id);
   }

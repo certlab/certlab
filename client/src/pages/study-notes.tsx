@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
@@ -31,41 +30,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  BookOpen,
-  Search,
-  Download,
-  Trash2,
-  Eye,
-  Calendar,
-  Target,
-  Filter,
-  FileText,
-} from 'lucide-react';
+import { BookOpen, Search, Download, Trash2, Eye, Calendar, Target, Filter } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { queryKeys } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { safeMarkdownToHtml, generateStudyNotesPdfHtml } from '@/lib/sanitize';
 import type { StudyNote, Category } from '@shared/schema';
-
-// Helper function to safely escape HTML entities to prevent XSS
-function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-// Safely render markdown-like content with HTML escaping
-function safeMarkdownToHtml(content: string): string {
-  // First escape all HTML to prevent XSS
-  let safe = escapeHtml(content);
-  // Then apply markdown transformations on the escaped content
-  safe = safe.replace(/\n/g, '<br>');
-  safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  safe = safe.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  return safe;
-}
 
 export default function StudyNotesPage() {
   const { user: currentUser, tenantId } = useAuth();
@@ -120,13 +92,6 @@ export default function StudyNotesPage() {
     );
   };
 
-  const getScoreColor = (score: number | null): string => {
-    if (score === null) return 'text-muted-foreground';
-    if (score >= 85) return 'text-green-600';
-    if (score >= 70) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
   const getScoreBgColor = (score: number | null): string => {
     if (score === null) return 'bg-muted';
     if (score >= 85) return 'bg-green-100 text-green-800';
@@ -162,71 +127,15 @@ export default function StudyNotesPage() {
     const categoryNames = getCategoryNames(note.categoryIds);
     const dateStr = note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'Unknown';
 
-    // Escape HTML first to prevent XSS, then apply safe markdown transformations
-    const escapedContent = escapeHtml(note.content);
-    const htmlContent = escapedContent
-      .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>')
-      .replace(/^## (.+)$/gm, '<h2 class="text-xl font-semibold mt-4 mb-2">$1</h2>')
-      .replace(/^### (.+)$/gm, '<h3 class="text-lg font-medium mt-3 mb-1">$1</h3>')
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-      .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
-      .replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4 list-decimal">$2</li>')
-      .replace(/---/g, '<hr class="my-4 border-gray-300">')
-      .replace(/\n\n/g, '</p><p class="mb-2">')
-      .replace(/\n/g, '<br>');
+    const pdfHtml = generateStudyNotesPdfHtml({
+      title: note.title,
+      categoryNames,
+      dateStr,
+      score: note.score,
+      content: note.content,
+    });
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${note.title} - CertLab Study Notes</title>
-          <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              max-width: 800px;
-              margin: 0 auto;
-              padding: 40px 20px;
-              color: #333;
-              line-height: 1.6;
-            }
-            h1 { color: #1e40af; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; }
-            h2 { color: #1e3a8a; margin-top: 24px; }
-            h3 { color: #1e40af; }
-            .header-info { 
-              background: #f0f9ff; 
-              padding: 16px; 
-              border-radius: 8px; 
-              margin-bottom: 24px;
-              border-left: 4px solid #3b82f6;
-            }
-            .header-info p { margin: 4px 0; }
-            strong { color: #1e40af; }
-            hr { margin: 24px 0; border: none; border-top: 1px solid #e5e7eb; }
-            li { margin-bottom: 4px; }
-            @media print {
-              body { padding: 20px; }
-              .no-print { display: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header-info">
-            <p><strong>Category:</strong> ${escapeHtml(categoryNames)}</p>
-            <p><strong>Generated:</strong> ${escapeHtml(dateStr)}</p>
-            ${note.score !== null ? `<p><strong>Quiz Score:</strong> ${note.score}%</p>` : ''}
-          </div>
-          <div class="content">
-            <p class="mb-2">${htmlContent}</p>
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-            }
-          </script>
-        </body>
-      </html>
-    `);
+    printWindow.document.write(pdfHtml);
     printWindow.document.close();
   };
 
