@@ -21,6 +21,24 @@ import { clientStorage } from '@/lib/client-storage';
 import { useAuth } from '@/lib/auth-provider';
 import type { Quiz, Category, Question as SchemaQuestion } from '@shared/schema';
 
+// Helper function to safely escape HTML entities to prevent XSS
+function escapeHtml(text: string): string {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Safely render markdown-like content with HTML escaping
+function safeMarkdownToHtml(content: string): string {
+  // First escape all HTML to prevent XSS
+  let safe = escapeHtml(content);
+  // Then apply markdown transformations on the escaped content
+  safe = safe.replace(/\n/g, '<br>');
+  safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  safe = safe.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  return safe;
+}
+
 interface QuizResult {
   questionId: number;
   answer: number;
@@ -178,13 +196,14 @@ export default function Review() {
         .filter(Boolean)
         .join(', ') || 'Mixed Quiz';
 
-    // Convert markdown-like content to HTML
-    const htmlContent = generatedLecture
+    // Escape HTML first to prevent XSS, then apply safe markdown transformations
+    const escapedContent = escapeHtml(generatedLecture);
+    const htmlContent = escapedContent
       .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>')
       .replace(/^## (.+)$/gm, '<h2 class="text-xl font-semibold mt-4 mb-2">$1</h2>')
       .replace(/^### (.+)$/gm, '<h3 class="text-lg font-medium mt-3 mb-1">$1</h3>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
       .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
       .replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4 list-decimal">$2</li>')
       .replace(/---/g, '<hr class="my-4 border-gray-300">')
@@ -195,7 +214,7 @@ export default function Review() {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Study Notes - ${categoryName} - CertLab</title>
+          <title>Study Notes - ${escapeHtml(categoryName)} - CertLab</title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -226,7 +245,7 @@ export default function Review() {
         </head>
         <body>
           <div class="header-info">
-            <p><strong>Category:</strong> ${categoryName}</p>
+            <p><strong>Category:</strong> ${escapeHtml(categoryName)}</p>
             <p><strong>Generated:</strong> ${new Date().toLocaleDateString()}</p>
             ${quiz.score !== null ? `<p><strong>Quiz Score:</strong> ${quiz.score}%</p>` : ''}
           </div>
@@ -497,10 +516,7 @@ export default function Review() {
                 <div
                   className="whitespace-pre-wrap text-sm leading-relaxed"
                   dangerouslySetInnerHTML={{
-                    __html: generatedLecture
-                      .replace(/\n/g, '<br>')
-                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                      .replace(/\*(.*?)\*/g, '<em>$1</em>'),
+                    __html: safeMarkdownToHtml(generatedLecture),
                   }}
                 />
               </div>

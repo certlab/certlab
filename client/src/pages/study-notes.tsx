@@ -49,6 +49,24 @@ import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import type { StudyNote, Category } from '@shared/schema';
 
+// Helper function to safely escape HTML entities to prevent XSS
+function escapeHtml(text: string): string {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Safely render markdown-like content with HTML escaping
+function safeMarkdownToHtml(content: string): string {
+  // First escape all HTML to prevent XSS
+  let safe = escapeHtml(content);
+  // Then apply markdown transformations on the escaped content
+  safe = safe.replace(/\n/g, '<br>');
+  safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  safe = safe.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  return safe;
+}
+
 export default function StudyNotesPage() {
   const { user: currentUser, tenantId } = useAuth();
   const [, setLocation] = useLocation();
@@ -144,13 +162,14 @@ export default function StudyNotesPage() {
     const categoryNames = getCategoryNames(note.categoryIds);
     const dateStr = note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'Unknown';
 
-    // Convert markdown-like content to HTML
-    const htmlContent = note.content
+    // Escape HTML first to prevent XSS, then apply safe markdown transformations
+    const escapedContent = escapeHtml(note.content);
+    const htmlContent = escapedContent
       .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>')
       .replace(/^## (.+)$/gm, '<h2 class="text-xl font-semibold mt-4 mb-2">$1</h2>')
       .replace(/^### (.+)$/gm, '<h3 class="text-lg font-medium mt-3 mb-1">$1</h3>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
       .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
       .replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4 list-decimal">$2</li>')
       .replace(/---/g, '<hr class="my-4 border-gray-300">')
@@ -193,8 +212,8 @@ export default function StudyNotesPage() {
         </head>
         <body>
           <div class="header-info">
-            <p><strong>Category:</strong> ${categoryNames}</p>
-            <p><strong>Generated:</strong> ${dateStr}</p>
+            <p><strong>Category:</strong> ${escapeHtml(categoryNames)}</p>
+            <p><strong>Generated:</strong> ${escapeHtml(dateStr)}</p>
             ${note.score !== null ? `<p><strong>Quiz Score:</strong> ${note.score}%</p>` : ''}
           </div>
           <div class="content">
@@ -452,10 +471,7 @@ export default function StudyNotesPage() {
                   <div
                     className="whitespace-pre-wrap text-sm leading-relaxed"
                     dangerouslySetInnerHTML={{
-                      __html: selectedNote.content
-                        .replace(/\n/g, '<br>')
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\*(.*?)\*/g, '<em>$1</em>'),
+                      __html: safeMarkdownToHtml(selectedNote.content),
                     }}
                   />
                 </div>
