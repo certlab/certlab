@@ -10,8 +10,6 @@ Each issue is marked with one of the following statuses:
 |--------|-------------|
 | **Open** | Issue has been identified and is pending action |
 | **In Progress** | Issue is currently being worked on |
-| **Resolved** | Issue has been fixed or addressed |
-| **Closed** | Issue has been closed (won't fix, duplicate, or no longer applicable) |
 
 ---
 
@@ -57,45 +55,22 @@ The application allows password-less account creation and login. While convenien
 
 ---
 
-### ~~Issue: Server-Side bcrypt Usage in Legacy Code~~ (Resolved)
-
-**File:** ~~`server/auth.ts`~~ (Removed)
-
-**Description:**
-The server-side code uses bcrypt with salt rounds of 10, which is acceptable but could be increased. More importantly, this code is legacy and not used in the client-side version, creating confusion.
-
-**Resolution:**
-- The entire `server/` directory including `server/auth.ts` has been removed
-- The application is now client-side only
-- Client authentication uses SHA-256 hashing (addressed in a separate security issue)
-
----
-
 ## 2. TypeScript Type Safety
 
-### Issue: Pre-existing TypeScript Errors (Partially Resolved)
+### Issue: Pre-existing TypeScript Errors (Open)
 
-**Files:** Multiple files (originally 8 files with 19 errors as documented in copilot-instructions.md)
+**Files:** Multiple files (5 files with 14 errors remaining)
 
 **Description:**
-The codebase has 19 pre-existing TypeScript errors that are ignored during build because Vite's esbuild is more lenient than tsc. These include:
+The codebase has pre-existing TypeScript errors that are ignored during build because Vite's esbuild is more lenient than tsc:
 
 - `client/src/components/Header.tsx` (2 errors)
 - `client/src/components/StudyGroupCard.tsx` (6 errors)
 - `client/src/pages/achievements.tsx` (1 error)
 - `client/src/pages/challenges.tsx` (3 errors)
 - `client/src/pages/study-groups.tsx` (2 errors)
-- ~~`server/routes.ts` (1 error)~~ - Removed with server directory
-- ~~`server/test-checkout.ts` (1 error)~~ - Removed with server directory
-- ~~`server/test-polar-redirect.ts` (3 errors)~~ - Removed with server directory
 
-**Resolution Status:**
-- Server-related TypeScript errors have been resolved by removing the unused `server/` directory
-- 5 server-side errors have been eliminated
-- Client-side errors (14 remaining) still need to be addressed
-- The `tsconfig.json` has been updated to only include `client/src` and `shared` directories
-
-**Recommendation (for remaining client-side errors):**
+**Recommendation:**
 - Fix remaining TypeScript errors in client components
 - Consider adding `"noEmit": false` in tsconfig.json and using tsc for build validation
 - Add pre-commit hooks to prevent new TypeScript errors
@@ -104,16 +79,13 @@ The codebase has 19 pre-existing TypeScript errors that are ignored during build
 
 ### Issue: Extensive Use of `any` Type (Open)
 
-**Files:** `server/storage.ts`, `client/src/lib/client-storage.ts`, `client/src/lib/queryClient.ts`
+**Files:** `client/src/lib/client-storage.ts`, `client/src/lib/queryClient.ts`
 
 **Description:**
 Many functions use `any` type, especially in storage operations. This bypasses TypeScript's type checking and can lead to runtime errors.
 
 **Examples from the codebase:**
 ```typescript
-// server/storage.ts Line 190
-let insertedCategories: any[] = existingCategories;
-
 // client/src/lib/client-storage.ts Line 43
 const newTenant: any = {...}
 ```
@@ -125,83 +97,7 @@ const newTenant: any = {...}
 
 ---
 
-## 3. Code Organization and Architecture
-
-### ~~Issue: Dead/Legacy Server Code~~ (RESOLVED)
-
-**Files:** `server/` directory
-
-**Description:**
-The application has migrated to a client-side only architecture, but the server directory still contains significant amounts of code including:
-- `server/storage.ts` - Full database storage implementation (3500+ lines)
-- `server/routes.ts` - Express routes
-- `server/auth.ts` - Server-side authentication
-- `server/polar.ts` - Payment integration (1000+ lines)
-- `server/openai-service.ts` - AI lecture generation
-
-This creates confusion about what code is active and increases maintenance burden.
-
-**Resolution:**
-- The `server/` directory has been removed as it contained legacy code no longer used by the client-side application
-- The `drizzle.config.ts` file has been removed as database configuration is no longer needed
-- The `tsconfig.json` has been updated to exclude server references
-
----
-
-### ~~Issue: Duplicate Code Between Client and Server Storage~~ (Resolved)
-
-**Files:** `server/storage.ts`, `client/src/lib/client-storage.ts`
-
-**Description:**
-There's significant code duplication between the server storage implementation (~3500 lines) and the client storage implementation (~880 lines). Both implement similar interfaces but for different backends.
-
-**Resolution:**
-- The `server/` directory has been completely removed as part of the client-side only migration
-- Only `client/src/lib/client-storage.ts` remains (~888 lines) using IndexedDB
-- A shared storage interface (`shared/storage-interface.ts`) defines the common API
-- No more code duplication concerns since the server code no longer exists
-
----
-
-### ~~Issue: Large Component Files~~ (Resolved)
-
-**Files:** `client/src/components/QuizInterface.tsx` (755 lines), `server/storage.ts` (3592 lines)
-
-**Description:**
-Some files are excessively long, making them difficult to maintain and test. QuizInterface.tsx contains multiple concerns including state management, UI rendering, and quiz logic.
-
-**Resolution:**
-- `QuizInterface.tsx` has been refactored from 755 lines to 292 lines
-- Quiz state management logic has been extracted to `client/src/hooks/useQuizState.ts`
-- The component now follows a cleaner separation of concerns
-- `server/storage.ts` has been removed as part of the client-side only migration
-
----
-
-## 4. Performance Optimizations
-
-### ~~Issue: Large Bundle Size Warning~~ (Resolved)
-
-**Build Output:**
-```
-../dist/assets/index-RExPweHP.js 701.53 kB │ gzip: 200.59 kB
-(!) Some chunks are larger than 500 kB after minification.
-```
-
-**Description:**
-The main JavaScript bundle exceeds 500 kB, which impacts initial load time and user experience, especially on mobile devices.
-
-**Resolution:**
-- Code splitting has been implemented using Vite's `manualChunks` configuration in `vite.config.ts`
-- Vendor code is now split into separate chunks:
-  - `vendor-react` (React core libraries)
-  - `vendor-ui` (Radix UI components)
-  - `vendor-charts` (Recharts)
-  - `vendor-utils` (date-fns, clsx, tailwind-merge, wouter)
-- Build now produces multiple smaller chunks instead of one large bundle
-- The largest chunk is now ~166 kB (gzip: ~51 kB) instead of 700+ kB
-
----
+## 3. Performance Optimizations
 
 ### Issue: Static vs Dynamic Import Conflict (Open)
 
@@ -234,7 +130,7 @@ TanStack Query is configured with `staleTime: Infinity` and `refetchOnWindowFocu
 
 ---
 
-## 5. Accessibility Improvements
+## 4. Accessibility Improvements
 
 ### Issue: Missing ARIA Labels and Roles (Open)
 
@@ -266,7 +162,7 @@ Score colors and feedback colors may not meet WCAG contrast requirements, especi
 
 ---
 
-## 6. Error Handling
+## 5. Error Handling
 
 ### Issue: Generic Error Messages (Open)
 
@@ -280,21 +176,6 @@ Error handling often returns generic messages like "An unexpected error occurred
 - Log errors with context for debugging
 - Provide specific, user-friendly error messages
 - Add error boundaries for React components
-
----
-
-### ~~Issue: Missing Error Boundaries~~ (Resolved)
-
-**File:** `client/src/App.tsx`
-
-**Description:**
-There are no React error boundaries to gracefully handle component crashes. A single component error can crash the entire application.
-
-**Resolution:**
-- Error boundary component has been implemented at `client/src/components/ErrorBoundary.tsx`
-- The `ErrorBoundary` wraps major sections in `App.tsx` (main content and routes)
-- Fallback UI is implemented with a user-friendly error message and retry button
-- Component crashes are caught and logged to console
 
 ---
 
@@ -312,34 +193,14 @@ While there's a global handler for unhandled rejections, it only logs and preven
 
 ---
 
-## 7. Testing
-
-### ~~Issue: No Test Infrastructure~~ (Resolved)
-
-**Description:**
-The codebase has no test files or test configuration. There's no `*.test.ts`, `*.spec.ts`, or test config files present. The copilot-instructions.md explicitly states "No test framework configured."
-
-**Resolution:**
-- Vitest has been set up as the test framework (compatible with Vite)
-- React Testing Library has been added for component tests
-- Test configuration exists in `vitest.config.ts` with jsdom environment
-- Setup file exists at `client/src/test/setup.ts`
-- 3 test files with 22 passing tests are implemented:
-  - `client/src/components/ui/button.test.tsx`
-  - `client/src/lib/utils.test.ts`
-  - `client/src/hooks/use-toast.test.ts`
-- Code coverage is configured with V8 provider and thresholds
-
----
-
-## 8. Documentation
+## 6. Documentation
 
 ### Issue: Inconsistent Code Comments (Open)
 
 **Files:** Various
 
 **Description:**
-Some files have excellent documentation (like the header in `server/polar.ts`), while others have minimal or no comments. Critical algorithms lack explanation.
+Some files have excellent documentation, while others have minimal or no comments. Critical algorithms lack explanation.
 
 **Recommendation:**
 - Add JSDoc comments to all public functions
@@ -349,22 +210,7 @@ Some files have excellent documentation (like the header in `server/polar.ts`), 
 
 ---
 
-### ~~Issue: Outdated README References~~ (Resolved)
-
-**File:** `README.md`
-
-**Description:**
-README mentions "Helen's AI-powered learning lab" but AI features have been removed according to the architecture notes. The README should be updated to reflect current capabilities.
-
-**Resolution:**
-- README has been updated to accurately describe CertLab as a "Client-Side Certification Learning Platform"
-- All references to "Helen" and AI-powered features have been removed
-- Current feature set is properly documented (IndexedDB storage, offline capability, adaptive learning, achievements, etc.)
-- Deployment instructions have been updated for GitHub Pages
-
----
-
-## 9. Dependency Management
+## 7. Dependency Management
 
 ### Issue: npm Audit Vulnerabilities (Open)
 
@@ -415,7 +261,7 @@ Several dependencies are unused now that the server code has been removed:
 
 ---
 
-## 10. UI/UX Improvements
+## 8. UI/UX Improvements
 
 ### Issue: Debug Information Displayed to Users (Open)
 
@@ -467,7 +313,7 @@ Loading states are implemented inconsistently across the application. Some use s
 
 ---
 
-## 11. Build and Deployment
+## 9. Build and Deployment
 
 ### Issue: Missing Environment Variable Validation (Open)
 
@@ -498,22 +344,7 @@ The build script only runs `vite build`, which uses esbuild and doesn't enforce 
 
 ---
 
-## 12. Database Schema and Data
-
-### ~~Issue: Hardcoded Question Data in Storage~~ (Resolved)
-
-**File:** ~~`server/storage.ts`~~ (Removed)
-
-**Description:**
-The storage.ts file contains thousands of lines of hardcoded question data (Lines 315-1290). This makes the file difficult to maintain and increases build size.
-
-**Resolution:**
-- The `server/storage.ts` file has been completely removed as part of the client-side migration
-- Seed data is now managed in `client/src/lib/seed-data.ts` with a cleaner structure
-- Question data is imported from separate data files in `client/src/data/`
-- The seeding mechanism runs on first app load for new users
-
----
+## 10. Database Schema and Data
 
 ### Issue: Question Schema Validation (Open)
 
@@ -530,7 +361,7 @@ Questions have inconsistent option ID handling. Some use 0-indexed IDs, others u
 
 ---
 
-## 13. API Design
+## 11. API Design
 
 ### Issue: Deprecated API Pattern (Open)
 
@@ -569,7 +400,7 @@ Query keys use inconsistent patterns:
 
 ---
 
-## 14. State Management
+## 12. State Management
 
 ### Issue: Mixed State Management Approaches (Open)
 
@@ -603,7 +434,7 @@ The AuthContext value object is recreated on every render, potentially causing u
 
 ---
 
-## 15. Scripts and Tooling
+## 13. Scripts and Tooling
 
 ### Issue: Incomplete Generate Scripts (Open)
 
@@ -639,53 +470,49 @@ The project lacks ESLint configuration for consistent code style. While TypeScri
 
 ## Summary
 
-This code review identified 35+ issues across 15 categories:
+This code review identified open issues across 12 categories:
 
-| Category | Issues | Open | Resolved | Priority |
-|----------|--------|------|----------|----------|
-| Security | 3 | 2 | 1 | High |
-| TypeScript | 2 | 1 | 1 | High |
-| Code Organization | 3 | 0 | 3 | Medium |
-| Performance | 4 | 2 | 2 | Medium |
-| Accessibility | 2 | 2 | 0 | Medium |
-| Error Handling | 3 | 2 | 1 | Medium |
-| Testing | 1 | 0 | 1 | High |
-| Documentation | 2 | 1 | 1 | Low |
-| Dependencies | 3 | 3 | 0 | Medium |
-| UI/UX | 3 | 3 | 0 | Low |
-| Build/Deploy | 2 | 2 | 0 | Medium |
-| Database | 2 | 1 | 1 | Medium |
-| API Design | 2 | 2 | 0 | Low |
-| State Management | 2 | 2 | 0 | Low |
-| Scripts/Tooling | 2 | 2 | 0 | Low |
+| Category | Open Issues | Priority |
+|----------|-------------|----------|
+| Security | 2 | High |
+| TypeScript | 2 | High |
+| Performance | 2 | Medium |
+| Accessibility | 2 | Medium |
+| Error Handling | 2 | Medium |
+| Documentation | 1 | Low |
+| Dependencies | 3 | Medium |
+| UI/UX | 3 | Low |
+| Build/Deploy | 2 | Medium |
+| Database | 1 | Medium |
+| API Design | 2 | Low |
+| State Management | 2 | Low |
+| Scripts/Tooling | 2 | Low |
 
-> **Note:** See [Section 16. User Feedback](#16-user-feedback) for additional issues reported by users.
+> **Note:** See [Section 14. User Feedback](#14-user-feedback) for additional issues reported by users.
 
 **Priority Recommendations:**
 
 1. **Immediate (Security/Quality):**
    - Fix remaining TypeScript errors in client components
    - Improve password hashing
-   - ~~Add test infrastructure~~ ✓ COMPLETED
 
 2. **Short-term (Performance/UX):**
-   - ~~Reduce bundle size~~ ✓ COMPLETED (code splitting implemented)
-   - ~~Add error boundaries~~ ✓ COMPLETED
-   - ~~Clean up legacy code~~ ✓ COMPLETED (server directory removed)
+   - Fix Quick Practice certification selection (User Feedback)
+   - Add category management for organizations (User Feedback)
 
 3. **Medium-term (Maintainability):**
    - Add linting and formatting
-   - ~~Improve documentation~~ ✓ COMPLETED (README updated)
    - Update dependencies
+   - Complete AI Study Notes generation (User Feedback)
 
 4. **Long-term (Architecture):**
-   - ~~Restructure codebase~~ ✓ COMPLETED (client-side only migration)
-   - Add comprehensive testing (infrastructure now in place)
+   - Add comprehensive testing
    - Implement proper CI/CD
+   - Complete Study Groups feature after enrollment system (User Feedback)
 
 ---
 
-## 16. User Feedback
+## 14. User Feedback
 
 The following issues have been reported by users during testing and evaluation of the platform.
 
@@ -765,57 +592,5 @@ The Default Organization has categories (CISM, CISSP), but custom organizations 
 
 ---
 
-## Summary (Updated)
-
-This code review identified 35+ issues across 15 categories, plus 4 additional issues from user feedback:
-
-| Category | Issues | Open | Resolved | Priority |
-|----------|--------|------|----------|----------|
-| Security | 3 | 2 | 1 | High |
-| TypeScript | 2 | 1 | 1 | High |
-| Code Organization | 3 | 0 | 3 | Medium |
-| Performance | 4 | 2 | 2 | Medium |
-| Accessibility | 2 | 2 | 0 | Medium |
-| Error Handling | 3 | 2 | 1 | Medium |
-| Testing | 1 | 0 | 1 | High |
-| Documentation | 2 | 1 | 1 | Low |
-| Dependencies | 3 | 3 | 0 | Medium |
-| UI/UX | 3 | 3 | 0 | Low |
-| Build/Deploy | 2 | 2 | 0 | Medium |
-| Database | 2 | 1 | 1 | Medium |
-| API Design | 2 | 2 | 0 | Low |
-| State Management | 2 | 2 | 0 | Low |
-| Scripts/Tooling | 2 | 2 | 0 | Low |
-| User Feedback | 4 | 4 | 0 | Mixed |
-
-**Priority Recommendations:**
-
-1. **Immediate (Security/Quality):**
-   - Fix remaining TypeScript errors in client components
-   - Improve password hashing
-   - ~~Add test infrastructure~~ ✓ COMPLETED
-
-2. **Short-term (Performance/UX):**
-   - ~~Reduce bundle size~~ ✓ COMPLETED (code splitting implemented)
-   - ~~Add error boundaries~~ ✓ COMPLETED
-   - ~~Clean up legacy code~~ ✓ COMPLETED (server directory removed)
-   - Fix Quick Practice certification selection (User Feedback)
-   - Add category management for organizations (User Feedback)
-
-3. **Medium-term (Maintainability):**
-   - Add linting and formatting
-   - ~~Improve documentation~~ ✓ COMPLETED (README updated)
-   - Update dependencies
-   - Complete AI Study Notes generation (User Feedback)
-
-4. **Long-term (Architecture):**
-   - ~~Restructure codebase~~ ✓ COMPLETED (client-side only migration)
-   - Add comprehensive testing (infrastructure now in place)
-   - Implement proper CI/CD
-   - Complete Study Groups feature after enrollment system (User Feedback)
-
----
-
 *Generated: Code Review for CertLab Repository*
-*Updated: User Feedback Added*
-*Last Status Update: November 2025 - Multiple issues marked as resolved*
+*Last Updated: November 2025*
