@@ -16,9 +16,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "bash -c 'tsc --noEmit'"
-    ]
+    "*.{ts,tsx}": "bash -c tsc"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
