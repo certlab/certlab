@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { getBasePath } from "./shared/env";
 
 export default defineConfig({
   plugins: [
@@ -18,7 +19,7 @@ export default defineConfig({
   // Set VITE_BASE_PATH environment variable to override (e.g., for forks or different repo names)
   // Default production path assumes repository name is 'certlab'
   // For root domain deployment (e.g., custom domain), set VITE_BASE_PATH='/'
-  base: process.env.VITE_BASE_PATH || (process.env.NODE_ENV === 'production' ? '/certlab/' : '/'),
+  base: getBasePath(),
   publicDir: path.resolve(import.meta.dirname, "client", "public"),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist"),

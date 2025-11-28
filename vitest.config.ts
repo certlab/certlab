@@ -15,14 +15,16 @@ export default defineConfig({
     // Note: If using TypeScript, add "vitest/globals" to tsconfig compilerOptions.types if you see type errors
     globals: true,
     setupFiles: ['./client/src/test/setup.ts'],
-    include: ['client/src/**/*.{test,spec}.{ts,tsx}'],
+    include: ['client/src/**/*.{test,spec}.{ts,tsx}', 'shared/**/*.{test,spec}.{ts,tsx}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['client/src/**/*.{ts,tsx}'],
+      include: ['client/src/**/*.{ts,tsx}', 'shared/**/*.{ts,tsx}'],
       exclude: [
         'client/src/**/*.test.{ts,tsx}',
         'client/src/**/*.spec.{ts,tsx}',
+        'shared/**/*.test.{ts,tsx}',
+        'shared/**/*.spec.{ts,tsx}',
         'client/src/test/**',
         'client/src/main.tsx',
       ],
