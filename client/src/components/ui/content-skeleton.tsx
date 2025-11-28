@@ -46,7 +46,6 @@ const ContentSkeleton = React.forwardRef<HTMLDivElement, ContentSkeletonProps>(
             />
           ))}
         </div>
-        <span className="sr-only">Loading content...</span>
       </div>
     )
   }

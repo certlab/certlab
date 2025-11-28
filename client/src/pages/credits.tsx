@@ -240,7 +240,7 @@ export default function Credits() {
         {/* Credit Packages */}
         {productsLoading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <LoadingSpinner size="lg" label="Loading credit packages..." />
+            <LoadingSpinner size="lg" />
             <span className="text-muted-foreground">Loading credit packages...</span>
           </div>
         ) : products.length === 0 ? (
