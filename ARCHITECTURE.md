@@ -207,6 +207,19 @@ CertLab uses a client-side authentication system:
 
 ## State Management
 
+CertLab uses four complementary state management approaches, each suited for specific use cases.
+
+> **For detailed guidance on when to use each approach, see [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md)**
+
+### Quick Reference
+
+| Approach | When to Use | Example |
+|----------|-------------|---------|
+| **useState** | Simple local state (toggles, inputs) | Modal visibility, form inputs |
+| **useReducer** | Complex local state with related updates | Quiz workflow (answers, navigation, flags) |
+| **TanStack Query** | Async data from IndexedDB | Fetching quizzes, categories, user data |
+| **React Context** | Global state shared across components | Authentication, theme |
+
 ### TanStack Query (React Query)
 
 Used for all async data operations:
@@ -218,7 +231,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: Infinity,          // Data never considered stale
       refetchOnWindowFocus: false,  // No auto-refetch
-      retry: 1,                     // Minimal retries
+      retry: false,                 // IndexedDB operations don't need retries
     },
   },
 });
@@ -226,16 +239,35 @@ const queryClient = new QueryClient({
 
 ### Query Key Patterns
 
+Use the `queryKeys` factory from `lib/queryClient.ts`:
+
 ```typescript
-// Categories filtered by tenant
-queryKey: ['/api/categories', user?.tenantId]
+import { queryKeys } from '@/lib/queryClient';
 
 // User-specific data
-queryKey: ['/api/user', user?.id, 'quizzes']
+queryKey: queryKeys.user.stats(userId)
+queryKey: queryKeys.user.quizzes(userId)
 
-// Single resource
-queryKey: ['/api/quiz', quizId]
+// Resource data
+queryKey: queryKeys.categories.all()
+queryKey: queryKeys.quiz.detail(quizId)
 ```
+
+### useReducer for Complex Workflows
+
+The quiz-taking feature uses `useReducer` for managing complex state:
+
+```typescript
+// Quiz state managed by reducer
+const [state, dispatch] = useReducer(quizReducer, initialQuizState);
+
+// Actions describe state transitions
+dispatch({ type: 'SELECT_ANSWER', payload: { questionId, answer } });
+dispatch({ type: 'TOGGLE_FLAG', payload: { questionId } });
+dispatch({ type: 'CHANGE_QUESTION', payload: { index } });
+```
+
+See `hooks/useQuizState.ts` and `components/quiz/quizReducer.ts` for implementation.
 
 ### Context Providers
 

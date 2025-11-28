@@ -184,6 +184,32 @@ export function QuizCard({ quiz, onStart }: QuizCardProps) {
 }
 ```
 
+### State Management
+
+Choose the right state management approach for your use case. See [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) for detailed guidance.
+
+| Use Case | Approach |
+|----------|----------|
+| Simple local state (toggles, inputs) | `useState` |
+| Complex local state with related updates | `useReducer` |
+| Async data from IndexedDB | TanStack Query (`useQuery`) |
+| Global state (auth, theme) | React Context |
+
+```typescript
+// Async data - use TanStack Query with queryKeys
+import { queryKeys } from '@/lib/queryClient';
+const { data: quiz } = useQuery({ queryKey: queryKeys.quiz.detail(quizId) });
+
+// Complex local state - use useReducer
+const [state, dispatch] = useReducer(quizReducer, initialState);
+
+// Simple local state - use useState
+const [isOpen, setIsOpen] = useState(false);
+
+// Global state - use context hooks
+const { user } = useAuth();
+```
+
 ### CSS and Styling
 
 - Use Tailwind CSS utility classes
