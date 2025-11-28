@@ -239,9 +239,9 @@ export default function Credits() {
 
         {/* Credit Packages */}
         {productsLoading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
             <LoadingSpinner size="lg" label="Loading credit packages..." />
-            <span className="ml-3 text-muted-foreground">Loading credit packages...</span>
+            <span className="text-muted-foreground">Loading credit packages...</span>
           </div>
         ) : products.length === 0 ? (
           <Card className="p-8 text-center">
