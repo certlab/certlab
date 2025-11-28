@@ -18,7 +18,7 @@ The following vulnerabilities have been reviewed and documented:
 #### Development-Only: esbuild cross-site request vulnerability (Moderate)
 
 - **Advisory**: [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99)
-- **Affected Package**: `esbuild <=0.24.2` (via vite, @vitejs/plugin-react)
+- **Affected Package**: `esbuild <=0.24.2` (specifically `esbuild@0.21.5` bundled in `vite@5.4.x`)
 - **Severity**: Moderate
 - **Status**: Accepted Risk (Development Only)
 - **Risk Assessment**:
@@ -30,7 +30,7 @@ The following vulnerabilities have been reviewed and documented:
 - **Mitigation**:
   - Run the development server only on trusted networks
   - Do not expose the development server to the public internet
-  - The vulnerability will be automatically resolved when vite v5.x receives a patched version, or when the project upgrades to vite v7.x
+  - The vulnerability will be automatically resolved when vite v5.x receives a patched esbuild version, or when the project upgrades to vite v7.x
 
 ## Security Best Practices
 
