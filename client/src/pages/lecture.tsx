@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
 import { ContentSkeleton } from "@/components/ui/content-skeleton";
+import { queryKeys } from "@/lib/queryClient";
 
 export default function LecturePage() {
   const { id } = useParams<{ id: string }>();
   
   const { data: lecture, isLoading, error } = useQuery({
-    queryKey: ['/api/lecture', id],
+    queryKey: queryKeys.lecture.detail(id),
     queryFn: async () => {
       const response = await fetch(`/api/lecture/${id}`);
       if (!response.ok) {

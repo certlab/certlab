@@ -6,27 +6,28 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-provider";
 import { Calendar, Clock, Target, TrendingUp, Bot } from "lucide-react";
+import { queryKeys } from "@/lib/queryClient";
 import type { UserStats, MasteryScore, Category, Quiz } from "@shared/schema";
 
 export default function StudyPlanCard() {
   const { user: currentUser } = useAuth();
 
   const { data: stats } = useQuery<UserStats>({
-    queryKey: ['/api/user', currentUser?.id, 'stats'],
+    queryKey: queryKeys.user.stats(currentUser?.id),
     enabled: !!currentUser,
   });
 
   const { data: studyPlan } = useQuery<any>({
-    queryKey: ['/api/user', currentUser?.id, 'study-plan'],
+    queryKey: queryKeys.user.studyPlan(currentUser?.id),
     enabled: !!currentUser,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
   const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
-    queryKey: ['/api/user', currentUser?.id, 'quizzes'],
+    queryKey: queryKeys.user.quizzes(currentUser?.id),
     enabled: !!currentUser,
   });
 

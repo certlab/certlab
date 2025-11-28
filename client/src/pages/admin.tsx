@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { clientStorage } from "@/lib/client-storage";
+import { queryKeys } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -194,7 +195,7 @@ function QuestionForm({
 // User Management Component
 function UserManagement({ selectedTenant }: { selectedTenant: number | null }) {
   const { data: users = [] } = useQuery<User[]>({
-    queryKey: ["/api/admin/tenants", selectedTenant, "users"],
+    queryKey: queryKeys.admin.tenants.users(selectedTenant),
     enabled: !!selectedTenant,
   });
 
@@ -281,7 +282,7 @@ export default function AdminDashboard() {
 
   // Fetch tenants
   const { data: tenants = [], isLoading: tenantsLoading } = useQuery<Tenant[]>({
-    queryKey: ["/api/admin/tenants"],
+    queryKey: queryKeys.admin.tenants.all(),
   });
 
   // Auto-select the first tenant when tenants are loaded
@@ -296,19 +297,19 @@ export default function AdminDashboard() {
 
   // Fetch tenant statistics if tenant is selected
   const { data: tenantStats } = useQuery<TenantStats>({
-    queryKey: ["/api/admin/tenants", selectedTenant, "stats"],
+    queryKey: queryKeys.admin.tenants.stats(selectedTenant),
     enabled: !!selectedTenant,
   });
 
   // Fetch tenant categories
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ["/api/admin/tenants", selectedTenant, "categories"],
+    queryKey: queryKeys.admin.tenants.categories(selectedTenant),
     enabled: !!selectedTenant,
   });
 
   // Fetch tenant questions (paginated)
   const { data: questions = [] } = useQuery<Question[]>({
-    queryKey: ["/api/admin/tenants", selectedTenant, "questions"],
+    queryKey: queryKeys.admin.tenants.questions(selectedTenant),
     enabled: !!selectedTenant,
   });
 
@@ -323,7 +324,7 @@ export default function AdminDashboard() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tenants"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.all() });
       setNewTenantDialog(false);
       toast({ title: "Tenant created successfully" });
     },
@@ -344,8 +345,8 @@ export default function AdminDashboard() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tenants", selectedTenant, "categories"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tenants", selectedTenant, "stats"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.categories(selectedTenant) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.stats(selectedTenant) });
       setNewCategoryDialog(false);
       toast({ title: "Category created successfully" });
     },
@@ -360,7 +361,7 @@ export default function AdminDashboard() {
       return await clientStorage.updateTenant(tenantId, updates);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tenants"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.all() });
       setEditTenantDialog(false);
       toast({ title: "Tenant updated successfully" });
     },
@@ -376,7 +377,7 @@ export default function AdminDashboard() {
       return await clientStorage.updateTenant(tenantId, { isActive: false });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tenants"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.all() });
       setSelectedTenant(null);
       toast({ title: "Tenant deactivated successfully" });
     },
@@ -728,7 +729,7 @@ export default function AdminDashboard() {
                               categories={categories}
                               tenantId={selectedTenant}
                               onSuccess={() => {
-                                queryClient.invalidateQueries({ queryKey: ["/api/admin/tenants", selectedTenant, "questions"] });
+                                queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.questions(selectedTenant) });
                                 setNewQuestionDialog(false);
                                 toast({ title: "Question created successfully" });
                               }}

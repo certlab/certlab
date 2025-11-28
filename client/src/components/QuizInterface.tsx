@@ -16,6 +16,7 @@ import {
 import { QuizHeader, QuestionDisplay, QuestionNavigator } from "@/components/quiz";
 import { useQuizState } from "@/hooks/useQuizState";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { queryKeys } from "@/lib/queryClient";
 import type { Question, Quiz } from "@shared/schema";
 
 interface QuizInterfaceProps {
@@ -26,11 +27,11 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   const [, setLocation] = useLocation();
 
   const { data: quiz } = useQuery<Quiz>({
-    queryKey: ['/api/quiz', quizId],
+    queryKey: queryKeys.quiz.detail(quizId),
   });
 
   const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<Question[]>({
-    queryKey: ['/api/quiz', quizId, 'questions'],
+    queryKey: queryKeys.quiz.questions(quizId),
     enabled: !!quiz,
   });
 

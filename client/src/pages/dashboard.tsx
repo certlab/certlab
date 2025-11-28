@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-provider";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, queryKeys } from "@/lib/queryClient";
 import { clientStorage } from "@/lib/client-storage";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +36,7 @@ export default function Dashboard() {
 
   // Get user stats
   const { data: stats } = useQuery<UserStats>({
-    queryKey: [`/api/user/${currentUser?.id}/stats`],
+    queryKey: queryKeys.user.stats(currentUser?.id),
     enabled: !!currentUser?.id,
   });
 
@@ -46,13 +46,13 @@ export default function Dashboard() {
 
   // Get recent quizzes
   const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
-    queryKey: ['/api/user', currentUser?.id, 'quizzes'],
+    queryKey: queryKeys.user.quizzes(currentUser?.id),
     enabled: !!currentUser,
   });
 
   // Get categories to avoid hardcoding category IDs
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
 
@@ -106,9 +106,9 @@ export default function Dashboard() {
 
     if (quiz?.id) {
       // Invalidate cache
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/user/${currentUser.id}/token-balance`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
       
       toast({
         title: "Quiz Created",

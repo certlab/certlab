@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge as BadgeUI } from "@/components/ui/badge";
 import { Trophy, Star, Target, Flame, Award, Lock, CheckCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth-provider";
+import { queryKeys } from "@/lib/queryClient";
 
 interface BadgeProgress {
   badge: {
@@ -70,7 +71,7 @@ export function AchievementProgress() {
   const { user: currentUser } = useAuth();
   
   const { data: progressData, isLoading } = useQuery<AchievementProgressData>({
-    queryKey: ["/api/user", currentUser?.id, "achievement-progress"],
+    queryKey: queryKeys.user.achievementProgress(currentUser?.id),
     enabled: !!currentUser?.id,
   });
 

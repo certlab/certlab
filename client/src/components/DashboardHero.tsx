@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-provider";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryKeys } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
   TrendingUp,
@@ -21,12 +21,12 @@ export default function DashboardHero() {
   const [, setLocation] = useLocation();
 
   const { data: stats } = useQuery<UserStats>({
-    queryKey: [`/api/user/${currentUser?.id}/stats`],
+    queryKey: queryKeys.user.stats(currentUser?.id),
     enabled: !!currentUser?.id,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+    queryKey: queryKeys.categories.all(),
   });
 
   const handleQuickQuiz = async (mode: string) => {

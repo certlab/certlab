@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Coins, Sparkles, Zap, Crown, Check } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, queryKeys } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -36,7 +36,7 @@ export default function Credits() {
 
   // Fetch credit products from Polar
   const { data: products = [], isLoading: productsLoading } = useQuery<CreditProduct[]>({
-    queryKey: ["/api/credits/products"],
+    queryKey: queryKeys.credits.products(),
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
@@ -46,7 +46,7 @@ export default function Credits() {
     totalPurchased: number;
     totalConsumed: number;
   }>({
-    queryKey: ["/api/credits/balance"],
+    queryKey: queryKeys.credits.balance(),
     staleTime: 10 * 1000,
   });
 
@@ -122,7 +122,7 @@ export default function Credits() {
             });
 
             // Invalidate queries to refresh balance
-            queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.credits.balance() });
 
             // Clear query parameters
             window.history.replaceState({}, '', '/app/credits');

@@ -3,13 +3,14 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-provider";
 import { Flame, TrendingUp, Calendar } from "lucide-react";
+import { queryKeys } from "@/lib/queryClient";
 import type { UserStats } from "@shared/schema";
 
 export default function LearningStreak() {
   const { user: currentUser } = useAuth();
 
   const { data: stats } = useQuery<UserStats>({
-    queryKey: [`/api/user/${currentUser?.id}/stats`],
+    queryKey: queryKeys.user.stats(currentUser?.id),
     enabled: !!currentUser?.id,
   });
 

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DetailedResultsAnalysis from "@/components/DetailedResultsAnalysis";
 import { getScoreColor, getScoreBgColor } from "@/lib/questions";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { queryKeys } from "@/lib/queryClient";
 import type { Quiz, Category } from "@shared/schema";
 
 export default function Results() {
@@ -15,14 +16,14 @@ export default function Results() {
   const quizId = parseInt(params?.id || "0");
 
   const { data: quiz, isLoading } = useQuery<Quiz>({
-    queryKey: ['/api/quiz', quizId],
+    queryKey: queryKeys.quiz.detail(quizId),
     enabled: !!quizId,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
   if (isLoading) {

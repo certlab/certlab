@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-provider";
 import { useLocation } from "wouter";
 import { getScoreColor } from "@/lib/questions";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, queryKeys } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import ImprovedCardSpacing from "@/components/ImprovedCardSpacing";
 import { BarChart3 } from "lucide-react";
@@ -16,12 +16,12 @@ export default function ActivitySidebar() {
   const [, setLocation] = useLocation();
 
   const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
-    queryKey: ['/api/user', currentUser?.id, 'quizzes'],
+    queryKey: queryKeys.user.quizzes(currentUser?.id),
     enabled: !!currentUser,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
   const completedQuizzes = recentQuizzes
@@ -61,7 +61,7 @@ export default function ActivitySidebar() {
       return response.json();
     },
     onSuccess: (quiz) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
       setLocation(`/app/quiz/${quiz.id}`);
     },
     onError: () => {
@@ -120,7 +120,7 @@ export default function ActivitySidebar() {
         return response.json();
       },
       onSuccess: (quiz: any) => {
-        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
         
         if (quiz.adaptiveInfo && quiz.adaptiveInfo.increasePercentage > 0) {
           toast({
@@ -198,7 +198,7 @@ export default function ActivitySidebar() {
         window.open(`/lecture/${lecture.id}`, '_blank');
         
         // Refresh lectures list
-        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
       } else {
         throw new Error(lecture.message || "Failed to generate study guide");
       }

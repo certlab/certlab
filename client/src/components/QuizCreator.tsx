@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth-provider";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, queryKeys } from "@/lib/queryClient";
 import { clientStorage } from "@/lib/client-storage";
 import { useToast } from "@/hooks/use-toast";
 import { InsufficientTokensDialog } from "@/components/InsufficientTokensDialog";
@@ -38,11 +38,11 @@ export default function QuizCreator() {
   const [currentTokenBalance, setCurrentTokenBalance] = useState(0);
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
   const { data: subcategories = [] } = useQuery<Subcategory[]>({
-    queryKey: ['/api/subcategories'],
+    queryKey: queryKeys.subcategories.all(),
     enabled: selectedCategories.length > 0,
   });
 
@@ -74,9 +74,9 @@ export default function QuizCreator() {
       return { quiz, tokenResult, tokenCost };
     },
     onSuccess: ({ quiz, tokenResult, tokenCost }) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/user/${currentUser?.id}/token-balance`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
       
       toast({
         title: "Quiz Created",

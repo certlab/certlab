@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth-provider";
 import { clientStorage } from "@/lib/client-storage";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, queryKeys } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Clock, FileText, Trophy, AlertCircle, CheckCircle } from "lucide-react";
 import type { Category, PracticeTest, PracticeTestAttempt, Quiz } from "@shared/schema";
@@ -75,17 +75,17 @@ export default function PracticeTestMode() {
   const { user: currentUser } = useAuth();
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
   // Fetch practice tests from API
   const { data: practiceTests = [], isLoading: isLoadingTests } = useQuery<PracticeTestWithStats[]>({
-    queryKey: ['/api/practice-tests'],
+    queryKey: queryKeys.practiceTests.all(),
   });
 
   // Fetch user's practice test attempts
   const { data: userAttempts = [] } = useQuery<UserAttemptWithTest[]>({
-    queryKey: currentUser ? [`/api/user/${currentUser.id}/practice-test-attempts`] : [],
+    queryKey: currentUser ? queryKeys.user.practiceTestAttempts(currentUser.id) : [],
     enabled: !!currentUser,
   });
 
@@ -104,8 +104,8 @@ export default function PracticeTestMode() {
       return startPracticeTest(currentUser.id, test);
     },
     onSuccess: (quiz) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/user/${currentUser?.id}/practice-test-attempts`] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.practiceTestAttempts(currentUser?.id) });
       setLocation(`/app/quiz/${quiz.id}`);
     },
     onError: (error: any) => {
@@ -250,8 +250,8 @@ export default function PracticeTestMode() {
                   // Start the practice test using the shared helper
                   const quiz = await startPracticeTest(currentUser.id, test);
                   
-                  queryClient.invalidateQueries({ queryKey: ['/api/practice-tests'] });
-                  queryClient.invalidateQueries({ queryKey: [`/api/user/${currentUser.id}/practice-test-attempts`] });
+                  queryClient.invalidateQueries({ queryKey: queryKeys.practiceTests.all() });
+                  queryClient.invalidateQueries({ queryKey: queryKeys.user.practiceTestAttempts(currentUser.id) });
                   setLocation(`/app/quiz/${quiz.id}`);
                 } catch (error: any) {
                   toast({

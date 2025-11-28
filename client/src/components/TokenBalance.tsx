@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-provider";
 import { clientStorage } from "@/lib/client-storage";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, queryKeys } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ export function TokenBalance() {
   const [tokensToAdd, setTokensToAdd] = useState("50");
 
   const { data: tokenData } = useQuery({
-    queryKey: [`/api/user/${user?.id}/token-balance`],
+    queryKey: queryKeys.user.tokenBalance(user?.id),
     enabled: !!user?.id,
   });
 
@@ -26,8 +26,8 @@ export function TokenBalance() {
       return await clientStorage.addTokens(user.id, amount);
     },
     onSuccess: (newBalance) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/user/${user?.id}/token-balance`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(user?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
       toast({
         title: "Tokens Added",
         description: `Your new balance is ${newBalance} tokens.`,

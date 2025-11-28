@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-provider";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, queryKeys } from "@/lib/queryClient";
 import { Link } from "wouter";
 import {
   Card,
@@ -120,7 +120,7 @@ export default function ProfilePage() {
 
   // Fetch user profile
   const { data: userProfile, isLoading } = useQuery<UserProfile>({
-    queryKey: [`/api/user/${user?.id}`],
+    queryKey: queryKeys.user.detail(user?.id),
     enabled: !!user?.id,
   });
 
@@ -136,7 +136,7 @@ export default function ProfilePage() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/user/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.detail(user?.id) });
       toast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated.",

@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { generateStudyNotes } from "@/lib/study-notes";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { queryKeys } from "@/lib/queryClient";
 import type { Quiz, Category, Question as SchemaQuestion } from "@shared/schema";
 
 interface QuizResult {
@@ -48,17 +49,17 @@ export default function Review() {
   const queryClient = useQueryClient();
 
   const { data: quiz, isLoading: quizLoading } = useQuery<Quiz>({
-    queryKey: ['/api/quiz', quizId],
+    queryKey: queryKeys.quiz.detail(quizId),
     enabled: !!quizId,
   });
 
   const { data: questions = [], isLoading: questionsLoading } = useQuery<Question[]>({
-    queryKey: ['/api/quiz', quizId, 'questions'],
+    queryKey: queryKeys.quiz.questions(quizId),
     enabled: !!quizId,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
   // Mutation for generating lecture notes (client-side)

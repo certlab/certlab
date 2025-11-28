@@ -40,6 +40,7 @@ import {
 import MobileNavigationEnhanced from "@/components/MobileNavigationEnhanced";
 import TenantSwitcher from "@/components/TenantSwitcher";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryClient";
 
 export default function Header() {
   const [location, setLocation] = useLocation();
@@ -50,7 +51,7 @@ export default function Header() {
   
   // Get token balance
   const { data: tokenData } = useQuery<{ balance: number }>({
-    queryKey: [`/api/user/${currentUser?.id}/token-balance`],
+    queryKey: queryKeys.user.tokenBalance(currentUser?.id),
     enabled: !!currentUser?.id,
     staleTime: 0, // Always refetch when invalidated
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes

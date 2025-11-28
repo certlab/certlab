@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/lib/auth-provider";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, queryKeys } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowRight, 
@@ -55,11 +55,11 @@ export default function LearningModeWizard() {
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
   const { data: subcategories = [] } = useQuery<Subcategory[]>({
-    queryKey: ['/api/subcategories'],
+    queryKey: queryKeys.subcategories.all(),
     enabled: sessionConfig.categories.length > 0,
   });
 
@@ -69,8 +69,8 @@ export default function LearningModeWizard() {
       return response.json();
     },
     onSuccess: (quiz) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscription.status() });
       
       if (quiz.adaptiveInfo && quiz.adaptiveInfo.increasePercentage > 0) {
         toast({

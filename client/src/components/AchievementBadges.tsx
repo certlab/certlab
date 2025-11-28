@@ -3,6 +3,7 @@ import { Badge, Trophy, Star, Target, Flame, BookOpen, Award, RotateCcw, Medal }
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge as BadgeUI } from "@/components/ui/badge";
 import { LevelProgress } from "@/components/LevelProgress";
+import { queryKeys } from "@/lib/queryClient";
 
 interface BadgeData {
   id: number;
@@ -85,7 +86,7 @@ const getCategoryIcon = (category: string) => {
 
 export function AchievementBadges({ userId }: AchievementBadgesProps) {
   const { data: achievements, isLoading, error } = useQuery<AchievementData>({
-    queryKey: ["/api/user", userId, "achievements"],
+    queryKey: queryKeys.user.achievements(userId),
     enabled: !!userId,
   });
 

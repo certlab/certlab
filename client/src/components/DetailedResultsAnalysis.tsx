@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-provider";
 import { TrendingUp, TrendingDown, Target, Clock, CheckCircle, XCircle, BarChart3 } from "lucide-react";
+import { queryKeys } from "@/lib/queryClient";
 import type { Quiz, Category } from "@shared/schema";
 
 interface DetailedResultsAnalysisProps {
@@ -15,12 +16,12 @@ export default function DetailedResultsAnalysis({ quizId }: DetailedResultsAnaly
   const { user: currentUser } = useAuth();
 
   const { data: quiz } = useQuery<Quiz>({
-    queryKey: ['/api/quiz', quizId],
+    queryKey: queryKeys.quiz.detail(quizId),
     enabled: !!currentUser,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
   if (!quiz || !quiz.completedAt) {

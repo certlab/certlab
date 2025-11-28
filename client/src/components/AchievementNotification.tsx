@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, X, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryClient";
 
 interface BadgeData {
   id: number;
@@ -36,7 +37,7 @@ export function AchievementNotification({ userId, onClose }: AchievementNotifica
   const [newAchievements, setNewAchievements] = useState<BadgeData[]>([]);
 
   const { data: achievements } = useQuery<AchievementData>({
-    queryKey: ["/api/user", userId, "achievements"],
+    queryKey: queryKeys.user.achievements(userId),
     enabled: !!userId,
     refetchInterval: 5000, // Check for new achievements every 5 seconds
   });

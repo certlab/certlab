@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-provider";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, queryKeys } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Zap, RotateCcw, Shuffle, BarChart3 } from "lucide-react";
@@ -16,12 +16,12 @@ export default function QuickActionsCard() {
   const { user: currentUser } = useAuth();
 
   const { data: masteryScores = [] } = useQuery<MasteryScore[]>({
-    queryKey: ['/api/user', currentUser?.id, 'mastery'],
+    queryKey: queryKeys.user.mastery(currentUser?.id),
     enabled: !!currentUser,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
   // Quick quiz creation mutation
@@ -35,8 +35,8 @@ export default function QuickActionsCard() {
       return response.json();
     },
     onSuccess: (quiz) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscription.status() });
       setLocation(`/app/quiz/${quiz.id}`);
     },
     onError: () => {

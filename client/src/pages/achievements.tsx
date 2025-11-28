@@ -5,6 +5,7 @@ import { Trophy, Target, Flame, Star, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-provider";
+import { queryKeys } from "@/lib/queryClient";
 
 interface Badge {
   id: number;
@@ -22,7 +23,7 @@ export default function AchievementsPage() {
   const { user: currentUser } = useAuth();
   
   const { data: allBadges } = useQuery<Badge[]>({
-    queryKey: ["/api/badges"],
+    queryKey: queryKeys.badges.all(),
   });
 
   if (!currentUser) {

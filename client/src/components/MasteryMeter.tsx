@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuth } from "@/lib/auth-provider";
 import { ChevronDown, ChevronUp, Grid, List, BarChart3 } from "lucide-react";
+import { queryKeys } from "@/lib/queryClient";
 import type { Category, Subcategory, MasteryScore } from "@shared/schema";
 import { useState } from "react";
 
@@ -20,15 +21,15 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
   const { data: subcategories = [] } = useQuery<Subcategory[]>({
-    queryKey: ['/api/subcategories'],
+    queryKey: queryKeys.subcategories.all(),
   });
 
   const { data: masteryScores = [] } = useQuery<MasteryScore[]>({
-    queryKey: ['/api/user', currentUser?.id, 'mastery'],
+    queryKey: queryKeys.user.mastery(currentUser?.id),
     enabled: !!currentUser,
   });
 

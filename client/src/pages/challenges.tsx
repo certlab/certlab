@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, queryKeys } from "@/lib/queryClient";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Challenge, ChallengeAttempt } from "@shared/schema";
 
@@ -19,13 +19,13 @@ export default function ChallengesPage() {
 
   // Fetch user's available challenges
   const { data: challenges = [] } = useQuery<Challenge[]>({
-    queryKey: [`/api/user/${currentUser?.id}/challenges`],
+    queryKey: queryKeys.user.challenges(currentUser?.id),
     enabled: !!currentUser,
   });
 
   // Fetch user's challenge attempts
   const { data: attempts = [] } = useQuery<ChallengeAttempt[]>({
-    queryKey: [`/api/user/${currentUser?.id}/challenge-attempts`],
+    queryKey: queryKeys.user.challengeAttempts(currentUser?.id),
     enabled: !!currentUser,
   });
 
@@ -38,7 +38,7 @@ export default function ChallengesPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/user/${currentUser?.id}/challenges`] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.challenges(currentUser?.id) });
       toast({
         title: "Daily Challenges Generated!",
         description: "New challenges are ready based on your learning areas.",

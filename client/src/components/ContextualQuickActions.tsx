@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-provider";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, queryKeys } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Play, 
@@ -23,17 +23,17 @@ export default function ContextualQuickActions() {
   const { toast } = useToast();
 
   const { data: stats } = useQuery<UserStats>({
-    queryKey: [`/api/user/${currentUser?.id}/stats`],
+    queryKey: queryKeys.user.stats(currentUser?.id),
     enabled: !!currentUser?.id,
   });
 
   const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
-    queryKey: ['/api/user', currentUser?.id, 'quizzes'],
+    queryKey: queryKeys.user.quizzes(currentUser?.id),
     enabled: !!currentUser,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
   const createQuizMutation = useMutation({
@@ -46,7 +46,7 @@ export default function ContextualQuickActions() {
       return response.json();
     },
     onSuccess: (quiz) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
       setLocation(`/app/quiz/${quiz.id}`);
     },
     onError: () => {

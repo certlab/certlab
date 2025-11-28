@@ -2,13 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-provider";
 import { TrendingUp, TrendingDown, Clock, Target, Award, BookOpen } from "lucide-react";
+import { queryKeys } from "@/lib/queryClient";
 import type { UserStats } from "@shared/schema";
 
 export default function DashboardStats() {
   const { user: currentUser } = useAuth();
 
   const { data: stats } = useQuery<UserStats>({
-    queryKey: ['/api/user', currentUser?.id, 'stats'],
+    queryKey: queryKeys.user.stats(currentUser?.id),
     enabled: !!currentUser,
   });
 

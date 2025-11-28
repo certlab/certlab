@@ -2,13 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-provider";
 import { Calendar, TrendingUp } from "lucide-react";
+import { queryKeys } from "@/lib/queryClient";
 import type { Quiz } from "@shared/schema";
 
 export default function WeeklyProgress() {
   const { user: currentUser } = useAuth();
 
   const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
-    queryKey: ['/api/user', currentUser?.id, 'quizzes'],
+    queryKey: queryKeys.user.quizzes(currentUser?.id),
     enabled: !!currentUser,
   });
 

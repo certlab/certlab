@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-provider";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, queryKeys } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Category, Subcategory } from "@shared/schema";
@@ -27,11 +27,11 @@ export default function LearningModeSelector() {
   const [timeLimit, setTimeLimit] = useState("30");
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: queryKeys.categories.all(),
   });
 
   const { data: subcategories = [] } = useQuery<Subcategory[]>({
-    queryKey: ['/api/subcategories'],
+    queryKey: queryKeys.subcategories.all(),
     enabled: selectedCategories.length > 0,
   });
 
@@ -41,7 +41,7 @@ export default function LearningModeSelector() {
       return response.json();
     },
     onSuccess: (quiz) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
       
       // Show adaptive learning feedback if applicable
       if (quiz.adaptiveInfo && quiz.adaptiveInfo.increasePercentage > 0) {

@@ -3,6 +3,7 @@ import { useAuth } from '@/lib/auth-provider';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { clientStorage } from '@/lib/client-storage';
 import { useToast } from '@/hooks/use-toast';
+import { queryKeys } from '@/lib/queryClient';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +25,7 @@ export default function TenantSwitcher() {
 
   // Fetch all tenants
   const { data: tenants = [], isLoading } = useQuery<Tenant[]>({
-    queryKey: ['/api/tenants'],
+    queryKey: queryKeys.tenants.all(),
     queryFn: async () => {
       return await clientStorage.getTenants();
     },
@@ -32,7 +33,7 @@ export default function TenantSwitcher() {
 
   // Get current tenant
   const { data: currentTenant } = useQuery<Tenant | undefined>({
-    queryKey: ['/api/tenants', user?.tenantId],
+    queryKey: queryKeys.tenants.detail(user?.tenantId),
     queryFn: async () => {
       if (!user?.tenantId) return undefined;
       return await clientStorage.getTenant(user.tenantId);
