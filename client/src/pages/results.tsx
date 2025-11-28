@@ -63,12 +63,6 @@ export default function Results() {
           <div className="text-center">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">Quiz Not Completed</h1>
             <p className="text-sm sm:text-base text-muted-foreground">This quiz hasn't been completed yet.</p>
-            <div className="mt-4 text-sm text-muted-foreground">
-              <div>Debug info: completedAt = {JSON.stringify(quiz.completedAt)}</div>
-              <div>Score: {quiz.score}</div>
-              <div>Correct Answers: {quiz.correctAnswers}</div>
-              <div>Total Questions: {quiz.totalQuestions}</div>
-            </div>
             <div className="flex gap-4 justify-center mt-4">
               <Button 
                 onClick={() => setLocation(`/app/quiz/${quizId}`)}
