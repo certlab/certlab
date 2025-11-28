@@ -21,9 +21,12 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
-const { spawnSync, execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 
+// Configuration constants
 const DRY_RUN = process.argv.includes('--dry-run');
+const WORD_OVERLAP_THRESHOLD = 0.6;  // 60% word match for fuzzy duplicate detection
+const RATE_LIMIT_DELAY_MS = 1000;    // 1 second between issue creations
 
 // Read ISSUES.md file
 const issuesPath = path.join(__dirname, '..', 'ISSUES.md');
@@ -117,18 +120,19 @@ function parseIssues(content) {
  * @throws {Error} If gh CLI is not installed or not authenticated
  */
 function getExistingIssues() {
-  try {
-    const result = execSync('gh issue list --state all --limit 500 --json title', {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe']
-    });
-    const issues = JSON.parse(result);
-    return issues.map(i => i.title.toLowerCase().trim());
-  } catch (error) {
+  const result = spawnSync('gh', ['issue', 'list', '--state', 'all', '--limit', '500', '--json', 'title'], {
+    encoding: 'utf-8',
+    stdio: ['pipe', 'pipe', 'pipe']
+  });
+  
+  if (result.status !== 0) {
     console.error('Error fetching existing issues. Make sure gh CLI is installed and authenticated.');
-    console.error(error.message);
+    console.error(result.stderr || result.error?.message);
     process.exit(1);
   }
+  
+  const issues = JSON.parse(result.stdout);
+  return issues.map(i => i.title.toLowerCase().trim());
 }
 
 /**
@@ -177,7 +181,7 @@ function issueExists(title, existingIssues) {
       if (existingWords.has(word)) matches++;
     }
     
-    if (titleWords.size > 0 && matches / titleWords.size >= 0.6) return true;
+    if (titleWords.size > 0 && matches / titleWords.size >= WORD_OVERLAP_THRESHOLD) return true;
   }
   
   return false;
@@ -319,7 +323,7 @@ async function main() {
     
     // Rate limiting - wait a bit between creations to avoid API limits
     if (!DRY_RUN) {
-      await sleep(1000);
+      await sleep(RATE_LIMIT_DELAY_MS);
     }
   }
   
