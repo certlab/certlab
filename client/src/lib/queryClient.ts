@@ -1,9 +1,62 @@
+/**
+ * TanStack Query Client Configuration
+ * 
+ * This module configures the TanStack Query (React Query) client for
+ * managing asynchronous data fetching and caching. In CertLab's client-only
+ * architecture, queries are routed to IndexedDB via the clientStorage service
+ * instead of making HTTP requests.
+ * 
+ * ## Architecture
+ * 
+ * ```
+ * React Component
+ *       ↓
+ * TanStack Query (useQuery)
+ *       ↓
+ * getQueryFn (this module)
+ *       ↓
+ * clientStorage (IndexedDB wrapper)
+ *       ↓
+ * IndexedDB
+ * ```
+ * 
+ * ## Query Path Routing
+ * 
+ * The `getQueryFn` function interprets query keys as API-like paths
+ * (e.g., `/api/user/123/stats`) and routes them to the appropriate
+ * clientStorage methods. This maintains API-compatible query keys
+ * while operating entirely client-side.
+ * 
+ * ## Supported Query Paths
+ * 
+ * - `/api/auth/user` - Current authenticated user
+ * - `/api/user/:id/*` - User-specific data (stats, quizzes, progress, etc.)
+ * - `/api/categories` - Certification categories
+ * - `/api/subcategories` - Category subcategories
+ * - `/api/badges` - Achievement badges
+ * - `/api/quiz/:id` - Quiz details
+ * - `/api/quiz/:id/questions` - Quiz questions
+ * - `/api/lecture/:id` - Lecture content
+ * - `/api/practice-tests` - Practice test configurations
+ * - `/api/tenants` - Multi-tenant organizations
+ * - `/api/admin/*` - Admin queries
+ * 
+ * @module queryClient
+ */
+
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { clientStorage } from "./client-storage";
 import { clientAuth } from "./client-auth";
 
-// Helper function to fetch shared achievement data from multiple IndexedDB stores
-// Used by both /achievement-progress and /achievements endpoints to reduce duplication
+/**
+ * Fetches shared achievement data needed by multiple endpoints.
+ * Consolidates data retrieval to reduce duplication between
+ * `/achievement-progress` and `/achievements` endpoints.
+ * 
+ * @param userId - The user's unique identifier
+ * @param tenantId - The tenant ID for data isolation
+ * @returns Object containing badges, user badges, game stats, and quizzes
+ */
 async function getAchievementData(userId: string, tenantId: number) {
   const allBadges = await clientStorage.getBadges();
   const userBadges = await clientStorage.getUserBadges(userId, tenantId);
@@ -12,9 +65,16 @@ async function getAchievementData(userId: string, tenantId: number) {
   return { allBadges, userBadges, gameStats, userQuizzes };
 }
 
-// Placeholder badge for when badge details are not found in the database.
-// This can happen if a badge is deleted while users still have references to it,
-// or if there's a data integrity issue between userBadges and badges stores.
+/**
+ * Creates a placeholder badge for when badge details are not found.
+ * 
+ * This can happen if:
+ * - A badge is deleted while users still have references to it
+ * - There's a data integrity issue between userBadges and badges stores
+ * 
+ * @param badgeId - The ID of the missing badge
+ * @returns A placeholder badge object with default values
+ */
 const createUnknownBadge = (badgeId: number) => ({
   id: badgeId,
   name: "Unknown Badge",
@@ -27,14 +87,52 @@ const createUnknownBadge = (badgeId: number) => ({
   points: 0
 });
 
-// Type for badge requirements
+/**
+ * Type definition for badge requirement criteria.
+ * Used to calculate progress towards earning badges.
+ */
 interface BadgeRequirement {
+  /** Type of requirement: quiz completion count, streak days, or score threshold */
   type: "quiz_count" | "streak" | "score";
+  /** The target value to achieve */
   value: number;
 }
 
-// Client-side query handler that uses IndexedDB
+/**
+ * Behavior options for handling 401 Unauthorized responses.
+ */
 type UnauthorizedBehavior = "returnNull" | "throw";
+
+/**
+ * Creates a query function that routes API-like paths to IndexedDB operations.
+ * 
+ * This function factory creates the query function used by TanStack Query.
+ * It interprets query keys as URL paths and routes them to the appropriate
+ * clientStorage methods, simulating a REST API while operating entirely
+ * on local IndexedDB data.
+ * 
+ * @template T - The expected return type of the query
+ * @param options - Configuration for unauthorized response handling
+ * @param options.on401 - How to handle unauthorized access ("returnNull" or "throw")
+ * @returns A QueryFunction compatible with TanStack Query
+ * 
+ * @example
+ * ```typescript
+ * // Usage in queryClient configuration
+ * const queryClient = new QueryClient({
+ *   defaultOptions: {
+ *     queries: {
+ *       queryFn: getQueryFn({ on401: "throw" }),
+ *     },
+ *   },
+ * });
+ * 
+ * // In a component
+ * const { data: user } = useQuery({
+ *   queryKey: ["/api/auth/user"],
+ * });
+ * ```
+ */
 export function getQueryFn<T>(options: {
   on401: UnauthorizedBehavior;
 }): QueryFunction<T> {
@@ -314,6 +412,20 @@ export function getQueryFn<T>(options: {
   };
 }
 
+/**
+ * Makes an API request.
+ * 
+ * @deprecated This function is deprecated. Use clientStorage methods directly.
+ * The function is kept for backward compatibility during migration.
+ * 
+ * @param options - Request options
+ * @param options.method - HTTP method (GET, POST, etc.)
+ * @param options.endpoint - API endpoint path
+ * @param options.data - Request body data (optional)
+ * @returns A mock Response indicating deprecation
+ * 
+ * @see clientStorage for direct data access methods
+ */
 export async function apiRequest({
   method,
   endpoint,
@@ -338,6 +450,29 @@ export async function apiRequest({
   });
 }
 
+/**
+ * Configured TanStack Query client instance for the application.
+ * 
+ * Configuration:
+ * - Uses the custom getQueryFn for IndexedDB-based data fetching
+ * - Disables automatic refetching (staleTime: Infinity)
+ * - Disables window focus refetching (data is local, no need to refresh)
+ * - Disables retries (IndexedDB operations are synchronous and deterministic)
+ * 
+ * @example
+ * ```tsx
+ * // Wrap your app with QueryClientProvider
+ * import { queryClient } from './lib/queryClient';
+ * 
+ * function App() {
+ *   return (
+ *     <QueryClientProvider client={queryClient}>
+ *       <YourApp />
+ *     </QueryClientProvider>
+ *   );
+ * }
+ * ```
+ */
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

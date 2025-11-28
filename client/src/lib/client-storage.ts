@@ -5,6 +5,39 @@
  * This follows the adapter pattern defined in the shared storage-interface.ts,
  * allowing the client to use the same data access patterns as the server
  * while using browser-native storage instead of PostgreSQL.
+ * 
+ * ## Architecture
+ * 
+ * This service acts as the primary data access layer for the client-side
+ * application, providing:
+ * 
+ * - CRUD operations for all data entities (users, quizzes, categories, etc.)
+ * - Multi-tenant data isolation
+ * - User authentication state management
+ * - Achievement and gamification tracking
+ * - Token-based access control
+ * 
+ * ## Usage
+ * 
+ * ```typescript
+ * import { clientStorage } from './client-storage';
+ * 
+ * // Get current user's quizzes
+ * const quizzes = await clientStorage.getUserQuizzes(userId, tenantId);
+ * 
+ * // Create a new quiz
+ * const quiz = await clientStorage.createQuiz({
+ *   userId,
+ *   title: 'CISSP Practice',
+ *   categoryIds: [1],
+ *   questionCount: 10,
+ * });
+ * 
+ * // Submit quiz answers
+ * const result = await clientStorage.submitQuiz(quiz.id, answers);
+ * ```
+ * 
+ * @module client-storage
  */
 
 import { indexedDBService, STORES } from './indexeddb';
@@ -22,7 +55,12 @@ import type {
   CertificationMasteryScore
 } from '@shared/storage-interface';
 
-// Generate unique IDs using crypto.randomUUID for better uniqueness
+/**
+ * Generates a unique identifier using the Web Crypto API.
+ * Provides better uniqueness guarantees than Math.random()-based approaches.
+ * 
+ * @returns A UUID v4 string
+ */
 function generateId(): string {
   return crypto.randomUUID();
 }

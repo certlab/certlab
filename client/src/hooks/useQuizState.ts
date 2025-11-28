@@ -1,3 +1,20 @@
+/**
+ * Quiz State Management Hook
+ * 
+ * This hook encapsulates all quiz-taking state and logic, providing a clean
+ * interface for components to manage quiz sessions. It handles:
+ * - Question navigation (next/previous)
+ * - Answer selection and validation
+ * - Timer countdown with auto-submit
+ * - Flagged question review workflow
+ * - Quiz submission
+ * 
+ * The hook uses React's useReducer for efficient batched state updates
+ * and prevents unnecessary re-renders during quiz interactions.
+ * 
+ * @module useQuizState
+ */
+
 import { useReducer, useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
@@ -7,12 +24,55 @@ import { quizReducer } from "@/components/quiz/quizReducer";
 import type { QuizState, Question, Quiz } from "@/components/quiz/types";
 import { initialQuizState } from "@/components/quiz/types";
 
+/**
+ * Configuration options for the useQuizState hook
+ */
 interface UseQuizStateOptions {
+  /** The unique identifier of the quiz being taken */
   quizId: number;
+  /** The quiz configuration (time limit, settings, etc.) */
   quiz: Quiz | undefined;
+  /** Array of questions for this quiz session */
   questions: Question[];
 }
 
+/**
+ * Custom hook for managing quiz session state and interactions.
+ * 
+ * This hook provides comprehensive quiz state management including:
+ * - Answer selection with immediate feedback
+ * - Timed quiz support with auto-submit on timeout
+ * - Question flagging for review before submission
+ * - Navigation between questions (normal and review modes)
+ * - Quiz submission with TanStack Query mutation
+ * 
+ * @param options - Configuration including quizId, quiz config, and questions
+ * @returns Object containing state and handler functions for quiz interactions
+ * 
+ * @example
+ * ```tsx
+ * function QuizComponent({ quizId, quiz, questions }) {
+ *   const {
+ *     state,
+ *     currentQuestion,
+ *     progress,
+ *     timeRemaining,
+ *     handleAnswerChange,
+ *     handleNextQuestion,
+ *     handleFlagQuestion,
+ *     handleSubmitQuiz,
+ *   } = useQuizState({ quizId, quiz, questions });
+ *   
+ *   return (
+ *     <div>
+ *       <ProgressBar value={progress} />
+ *       <QuestionDisplay question={currentQuestion} />
+ *       <AnswerOptions onChange={handleAnswerChange} />
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
 export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -29,6 +89,10 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
   // Ref to track timer to avoid recreating interval every second
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  /**
+   * Mutation for submitting quiz answers to IndexedDB storage.
+   * On success, invalidates relevant queries and navigates to results page.
+   */
   const submitQuizMutation = useMutation({
     mutationFn: async (quizAnswers: { questionId: number; answer: number }[]) => {
       const { clientStorage } = await import('@/lib/client-storage');
@@ -48,14 +112,18 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
     },
   });
 
-  // Initialize timer
+  // Initialize timer from quiz time limit (converted from minutes to seconds)
   useEffect(() => {
     if (quiz?.timeLimit) {
-      setTimeRemaining(quiz.timeLimit * 60); // Convert minutes to seconds
+      setTimeRemaining(quiz.timeLimit * 60);
     }
   }, [quiz]);
 
-  // Timer countdown (efficient: only create interval once)
+  /**
+   * Timer countdown effect.
+   * Creates a single interval that decrements every second.
+   * Auto-submits the quiz when time reaches zero.
+   */
   useEffect(() => {
     if (timeRemaining === null || timeRemaining <= 0) {
       if (timerRef.current) {
@@ -86,9 +154,16 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
     };
   }, [timeRemaining]);
 
+  /** Current question being displayed */
   const currentQuestion = questions[state.currentQuestionIndex];
+  /** Progress percentage (0-100) through the quiz */
   const progress = questions.length > 0 ? ((state.currentQuestionIndex + 1) / questions.length) * 100 : 0;
 
+  /**
+   * Handles answer selection for the current question.
+   * Once an answer is selected, it cannot be changed (locked in).
+   * Immediately shows feedback on whether the answer was correct.
+   */
   const handleAnswerChange = useCallback((value: string) => {
     // Prevent changing answer once selected
     if (state.selectedAnswer !== undefined) {
@@ -113,6 +188,11 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
     }
   }, [state.selectedAnswer, currentQuestion]);
 
+  /**
+   * Handles quiz submission.
+   * If there are flagged questions and not in review mode, prompts user to review.
+   * Otherwise, submits all answers via the mutation.
+   */
   const handleSubmitQuiz = useCallback(() => {
     // Check if there are flagged questions
     if (state.flaggedQuestions.size > 0 && !state.isReviewingFlagged) {
@@ -136,6 +216,11 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
     submitQuizRef.current = handleSubmitQuiz;
   }, [handleSubmitQuiz]);
 
+  /**
+   * Navigates to the next question.
+   * In review mode: moves through flagged questions, auto-submits at end.
+   * In normal mode: advances to next question or triggers submission at end.
+   */
   const handleNextQuestion = useCallback(() => {
     if (state.isReviewingFlagged) {
       // In review mode, navigate only through flagged questions
@@ -179,6 +264,11 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
     }
   }, [state, questions, submitQuizMutation, handleSubmitQuiz]);
 
+  /**
+   * Navigates to the previous question.
+   * In review mode: moves backwards through flagged questions only.
+   * In normal mode: moves to the previous question in sequence.
+   */
   const handlePreviousQuestion = useCallback(() => {
     if (state.isReviewingFlagged) {
       // In review mode, navigate only through flagged questions
@@ -209,6 +299,10 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
     }
   }, [state, questions]);
 
+  /**
+   * Toggles the flag status of the current question.
+   * Flagged questions can be reviewed before final submission.
+   */
   const handleFlagQuestion = useCallback(() => {
     if (currentQuestion) {
       dispatch({
@@ -218,6 +312,10 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
     }
   }, [currentQuestion]);
 
+  /**
+   * Initiates the flagged questions review workflow.
+   * Enters review mode and navigates to the first flagged question.
+   */
   const handleReviewFlaggedQuestions = useCallback(() => {
     setShowFlaggedQuestionsDialog(false);
     
@@ -247,6 +345,10 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
     }
   }, [state, questions]);
 
+  /**
+   * Skips the flagged questions review and submits immediately.
+   * Called when user chooses not to review flagged questions.
+   */
   const handleSubmitWithoutReview = useCallback(() => {
     setShowFlaggedQuestionsDialog(false);
     // Submit the quiz directly
@@ -261,6 +363,10 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
     submitQuizMutation.mutate(quizAnswers);
   }, [state, questions, submitQuizMutation]);
 
+  /**
+   * Directly navigates to a specific question by index.
+   * Used for question overview/navigation panel.
+   */
   const navigateToQuestion = useCallback((index: number) => {
     const targetQuestion = questions[index];
     const savedAnswer = targetQuestion ? state.answers[targetQuestion.id] : undefined;
@@ -274,20 +380,35 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
   }, [state, questions]);
 
   return {
+    /** Current quiz state from reducer */
     state,
+    /** Seconds remaining (null if untimed quiz) */
     timeRemaining,
+    /** Whether to show the flagged questions review dialog */
     showFlaggedQuestionsDialog,
+    /** Setter for flagged questions dialog visibility */
     setShowFlaggedQuestionsDialog,
+    /** The current question being displayed */
     currentQuestion,
+    /** Progress percentage through the quiz (0-100) */
     progress,
+    /** TanStack Query mutation for quiz submission */
     submitQuizMutation,
+    /** Handler for selecting an answer */
     handleAnswerChange,
+    /** Handler for moving to next question */
     handleNextQuestion,
+    /** Handler for moving to previous question */
     handlePreviousQuestion,
+    /** Handler for flagging/unflagging current question */
     handleFlagQuestion,
+    /** Handler for initiating quiz submission */
     handleSubmitQuiz,
+    /** Handler for starting flagged question review */
     handleReviewFlaggedQuestions,
+    /** Handler for submitting without reviewing flagged questions */
     handleSubmitWithoutReview,
+    /** Handler for direct navigation to a question by index */
     navigateToQuestion,
   };
 }
