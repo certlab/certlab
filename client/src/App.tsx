@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import BreadcrumbNavigation from "@/components/BreadcrumbNavigation";
 import PageLoader from "@/components/PageLoader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 // Landing page is eagerly loaded for fast first paint (initial route)
 import Landing from "@/pages/landing";
 import { lazy, Suspense, useEffect } from "react";
@@ -46,7 +47,7 @@ function Router() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <LoadingSpinner size="xl" label="Loading application..." />
       </div>
     );
   }

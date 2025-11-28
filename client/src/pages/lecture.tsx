@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
+import { ContentSkeleton } from "@/components/ui/content-skeleton";
 
 export default function LecturePage() {
   const { id } = useParams<{ id: string }>();
@@ -23,12 +24,7 @@ export default function LecturePage() {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-4xl mx-auto">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-            <div className="h-4 bg-gray-200 rounded w-full"></div>
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          </div>
+          <ContentSkeleton lines={6} showHeader={true} />
         </div>
       </div>
     );

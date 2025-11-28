@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-provider";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Category, Subcategory } from "@shared/schema";
 
 type LearningMode = "study" | "quiz" | "challenge";
@@ -492,7 +493,7 @@ export default function LearningModeSelector() {
         >
           {createQuizMutation.isPending ? (
             <div className="flex items-center justify-center space-x-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <LoadingSpinner size="sm" variant="white" />
               <span>Starting {selectedMode === "study" ? "Study" : "Quiz"} Session...</span>
             </div>
           ) : (

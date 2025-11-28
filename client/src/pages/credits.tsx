@@ -3,10 +3,11 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Coins, Sparkles, Zap, Crown, Check, Loader2 } from "lucide-react";
+import { Coins, Sparkles, Zap, Crown, Check } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface CreditProduct {
   id: string;
@@ -176,7 +177,7 @@ export default function Credits() {
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <Card className="p-8 max-w-md">
             <div className="flex flex-col items-center gap-4">
-              <Loader2 className="w-12 h-12 animate-spin text-primary" />
+              <LoadingSpinner size="xl" label="Verifying purchase..." />
               <div className="text-center">
                 <h3 className="text-xl font-bold mb-2">Verifying Your Purchase</h3>
                 <p className="text-muted-foreground">
@@ -239,7 +240,7 @@ export default function Credits() {
         {/* Credit Packages */}
         {productsLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <LoadingSpinner size="lg" label="Loading credit packages..." />
             <span className="ml-3 text-muted-foreground">Loading credit packages...</span>
           </div>
         ) : products.length === 0 ? (

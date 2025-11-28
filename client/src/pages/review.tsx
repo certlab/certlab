@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { generateStudyNotes } from "@/lib/study-notes";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Quiz, Category, Question as SchemaQuestion } from "@shared/schema";
 
 interface QuizResult {
@@ -107,7 +108,7 @@ export default function Review() {
       <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="flex items-center justify-center min-h-[24rem]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <LoadingSpinner size="lg" label="Loading quiz review..." />
           </div>
         </div>
       </div>
@@ -219,8 +220,8 @@ export default function Review() {
                 >
                   {generateLectureMutation.isPending ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Generating...
+                      <LoadingSpinner size="sm" variant="white" />
+                      <span className="ml-2">Generating...</span>
                     </>
                   ) : (
                     <>

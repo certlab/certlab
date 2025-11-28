@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { QuizHeader, QuestionDisplay, QuestionNavigator } from "@/components/quiz";
 import { useQuizState } from "@/hooks/useQuizState";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Question, Quiz } from "@shared/schema";
 
 interface QuizInterfaceProps {
@@ -147,7 +148,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   if (!quiz || !currentQuestion || isLoadingQuestions) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <LoadingSpinner size="lg" label="Loading quiz..." />
       </div>
     );
   }

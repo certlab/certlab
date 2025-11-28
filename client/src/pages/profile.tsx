@@ -31,7 +31,6 @@ import {
   BookOpen,
   CreditCard,
   Save,
-  Loader2,
   Award,
   Calendar,
   Settings,
@@ -45,6 +44,7 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { clientAuth } from "@/lib/client-auth";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface UserProfile {
   id: string;
@@ -293,7 +293,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="container mx-auto p-6 flex items-center justify-center min-h-[600px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <LoadingSpinner size="lg" label="Loading profile..." />
       </div>
     );
   }
@@ -773,7 +773,7 @@ export default function ProfilePage() {
                 >
                   {isPasswordLoading ? (
                     <div className="flex items-center space-x-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <LoadingSpinner size="sm" variant="white" />
                       <span>Updating...</span>
                     </div>
                   ) : (
@@ -798,7 +798,7 @@ export default function ProfilePage() {
           data-testid="save-button"
         >
           {updateProfileMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <LoadingSpinner size="sm" variant="white" />
           ) : (
             <>
               <Save className="h-4 w-4 mr-2" />

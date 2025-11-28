@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap, Shield, BookOpen, Target, ArrowRight } from "lucide-react";
 import { useAuth } from "@/lib/auth-provider";
 import { useLocation } from "wouter";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 // Lazy load Login component to reduce initial bundle size
 const Login = lazy(() => import("./login"));
@@ -34,9 +35,8 @@ export default function Landing() {
   if (showLogin) {
     return (
       <Suspense fallback={
-        <div className="min-h-screen bg-background flex items-center justify-center" role="status" aria-live="polite">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <span className="sr-only">Loading login...</span>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <LoadingSpinner size="lg" label="Loading login..." />
         </div>
       }>
         <Login />
