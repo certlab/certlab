@@ -1,6 +1,16 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar, index } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  boolean,
+  timestamp,
+  jsonb,
+  varchar,
+  index,
+} from 'drizzle-orm/pg-core';
+import { createInsertSchema } from 'drizzle-zod';
+import { z } from 'zod';
 
 // ============================================================================
 // Question Option Schema Validation
@@ -11,8 +21,8 @@ import { z } from "zod";
  * Options use 0-indexed IDs (0, 1, 2, 3) for consistency.
  */
 export const questionOptionSchema = z.object({
-  id: z.number().int().min(0).max(9),  // 0-indexed, supports up to 10 options
-  text: z.string().min(1),              // Option text must be non-empty
+  id: z.number().int().min(0).max(9), // 0-indexed, supports up to 10 options
+  text: z.string().min(1), // Option text must be non-empty
 });
 
 /**
@@ -33,20 +43,22 @@ export type QuestionOption = z.infer<typeof questionOptionSchema>;
  * @returns true if correctAnswer matches an option ID, false otherwise
  */
 export function validateCorrectAnswer(options: QuestionOption[], correctAnswer: number): boolean {
-  return options.some(option => option.id === correctAnswer);
+  return options.some((option) => option.id === correctAnswer);
 }
 
 /**
  * Normalizes question options to use 0-indexed IDs.
  * If options don't have IDs or have non-sequential IDs, this will reassign them.
- * 
+ *
  * Note: This utility function is provided for migration scripts and future use
  * when fixing existing data with inconsistent option IDs.
- * 
+ *
  * @param options Array of options (potentially without IDs or with inconsistent IDs)
  * @returns Normalized options with 0-indexed IDs
  */
-export function normalizeQuestionOptions(options: Array<{ id?: number; text: string }>): QuestionOption[] {
+export function normalizeQuestionOptions(
+  options: Array<{ id?: number; text: string }>
+): QuestionOption[] {
   return options.map((option, index) => ({
     id: index,
     text: option.text,
@@ -56,15 +68,15 @@ export function normalizeQuestionOptions(options: Array<{ id?: number; text: str
 /**
  * Validates a complete question's options and correctAnswer.
  * Returns validation result with specific error messages.
- * 
+ *
  * Note: This utility function provides a convenient way to validate question data
  * in migration scripts or when validating data from external sources. The import
  * flow uses `validateQuestionOptions` in import-questions.ts for per-question validation.
  */
-export function validateQuestionData(data: {
-  options: unknown;
-  correctAnswer: number;
-}): { valid: boolean; errors: string[] } {
+export function validateQuestionData(data: { options: unknown; correctAnswer: number }): {
+  valid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   // Validate options structure
@@ -76,8 +88,10 @@ export function validateQuestionData(data: {
 
   // Validate correctAnswer matches an option ID
   if (!validateCorrectAnswer(optionsResult.data, data.correctAnswer)) {
-    const optionIds = optionsResult.data.map(o => o.id).join(', ');
-    errors.push(`correctAnswer ${data.correctAnswer} does not match any option ID. Valid IDs: ${optionIds}`);
+    const optionIds = optionsResult.data.map((o) => o.id).join(', ');
+    errors.push(
+      `correctAnswer ${data.correctAnswer} does not match any option ID. Valid IDs: ${optionIds}`
+    );
     return { valid: false, errors };
   }
 
@@ -90,190 +104,204 @@ export function validateQuestionData(data: {
 
 // Session storage table
 export const sessions = pgTable(
-  "sessions",
+  'sessions',
   {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
+    sid: varchar('sid').primaryKey(),
+    sess: jsonb('sess').notNull(),
+    expire: timestamp('expire').notNull(),
   },
-  (table) => [index("IDX_session_expire").on(table.expire)],
+  (table) => [index('IDX_session_expire').on(table.expire)]
 );
 
 // Tenants table for multi-tenancy support
-export const tenants = pgTable("tenants", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  domain: text("domain").unique(), // Optional custom domain
-  settings: jsonb("settings").default({}), // Tenant-specific configuration
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+export const tenants = pgTable('tenants', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  domain: text('domain').unique(), // Optional custom domain
+  settings: jsonb('settings').default({}), // Tenant-specific configuration
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 // User storage table
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique().notNull(),
-  passwordHash: varchar("password_hash"), // bcrypt hashed password
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
-  role: text("role").notNull().default("user"), // "admin", "user"
-  tenantId: integer("tenant_id").notNull().default(1),
-  certificationGoals: jsonb("certification_goals").$type<string[]>(),
-  studyPreferences: jsonb("study_preferences").$type<{
+export const users = pgTable('users', {
+  id: varchar('id').primaryKey().notNull(),
+  email: varchar('email').unique().notNull(),
+  passwordHash: varchar('password_hash'), // bcrypt hashed password
+  firstName: varchar('first_name'),
+  lastName: varchar('last_name'),
+  profileImageUrl: varchar('profile_image_url'),
+  role: text('role').notNull().default('user'), // "admin", "user"
+  tenantId: integer('tenant_id').notNull().default(1),
+  certificationGoals: jsonb('certification_goals').$type<string[]>(),
+  studyPreferences: jsonb('study_preferences').$type<{
     dailyTimeMinutes?: number;
     preferredDifficulty?: 'beginner' | 'intermediate' | 'advanced';
     focusAreas?: string[];
     studyDays?: string[];
     reminderTime?: string;
   }>(),
-  skillsAssessment: jsonb("skills_assessment").$type<{
+  skillsAssessment: jsonb('skills_assessment').$type<{
     experienceLevel?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
     relevantExperience?: string[];
     learningStyle?: 'visual' | 'auditory' | 'kinesthetic' | 'reading';
     completedCertifications?: string[];
     motivations?: string[];
   }>(),
-  polarCustomerId: varchar("polar_customer_id"), // Used for credits management
-  tokenBalance: integer("token_balance").default(100), // Free tokens for quiz generation
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  polarCustomerId: varchar('polar_customer_id'), // Used for credits management
+  tokenBalance: integer('token_balance').default(100), // Free tokens for quiz generation
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const categories = pgTable("categories", {
-  id: serial("id").primaryKey(),
-  tenantId: integer("tenant_id").notNull(),
-  name: text("name").notNull(),
-  description: text("description"),
-  icon: text("icon"),
+export const categories = pgTable('categories', {
+  id: serial('id').primaryKey(),
+  tenantId: integer('tenant_id').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  icon: text('icon'),
 });
 
-export const subcategories = pgTable("subcategories", {
-  id: serial("id").primaryKey(),
-  tenantId: integer("tenant_id").notNull(),
-  categoryId: integer("category_id").notNull(),
-  name: text("name").notNull(),
-  description: text("description"),
+export const subcategories = pgTable('subcategories', {
+  id: serial('id').primaryKey(),
+  tenantId: integer('tenant_id').notNull(),
+  categoryId: integer('category_id').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
 });
 
-export const questions = pgTable("questions", {
-  id: serial("id").primaryKey(),
-  tenantId: integer("tenant_id").notNull(),
-  categoryId: integer("category_id").notNull(),
-  subcategoryId: integer("subcategory_id").notNull(),
-  text: text("text").notNull(),
-  options: jsonb("options").$type<QuestionOption[]>().notNull(), // Array of option objects with id and text
-  correctAnswer: integer("correct_answer").notNull(),
-  explanation: text("explanation"),
-  difficultyLevel: integer("difficulty_level").default(1), // 1-5 scale (1=Easy, 5=Expert)
-  tags: jsonb("tags"), // Array of topic tags for lecture generation
+export const questions = pgTable('questions', {
+  id: serial('id').primaryKey(),
+  tenantId: integer('tenant_id').notNull(),
+  categoryId: integer('category_id').notNull(),
+  subcategoryId: integer('subcategory_id').notNull(),
+  text: text('text').notNull(),
+  options: jsonb('options').$type<QuestionOption[]>().notNull(), // Array of option objects with id and text
+  correctAnswer: integer('correct_answer').notNull(),
+  explanation: text('explanation'),
+  difficultyLevel: integer('difficulty_level').default(1), // 1-5 scale (1=Easy, 5=Expert)
+  tags: jsonb('tags'), // Array of topic tags for lecture generation
 });
 
 // User quizzes - isolated per tenant (user data does not transfer between tenants)
-export const quizzes = pgTable("quizzes", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
-  tenantId: integer("tenant_id").notNull().default(1), // Isolates quiz history per tenant
-  title: text("title").notNull(),
-  categoryIds: jsonb("category_ids").notNull(), // Array of category IDs
-  subcategoryIds: jsonb("subcategory_ids").notNull(), // Array of subcategory IDs
-  questionIds: jsonb("question_ids"), // Array of specific question IDs for this quiz (for consistent scoring)
-  questionCount: integer("question_count").notNull(),
-  timeLimit: integer("time_limit"), // in minutes, null for no limit
-  startedAt: timestamp("started_at").defaultNow(),
-  completedAt: timestamp("completed_at"),
-  score: integer("score"), // percentage
-  correctAnswers: integer("correct_answers"),
-  totalQuestions: integer("total_questions"),
-  answers: jsonb("answers"), // Array of user answers
-  isAdaptive: boolean("is_adaptive").default(false),
-  adaptiveMetrics: jsonb("adaptive_metrics"), // Tracks wrong answer patterns
-  difficultyLevel: integer("difficulty_level").default(1), // 1-5 scale
-  difficultyFilter: jsonb("difficulty_filter"), // Array of difficulty levels to include
-  isPassing: boolean("is_passing").default(false), // 85%+ threshold
-  missedTopics: jsonb("missed_topics"), // Topics that need lecture generation
-  mode: text("mode").notNull().default("study"), // "study", "quiz", or "challenge" mode
+export const quizzes = pgTable('quizzes', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1), // Isolates quiz history per tenant
+  title: text('title').notNull(),
+  categoryIds: jsonb('category_ids').notNull(), // Array of category IDs
+  subcategoryIds: jsonb('subcategory_ids').notNull(), // Array of subcategory IDs
+  questionIds: jsonb('question_ids'), // Array of specific question IDs for this quiz (for consistent scoring)
+  questionCount: integer('question_count').notNull(),
+  timeLimit: integer('time_limit'), // in minutes, null for no limit
+  startedAt: timestamp('started_at').defaultNow(),
+  completedAt: timestamp('completed_at'),
+  score: integer('score'), // percentage
+  correctAnswers: integer('correct_answers'),
+  totalQuestions: integer('total_questions'),
+  answers: jsonb('answers'), // Array of user answers
+  isAdaptive: boolean('is_adaptive').default(false),
+  adaptiveMetrics: jsonb('adaptive_metrics'), // Tracks wrong answer patterns
+  difficultyLevel: integer('difficulty_level').default(1), // 1-5 scale
+  difficultyFilter: jsonb('difficulty_filter'), // Array of difficulty levels to include
+  isPassing: boolean('is_passing').default(false), // 85%+ threshold
+  missedTopics: jsonb('missed_topics'), // Topics that need lecture generation
+  mode: text('mode').notNull().default('study'), // "study", "quiz", or "challenge" mode
 });
 
 // Micro-learning challenges table
-export const challenges = pgTable("challenges", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
-  type: text("type").notNull(), // "daily", "quick", "streak", "focus"
-  title: text("title").notNull(),
-  description: text("description"),
-  categoryId: integer("category_id"),
-  subcategoryId: integer("subcategory_id"),
-  targetScore: integer("target_score").default(80), // Target percentage
-  questionsCount: integer("questions_count").default(5), // 3-7 questions typically
-  timeLimit: integer("time_limit").default(5), // 5-15 minutes
-  difficulty: integer("difficulty").default(1), // 1-3 for challenges (easier than full quizzes)
-  streakMultiplier: integer("streak_multiplier").default(1), // Bonus points for streaks
-  pointsReward: integer("points_reward").default(50), // Base points for completion
-  isActive: boolean("is_active").default(true),
-  availableAt: timestamp("available_at").defaultNow(),
-  expiresAt: timestamp("expires_at"), // Some challenges expire (like daily challenges)
-  createdAt: timestamp("created_at").defaultNow(),
+export const challenges = pgTable('challenges', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  type: text('type').notNull(), // "daily", "quick", "streak", "focus"
+  title: text('title').notNull(),
+  description: text('description'),
+  categoryId: integer('category_id'),
+  subcategoryId: integer('subcategory_id'),
+  targetScore: integer('target_score').default(80), // Target percentage
+  questionsCount: integer('questions_count').default(5), // 3-7 questions typically
+  timeLimit: integer('time_limit').default(5), // 5-15 minutes
+  difficulty: integer('difficulty').default(1), // 1-3 for challenges (easier than full quizzes)
+  streakMultiplier: integer('streak_multiplier').default(1), // Bonus points for streaks
+  pointsReward: integer('points_reward').default(50), // Base points for completion
+  isActive: boolean('is_active').default(true),
+  availableAt: timestamp('available_at').defaultNow(),
+  expiresAt: timestamp('expires_at'), // Some challenges expire (like daily challenges)
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 // User challenge attempts and progress
-export const challengeAttempts = pgTable("challenge_attempts", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
-  tenantId: integer("tenant_id").notNull().default(1),
-  challengeId: integer("challenge_id").notNull(),
-  quizId: integer("quiz_id"), // Links to the actual quiz attempt
-  score: integer("score"), // Percentage score
-  pointsEarned: integer("points_earned").default(0),
-  timeSpent: integer("time_spent"), // in seconds
-  isCompleted: boolean("is_completed").default(false),
-  isPassed: boolean("is_passed").default(false), // Met the target score
-  answers: jsonb("answers"), // User answers for quick reference
-  startedAt: timestamp("started_at").defaultNow(),
-  completedAt: timestamp("completed_at"),
+export const challengeAttempts = pgTable('challenge_attempts', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  challengeId: integer('challenge_id').notNull(),
+  quizId: integer('quiz_id'), // Links to the actual quiz attempt
+  score: integer('score'), // Percentage score
+  pointsEarned: integer('points_earned').default(0),
+  timeSpent: integer('time_spent'), // in seconds
+  isCompleted: boolean('is_completed').default(false),
+  isPassed: boolean('is_passed').default(false), // Met the target score
+  answers: jsonb('answers'), // User answers for quick reference
+  startedAt: timestamp('started_at').defaultNow(),
+  completedAt: timestamp('completed_at'),
 });
 
-export const userProgress = pgTable("user_progress", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
-  tenantId: integer("tenant_id").notNull().default(1),
-  categoryId: integer("category_id").notNull(),
-  questionsCompleted: integer("questions_completed").notNull().default(0),
-  totalQuestions: integer("total_questions").notNull().default(0),
-  averageScore: integer("average_score").notNull().default(0),
-  lastQuizDate: timestamp("last_quiz_date"),
-  adaptiveDifficulty: integer("adaptive_difficulty").default(1), // 1-5 scale
-  consecutiveCorrect: integer("consecutive_correct").default(0),
-  consecutiveWrong: integer("consecutive_wrong").default(0),
-  weakSubcategories: jsonb("weak_subcategories"), // Array of struggling subcategory IDs
+export const userProgress = pgTable('user_progress', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  categoryId: integer('category_id').notNull(),
+  questionsCompleted: integer('questions_completed').notNull().default(0),
+  totalQuestions: integer('total_questions').notNull().default(0),
+  averageScore: integer('average_score').notNull().default(0),
+  lastQuizDate: timestamp('last_quiz_date'),
+  adaptiveDifficulty: integer('adaptive_difficulty').default(1), // 1-5 scale
+  consecutiveCorrect: integer('consecutive_correct').default(0),
+  consecutiveWrong: integer('consecutive_wrong').default(0),
+  weakSubcategories: jsonb('weak_subcategories'), // Array of struggling subcategory IDs
 });
 
 // Mastery tracking for rolling average across all certification areas
-export const masteryScores = pgTable("mastery_scores", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
-  tenantId: integer("tenant_id").notNull().default(1),
-  categoryId: integer("category_id").notNull(),
-  subcategoryId: integer("subcategory_id").notNull(),
-  correctAnswers: integer("correct_answers").notNull().default(0),
-  totalAnswers: integer("total_answers").notNull().default(0),
-  rollingAverage: integer("rolling_average").notNull().default(0), // 0-100 percentage
-  lastUpdated: timestamp("last_updated").defaultNow(),
+export const masteryScores = pgTable('mastery_scores', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  categoryId: integer('category_id').notNull(),
+  subcategoryId: integer('subcategory_id').notNull(),
+  correctAnswers: integer('correct_answers').notNull().default(0),
+  totalAnswers: integer('total_answers').notNull().default(0),
+  rollingAverage: integer('rolling_average').notNull().default(0), // 0-100 percentage
+  lastUpdated: timestamp('last_updated').defaultNow(),
 });
 
 // Lectures table for AI-generated content based on missed topics
-export const lectures = pgTable("lectures", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
-  tenantId: integer("tenant_id").notNull().default(1),
-  quizId: integer("quiz_id"),
-  title: text("title").notNull(),
-  content: text("content").notNull(), // Generated lecture content
-  topics: jsonb("topics").notNull(), // Array of missed topic tags
-  categoryId: integer("category_id").notNull(),
-  subcategoryId: integer("subcategory_id"),
-  createdAt: timestamp("created_at").defaultNow(),
-  isRead: boolean("is_read").default(false),
+export const lectures = pgTable('lectures', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  quizId: integer('quiz_id'),
+  title: text('title').notNull(),
+  content: text('content').notNull(), // Generated lecture content
+  topics: jsonb('topics').notNull(), // Array of missed topic tags
+  categoryId: integer('category_id').notNull(),
+  subcategoryId: integer('subcategory_id'),
+  createdAt: timestamp('created_at').defaultNow(),
+  isRead: boolean('is_read').default(false),
+});
+
+// Study Notes table for user-generated study notes from quiz results
+export const studyNotes = pgTable('study_notes', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  quizId: integer('quiz_id'),
+  title: text('title').notNull(),
+  content: text('content').notNull(), // Generated study notes content (markdown)
+  categoryIds: jsonb('category_ids').$type<number[]>(), // Categories this note covers
+  score: integer('score'), // Quiz score at time of generation
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 // Insert schemas
@@ -300,12 +328,20 @@ export const insertLectureSchema = createInsertSchema(lectures).omit({
   createdAt: true,
 });
 
-export const insertQuestionSchema = createInsertSchema(questions).omit({
+export const insertStudyNoteSchema = createInsertSchema(studyNotes).omit({
   id: true,
-}).extend({
-  // Override the options field with proper Zod validation
-  options: questionOptionsSchema,
+  createdAt: true,
+  updatedAt: true,
 });
+
+export const insertQuestionSchema = createInsertSchema(questions)
+  .omit({
+    id: true,
+  })
+  .extend({
+    // Override the options field with proper Zod validation
+    options: questionOptionsSchema,
+  });
 
 export const insertQuizSchema = createInsertSchema(quizzes).omit({
   id: true,
@@ -322,44 +358,44 @@ export const insertMasteryScoreSchema = createInsertSchema(masteryScores).omit({
 });
 
 // Achievement badges for gamified learning milestones
-export const badges = pgTable("badges", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(), // e.g., "First Steps", "Quiz Master", "Streak Champion"
-  description: text("description").notNull(),
-  icon: text("icon").notNull(), // Icon class or emoji
-  category: text("category").notNull(), // "progress", "performance", "streak", "mastery"
-  requirement: jsonb("requirement").notNull(), // Flexible requirement definition
-  color: text("color").notNull(), // Badge color theme
-  rarity: text("rarity").notNull(), // "common", "uncommon", "rare", "legendary"
-  points: integer("points").default(0), // Gamification points awarded
-  createdAt: timestamp("created_at").defaultNow(),
+export const badges = pgTable('badges', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(), // e.g., "First Steps", "Quiz Master", "Streak Champion"
+  description: text('description').notNull(),
+  icon: text('icon').notNull(), // Icon class or emoji
+  category: text('category').notNull(), // "progress", "performance", "streak", "mastery"
+  requirement: jsonb('requirement').notNull(), // Flexible requirement definition
+  color: text('color').notNull(), // Badge color theme
+  rarity: text('rarity').notNull(), // "common", "uncommon", "rare", "legendary"
+  points: integer('points').default(0), // Gamification points awarded
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 // User badges - tracks which badges users have earned
-export const userBadges = pgTable("user_badges", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
-  tenantId: integer("tenant_id").notNull().default(1),
-  badgeId: integer("badge_id").notNull(),
-  earnedAt: timestamp("earned_at").defaultNow(),
-  progress: integer("progress").default(0), // For progressive badges
-  isNotified: boolean("is_notified").default(false), // Whether user has seen the achievement
+export const userBadges = pgTable('user_badges', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  badgeId: integer('badge_id').notNull(),
+  earnedAt: timestamp('earned_at').defaultNow(),
+  progress: integer('progress').default(0), // For progressive badges
+  isNotified: boolean('is_notified').default(false), // Whether user has seen the achievement
 });
 
 // User statistics for gamification
-export const userGameStats = pgTable("user_game_stats", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
-  tenantId: integer("tenant_id").notNull().default(1),
-  totalPoints: integer("total_points").default(0),
-  currentStreak: integer("current_streak").default(0),
-  longestStreak: integer("longest_streak").default(0),
-  lastActivityDate: timestamp("last_activity_date"),
-  totalBadgesEarned: integer("total_badges_earned").default(0),
-  level: integer("level").default(1), // User level based on points
-  nextLevelPoints: integer("next_level_points").default(100),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+export const userGameStats = pgTable('user_game_stats', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  totalPoints: integer('total_points').default(0),
+  currentStreak: integer('current_streak').default(0),
+  longestStreak: integer('longest_streak').default(0),
+  lastActivityDate: timestamp('last_activity_date'),
+  totalBadgesEarned: integer('total_badges_earned').default(0),
+  level: integer('level').default(1), // User level based on points
+  nextLevelPoints: integer('next_level_points').default(100),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 // Insert schemas for achievement system
@@ -386,7 +422,7 @@ export const upsertUserSchema = z.object({
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
   profileImageUrl: z.string().nullable(),
-  role: z.enum(["user", "admin"]).optional(),
+  role: z.enum(['user', 'admin']).optional(),
 });
 
 // Quiz creation schema
@@ -396,7 +432,7 @@ export const createQuizSchema = z.object({
   subcategoryIds: z.array(z.number()).optional(),
   questionCount: z.number().min(1).max(100),
   timeLimit: z.number().optional(),
-  mode: z.enum(["study", "quiz"]).default("study"),
+  mode: z.enum(['study', 'quiz']).default('study'),
 });
 
 // Answer submission schema
@@ -492,6 +528,8 @@ export type InsertUserGameStats = z.infer<typeof insertUserGameStatsSchema>;
 export type UserGameStats = typeof userGameStats.$inferSelect;
 export type InsertLecture = z.infer<typeof insertLectureSchema>;
 export type Lecture = typeof lectures.$inferSelect;
+export type InsertStudyNote = z.infer<typeof insertStudyNoteSchema>;
+export type StudyNote = typeof studyNotes.$inferSelect;
 
 // Challenge schemas and types
 export const insertChallengeSchema = createInsertSchema(challenges).omit({
@@ -511,68 +549,68 @@ export type InsertChallengeAttempt = z.infer<typeof insertChallengeAttemptSchema
 export type ChallengeAttempt = typeof challengeAttempts.$inferSelect;
 
 // Study Groups table for collaborative learning
-export const studyGroups = pgTable("study_groups", {
-  id: serial("id").primaryKey(),
-  tenantId: integer("tenant_id").notNull().default(1),
-  name: text("name").notNull(),
-  description: text("description"),
-  categoryIds: jsonb("category_ids").notNull().$type<number[]>(), // Categories this group focuses on
-  createdBy: varchar("created_by").notNull(), // User ID who created the group
-  maxMembers: integer("max_members").default(20),
-  isPublic: boolean("is_public").default(true),
-  level: text("level").default("Intermediate"), // "Beginner" | "Intermediate" | "Advanced"
-  meetingSchedule: jsonb("meeting_schedule").$type<{
+export const studyGroups = pgTable('study_groups', {
+  id: serial('id').primaryKey(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  name: text('name').notNull(),
+  description: text('description'),
+  categoryIds: jsonb('category_ids').notNull().$type<number[]>(), // Categories this group focuses on
+  createdBy: varchar('created_by').notNull(), // User ID who created the group
+  maxMembers: integer('max_members').default(20),
+  isPublic: boolean('is_public').default(true),
+  level: text('level').default('Intermediate'), // "Beginner" | "Intermediate" | "Advanced"
+  meetingSchedule: jsonb('meeting_schedule').$type<{
     frequency?: string;
     dayOfWeek?: string;
     time?: string;
   }>(),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 // Study Group Members table
-export const studyGroupMembers = pgTable("study_group_members", {
-  id: serial("id").primaryKey(),
-  groupId: integer("group_id").notNull(),
-  userId: varchar("user_id").notNull(),
-  role: text("role").default("member"), // "owner", "moderator", "member"
-  joinedAt: timestamp("joined_at").defaultNow(),
-  lastActiveAt: timestamp("last_active_at"),
-  contributionScore: integer("contribution_score").default(0), // Points for activity in group
+export const studyGroupMembers = pgTable('study_group_members', {
+  id: serial('id').primaryKey(),
+  groupId: integer('group_id').notNull(),
+  userId: varchar('user_id').notNull(),
+  role: text('role').default('member'), // "owner", "moderator", "member"
+  joinedAt: timestamp('joined_at').defaultNow(),
+  lastActiveAt: timestamp('last_active_at'),
+  contributionScore: integer('contribution_score').default(0), // Points for activity in group
 });
 
 // Practice Tests table for certification practice exams
-export const practiceTests = pgTable("practice_tests", {
-  id: serial("id").primaryKey(),
-  tenantId: integer("tenant_id").notNull().default(1),
-  name: text("name").notNull(),
-  description: text("description"),
-  categoryIds: jsonb("category_ids").notNull().$type<number[]>(),
-  questionCount: integer("question_count").notNull(),
-  timeLimit: integer("time_limit").notNull(), // in minutes
-  difficulty: text("difficulty").notNull(), // "Easy", "Medium", "Hard", "Mixed"
-  passingScore: integer("passing_score").default(70), // percentage
-  isOfficial: boolean("is_official").default(false), // Whether this is an official practice test
-  questionPool: jsonb("question_pool").$type<number[]>(), // Optional: specific question IDs to use
-  createdBy: varchar("created_by"), // User ID if user-created
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+export const practiceTests = pgTable('practice_tests', {
+  id: serial('id').primaryKey(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  name: text('name').notNull(),
+  description: text('description'),
+  categoryIds: jsonb('category_ids').notNull().$type<number[]>(),
+  questionCount: integer('question_count').notNull(),
+  timeLimit: integer('time_limit').notNull(), // in minutes
+  difficulty: text('difficulty').notNull(), // "Easy", "Medium", "Hard", "Mixed"
+  passingScore: integer('passing_score').default(70), // percentage
+  isOfficial: boolean('is_official').default(false), // Whether this is an official practice test
+  questionPool: jsonb('question_pool').$type<number[]>(), // Optional: specific question IDs to use
+  createdBy: varchar('created_by'), // User ID if user-created
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 // Practice Test Attempts table
-export const practiceTestAttempts = pgTable("practice_test_attempts", {
-  id: serial("id").primaryKey(),
-  tenantId: integer("tenant_id").notNull(),
-  testId: integer("test_id").notNull(),
-  userId: varchar("user_id").notNull(),
-  quizId: integer("quiz_id"), // Links to the actual quiz attempt
-  score: integer("score"), // percentage
-  isPassed: boolean("is_passed").default(false),
-  timeSpent: integer("time_spent"), // in seconds
-  startedAt: timestamp("started_at").defaultNow(),
-  completedAt: timestamp("completed_at"),
+export const practiceTestAttempts = pgTable('practice_test_attempts', {
+  id: serial('id').primaryKey(),
+  tenantId: integer('tenant_id').notNull(),
+  testId: integer('test_id').notNull(),
+  userId: varchar('user_id').notNull(),
+  quizId: integer('quiz_id'), // Links to the actual quiz attempt
+  score: integer('score'), // percentage
+  isPassed: boolean('is_passed').default(false),
+  timeSpent: integer('time_spent'), // in seconds
+  startedAt: timestamp('started_at').defaultNow(),
+  completedAt: timestamp('completed_at'),
 });
 
 // Insert schemas for study groups and practice tests

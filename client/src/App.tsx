@@ -1,43 +1,45 @@
-import { Switch, Route, useLocation, Router as WouterRouter } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/lib/theme-provider";
-import { AuthProvider, useAuth } from "@/lib/auth-provider";
-import { AchievementNotification } from "@/components/AchievementNotification";
-import { UnhandledRejectionHandler } from "@/components/UnhandledRejectionHandler";
-import Header from "@/components/Header";
-import BreadcrumbNavigation from "@/components/BreadcrumbNavigation";
-import PageLoader from "@/components/PageLoader";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Switch, Route, useLocation, Router as WouterRouter } from 'wouter';
+import { queryClient } from './lib/queryClient';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/toaster';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { ThemeProvider } from '@/lib/theme-provider';
+import { AuthProvider, useAuth } from '@/lib/auth-provider';
+import { AchievementNotification } from '@/components/AchievementNotification';
+import { UnhandledRejectionHandler } from '@/components/UnhandledRejectionHandler';
+import Header from '@/components/Header';
+import BreadcrumbNavigation from '@/components/BreadcrumbNavigation';
+import PageLoader from '@/components/PageLoader';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 // Landing page is eagerly loaded for fast first paint (initial route)
-import Landing from "@/pages/landing";
-import { lazy, Suspense, useEffect } from "react";
+import Landing from '@/pages/landing';
+import { lazy, Suspense, useEffect } from 'react';
 
 // Lazy load page components for code splitting
-const NotFound = lazy(() => import("@/pages/not-found"));
-const Dashboard = lazy(() => import("@/pages/dashboard"));
-const Quiz = lazy(() => import("@/pages/quiz"));
-const Results = lazy(() => import("@/pages/results"));
-const Review = lazy(() => import("@/pages/review"));
-const Lecture = lazy(() => import("@/pages/lecture"));
-const Achievements = lazy(() => import("@/pages/achievements"));
-const Accessibility = lazy(() => import("@/pages/accessibility"));
-const AdminDashboard = lazy(() => import("@/pages/admin"));
-const UIStructurePage = lazy(() => import("@/pages/ui-structure"));
-const ChallengesPage = lazy(() => import("@/pages/challenges"));
-const CreditsPage = lazy(() => import("@/pages/credits"));
-const ProfilePage = lazy(() => import("@/pages/profile"));
-const PracticeTests = lazy(() => import("@/pages/practice-tests"));
-const DataImportPage = lazy(() => import("@/pages/data-import"));
+const NotFound = lazy(() => import('@/pages/not-found'));
+const Dashboard = lazy(() => import('@/pages/dashboard'));
+const Quiz = lazy(() => import('@/pages/quiz'));
+const Results = lazy(() => import('@/pages/results'));
+const Review = lazy(() => import('@/pages/review'));
+const Lecture = lazy(() => import('@/pages/lecture'));
+const StudyNotesPage = lazy(() => import('@/pages/study-notes'));
+const Achievements = lazy(() => import('@/pages/achievements'));
+const Accessibility = lazy(() => import('@/pages/accessibility'));
+const AdminDashboard = lazy(() => import('@/pages/admin'));
+const UIStructurePage = lazy(() => import('@/pages/ui-structure'));
+const ChallengesPage = lazy(() => import('@/pages/challenges'));
+const CreditsPage = lazy(() => import('@/pages/credits'));
+const ProfilePage = lazy(() => import('@/pages/profile'));
+const PracticeTests = lazy(() => import('@/pages/practice-tests'));
+const DataImportPage = lazy(() => import('@/pages/data-import'));
 
 // Get the base path from Vite's configuration
 // For GitHub Pages deployment at /certlab/, BASE_URL is '/certlab/'
 // We remove the trailing slash to match wouter's expected format
 // For root deployments where BASE_URL is '/', we use an empty string
-const BASE_PATH = import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
+const BASE_PATH =
+  import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -55,8 +57,8 @@ function Router() {
   return (
     <div className="min-h-screen bg-background">
       {/* Skip to main content link for keyboard navigation */}
-      <a 
-        href="#main-content" 
+      <a
+        href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-background focus:text-foreground focus:px-4 focus:py-2 focus:rounded-md focus:border focus:border-primary focus:shadow-lg"
       >
         Skip to main content
@@ -79,6 +81,7 @@ function Router() {
                   <Route path="/app/results/:id" component={Results} />
                   <Route path="/app/review/:id" component={Review} />
                   <Route path="/app/lecture/:id" component={Lecture} />
+                  <Route path="/app/study-notes" component={StudyNotesPage} />
                   <Route path="/app/achievements" component={Achievements} />
                   <Route path="/app/accessibility" component={Accessibility} />
                   <Route path="/app/practice-tests" component={PracticeTests} />
@@ -116,9 +119,7 @@ function AppContent() {
   return (
     <>
       <Router />
-      {isAuthenticated && user && (
-        <AchievementNotification userId={user.id} />
-      )}
+      {isAuthenticated && user && <AchievementNotification userId={user.id} />}
     </>
   );
 }

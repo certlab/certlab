@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { useAuth } from "@/lib/auth-provider";
-import { Button } from "@/components/ui/button";
-import { useLocation } from "wouter";
-import { useToast } from "@/hooks/use-toast";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { Badge } from "@/components/ui/badge";
+import { useState } from 'react';
+import { useAuth } from '@/lib/auth-provider';
+import { Button } from '@/components/ui/button';
+import { useLocation } from 'wouter';
+import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { Badge } from '@/components/ui/badge';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,19 +12,19 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
+} from '@/components/ui/navigation-menu';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { 
-  Home, 
-  Settings, 
-  BookOpen, 
-  Trophy, 
+} from '@/components/ui/dropdown-menu';
+import {
+  Home,
+  Settings,
+  BookOpen,
+  Trophy,
   BarChart3,
   Database,
   Shield,
@@ -35,12 +35,12 @@ import {
   FileText,
   Crown,
   Sparkles,
-  Coins
-} from "lucide-react";
-import MobileNavigationEnhanced from "@/components/MobileNavigationEnhanced";
-import TenantSwitcher from "@/components/TenantSwitcher";
-import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryClient";
+  Coins,
+} from 'lucide-react';
+import MobileNavigationEnhanced from '@/components/MobileNavigationEnhanced';
+import TenantSwitcher from '@/components/TenantSwitcher';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryClient';
 
 export default function Header() {
   const [location, setLocation] = useLocation();
@@ -48,7 +48,7 @@ export default function Header() {
   const { toast } = useToast();
   const isAdminArea = location.startsWith('/admin');
   const isAdmin = currentUser?.role === 'admin';
-  
+
   // Get token balance
   const { data: tokenData } = useQuery<{ balance: number }>({
     queryKey: queryKeys.user.tokenBalance(currentUser?.id),
@@ -61,14 +61,14 @@ export default function Header() {
     try {
       await logout();
       toast({
-        title: "Signed out successfully",
-        description: "You have been logged out of your account.",
+        title: 'Signed out successfully',
+        description: 'You have been logged out of your account.',
       });
       // Note: logout() handles the redirect to the production URL
     } catch (error) {
       toast({
-        title: "Signed out",
-        description: "You have been logged out of your account.",
+        title: 'Signed out',
+        description: 'You have been logged out of your account.',
       });
       // Note: logout() handles the redirect to the production URL
     }
@@ -104,8 +104,8 @@ export default function Header() {
               <h1 className="text-xl font-semibold text-foreground tracking-tight">Cert Lab</h1>
               {/* Token Balance Display - Hidden on medium screens to save space */}
               {tokenData && currentUser && (
-                <Badge 
-                  variant="secondary" 
+                <Badge
+                  variant="secondary"
                   className="hidden lg:flex ml-2 px-3 py-1 cursor-pointer hover:bg-secondary/80 transition-colors"
                   onClick={() => setLocation('/app/dashboard')}
                   onKeyDown={(e) => {
@@ -133,7 +133,7 @@ export default function Header() {
               </div>
             )}
           </div>
-          
+
           {/* Mobile Navigation */}
           <div className="md:hidden">
             <MobileNavigationEnhanced />
@@ -147,9 +147,9 @@ export default function Header() {
                   <Settings className="w-3 h-3 mr-1" />
                   Admin Mode
                 </Badge>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setLocation("/app")}
+                <Button
+                  variant="ghost"
+                  onClick={() => setLocation('/app')}
                   className="text-muted-foreground hover:text-primary"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
@@ -161,9 +161,9 @@ export default function Header() {
                 <NavigationMenuList>
                   {/* Dashboard */}
                   <NavigationMenuItem>
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => setLocation("/app")}
+                    <Button
+                      variant="ghost"
+                      onClick={() => setLocation('/app')}
                       className="text-muted-foreground hover:text-primary h-10 px-4 py-2"
                     >
                       <Home className="w-4 h-4 mr-2" />
@@ -186,9 +186,9 @@ export default function Header() {
                             Learning Features
                           </h3>
                           <div className="grid grid-cols-3 gap-3">
-                            <NavigationMenuLink 
+                            <NavigationMenuLink
                               className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                              onClick={() => setLocation("/app/achievements")}
+                              onClick={() => setLocation('/app/achievements')}
                             >
                               <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -200,9 +200,9 @@ export default function Header() {
                                 View earned badges and certifications
                               </p>
                             </NavigationMenuLink>
-                            <NavigationMenuLink 
+                            <NavigationMenuLink
                               className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                              onClick={() => setLocation("/app/practice-tests")}
+                              onClick={() => setLocation('/app/practice-tests')}
                             >
                               <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -212,6 +212,20 @@ export default function Header() {
                               </div>
                               <p className="text-xs leading-relaxed text-muted-foreground pl-8">
                                 Take full-length practice exams
+                              </p>
+                            </NavigationMenuLink>
+                            <NavigationMenuLink
+                              className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
+                              onClick={() => setLocation('/app/study-notes')}
+                            >
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <BookOpen className="w-3 h-3 text-primary" />
+                                </div>
+                                Study Notes
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                View and export saved study notes
                               </p>
                             </NavigationMenuLink>
                           </div>
@@ -225,9 +239,9 @@ export default function Header() {
                               Developer Tools
                             </h3>
                             <div className="grid grid-cols-2 gap-3">
-                              <NavigationMenuLink 
+                              <NavigationMenuLink
                                 className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                                onClick={() => setLocation("/accessibility")}
+                                onClick={() => setLocation('/accessibility')}
                               >
                                 <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                   <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -239,9 +253,9 @@ export default function Header() {
                                   Check color contrast and accessibility
                                 </p>
                               </NavigationMenuLink>
-                              <NavigationMenuLink 
+                              <NavigationMenuLink
                                 className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                                onClick={() => setLocation("/ui-structure")}
+                                onClick={() => setLocation('/ui-structure')}
                               >
                                 <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                   <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -264,20 +278,20 @@ export default function Header() {
                               <Settings className="w-4 h-4" />
                               Administration
                             </h3>
-                            <NavigationMenuLink 
+                            <NavigationMenuLink
                               className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                              onClick={() => setLocation("/admin")}
+                              onClick={() => setLocation('/admin')}
                             >
-                            <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                <Settings className="w-3 h-3 text-primary" />
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <Settings className="w-3 h-3 text-primary" />
+                                </div>
+                                Admin Dashboard
                               </div>
-                              Admin Dashboard
-                            </div>
-                            <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                              Manage users, content, and system settings
-                            </p>
-                          </NavigationMenuLink>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                Manage users, content, and system settings
+                              </p>
+                            </NavigationMenuLink>
                           </div>
                         )}
 
@@ -287,20 +301,20 @@ export default function Header() {
                             <Database className="w-4 h-4" />
                             Data Management
                           </h3>
-                          <NavigationMenuLink 
+                          <NavigationMenuLink
                             className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                            onClick={() => setLocation("/app/data-import")}
+                            onClick={() => setLocation('/app/data-import')}
                           >
-                          <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                              <Database className="w-3 h-3 text-primary" />
+                            <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                <Database className="w-3 h-3 text-primary" />
+                              </div>
+                              Import Sample Data
                             </div>
-                            Import Sample Data
-                          </div>
-                          <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                            Load 500+ practice questions per certification
-                          </p>
-                        </NavigationMenuLink>
+                            <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                              Load 500+ practice questions per certification
+                            </p>
+                          </NavigationMenuLink>
                         </div>
                       </div>
                     </NavigationMenuContent>
@@ -316,18 +330,21 @@ export default function Header() {
             <div className="hidden md:block">
               <ThemeToggle />
             </div>
-            
+
             {/* User Profile */}
             {currentUser && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="relative h-10 rounded-full px-2 hover:bg-accent/10"
                     aria-label={`User menu for ${getUserDisplayName(currentUser)}`}
                   >
                     <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center shadow-glow" aria-hidden="true">
+                      <div
+                        className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center shadow-glow"
+                        aria-hidden="true"
+                      >
                         <span className="text-primary-foreground text-sm font-semibold">
                           {getInitials(currentUser.firstName, currentUser.lastName)}
                         </span>
@@ -365,7 +382,9 @@ export default function Header() {
                     <>
                       <DropdownMenuSeparator className="my-2" />
                       <div className="px-3 py-2">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Token Balance:</p>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">
+                          Token Balance:
+                        </p>
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5 text-xs">
                             <Coins className="w-3 h-3 text-amber-500" />
@@ -377,7 +396,7 @@ export default function Header() {
                           {tokenData.balance < 20 && (
                             <div className="flex items-center gap-1.5 text-xs">
                               <Sparkles className="w-3 h-3 text-purple-500" />
-                              <button 
+                              <button
                                 onClick={() => setLocation('/app/dashboard')}
                                 className="text-purple-600 hover:underline"
                               >
@@ -390,22 +409,22 @@ export default function Header() {
                     </>
                   )}
                   <DropdownMenuSeparator className="my-2" />
-                  <DropdownMenuItem 
-                    onClick={() => setLocation("/app/achievements")}
+                  <DropdownMenuItem
+                    onClick={() => setLocation('/app/achievements')}
                     className="cursor-pointer rounded-md py-2.5 px-3"
                   >
                     <Trophy className="w-4 h-4 mr-3 text-primary" />
                     <span className="font-medium">My Achievements</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setLocation("/app/profile")}
+                  <DropdownMenuItem
+                    onClick={() => setLocation('/app/profile')}
                     className="cursor-pointer rounded-md py-2.5 px-3"
                   >
                     <User className="w-4 h-4 mr-3 text-primary" />
                     <span className="font-medium">My Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={handleSignOut}
                     className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
                   >
