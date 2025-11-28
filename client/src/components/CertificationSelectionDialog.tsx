@@ -53,6 +53,8 @@ export function CertificationSelectionDialog({
     if (!selectedCategoryId) return;
 
     const categoryId = parseInt(selectedCategoryId, 10);
+    if (isNaN(categoryId)) return;
+
     const selectedCategory = categories.find((c) => c.id === categoryId);
 
     if (selectedCategory) {
