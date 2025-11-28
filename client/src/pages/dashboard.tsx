@@ -142,17 +142,21 @@ export default function Dashboard() {
     setShowCertificationDialog(true);
   };
 
+  const showQuizError = (error: unknown) => {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Failed to create practice session';
+    toast({
+      title: 'Error',
+      description: errorMessage,
+      variant: 'destructive',
+    });
+  };
+
   const handleCertificationSelected = async (categoryId: number, categoryName: string) => {
     try {
       await createQuickPractice(categoryId, categoryName);
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to create practice session';
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      showQuizError(error);
     }
   };
 
@@ -162,13 +166,7 @@ export default function Dashboard() {
       try {
         await createQuickPractice(pendingCategoryId, pendingCategoryName);
       } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to create practice session';
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive',
-        });
+        showQuizError(error);
       } finally {
         setPendingCategoryId(null);
         setPendingCategoryName('');
