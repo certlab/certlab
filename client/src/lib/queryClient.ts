@@ -41,12 +41,80 @@
  * - `/api/tenants` - Multi-tenant organizations
  * - `/api/admin/*` - Admin queries
  * 
+ * ## Caching Strategy
+ * 
+ * Different query types use appropriate stale times based on how frequently
+ * the underlying data changes:
+ * 
+ * - **Static data** (categories, badges, practice tests): 5 minutes
+ *   These rarely change during a session and can be cached longer.
+ * 
+ * - **User data** (stats, progress, achievements): 30 seconds
+ *   These change frequently during active usage and need shorter cache times.
+ * 
+ * - **Auth data**: 1 minute
+ *   Balance between performance and security responsiveness.
+ * 
+ * Cache is automatically invalidated after mutations using the
+ * `invalidateUserQueries` and `invalidateAllUserData` helper functions.
+ * 
  * @module queryClient
  */
 
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { clientStorage } from "./client-storage";
 import { clientAuth } from "./client-auth";
+
+/**
+ * Stale time constants for different query types (in milliseconds).
+ * 
+ * These values determine how long cached data is considered "fresh"
+ * before TanStack Query marks it as stale and eligible for refetching.
+ * 
+ * In CertLab's client-only architecture with IndexedDB, these times are
+ * primarily used to:
+ * 1. Control when background refetches occur
+ * 2. Determine if cached data should be used immediately vs. refetched
+ * 3. Optimize performance by reducing unnecessary IndexedDB reads
+ */
+export const staleTime = {
+  /**
+   * Static reference data that rarely changes during a session.
+   * Examples: categories, badges, practice test definitions, tenants
+   * 
+   * 5 minutes - long enough to avoid repeated reads, short enough
+   * to pick up admin changes within a reasonable timeframe.
+   */
+  static: 5 * 60 * 1000, // 5 minutes
+  
+  /**
+   * User-specific data that changes frequently during active usage.
+   * Examples: user stats, progress, achievements, quizzes, mastery scores
+   * 
+   * 30 seconds - ensures UI reflects recent quiz completions and
+   * achievement unlocks without excessive refetching.
+   */
+  user: 30 * 1000, // 30 seconds
+  
+  /**
+   * Authentication and session data.
+   * Examples: current user, auth status
+   * 
+   * 1 minute - balances security responsiveness with performance.
+   * Auth state changes (login/logout) should trigger immediate invalidation
+   * regardless of stale time.
+   */
+  auth: 60 * 1000, // 1 minute
+  
+  /**
+   * Quiz-related data that's typically stable during a session.
+   * Examples: quiz details, quiz questions
+   * 
+   * 2 minutes - quiz content doesn't change frequently, but we want
+   * to reflect any updates within a reasonable time.
+   */
+  quiz: 2 * 60 * 1000, // 2 minutes
+} as const;
 
 /**
  * Query Key Factory
@@ -562,8 +630,8 @@ export async function apiRequest({
  * 
  * Configuration:
  * - Uses the custom getQueryFn for IndexedDB-based data fetching
- * - Disables automatic refetching (staleTime: Infinity)
- * - Disables window focus refetching (data is local, no need to refresh)
+ * - Uses appropriate stale times based on data type (see staleTime constants)
+ * - Disables window focus refetching (data is local, no need to refresh on focus)
  * - Disables retries (IndexedDB operations are synchronous and deterministic)
  * 
  * @example
@@ -586,7 +654,9 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      // Default stale time for user data - most common query type
+      // Individual queries can override this using the staleTime constants
+      staleTime: staleTime.user,
       retry: false,
     },
     mutations: {
@@ -594,3 +664,117 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+/**
+ * Invalidates user-specific queries after mutations that modify user data.
+ * 
+ * Use this after mutations that affect user stats, progress, achievements,
+ * or other user-specific data. This ensures the UI reflects the latest
+ * data from IndexedDB.
+ * 
+ * @param userId - The user ID whose queries should be invalidated
+ * 
+ * @example
+ * ```typescript
+ * const mutation = useMutation({
+ *   mutationFn: async (data) => {
+ *     await clientStorage.updateUserProgress(userId, data);
+ *   },
+ *   onSuccess: () => {
+ *     invalidateUserQueries(userId);
+ *   },
+ * });
+ * ```
+ */
+export function invalidateUserQueries(userId: string | undefined): void {
+  if (!userId) return;
+  
+  queryClient.invalidateQueries({ 
+    queryKey: queryKeys.user.all(userId),
+  });
+}
+
+/**
+ * Invalidates all user-related data including auth state.
+ * 
+ * Use this after significant user actions like:
+ * - Login/logout
+ * - Account deletion
+ * - Tenant switching
+ * 
+ * @param userId - Optional user ID for targeted invalidation.
+ *                 If not provided, invalidates all user queries.
+ * 
+ * @example
+ * ```typescript
+ * // After logout
+ * await clientAuth.logout();
+ * invalidateAllUserData();
+ * ```
+ */
+export function invalidateAllUserData(userId?: string): void {
+  // Invalidate auth state
+  queryClient.invalidateQueries({ 
+    queryKey: queryKeys.auth.user(),
+  });
+  
+  // Invalidate user-specific data if userId provided
+  if (userId) {
+    queryClient.invalidateQueries({ 
+      queryKey: queryKeys.user.all(userId),
+    });
+  } else {
+    // Invalidate all user queries by prefix
+    queryClient.invalidateQueries({ 
+      queryKey: ["/api", "user"],
+    });
+  }
+}
+
+/**
+ * Invalidates static reference data caches.
+ * 
+ * Use this after admin operations that modify categories, badges,
+ * or other reference data. This is typically only needed after
+ * admin mutations.
+ * 
+ * @example
+ * ```typescript
+ * // After admin creates a new category
+ * await clientStorage.createCategory(data);
+ * invalidateStaticData();
+ * ```
+ */
+export function invalidateStaticData(): void {
+  queryClient.invalidateQueries({ queryKey: queryKeys.categories.all() });
+  queryClient.invalidateQueries({ queryKey: queryKeys.subcategories.all() });
+  queryClient.invalidateQueries({ queryKey: queryKeys.badges.all() });
+  queryClient.invalidateQueries({ queryKey: queryKeys.practiceTests.all() });
+  queryClient.invalidateQueries({ queryKey: queryKeys.tenants.all() });
+}
+
+/**
+ * Invalidates quiz-related caches.
+ * 
+ * Use this after mutations that modify quiz state, such as
+ * completing a quiz or updating quiz questions.
+ * 
+ * @param quizId - Optional quiz ID for targeted invalidation
+ * 
+ * @example
+ * ```typescript
+ * // After completing a quiz
+ * await clientStorage.completeQuiz(quizId, results);
+ * invalidateQuizQueries(quizId);
+ * invalidateUserQueries(userId); // Also update user stats
+ * ```
+ */
+export function invalidateQuizQueries(quizId?: number | string): void {
+  if (quizId) {
+    queryClient.invalidateQueries({ queryKey: queryKeys.quiz.detail(quizId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.quiz.questions(quizId) });
+  } else {
+    // Invalidate all quiz queries
+    queryClient.invalidateQueries({ queryKey: ["/api", "quiz"] });
+  }
+}
