@@ -36,21 +36,22 @@ export const buildEnvSchema = z.object({
 export const serverEnvSchema = z.object({
   /**
    * Session secret for secure session management.
-   * Required for server-side session handling.
+   * Optional - only needed for server-side session handling.
    */
-  SESSION_SECRET: z.string().min(1).optional(),
+  SESSION_SECRET: z.string().optional(),
 
   /**
    * Database connection string.
-   * Required for database operations in server scripts.
+   * Optional - only needed for database operations in server scripts.
+   * Use requireDatabaseUrl() for scripts that require database access.
    */
-  DATABASE_URL: z.string().url().optional(),
+  DATABASE_URL: z.string().optional(),
 
   /**
    * Application base URL.
    * Defaults to http://localhost:5000 if not set.
    */
-  APP_URL: z.string().url().optional().default("http://localhost:5000"),
+  APP_URL: z.union([z.string().url(), z.literal("")]).optional().default("http://localhost:5000"),
 
   /**
    * Polar API key for subscription management.

@@ -60,11 +60,18 @@ describe('Environment validation schemas', () => {
       expect(result.APP_URL).toBe('http://localhost:5000');
     });
 
-    it('should reject invalid DATABASE_URL format', () => {
+    it('should accept any DATABASE_URL string (validation happens in requireDatabaseUrl)', () => {
       const result = serverEnvSchema.safeParse({
-        DATABASE_URL: 'not-a-valid-url',
+        DATABASE_URL: 'any-string-value',
       });
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept empty DATABASE_URL', () => {
+      const result = serverEnvSchema.safeParse({
+        DATABASE_URL: '',
+      });
+      expect(result.success).toBe(true);
     });
 
     it('should accept all optional Polar configuration', () => {
