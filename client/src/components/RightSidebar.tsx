@@ -261,7 +261,7 @@ export function RightSidebar() {
       {/* Right Sidebar */}
       <div
         className={cn(
-          'fixed top-16 bottom-0 right-0 z-10 flex flex-col bg-sidebar text-sidebar-foreground border-l transition-transform duration-300 ease-in-out',
+          'fixed top-16 bottom-0 right-0 z-10 flex flex-col bg-card text-card-foreground border-l-2 border-border shadow-2xl transition-transform duration-300 ease-in-out',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
         style={{ width: RIGHT_SIDEBAR_WIDTH }}
@@ -270,13 +270,13 @@ export function RightSidebar() {
         role="complementary"
       >
         {/* Close Button */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <span className="text-sm font-medium text-muted-foreground">
+        <div className="flex items-center justify-between p-4 border-b-2 border-border bg-muted/50">
+          <span className="text-sm font-semibold">
             {activePanel === 'settings' && 'Settings'}
             {activePanel === 'user' && 'Account'}
             {activePanel === 'notifications' && 'Notifications'}
           </span>
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={closePanel}>
+          <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl" onClick={closePanel}>
             <X className="h-4 w-4" />
             <span className="sr-only">Close panel</span>
           </Button>
