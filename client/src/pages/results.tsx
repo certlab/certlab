@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DetailedResultsAnalysis from '@/components/DetailedResultsAnalysis';
-import { getScoreColor, getScoreBgColor } from '@/lib/questions';
+import { getScoreColor } from '@/lib/questions';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { queryKeys } from '@/lib/queryClient';
 import type { Quiz, Category } from '@shared/schema';
@@ -164,7 +164,7 @@ export default function Results() {
                 <div className="text-sm sm:text-base text-muted-foreground">Correct Answers</div>
               </div>
               <div className="text-center py-3 sm:py-0">
-                <div className="text-3xl sm:text-4xl font-bold text-accent mb-1 sm:mb-2">
+                <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1 sm:mb-2">
                   {formatDuration(quiz.startedAt!, quiz.completedAt)}
                 </div>
                 <div className="text-sm sm:text-base text-muted-foreground">Time Taken</div>
@@ -283,6 +283,14 @@ export default function Results() {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button
+                onClick={() => setLocation('/app')}
+                className="flex-1 bg-primary text-white hover:bg-primary/90"
+                size="sm"
+              >
+                <i className="fas fa-home mr-2"></i>
+                Return to Dashboard
+              </Button>
+              <Button
                 variant="outline"
                 onClick={() => setLocation(`/app/review/${quizId}`)}
                 className="flex-1"
@@ -291,8 +299,8 @@ export default function Results() {
                 Review Answers
               </Button>
               <Button variant="outline" onClick={() => setLocation('/app')} className="flex-1">
-                <i className="fas fa-home mr-2"></i>
-                Return to Dashboard
+                <i className="fas fa-redo mr-2"></i>
+                Take Another Quiz
               </Button>
             </div>
           </CardContent>
