@@ -12,6 +12,7 @@ import {
   Target,
   GraduationCap,
   Coins,
+  ShoppingCart,
 } from 'lucide-react';
 import { cn, getInitials, getUserDisplayName } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -51,6 +52,7 @@ const getNavigationItems = (isAdmin: boolean) => [
       { title: 'Practice Tests', url: '/app/practice-tests' },
       { title: 'Study Notes', url: '/app/study-notes' },
       { title: 'Challenges', url: '/app/challenges' },
+      { title: 'Study Materials', url: '/app/marketplace' },
     ],
   },
   {

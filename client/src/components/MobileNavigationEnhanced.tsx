@@ -24,6 +24,7 @@ import {
   Star,
   Sparkles,
   Building,
+  ShoppingCart,
 } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 
@@ -92,6 +93,13 @@ export default function MobileNavigationEnhanced() {
           badge: 'Soon',
           description: 'Quick practice sessions',
           comingSoon: true,
+        },
+        {
+          id: 'marketplace',
+          label: 'Study Materials',
+          icon: <ShoppingCart className="w-4 h-4" />,
+          href: '/app/marketplace',
+          description: 'Browse and purchase study materials',
         },
       ],
     },
