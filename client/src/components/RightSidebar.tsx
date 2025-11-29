@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { useRightSidebar } from '@/lib/right-sidebar-provider';
 import { useAuth } from '@/lib/auth-provider';
 import { useTheme } from '@/lib/theme-provider';
+import { themes } from '@/lib/theme-constants';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getInitials, getUserDisplayName } from '@/lib/utils';
@@ -8,74 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import {
-  X,
-  Moon,
-  Sun,
-  Snowflake,
-  Coffee,
-  Zap,
-  Sparkles,
-  Flower,
-  Eye,
-  LogOut,
-  User,
-  Trophy,
-  Bell,
-  Settings,
-  Check,
-} from 'lucide-react';
-
-const themes = [
-  {
-    name: 'Light',
-    value: 'light' as const,
-    icon: Sun,
-    description: 'Clean and bright',
-  },
-  {
-    name: 'Dark',
-    value: 'dark' as const,
-    icon: Moon,
-    description: 'Easy on the eyes',
-  },
-  {
-    name: 'High Contrast',
-    value: 'high-contrast' as const,
-    icon: Eye,
-    description: 'WCAG AAA compliant',
-  },
-  {
-    name: 'Nord',
-    value: 'nord' as const,
-    icon: Snowflake,
-    description: 'Cool arctic palette',
-  },
-  {
-    name: 'Catppuccin',
-    value: 'catppuccin' as const,
-    icon: Coffee,
-    description: 'Warm and cozy',
-  },
-  {
-    name: 'Tokyo Night',
-    value: 'tokyo-night' as const,
-    icon: Zap,
-    description: 'Vibrant neon dark',
-  },
-  {
-    name: 'Dracula',
-    value: 'dracula' as const,
-    icon: Sparkles,
-    description: 'Bold purple dark',
-  },
-  {
-    name: 'Rose Pine',
-    value: 'rose-pine' as const,
-    icon: Flower,
-    description: 'Soft pastel elegance',
-  },
-];
+import { X, LogOut, User, Trophy, Bell, Settings, Check } from 'lucide-react';
 
 function SettingsPanel() {
   const { theme, setTheme } = useTheme();
@@ -247,6 +182,20 @@ const RIGHT_SIDEBAR_WIDTH = '20rem';
 export function RightSidebar() {
   const { isOpen, activePanel, closePanel } = useRightSidebar();
 
+  // Handle Escape key to close the panel
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closePanel();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, closePanel]);
+
   return (
     <>
       {/* Backdrop for mobile - optional, can be removed if not needed */}
@@ -268,6 +217,7 @@ export function RightSidebar() {
         data-state={isOpen ? 'open' : 'closed'}
         aria-label="Right sidebar panel"
         role="complementary"
+        aria-hidden={!isOpen}
       >
         {/* Close Button */}
         <div className="flex items-center justify-between p-4 border-b-2 border-border bg-muted/50">
