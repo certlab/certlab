@@ -150,13 +150,17 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border border-white/30 bg-black/50 backdrop-blur-sm animate-slide-up">
+    <div className="min-h-screen bg-[linear-gradient(to_bottom,#000,#200d42_34%,#4f21a1_65%,#a46edb_82%)] text-white flex items-center justify-center p-4">
+      <Card className="w-full max-w-md border border-[#b48cde]/50 bg-black/60 backdrop-blur-sm animate-slide-up">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <i className="fas fa-shield-alt text-white text-3xl"></i>
+            <div className="h-14 w-14 bg-white text-black justify-center items-center rounded-lg inline-flex">
+              <i className="fas fa-shield-alt text-2xl"></i>
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-white">Welcome to Cert Lab</CardTitle>
+          <CardTitle className="text-2xl font-bold bg-[linear-gradient(to_right,#f87aff,#fb93d0,#ffdd99,#c3f0b2,#2fd8fe)] bg-clip-text text-transparent">
+            Welcome to Cert Lab
+          </CardTitle>
           <p className="text-white/70">
             Master certifications with Helen's AI-powered learning lab
           </p>
@@ -164,16 +168,16 @@ export default function Login() {
 
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-white/10">
+            <TabsList className="grid w-full grid-cols-2 bg-[#200d42]/50 border border-[#b48cde]/30">
               <TabsTrigger
                 value="login"
-                className="data-[state=active]:bg-white data-[state=active]:text-black text-white/70"
+                className="data-[state=active]:bg-[#9560eb] data-[state=active]:text-white text-white/70"
               >
                 Login
               </TabsTrigger>
               <TabsTrigger
                 value="register"
-                className="data-[state=active]:bg-white data-[state=active]:text-black text-white/70"
+                className="data-[state=active]:bg-[#9560eb] data-[state=active]:text-white text-white/70"
               >
                 Register
               </TabsTrigger>
@@ -188,7 +192,7 @@ export default function Login() {
                       Available Accounts
                     </Label>
                     <div
-                      className="space-y-2 max-h-60 overflow-y-auto border border-white/30 rounded-md p-2"
+                      className="space-y-2 max-h-60 overflow-y-auto border border-[#b48cde]/30 rounded-md p-2"
                       role="radiogroup"
                       aria-labelledby="accounts-label"
                     >
@@ -199,14 +203,14 @@ export default function Login() {
                           role="radio"
                           aria-checked={selectedAccount?.id === account.id}
                           onClick={() => handleAccountSelect(account)}
-                          className={`w-full p-3 rounded-lg border text-left transition-all hover:border-white/60 hover:bg-white/10 ${
+                          className={`w-full p-3 rounded-lg border text-left transition-all hover:border-[#9560eb] hover:bg-[#200d42]/50 ${
                             selectedAccount?.id === account.id
-                              ? 'border-white bg-white/20'
-                              : 'border-white/30'
+                              ? 'border-[#9560eb] bg-[#200d42]/70'
+                              : 'border-[#b48cde]/30'
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            <UserIcon className="h-5 w-5 text-white/70" />
+                            <UserIcon className="h-5 w-5 text-[#b48cde]" />
                             <div className="flex-1">
                               <div className="font-medium text-sm text-white">
                                 {account.firstName && account.lastName
@@ -241,7 +245,7 @@ export default function Login() {
                     onChange={(e) => handleEmailChange(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:border-white/60"
+                    className="bg-[#200d42]/50 border-[#b48cde]/30 text-white placeholder:text-white/50 focus:border-[#9560eb]"
                   />
                 </div>
 
@@ -259,7 +263,7 @@ export default function Login() {
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required={!selectedAccount || selectedAccount.hasPassword}
                       disabled={isLoading}
-                      className="bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:border-white/60"
+                      className="bg-[#200d42]/50 border-[#b48cde]/30 text-white placeholder:text-white/50 focus:border-[#9560eb]"
                     />
                   </div>
                 )}
@@ -280,12 +284,12 @@ export default function Login() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-white text-black hover:bg-white/90"
+                  className="w-full bg-[#9560eb] text-white hover:bg-[#a46edb]"
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <div className="flex items-center space-x-2">
-                      <LoadingSpinner size="sm" variant="black" />
+                      <LoadingSpinner size="sm" variant="white" />
                       <span>Logging in...</span>
                     </div>
                   ) : (
@@ -309,7 +313,7 @@ export default function Login() {
                     onChange={(e) => setRegisterEmail(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:border-white/60"
+                    className="bg-[#200d42]/50 border-[#b48cde]/30 text-white placeholder:text-white/50 focus:border-[#9560eb]"
                   />
                 </div>
                 <div className="space-y-2">
@@ -324,7 +328,7 @@ export default function Login() {
                     onChange={(e) => setRegisterPassword(e.target.value)}
                     disabled={isLoading}
                     minLength={registerPassword ? 8 : undefined}
-                    className="bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:border-white/60"
+                    className="bg-[#200d42]/50 border-[#b48cde]/30 text-white placeholder:text-white/50 focus:border-[#9560eb]"
                   />
                   <p className="text-xs text-white/70">
                     You can set a password later in your profile settings for added security
@@ -354,7 +358,7 @@ export default function Login() {
                     value={registerFirstName}
                     onChange={(e) => setRegisterFirstName(e.target.value)}
                     disabled={isLoading}
-                    className="bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:border-white/60"
+                    className="bg-[#200d42]/50 border-[#b48cde]/30 text-white placeholder:text-white/50 focus:border-[#9560eb]"
                   />
                 </div>
                 <div className="space-y-2">
@@ -368,17 +372,17 @@ export default function Login() {
                     value={registerLastName}
                     onChange={(e) => setRegisterLastName(e.target.value)}
                     disabled={isLoading}
-                    className="bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:border-white/60"
+                    className="bg-[#200d42]/50 border-[#b48cde]/30 text-white placeholder:text-white/50 focus:border-[#9560eb]"
                   />
                 </div>
                 <Button
                   type="submit"
-                  className="w-full bg-white text-black hover:bg-white/90"
+                  className="w-full bg-[#9560eb] text-white hover:bg-[#a46edb]"
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <div className="flex items-center space-x-2">
-                      <LoadingSpinner size="sm" variant="black" />
+                      <LoadingSpinner size="sm" variant="white" />
                       <span>Creating account...</span>
                     </div>
                   ) : (
