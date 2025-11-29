@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Search, Settings } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
@@ -19,14 +19,20 @@ interface AuthenticatedLayoutProps {
 function AuthenticatedHeader() {
   const { user: currentUser } = useAuth();
   const { togglePanel, isOpen: isRightSidebarOpen } = useRightSidebar();
-  const { setOpen: setLeftSidebarOpen } = useSidebar();
+  const { open: isLeftSidebarOpen, setOpen: setLeftSidebarOpen } = useSidebar();
+  const previousLeftSidebarState = useRef<boolean>(true);
 
-  // Collapse left sidebar when right sidebar opens
+  // Collapse left sidebar when right sidebar opens, restore when it closes
   useEffect(() => {
     if (isRightSidebarOpen) {
+      // Save current left sidebar state before collapsing
+      previousLeftSidebarState.current = isLeftSidebarOpen;
       setLeftSidebarOpen(false);
+    } else {
+      // Restore previous left sidebar state when right sidebar closes
+      setLeftSidebarOpen(previousLeftSidebarState.current);
     }
-  }, [isRightSidebarOpen, setLeftSidebarOpen]);
+  }, [isRightSidebarOpen, setLeftSidebarOpen, isLeftSidebarOpen]);
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur">
