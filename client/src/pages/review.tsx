@@ -289,7 +289,7 @@ export default function Review() {
           <div className="bg-gradient-to-r from-primary to-primary/90 p-4 sm:p-6 text-white">
             <div className="text-center mb-4">
               <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 bg-white/20 rounded-full flex items-center justify-center">
-                <i className="fas fa-clipboard-check text-xl sm:text-2xl"></i>
+                <i className="fas fa-clipboard-check text-xl sm:text-2xl" aria-hidden="true"></i>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold mb-1">Review Answers</h1>
               <p className="text-sm sm:text-base opacity-90">
@@ -327,7 +327,7 @@ export default function Review() {
                   </>
                 ) : (
                   <>
-                    <i className="fas fa-graduation-cap mr-2"></i>
+                    <i className="fas fa-graduation-cap mr-2" aria-hidden="true"></i>
                     Generate Study Notes
                   </>
                 )}
@@ -338,11 +338,11 @@ export default function Review() {
                   onClick={() => setLocation(`/app/results/${quizId}`)}
                   className="w-full"
                 >
-                  <i className="fas fa-chart-bar mr-2"></i>
+                  <i className="fas fa-chart-bar mr-2" aria-hidden="true"></i>
                   View Results
                 </Button>
                 <Button variant="outline" onClick={() => setLocation('/app')} className="w-full">
-                  <i className="fas fa-home mr-2"></i>
+                  <i className="fas fa-home mr-2" aria-hidden="true"></i>
                   Dashboard
                 </Button>
               </div>
@@ -387,14 +387,16 @@ export default function Review() {
                     </p>
                   </div>
 
-                  {/* Answer Options */}
                   <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                     {question.options.map((option) => {
                       const status = getOptionStatus(option.id, question, userAnswer);
                       return (
                         <div key={option.id} className={getOptionClasses(status)}>
                           <div className="flex items-start sm:items-center gap-3">
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-current flex items-center justify-center text-xs sm:text-sm font-bold mt-0.5 sm:mt-0">
+                            <div
+                              className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-current flex items-center justify-center text-xs sm:text-sm font-bold mt-0.5 sm:mt-0"
+                              aria-label={`Option ${String.fromCharCode(65 + option.id)}`}
+                            >
                               {String.fromCharCode(65 + option.id)}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -443,7 +445,7 @@ export default function Review() {
         {/* Back to Top */}
         <div className="mt-8 text-center">
           <Button variant="outline" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <i className="fas fa-chevron-up mr-2"></i>
+            <i className="fas fa-chevron-up mr-2" aria-hidden="true"></i>
             Back to Top
           </Button>
         </div>
@@ -453,7 +455,7 @@ export default function Review() {
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <i className="fas fa-graduation-cap text-purple-600"></i>
+                <i className="fas fa-graduation-cap text-purple-600" aria-hidden="true"></i>
                 AI-Generated Study Notes
               </DialogTitle>
             </DialogHeader>
@@ -485,11 +487,11 @@ export default function Review() {
                   }}
                   size="sm"
                 >
-                  <i className="fas fa-copy mr-2"></i>
+                  <i className="fas fa-copy mr-2" aria-hidden="true"></i>
                   Copy
                 </Button>
                 <Button variant="outline" onClick={handleExportPDF} size="sm">
-                  <i className="fas fa-file-pdf mr-2"></i>
+                  <i className="fas fa-file-pdf mr-2" aria-hidden="true"></i>
                   Export PDF
                 </Button>
                 <Button
@@ -506,12 +508,12 @@ export default function Review() {
                     </>
                   ) : notesSaved ? (
                     <>
-                      <i className="fas fa-check mr-2"></i>
+                      <i className="fas fa-check mr-2" aria-hidden="true"></i>
                       Saved
                     </>
                   ) : (
                     <>
-                      <i className="fas fa-save mr-2"></i>
+                      <i className="fas fa-save mr-2" aria-hidden="true"></i>
                       Save to Library
                     </>
                   )}
