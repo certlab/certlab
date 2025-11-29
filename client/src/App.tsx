@@ -7,8 +7,7 @@ import { ThemeProvider } from '@/lib/theme-provider';
 import { AuthProvider, useAuth } from '@/lib/auth-provider';
 import { AchievementNotification } from '@/components/AchievementNotification';
 import { UnhandledRejectionHandler } from '@/components/UnhandledRejectionHandler';
-import Header from '@/components/Header';
-import BreadcrumbNavigation from '@/components/BreadcrumbNavigation';
+import { AuthenticatedLayout } from '@/components/AuthenticatedLayout';
 import PageLoader from '@/components/PageLoader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -64,38 +63,32 @@ function Router() {
         Skip to main content
       </a>
       {isAuthenticated ? (
-        <>
-          <Header />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-            <BreadcrumbNavigation />
-          </div>
-          <main id="main-content" tabIndex={-1}>
-            <ErrorBoundary>
-              <Suspense fallback={<PageLoader />}>
-                <Switch>
-                  <Route path="/" component={Landing} />
-                  <Route path="/app" component={Dashboard} />
-                  <Route path="/app/dashboard" component={Dashboard} />
-                  <Route path="/app/profile" component={ProfilePage} />
-                  <Route path="/app/quiz/:id" component={Quiz} />
-                  <Route path="/app/results/:id" component={Results} />
-                  <Route path="/app/review/:id" component={Review} />
-                  <Route path="/app/lecture/:id" component={Lecture} />
-                  <Route path="/app/study-notes" component={StudyNotesPage} />
-                  <Route path="/app/achievements" component={Achievements} />
-                  <Route path="/app/accessibility" component={Accessibility} />
-                  <Route path="/app/practice-tests" component={PracticeTests} />
-                  <Route path="/app/challenges" component={ChallengesPage} />
-                  {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
-                  <Route path="/app/credits" component={CreditsPage} />
-                  <Route path="/app/data-import" component={DataImportPage} />
-                  {isAdmin && <Route path="/admin" component={AdminDashboard} />}
-                  <Route component={NotFound} />
-                </Switch>
-              </Suspense>
-            </ErrorBoundary>
-          </main>
-        </>
+        <AuthenticatedLayout>
+          <ErrorBoundary>
+            <Suspense fallback={<PageLoader />}>
+              <Switch>
+                <Route path="/" component={Landing} />
+                <Route path="/app" component={Dashboard} />
+                <Route path="/app/dashboard" component={Dashboard} />
+                <Route path="/app/profile" component={ProfilePage} />
+                <Route path="/app/quiz/:id" component={Quiz} />
+                <Route path="/app/results/:id" component={Results} />
+                <Route path="/app/review/:id" component={Review} />
+                <Route path="/app/lecture/:id" component={Lecture} />
+                <Route path="/app/study-notes" component={StudyNotesPage} />
+                <Route path="/app/achievements" component={Achievements} />
+                <Route path="/app/accessibility" component={Accessibility} />
+                <Route path="/app/practice-tests" component={PracticeTests} />
+                <Route path="/app/challenges" component={ChallengesPage} />
+                {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
+                <Route path="/app/credits" component={CreditsPage} />
+                <Route path="/app/data-import" component={DataImportPage} />
+                {isAdmin && <Route path="/admin" component={AdminDashboard} />}
+                <Route component={NotFound} />
+              </Switch>
+            </Suspense>
+          </ErrorBoundary>
+        </AuthenticatedLayout>
       ) : (
         <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>
