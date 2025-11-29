@@ -1,50 +1,32 @@
-import { ReactNode } from 'react';
-import { useLocation } from 'wouter';
-import { useAuth } from '@/lib/auth-provider';
-import { useToast } from '@/hooks/use-toast';
+import { ReactNode, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Search, LogOut, User, Trophy } from 'lucide-react';
-import { getInitials, getUserDisplayName } from '@/lib/utils';
+import { Bell, Search, Settings } from 'lucide-react';
+import { getInitials } from '@/lib/utils';
+import { useAuth } from '@/lib/auth-provider';
+import { RightSidebarProvider, useRightSidebar } from '@/lib/right-sidebar-provider';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { AppSidebar } from '@/components/AppSidebar';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { RightSidebar } from '@/components/RightSidebar';
+import { SidebarProvider, SidebarInset, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
 }
 
 function AuthenticatedHeader() {
-  const [, setLocation] = useLocation();
-  const { user: currentUser, logout } = useAuth();
-  const { toast } = useToast();
+  const { user: currentUser } = useAuth();
+  const { togglePanel, isOpen: isRightSidebarOpen } = useRightSidebar();
+  const { setOpen: setLeftSidebarOpen } = useSidebar();
 
-  const handleSignOut = async () => {
-    try {
-      await logout();
-      toast({
-        title: 'Signed out successfully',
-        description: 'You have been logged out of your account.',
-      });
-    } catch (error) {
-      console.error('Error during sign out:', error);
-      toast({
-        title: 'Signed out with warnings',
-        description:
-          'You have been logged out locally, but there was a problem completing the sign out process.',
-      });
+  // Collapse left sidebar when right sidebar opens
+  useEffect(() => {
+    if (isRightSidebarOpen) {
+      setLeftSidebarOpen(false);
     }
-  };
+  }, [isRightSidebarOpen, setLeftSidebarOpen]);
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur">
@@ -60,69 +42,51 @@ function AuthenticatedHeader() {
             <Input type="search" placeholder="Search..." className="w-[200px] rounded-xl pl-9" />
           </div>
 
-          {/* Theme Toggle */}
-          <ThemeToggle />
-
-          {/* TODO: Notifications - currently a placeholder for future implementation */}
+          {/* Settings/Theme Toggle - Opens right sidebar */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-xl relative" disabled>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0 rounded-xl"
+                onClick={() => togglePanel('settings')}
+                aria-label="Open settings panel"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Settings</TooltipContent>
+          </Tooltip>
+
+          {/* Notifications - Opens right sidebar */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-xl relative"
+                onClick={() => togglePanel('notifications')}
+                aria-label="Open notifications panel"
+              >
                 <Bell className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Notifications (coming soon)</TooltipContent>
+            <TooltipContent>Notifications</TooltipContent>
           </Tooltip>
 
-          {/* User Avatar Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
-                <Avatar className="h-9 w-9 border-2 border-primary">
-                  <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-white text-sm">
-                    {currentUser ? getInitials(currentUser.firstName, currentUser.lastName) : '?'}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-xl p-2">
-              <div className="flex items-center gap-3 p-2">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-white">
-                    {currentUser ? getInitials(currentUser.firstName, currentUser.lastName) : '?'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">
-                    {currentUser ? getUserDisplayName(currentUser) : 'User'}
-                  </span>
-                  <span className="text-xs text-muted-foreground">Student</span>
-                </div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setLocation('/app/profile')}
-                className="cursor-pointer rounded-lg"
-              >
-                <User className="mr-2 h-4 w-4" />
-                My Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setLocation('/app/achievements')}
-                className="cursor-pointer rounded-lg"
-              >
-                <Trophy className="mr-2 h-4 w-4" />
-                Achievements
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleSignOut}
-                className="cursor-pointer rounded-lg text-destructive focus:text-destructive"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* User Avatar - Opens right sidebar */}
+          <Button
+            variant="ghost"
+            className="relative h-9 w-9 rounded-full p-0"
+            onClick={() => togglePanel('user')}
+            aria-label="Open user panel"
+          >
+            <Avatar className="h-9 w-9 border-2 border-primary">
+              <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-white text-sm">
+                {currentUser ? getInitials(currentUser.firstName, currentUser.lastName) : '?'}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
         </div>
       </div>
     </header>
@@ -146,15 +110,18 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
         transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
       />
 
-      <SidebarProvider defaultOpen={true}>
-        <AppSidebar />
-        <SidebarInset>
-          <AuthenticatedHeader />
-          <main id="main-content" tabIndex={-1} className="flex-1 p-4 md:p-6">
-            {children}
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
+      <RightSidebarProvider>
+        <SidebarProvider defaultOpen={true}>
+          <AppSidebar />
+          <SidebarInset>
+            <AuthenticatedHeader />
+            <main id="main-content" tabIndex={-1} className="flex-1 p-4 md:p-6">
+              {children}
+            </main>
+          </SidebarInset>
+          <RightSidebar />
+        </SidebarProvider>
+      </RightSidebarProvider>
     </div>
   );
 }
