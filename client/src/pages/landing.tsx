@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { GraduationCap, ArrowRight, Brain, Shield, BookOpen, Menu } from 'lucide-react';
+import { GraduationCap, ArrowRight, Brain, Shield, BookOpen, Menu, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { useLocation } from 'wouter';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -63,6 +63,7 @@ export default function Landing() {
   const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const [showLogin, setShowLogin] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogin = useCallback(() => {
     setShowLogin(true);
@@ -74,10 +75,16 @@ export default function Landing() {
 
   const handleScrollToFeatures = useCallback(() => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+    setMobileMenuOpen(false);
   }, []);
 
   const handleScrollToFaq = useCallback(() => {
     document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' });
+    setMobileMenuOpen(false);
+  }, []);
+
+  const handleToggleMobileMenu = useCallback(() => {
+    setMobileMenuOpen((prev) => !prev);
   }, []);
 
   const getUserDisplayName = (user: any) => {
@@ -119,9 +126,14 @@ export default function Landing() {
             </div>
             <button
               className="border border-white/30 size-10 inline-flex justify-center items-center rounded-lg md:hidden"
-              aria-label="Open navigation menu"
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              onClick={handleToggleMobileMenu}
             >
-              <Menu className="text-white w-5 h-5" />
+              {mobileMenuOpen ? (
+                <X className="text-white w-5 h-5" />
+              ) : (
+                <Menu className="text-white w-5 h-5" />
+              )}
             </button>
             <nav className="text-white/60 items-center gap-6 hidden md:flex">
               <button
@@ -155,6 +167,46 @@ export default function Landing() {
               )}
             </nav>
           </div>
+          {/* Mobile Menu Dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden mt-4 py-4 border-t border-white/20">
+              <div className="flex flex-col gap-4">
+                <button
+                  onClick={handleScrollToFeatures}
+                  className="text-white/60 hover:text-white transition duration-300 text-left"
+                >
+                  Features
+                </button>
+                <button
+                  onClick={handleScrollToFaq}
+                  className="text-white/60 hover:text-white transition duration-300 text-left"
+                >
+                  FAQ
+                </button>
+                {isAuthenticated ? (
+                  <button
+                    onClick={() => {
+                      handleGoToDashboard();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="bg-white py-2 px-4 rounded-lg text-black font-medium text-center"
+                  >
+                    Dashboard
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      handleLogin();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="bg-white py-2 px-4 rounded-lg text-black font-medium text-center"
+                  >
+                    Get Started
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
