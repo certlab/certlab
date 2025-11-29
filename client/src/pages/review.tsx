@@ -468,11 +468,11 @@ export default function Review() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t">
+            <div className="flex flex-col gap-3 pt-4 border-t sm:flex-row sm:justify-between sm:items-center">
               <p className="text-sm text-muted-foreground">
                 Generated with AI based on your quiz performance
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
