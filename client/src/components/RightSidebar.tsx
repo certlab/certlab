@@ -261,7 +261,7 @@ export function RightSidebar() {
       {/* Right Sidebar */}
       <div
         className={cn(
-          'fixed top-16 bottom-0 right-0 z-10 flex flex-col bg-card text-card-foreground border-l-2 border-border shadow-2xl transition-transform duration-300 ease-in-out',
+          'fixed inset-y-0 right-0 z-50 flex flex-col bg-card text-card-foreground border-l-2 border-border shadow-2xl transition-transform duration-300 ease-in-out',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
         style={{ width: RIGHT_SIDEBAR_WIDTH }}
