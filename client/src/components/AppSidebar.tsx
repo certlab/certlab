@@ -83,7 +83,7 @@ const getNavigationItems = (isAdmin: boolean) => [
 
 export function AppSidebar() {
   const [location, setLocation] = useLocation();
-  const { user: currentUser, logout } = useAuth();
+  const { user: currentUser } = useAuth();
   const isAdmin = currentUser?.role === 'admin';
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
     Learning: true,
@@ -231,7 +231,10 @@ export function AppSidebar() {
             className="flex items-center gap-2 rounded-xl bg-accent/50 px-3 py-2 mb-2 cursor-pointer hover:bg-accent transition-colors"
             onClick={() => setLocation('/app/dashboard')}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === ' ') {
+                e.preventDefault();
+                setLocation('/app/dashboard');
+              } else if (e.key === 'Enter') {
                 setLocation('/app/dashboard');
               }
             }}

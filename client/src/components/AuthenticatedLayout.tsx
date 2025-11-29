@@ -36,10 +36,12 @@ function AuthenticatedHeader() {
         title: 'Signed out successfully',
         description: 'You have been logged out of your account.',
       });
-    } catch {
+    } catch (error) {
+      console.error('Error during sign out:', error);
       toast({
-        title: 'Signed out',
-        description: 'You have been logged out of your account.',
+        title: 'Signed out with warnings',
+        description:
+          'You have been logged out locally, but there was a problem completing the sign out process.',
       });
     }
   };
@@ -52,7 +54,7 @@ function AuthenticatedHeader() {
         <h1 className="text-xl font-semibold">Cert Lab</h1>
 
         <div className="flex items-center gap-3">
-          {/* Search - Hidden on mobile */}
+          {/* TODO: Search functionality - currently a placeholder for future implementation */}
           <div className="hidden md:block relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input type="search" placeholder="Search..." className="w-[200px] rounded-xl pl-9" />
@@ -61,14 +63,14 @@ function AuthenticatedHeader() {
           {/* Theme Toggle */}
           <ThemeToggle />
 
-          {/* Notifications */}
+          {/* TODO: Notifications - currently a placeholder for future implementation */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-xl relative">
+              <Button variant="ghost" size="icon" className="rounded-xl relative" disabled>
                 <Bell className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Notifications</TooltipContent>
+            <TooltipContent>Notifications (coming soon)</TooltipContent>
           </Tooltip>
 
           {/* User Avatar Dropdown */}
