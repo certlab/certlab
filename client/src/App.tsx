@@ -32,6 +32,7 @@ const CreditsPage = lazy(() => import('@/pages/credits'));
 const ProfilePage = lazy(() => import('@/pages/profile'));
 const PracticeTests = lazy(() => import('@/pages/practice-tests'));
 const DataImportPage = lazy(() => import('@/pages/data-import'));
+const MarketplacePage = lazy(() => import('@/pages/marketplace'));
 
 // Get the base path from Vite's configuration
 // For GitHub Pages deployment at /certlab/, BASE_URL is '/certlab/'
@@ -94,6 +95,7 @@ function Router() {
                 <Route path="/app/accessibility" component={Accessibility} />
                 <Route path="/app/practice-tests" component={PracticeTests} />
                 <Route path="/app/challenges" component={ChallengesPage} />
+                <Route path="/app/marketplace" component={MarketplacePage} />
                 {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
                 <Route path="/app/credits" component={CreditsPage} />
                 <Route path="/app/data-import" component={DataImportPage} />
