@@ -160,7 +160,7 @@ export default function Landing() {
 
       {/* Hero Section */}
       <section className="relative py-[72px] md:py-24 bg-[linear-gradient(to_bottom,#000,#200d42_34%,#4f21a1_65%,#a46edb_82%)] overflow-clip">
-        <div className="absolute h-[375px] w-[750px] md:w-[1536px] md:h-[768px] lg:w-[2400px] lg:h-[1200px] rounded-[100%] bg-black left-1/2 -translate-x-1/2 border border-[#b48cde] bg-[radial-gradient(closest-side,#000_82%,#9560eb)] top-[calc(100%-96px)] md:top-[calc(100%-120px)]" />
+        <div className="absolute h-[375px] w-[750px] sm:w-[900px] md:w-[1536px] md:h-[768px] lg:w-[2400px] lg:h-[1200px] rounded-[100%] bg-black left-1/2 -translate-x-1/2 border border-[#b48cde] bg-[radial-gradient(closest-side,#000_82%,#9560eb)] top-[calc(100%-96px)] md:top-[calc(100%-120px)]" />
         <div className="container mx-auto px-4 relative">
           <div className="flex items-center justify-center">
             <button
@@ -178,14 +178,14 @@ export default function Landing() {
           </div>
           <div className="flex justify-center mt-8">
             <div className="inline-flex relative">
-              <h1 className="text-7xl md:text-9xl font-bold tracking-tighter text-center">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-9xl font-bold tracking-tighter text-center">
                 Master Your
                 <br /> Certifications
               </h1>
             </div>
           </div>
           <div className="flex justify-center">
-            <p className="text-center text-xl mt-8 max-w-md text-white/70">
+            <p className="text-center text-base sm:text-lg md:text-xl mt-8 max-w-md text-white/70 px-2">
               The intelligent learning platform that adapts to you. Pass CISSP, CISM, and other
               professional certifications with confidence.
             </p>
@@ -218,7 +218,7 @@ export default function Landing() {
       {/* Features Section */}
       <section id="features" className="bg-black py-[72px] md:py-24">
         <div className="container mx-auto px-4">
-          <h2 className="text-center font-bold text-5xl md:text-6xl tracking-tighter">
+          <h2 className="text-center font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tighter">
             Everything you need
           </h2>
           <div className="max-w-xl mx-auto">
@@ -247,7 +247,9 @@ export default function Landing() {
       {/* Call to Action Section */}
       <section className="bg-black py-[72px] md:py-24 text-center">
         <div className="container mx-auto px-4 max-w-xl relative">
-          <h2 className="text-5xl md:text-6xl font-bold tracking-tighter">Get instant access</h2>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter">
+            Get instant access
+          </h2>
           <p className="text-xl text-white/70 mt-5">
             Start your certification journey today with an app designed to track your progress and
             motivate your efforts.
@@ -275,7 +277,7 @@ export default function Landing() {
       {/* FAQ Section */}
       <section id="faq" className="py-[72px] md:py-24 bg-gradient-to-b from-[#5f2ca8] to-black">
         <div className="container mx-auto px-4">
-          <h2 className="text-5xl md:text-6xl lg:max-w-[648px] mx-auto text-center font-bold tracking-tighter">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl lg:max-w-[648px] mx-auto text-center font-bold tracking-tighter">
             Frequently asked questions
           </h2>
           <div className="mt-12 max-w-[648px] mx-auto">
