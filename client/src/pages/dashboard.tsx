@@ -257,39 +257,43 @@ export default function Dashboard() {
               <CardContent className="space-y-4">
                 <Button
                   onClick={handleStartPractice}
-                  className="w-full justify-start whitespace-normal text-left"
+                  className="w-full justify-start text-xs sm:text-sm"
                   size="lg"
                   data-testid="start-quick-practice"
                 >
-                  <PlayCircle className="mr-3 h-5 w-5 shrink-0" />
-                  Start Quick Practice
-                  <span className="ml-auto text-sm opacity-80 shrink-0">10 questions</span>
+                  <PlayCircle className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <span className="hidden sm:inline">Start Quick Practice</span>
+                  <span className="sm:hidden">Quick Practice</span>
+                  <span className="ml-auto text-xs opacity-80 shrink-0">10 questions</span>
                 </Button>
 
                 <Button
                   onClick={handleContinueLearning}
                   variant="outline"
-                  className="w-full justify-start whitespace-normal text-left"
+                  className="w-full justify-start text-xs sm:text-sm"
                   size="lg"
                   data-testid="continue-learning"
                 >
-                  <BookOpen className="mr-3 h-5 w-5 shrink-0" />
-                  Continue Learning
+                  <BookOpen className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <span className="hidden sm:inline">Continue Learning</span>
+                  <span className="sm:hidden">Continue</span>
                   {recentQuizzes.find((q) => !q.completedAt) && (
-                    <span className="ml-auto text-sm opacity-80 shrink-0">Resume quiz</span>
+                    <span className="ml-auto text-xs opacity-80 shrink-0">Resume</span>
                   )}
                 </Button>
 
                 <Button
                   onClick={handleViewProgress}
                   variant="outline"
-                  className="w-full justify-start whitespace-normal text-left"
+                  className="w-full justify-start text-xs sm:text-sm"
                   size="lg"
                   data-testid="view-progress"
                 >
-                  <ChartBar className="mr-3 h-5 w-5 shrink-0" />
-                  View Progress
-                  <span className="ml-auto text-sm opacity-80 shrink-0">Achievements</span>
+                  <ChartBar className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <span>View Progress</span>
+                  <span className="ml-auto text-xs opacity-80 shrink-0 hidden sm:inline">
+                    Achievements
+                  </span>
                 </Button>
               </CardContent>
             </Card>
