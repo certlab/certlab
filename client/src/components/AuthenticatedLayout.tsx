@@ -32,7 +32,8 @@ function AuthenticatedHeader() {
       // Restore previous left sidebar state when right sidebar closes
       setLeftSidebarOpen(previousLeftSidebarState.current);
     }
-  }, [isRightSidebarOpen, setLeftSidebarOpen, isLeftSidebarOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRightSidebarOpen, setLeftSidebarOpen]);
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur">

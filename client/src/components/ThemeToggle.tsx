@@ -1,68 +1,18 @@
-import { Moon, Sun, Snowflake, Coffee, Zap, Sparkles, Flower, Eye } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Sun } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useTheme } from "@/lib/theme-provider";
-
-const themes = [
-  {
-    name: "Light",
-    value: "light" as const,
-    icon: Sun,
-    description: "Clean and bright"
-  },
-  {
-    name: "Dark", 
-    value: "dark" as const,
-    icon: Moon,
-    description: "Easy on the eyes"
-  },
-  {
-    name: "High Contrast",
-    value: "high-contrast" as const,
-    icon: Eye,
-    description: "WCAG AAA compliant"
-  },
-  {
-    name: "Nord",
-    value: "nord" as const,
-    icon: Snowflake,
-    description: "Cool arctic palette"
-  },
-  {
-    name: "Catppuccin",
-    value: "catppuccin" as const,
-    icon: Coffee,
-    description: "Warm and cozy"
-  },
-  {
-    name: "Tokyo Night",
-    value: "tokyo-night" as const,
-    icon: Zap,
-    description: "Vibrant neon dark"
-  },
-  {
-    name: "Dracula",
-    value: "dracula" as const,
-    icon: Sparkles,
-    description: "Bold purple dark"
-  },
-  {
-    name: "Rose Pine",
-    value: "rose-pine" as const,
-    icon: Flower,
-    description: "Soft pastel elegance"
-  }
-];
+} from '@/components/ui/dropdown-menu';
+import { useTheme } from '@/lib/theme-provider';
+import { themes } from '@/lib/theme-constants';
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
-  const currentTheme = themes.find(t => t.value === theme);
+  const currentTheme = themes.find((t) => t.value === theme);
   const CurrentIcon = currentTheme?.icon || Sun;
 
   return (
@@ -85,11 +35,11 @@ export function ThemeToggle() {
               <Icon className="h-4 w-4" />
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{themeOption.name}</span>
-                <span className="description text-xs text-muted-foreground">{themeOption.description}</span>
+                <span className="description text-xs text-muted-foreground">
+                  {themeOption.description}
+                </span>
               </div>
-              {theme === themeOption.value && (
-                <span className="ml-auto text-xs">✓</span>
-              )}
+              {theme === themeOption.value && <span className="ml-auto text-xs">✓</span>}
             </DropdownMenuItem>
           );
         })}
