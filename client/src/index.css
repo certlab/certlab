@@ -42,6 +42,16 @@
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Sidebar variables */
+  --sidebar-background: hsl(0, 0%, 100%);
+  --sidebar-foreground: hsl(215, 25%, 20%);
+  --sidebar-primary: hsl(221, 83%, 53%);
+  --sidebar-primary-foreground: hsl(210, 40%, 98%);
+  --sidebar-accent: hsl(210, 40%, 96%);
+  --sidebar-accent-foreground: hsl(215, 25%, 27%);
+  --sidebar-border: hsl(214, 32%, 89%);
+  --sidebar-ring: hsl(221, 83%, 53%);
 }
 
 .dark {
@@ -71,6 +81,16 @@
   --success: hsl(142, 71%, 55%);
   --warning: hsl(38, 92%, 60%);
   --info: hsl(210, 100%, 65%);
+
+  /* Sidebar variables */
+  --sidebar-background: hsl(240, 10%, 10%);
+  --sidebar-foreground: hsl(0, 0%, 95%);
+  --sidebar-primary: hsl(210, 100%, 60%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(240, 6%, 18%);
+  --sidebar-accent-foreground: hsl(0, 0%, 92%);
+  --sidebar-border: hsl(240, 6%, 20%);
+  --sidebar-ring: hsl(210, 100%, 60%);
 }
 
 /* Nord - Cool arctic palette with muted blues and grays */
@@ -101,6 +121,16 @@
   --success: hsl(92, 28%, 65%);
   --warning: hsl(40, 71%, 73%);
   --info: hsl(213, 32%, 52%);
+
+  /* Sidebar variables */
+  --sidebar-background: hsl(0, 0%, 100%);
+  --sidebar-foreground: hsl(220, 20%, 18%);
+  --sidebar-primary: hsl(213, 32%, 52%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(220, 16%, 88%);
+  --sidebar-accent-foreground: hsl(220, 16%, 22%);
+  --sidebar-border: hsl(220, 13%, 91%);
+  --sidebar-ring: hsl(213, 32%, 52%);
 }
 
 /* Catppuccin Mocha - Warm, cozy dark theme */
@@ -131,6 +161,16 @@
   --success: hsl(115, 54%, 76%);
   --warning: hsl(40, 62%, 73%);
   --info: hsl(217, 92%, 76%);
+
+  /* Sidebar variables */
+  --sidebar-background: hsl(240, 23%, 18%);
+  --sidebar-foreground: hsl(226, 64%, 90%);
+  --sidebar-primary: hsl(217, 92%, 76%);
+  --sidebar-primary-foreground: hsl(240, 21%, 15%);
+  --sidebar-accent: hsl(240, 19%, 26%);
+  --sidebar-accent-foreground: hsl(226, 64%, 88%);
+  --sidebar-border: hsl(240, 19%, 26%);
+  --sidebar-ring: hsl(217, 92%, 76%);
 }
 
 /* Tokyo Night - Modern vibrant neon dark theme */
@@ -161,6 +201,16 @@
   --success: hsl(158, 64%, 52%);
   --warning: hsl(29, 81%, 47%);
   --info: hsl(209, 100%, 60%);
+
+  /* Sidebar variables */
+  --sidebar-background: hsl(221, 12%, 23%);
+  --sidebar-foreground: hsl(215, 13%, 78%);
+  --sidebar-primary: hsl(209, 100%, 60%);
+  --sidebar-primary-foreground: hsl(220, 13%, 18%);
+  --sidebar-accent: hsl(223, 12%, 30%);
+  --sidebar-accent-foreground: hsl(215, 13%, 70%);
+  --sidebar-border: hsl(223, 12%, 30%);
+  --sidebar-ring: hsl(209, 100%, 60%);
 }
 
 /* Dracula - Bold purple and pink dark theme */
@@ -191,6 +241,16 @@
   --success: hsl(135, 94%, 65%);
   --warning: hsl(65, 92%, 76%);
   --info: hsl(191, 97%, 77%);
+
+  /* Sidebar variables */
+  --sidebar-background: hsl(232, 14%, 31%);
+  --sidebar-foreground: hsl(60, 30%, 96%);
+  --sidebar-primary: hsl(265, 89%, 78%);
+  --sidebar-primary-foreground: hsl(231, 15%, 18%);
+  --sidebar-accent: hsl(233, 14%, 40%);
+  --sidebar-accent-foreground: hsl(60, 30%, 96%);
+  --sidebar-border: hsl(233, 14%, 40%);
+  --sidebar-ring: hsl(265, 89%, 78%);
 }
 
 /* Rose Pine - Soft, elegant pastel theme */
@@ -221,6 +281,16 @@
   --success: hsl(110, 28%, 70%);
   --warning: hsl(35, 88%, 72%);
   --info: hsl(189, 43%, 73%);
+
+  /* Sidebar variables */
+  --sidebar-background: hsl(247, 23%, 15%);
+  --sidebar-foreground: hsl(245, 50%, 93%);
+  --sidebar-primary: hsl(2, 55%, 83%);
+  --sidebar-primary-foreground: hsl(249, 22%, 12%);
+  --sidebar-accent: hsl(248, 25%, 23%);
+  --sidebar-accent-foreground: hsl(245, 50%, 91%);
+  --sidebar-border: hsl(248, 25%, 23%);
+  --sidebar-ring: hsl(2, 55%, 83%);
 }
 
 /* High Contrast - WCAG AAA compliant theme for maximum accessibility */
@@ -251,6 +321,16 @@
   --success: hsl(120, 100%, 40%);
   --warning: hsl(45, 100%, 50%);
   --info: hsl(210, 100%, 60%);
+
+  /* Sidebar variables */
+  --sidebar-background: hsl(0, 0%, 5%);
+  --sidebar-foreground: hsl(0, 0%, 100%);
+  --sidebar-primary: hsl(210, 100%, 60%);
+  --sidebar-primary-foreground: hsl(0, 0%, 0%);
+  --sidebar-accent: hsl(0, 0%, 25%);
+  --sidebar-accent-foreground: hsl(0, 0%, 100%);
+  --sidebar-border: hsl(0, 0%, 40%);
+  --sidebar-ring: hsl(60, 100%, 50%);
 }
 
 @layer base {
