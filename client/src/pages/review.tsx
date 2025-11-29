@@ -449,7 +449,7 @@ export default function Review() {
 
         {/* Lecture Notes Dialog */}
         <Dialog open={showLectureDialog} onOpenChange={setShowLectureDialog}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogContent className="w-full h-full max-w-none max-h-none sm:max-w-4xl sm:max-h-[80vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <i className="fas fa-graduation-cap text-purple-600" aria-hidden="true"></i>
