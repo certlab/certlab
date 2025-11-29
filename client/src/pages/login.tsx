@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { clientAuth } from '@/lib/client-auth';
 import { useLocation } from 'wouter';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { User as UserIcon, Info, AlertTriangle } from 'lucide-react';
+import { User as UserIcon, AlertTriangle } from 'lucide-react';
 import { logError, getUserFriendlyMessage, getErrorTitle } from '@/lib/errors';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
