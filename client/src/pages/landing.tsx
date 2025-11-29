@@ -483,8 +483,11 @@ export default function Landing() {
                     variant="outline"
                     size="lg"
                     className="text-lg px-8 bg-transparent border-white text-white hover:bg-white/10"
+                    onClick={() =>
+                      document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' })
+                    }
                   >
-                    Contact Sales
+                    Learn More
                   </Button>
                 </>
               )}
@@ -567,19 +570,17 @@ export default function Landing() {
               <h4 className="font-semibold mb-4">Certifications</h4>
               <ul className="space-y-2 text-muted-foreground">
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors">
+                  <a href="#features" className="hover:text-foreground transition-colors">
                     CISSP
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors">
+                  <a href="#features" className="hover:text-foreground transition-colors">
                     CISM
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors">
-                    Coming Soon
-                  </a>
+                  <span className="text-muted-foreground/60 cursor-default">Coming Soon</span>
                 </li>
               </ul>
             </div>
