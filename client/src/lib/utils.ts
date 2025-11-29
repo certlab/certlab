@@ -61,7 +61,9 @@ export function getInitials(firstName?: string | null, lastName?: string | null)
 }
 
 /**
- * User type for display name function
+ * Minimum user properties required for display name generation.
+ * This interface defines the contract for the getUserDisplayName function,
+ * allowing it to work with any object that has these optional properties.
  */
 interface UserForDisplayName {
   firstName?: string | null;
