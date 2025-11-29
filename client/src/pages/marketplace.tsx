@@ -3,6 +3,8 @@ import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/c
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShoppingCart, Package } from 'lucide-react';
+import { useAuth } from '@/lib/auth-provider';
+import { useToast } from '@/hooks/use-toast';
 
 // Define study material types
 interface StudyMaterial {
@@ -34,13 +36,14 @@ function MaterialCardGrid({ materials, onBuy, keyPrefix = '' }: MaterialCardGrid
               <span className="text-sm font-medium text-foreground">{material.type}</span>
             </div>
             <div className="mb-4">
-              <span className="text-muted-foreground">({material.tokens})</span>
+              <span className="text-muted-foreground">({material.tokens} tokens)</span>
             </div>
             <Button
               variant="outline"
               size="sm"
               className="w-full max-w-[100px]"
               onClick={() => onBuy(material.id)}
+              aria-label={`Buy ${material.type} for ${material.tokens} tokens`}
             >
               Buy
             </Button>
@@ -51,6 +54,8 @@ function MaterialCardGrid({ materials, onBuy, keyPrefix = '' }: MaterialCardGrid
   );
 }
 
+// TODO: This data should eventually come from IndexedDB storage via clientStorage,
+// following the pattern in study-notes.tsx and dashboard.tsx
 // Sample study materials data
 const studyMaterials: StudyMaterial[] = [
   {
@@ -59,7 +64,7 @@ const studyMaterials: StudyMaterial[] = [
     type: 'CISSP Questions',
     tokens: 500,
     description:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.',
+      'Comprehensive question bank with 500 practice questions covering all CISSP domains.',
     featured: true,
   },
   { id: 'cism-questions-500', name: 'CISM Question Pack', type: 'CISM Questions', tokens: 500 },
@@ -94,9 +99,25 @@ const gridMaterials = studyMaterials.filter((m) => !m.featured);
 
 export default function Marketplace() {
   const [activeTab, setActiveTab] = useState('categories');
+  const { user: currentUser } = useAuth();
+  const { toast } = useToast();
 
+  // TODO: Implement purchase flow with token validation, authentication check, and transaction logging
   const handleBuyNow = (materialId: string) => {
+    if (!currentUser) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to purchase study materials.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // Integration with purchase/token flow to be handled in another issue
+    toast({
+      title: 'Coming Soon',
+      description: 'The purchase feature is not yet implemented. Stay tuned!',
+    });
     console.log('Buy material:', materialId);
   };
 
@@ -143,6 +164,8 @@ export default function Marketplace() {
                         className="w-full h-full text-muted-foreground/30"
                         viewBox="0 0 100 100"
                         preserveAspectRatio="none"
+                        role="img"
+                        aria-label="Featured material image placeholder"
                       >
                         <line
                           x1="0"
@@ -187,6 +210,7 @@ export default function Marketplace() {
                         size="lg"
                         className="px-8"
                         onClick={() => handleBuyNow(featuredMaterial.id)}
+                        aria-label={`Buy ${featuredMaterial.name} for ${featuredMaterial.tokens} tokens`}
                       >
                         Buy Now
                       </Button>
