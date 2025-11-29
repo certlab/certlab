@@ -45,6 +45,9 @@ function Router() {
   const [location] = useLocation();
   const isAdmin = user?.role === 'admin';
 
+  // Determine if current route is an authenticated app route (starts with /app or /admin)
+  const isAppRoute = location.startsWith('/app') || location.startsWith('/admin');
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -53,21 +56,32 @@ function Router() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Skip to main content link for keyboard navigation */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-background focus:text-foreground focus:px-4 focus:py-2 focus:rounded-md focus:border focus:border-primary focus:shadow-lg"
-      >
-        Skip to main content
-      </a>
-      {isAuthenticated ? (
+  // Landing page should never have authenticated layout
+  if (location === '/' || location === '') {
+    return (
+      <div className="min-h-screen bg-background">
+        <ErrorBoundary>
+          <Landing />
+        </ErrorBoundary>
+      </div>
+    );
+  }
+
+  // For authenticated app routes, show authenticated layout
+  if (isAuthenticated && isAppRoute) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Skip to main content link for keyboard navigation */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-background focus:text-foreground focus:px-4 focus:py-2 focus:rounded-md focus:border focus:border-primary focus:shadow-lg"
+        >
+          Skip to main content
+        </a>
         <AuthenticatedLayout>
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
               <Switch>
-                <Route path="/" component={Landing} />
                 <Route path="/app" component={Dashboard} />
                 <Route path="/app/dashboard" component={Dashboard} />
                 <Route path="/app/profile" component={ProfilePage} />
@@ -89,19 +103,23 @@ function Router() {
             </Suspense>
           </ErrorBoundary>
         </AuthenticatedLayout>
-      ) : (
-        <ErrorBoundary>
-          <Suspense fallback={<PageLoader />}>
-            <Switch>
-              {/* Landing page is always available at root */}
-              <Route path="/" component={Landing} />
-              {/* Redirect non-authenticated users trying to access protected routes */}
-              <Route path="/app/*" component={Landing} />
-              <Route component={NotFound} />
-            </Switch>
-          </Suspense>
-        </ErrorBoundary>
-      )}
+      </div>
+    );
+  }
+
+  // For non-authenticated users trying to access app routes, redirect to landing
+  return (
+    <div className="min-h-screen bg-background">
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          <Switch>
+            {/* Redirect non-authenticated users trying to access protected routes */}
+            <Route path="/app/*" component={Landing} />
+            <Route path="/admin" component={Landing} />
+            <Route component={NotFound} />
+          </Switch>
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 }
