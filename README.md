@@ -225,6 +225,37 @@ VITE_BASE_PATH=/my-certlab/ npm run build
 VITE_BASE_PATH=/ npm run build
 ```
 
+### Firebase Hosting
+
+CertLab supports deployment to Firebase Hosting as an alternative to GitHub Pages:
+
+**Automatic Deployment (GitHub Actions):**
+
+1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
+2. Set up Firebase Hosting in your project
+3. Add the following secrets to your GitHub repository:
+   - `FIREBASE_SERVICE_ACCOUNT`: Service account JSON from Firebase Console
+   - `FIREBASE_PROJECT_ID`: Your Firebase project ID
+4. Push to `main` branch - automatic deployment via GitHub Actions
+
+**Manual Deployment:**
+
+```bash
+# Install Firebase CLI (already included as dev dependency)
+npm install
+
+# Login to Firebase
+npx firebase login
+
+# Initialize project (select your Firebase project)
+npx firebase use --add
+
+# Build and deploy
+npm run deploy:firebase
+```
+
+For detailed Firebase deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
+
 ### Alternative Platforms
 
 | Platform | Build Command | Output Directory |
@@ -232,6 +263,7 @@ VITE_BASE_PATH=/ npm run build
 | **Netlify** | `npm run build` | `dist` |
 | **Vercel** | `npm run build` | `dist` |
 | **Cloudflare Pages** | `npm run build` | `dist` |
+| **Firebase Hosting** | `npm run build:firebase` | `dist` |
 
 For custom domains, set `VITE_BASE_PATH=/` in your environment.
 

@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "build:strict": "tsc && vite build",
+    "build:firebase": "VITE_BASE_PATH=/ vite build",
     "preview": "vite preview",
     "check": "tsc",
     "lint": "eslint client/src shared",
@@ -17,6 +18,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "deploy:firebase": "npm run build:firebase && firebase deploy --only hosting",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -99,6 +101,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "firebase-tools": "^14.26.0",
     "globals": "^16.5.0",
     "husky": "^9.1.7",
     "jsdom": "^27.2.0",

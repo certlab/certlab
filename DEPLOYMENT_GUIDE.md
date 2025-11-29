@@ -69,6 +69,93 @@ Or in GitHub Actions:
 
 **URL**: `https://[username].github.io/[repo-name]/`
 
+### Firebase Hosting
+
+Firebase Hosting is an excellent alternative with fast global CDN and easy setup.
+
+✅ Free tier available (10 GB storage, 360 MB/day transfer)
+✅ Automatic HTTPS with SSL certificates
+✅ Global CDN (Fastly network)
+✅ Easy rollbacks and preview channels
+✅ Custom domain support
+
+#### Prerequisites
+
+1. A Google account
+2. A Firebase project (create at [console.firebase.google.com](https://console.firebase.google.com))
+3. Firebase CLI (included as dev dependency)
+
+#### Manual Deployment
+
+```bash
+# 1. Install dependencies (includes Firebase CLI)
+npm install
+
+# 2. Login to Firebase
+npx firebase login
+
+# 3. Set up your Firebase project
+npx firebase use --add
+# Select your project from the list
+
+# 4. Build and deploy
+npm run deploy:firebase
+
+# Alternative: Build then deploy separately
+npm run build:firebase
+npx firebase deploy --only hosting
+```
+
+#### GitHub Actions Deployment (Automated)
+
+The repository includes a Firebase deployment workflow at `.github/workflows/firebase-deploy.yml`.
+
+**Setup Steps:**
+
+1. **Create Firebase Service Account:**
+   - Go to Firebase Console → Project Settings → Service accounts
+   - Click "Generate new private key"
+   - Download the JSON file
+
+2. **Add GitHub Secrets:**
+   - Go to your GitHub repository → Settings → Secrets and variables → Actions
+   - Add the following secrets:
+     - `FIREBASE_SERVICE_ACCOUNT`: Paste the entire JSON content from step 1
+     - `FIREBASE_PROJECT_ID`: Your Firebase project ID
+
+3. **Configure Firebase Project:**
+   - Update `.firebaserc` with your project ID:
+   ```json
+   {
+     "projects": {
+       "default": "your-firebase-project-id"
+     }
+   }
+   ```
+
+4. **Deploy:**
+   - Push to `main` branch
+   - GitHub Actions will automatically build and deploy to Firebase Hosting
+
+**URL**: `https://[project-id].web.app` or `https://[project-id].firebaseapp.com`
+
+#### Firebase Configuration Files
+
+- `firebase.json`: Hosting configuration including SPA rewrites
+- `.firebaserc`: Project aliases and configuration
+
+The configuration includes:
+- SPA rewrite rules (all routes redirect to index.html)
+- Cache headers for static assets
+- Standard ignore patterns
+
+#### Available npm Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run build:firebase` | Build with base path set to `/` for Firebase |
+| `npm run deploy:firebase` | Build and deploy to Firebase Hosting |
+
 ### Netlify
 1. Connect GitHub repository
 2. Build command: `npm run build`
