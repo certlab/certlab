@@ -1,5 +1,10 @@
 name: Deploy to Firebase Hosting
 
+# Note: This workflow runs alongside deploy.yml (GitHub Pages).
+# Both workflows trigger on push to main, deploying to both platforms.
+# To deploy to only one platform, manually trigger the desired workflow
+# or remove/disable the workflow you don't need.
+
 on:
   push:
     branches:
@@ -14,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -29,11 +34,9 @@ jobs:
         run: npm run check
 
       - name: Build
-        run: npm run build
+        run: npm run build:firebase
         env:
           NODE_ENV: production
-          # Set base path to root for Firebase Hosting (not /certlab/ like GitHub Pages)
-          VITE_BASE_PATH: /
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0.10.0
