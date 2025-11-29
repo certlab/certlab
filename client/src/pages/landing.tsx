@@ -127,6 +127,8 @@ export default function Landing() {
             <button
               className="border border-white/30 size-10 inline-flex justify-center items-center rounded-lg md:hidden"
               aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
               onClick={handleToggleMobileMenu}
             >
               {mobileMenuOpen ? (
@@ -169,7 +171,7 @@ export default function Landing() {
           </div>
           {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
-            <div className="md:hidden mt-4 py-4 border-t border-white/20">
+            <div id="mobile-menu" className="md:hidden mt-4 py-4 border-t border-white/20">
               <div className="flex flex-col gap-4">
                 <button
                   onClick={handleScrollToFeatures}
