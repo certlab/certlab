@@ -124,14 +124,22 @@ The repository includes a Firebase deployment workflow at `.github/workflows/fir
      - `FIREBASE_PROJECT_ID`: Your Firebase project ID
 
 3. **Configure Firebase Project:**
-   - Update `.firebaserc` with your project ID:
-   ```json
-   {
-     "projects": {
-       "default": "your-firebase-project-id"
-     }
-   }
-   ```
+   - Ensure the `.firebaserc` file exists in your repository and contains your Firebase project ID.
+   - You can create or update this file in one of two ways:
+     - **Option 1 (Recommended):** Run the following command locally and follow the prompts:
+       ```bash
+       npx firebase use --add
+       ```
+       This will create or update `.firebaserc` automatically.
+     - **Option 2:** Manually create or edit `.firebaserc` with the following content:
+       ```json
+       {
+         "projects": {
+           "default": "your-firebase-project-id"
+         }
+       }
+       ```
+   - **Important:** Commit the `.firebaserc` file to your repository so that GitHub Actions can access it.
 
 4. **Deploy:**
    - Push to `main` branch
