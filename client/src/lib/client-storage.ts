@@ -1178,11 +1178,11 @@ class ClientStorage implements IClientStorage {
       };
     }
 
-    // Deduct tokens
+    // Calculate new balance
     const newBalance = currentBalance - tokensCost;
-    await this.updateUser(userId, { tokenBalance: newBalance });
 
-    // Record the purchase
+    // Record the purchase first (before deducting tokens)
+    // This way if the purchase recording fails, no tokens are lost
     const purchase: Omit<MarketplacePurchase, 'id'> = {
       userId,
       materialId,
@@ -1192,17 +1192,48 @@ class ClientStorage implements IClientStorage {
       purchasedAt: new Date(),
     };
 
-    const id = await indexedDBService.add(STORES.marketplacePurchases, purchase);
+    let purchaseId: number;
+    try {
+      const id = await indexedDBService.add(STORES.marketplacePurchases, purchase);
+      purchaseId = Number(id);
+    } catch (error) {
+      // Purchase recording failed, no tokens deducted
+      return {
+        success: false,
+        newBalance: currentBalance,
+        message: 'Failed to record purchase. Please try again.',
+      };
+    }
+
+    // Now deduct tokens - if this fails, we need to rollback the purchase
+    try {
+      await this.updateUser(userId, { tokenBalance: newBalance });
+    } catch (error) {
+      // Token deduction failed, rollback the purchase
+      try {
+        await indexedDBService.delete(STORES.marketplacePurchases, purchaseId);
+      } catch {
+        // Rollback failed - log for manual intervention
+        console.error(
+          `Critical: Failed to rollback purchase ${purchaseId} after token deduction failure`
+        );
+      }
+      return {
+        success: false,
+        newBalance: currentBalance,
+        message: 'Failed to update token balance. Please try again.',
+      };
+    }
 
     return {
       success: true,
-      purchase: { ...purchase, id: Number(id) },
+      purchase: { ...purchase, id: purchaseId },
       newBalance,
     };
   }
 
   /**
-   * Gets a specific purchase for a user and material
+   * Gets a specific purchase for a user and material using compound index
    * @param userId - The user ID
    * @param materialId - The material ID
    * @returns The purchase if found, undefined otherwise
@@ -1211,12 +1242,12 @@ class ClientStorage implements IClientStorage {
     userId: string,
     materialId: string
   ): Promise<MarketplacePurchase | undefined> {
-    const allPurchases = await indexedDBService.getByIndex<MarketplacePurchase>(
+    // Use compound index for direct lookup instead of filtering all purchases
+    return await indexedDBService.getOneByIndex<MarketplacePurchase>(
       STORES.marketplacePurchases,
-      'userId',
-      userId
+      'userMaterial',
+      [userId, materialId]
     );
-    return allPurchases.find((p) => p.materialId === materialId);
   }
 
   /**

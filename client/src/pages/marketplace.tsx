@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
@@ -22,10 +22,24 @@ import { clientStorage } from '@/lib/client-storage';
 import { queryKeys, queryClient } from '@/lib/queryClient';
 import type { Category, MarketplacePurchase } from '@shared/schema';
 
-// Default tenant ID for multi-tenant data isolation
+// ============================================================================
+// Configuration Constants
+// ============================================================================
+
+/** Default tenant ID for multi-tenant data isolation */
 const DEFAULT_TENANT_ID = 1;
 
-// Define study material types
+/** Minimum tokens to add when user has insufficient balance */
+const MIN_TOKENS_TO_ADD = 50;
+
+/** Button styling constant for consistent sizing across all marketplace buttons */
+const BUTTON_CLASS_NAME = 'flex-1 max-w-[80px]';
+
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+/** Study material available for purchase in the marketplace */
 interface StudyMaterial {
   id: string;
   name: string;
@@ -35,10 +49,65 @@ interface StudyMaterial {
   featured?: boolean;
 }
 
-// Button styling constant for consistent sizing across all marketplace buttons
-const BUTTON_CLASS_NAME = 'flex-1 max-w-[80px]';
+// ============================================================================
+// Study Materials Data
+// ============================================================================
 
-// Reusable component for material card grid
+/**
+ * Available study materials for the marketplace.
+ * TODO: This data should eventually come from IndexedDB storage via clientStorage,
+ * following the pattern in study-notes.tsx and dashboard.tsx
+ */
+const STUDY_MATERIALS: StudyMaterial[] = [
+  {
+    id: 'cissp-questions-500',
+    name: 'CISSP Question Pack',
+    type: 'CISSP Questions',
+    tokens: 500,
+    description:
+      'Comprehensive question bank with 500 practice questions covering all CISSP domains.',
+    featured: true,
+  },
+  { id: 'cism-questions-500', name: 'CISM Question Pack', type: 'CISM Questions', tokens: 500 },
+  {
+    id: 'security-plus-400',
+    name: 'Security+ Question Pack',
+    type: 'Security+ Questions',
+    tokens: 400,
+  },
+  { id: 'cissp-study-guide', name: 'CISSP Study Guide', type: 'CISSP Study Guide', tokens: 200 },
+  { id: 'cism-flashcards', name: 'CISM Flashcards', type: 'CISM Flashcards', tokens: 150 },
+  {
+    id: 'cism-questions-400',
+    name: 'CISM Question Pack (Basic)',
+    type: 'CISM Questions',
+    tokens: 400,
+  },
+  {
+    id: 'security-plus-200',
+    name: 'Security+ Starter Pack',
+    type: 'Security+ Questions',
+    tokens: 200,
+  },
+  {
+    id: 'cissp-flashcards',
+    name: 'CISSP Flashcards',
+    type: 'CISSP Flashcards',
+    tokens: 175,
+  },
+];
+
+/** Featured material for prominent display */
+const FEATURED_MATERIAL = STUDY_MATERIALS.find((m) => m.featured);
+
+/** Non-featured materials for the grid display */
+const GRID_MATERIALS = STUDY_MATERIALS.filter((m) => !m.featured);
+
+// ============================================================================
+// Components
+// ============================================================================
+
+/** Props for the MaterialCardGrid component */
 interface MaterialCardGridProps {
   materials: StudyMaterial[];
   purchasedMaterialIds: Set<string>;
