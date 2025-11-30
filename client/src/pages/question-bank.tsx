@@ -414,10 +414,9 @@ export default function QuestionBankPage() {
 
   const QuestionForm = ({ isEdit = false }: { isEdit?: boolean }) => (
     <div
-      className="space-y-4 max-h-[60vh] overflow-y-auto pr-2"
+      className="space-y-4"
       role="region"
       aria-label={isEdit ? 'Edit question form' : 'Add question form'}
-      tabIndex={0}
     >
       <div>
         <Label htmlFor="text">Question Text *</Label>
@@ -922,6 +921,7 @@ export default function QuestionBankPage() {
                     size="sm"
                     onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
+                    aria-label="Go to previous page"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     <span className="hidden sm:inline">Previous</span>
@@ -934,6 +934,7 @@ export default function QuestionBankPage() {
                     size="sm"
                     onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
+                    aria-label="Go to next page"
                   >
                     <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="h-4 w-4" />
