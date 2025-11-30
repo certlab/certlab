@@ -11,6 +11,9 @@ import { clientStorage } from '@/lib/client-storage';
 import { queryKeys } from '@/lib/queryClient';
 import type { Category } from '@shared/schema';
 
+// Default tenant ID for multi-tenant data isolation
+const DEFAULT_TENANT_ID = 1;
+
 // Define study material types
 interface StudyMaterial {
   id: string;
@@ -21,6 +24,9 @@ interface StudyMaterial {
   featured?: boolean;
 }
 
+// Button styling constant for consistent sizing across all marketplace buttons
+const BUTTON_CLASS_NAME = 'flex-1 max-w-[80px]';
+
 // Reusable component for material card grid
 interface MaterialCardGridProps {
   materials: StudyMaterial[];
@@ -30,8 +36,6 @@ interface MaterialCardGridProps {
 }
 
 function MaterialCardGrid({ materials, onBuy, onPreview, keyPrefix = '' }: MaterialCardGridProps) {
-  const buttonClassName = 'flex-1 max-w-[80px]';
-
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
       {materials.map((material) => (
@@ -50,9 +54,9 @@ function MaterialCardGrid({ materials, onBuy, onPreview, keyPrefix = '' }: Mater
               <Button
                 variant="outline"
                 size="sm"
-                className={buttonClassName}
+                className={BUTTON_CLASS_NAME}
                 onClick={() => onPreview(material)}
-                aria-label={`Preview ${material.type}`}
+                aria-label={`Preview ${material.name} - ${material.tokens} tokens`}
               >
                 <Eye className="w-4 h-4 mr-1" />
                 Preview
@@ -60,9 +64,9 @@ function MaterialCardGrid({ materials, onBuy, onPreview, keyPrefix = '' }: Mater
               <Button
                 variant="outline"
                 size="sm"
-                className={buttonClassName}
+                className={BUTTON_CLASS_NAME}
                 onClick={() => onBuy(material.id)}
-                aria-label={`Buy ${material.type} for ${material.tokens} tokens`}
+                aria-label={`Buy ${material.name} for ${material.tokens} tokens`}
               >
                 Buy
               </Button>
@@ -124,27 +128,39 @@ export default function Marketplace() {
   const { toast } = useToast();
 
   // Fetch categories to map material types to category IDs
-  const { data: categories = [] } = useQuery<Category[]>({
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
     queryKey: queryKeys.categories.all(),
   });
 
   // Helper function to get category ID from material type
   const getCategoryIdFromMaterial = (material: StudyMaterial): number | null => {
-    const type = material.type.toLowerCase();
-    if (type.includes('cissp')) {
-      const cisspCategory = categories.find((c) => c.name.toLowerCase() === 'cissp');
-      return cisspCategory?.id ?? null;
-    }
-    if (type.includes('cism')) {
-      const cismCategory = categories.find((c) => c.name.toLowerCase() === 'cism');
-      return cismCategory?.id ?? null;
-    }
-    // For Security+ or other certifications, try to find a matching category
-    const matchingCategory = categories.find(
+    // Normalize material type to handle common variations
+    const materialType = material.type.toLowerCase();
+    // Map common variations to canonical category names
+    const typeMap: Record<string, string> = {
+      'security+': 'security plus',
+      'sec+': 'security plus',
+      'security plus': 'security plus',
+      cissp: 'cissp',
+      cism: 'cism',
+    };
+
+    // Extract the certification name from the material type (e.g., "CISSP Questions" -> "cissp")
+    const trimmedType = materialType.trim();
+    const certName = trimmedType.split(' ')[0] || trimmedType;
+    // Try to normalize the type using the map, fallback to original
+    const normalizedType = typeMap[certName] || certName;
+
+    // Try to find a category whose name matches the normalized type (case-insensitive)
+    const exactMatch = categories.find((c) => normalizedType === c.name.toLowerCase());
+    if (exactMatch) return exactMatch.id;
+
+    // Fallback: try to find a category whose name is included in the normalized type
+    const partialMatch = categories.find(
       (c) =>
-        type.includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(type.split(' ')[0])
+        trimmedType.includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(normalizedType)
     );
-    return matchingCategory?.id ?? null;
+    return partialMatch?.id ?? null;
   };
 
   // Handle preview - creates a quiz with sample questions from the material's category
@@ -154,6 +170,14 @@ export default function Marketplace() {
         title: 'Authentication Required',
         description: 'Please log in to preview study materials.',
         variant: 'destructive',
+      });
+      return;
+    }
+
+    if (categoriesLoading) {
+      toast({
+        title: 'Loading',
+        description: 'Please wait while we load available categories...',
       });
       return;
     }
@@ -169,13 +193,33 @@ export default function Marketplace() {
     }
 
     try {
-      // Create a preview quiz with a small number of questions (5 questions for preview)
+      // Check if questions are available before creating the quiz
+      const user = await clientStorage.getUser(currentUser.id);
+      const tenantId = user?.tenantId || DEFAULT_TENANT_ID;
+
+      const availableQuestions = await clientStorage.getQuestionsByCategories(
+        [categoryId],
+        undefined,
+        undefined,
+        tenantId
+      );
+
+      if (availableQuestions.length === 0) {
+        toast({
+          title: 'No Questions Available',
+          description: `There are no questions available for ${material.name} yet. Please check back later.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Create a preview quiz with the minimum of 5 or available questions
       const quiz = await clientStorage.createQuiz({
         userId: currentUser.id,
         title: `${material.name} Preview`,
         categoryIds: [categoryId],
         subcategoryIds: [],
-        questionCount: 5,
+        questionCount: Math.min(5, availableQuestions.length),
         mode: 'study',
       });
 
@@ -305,7 +349,7 @@ export default function Marketplace() {
                         variant="outline"
                         className="px-6"
                         onClick={() => handlePreview(featuredMaterial)}
-                        aria-label={`Preview ${featuredMaterial.name}`}
+                        aria-label={`Preview ${featuredMaterial.name} - ${featuredMaterial.tokens} tokens`}
                       >
                         <Eye className="w-5 h-5 mr-2" />
                         Preview
@@ -316,7 +360,7 @@ export default function Marketplace() {
                         onClick={() => handleBuyNow(featuredMaterial.id)}
                         aria-label={`Buy ${featuredMaterial.name} for ${featuredMaterial.tokens} tokens`}
                       >
-                        Buy Now
+                        Buy
                       </Button>
                     </div>
                   </div>
