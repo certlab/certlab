@@ -178,6 +178,11 @@ export const queryKeys = {
     all: () => ['/api', 'subcategories'] as const,
   },
 
+  // Question queries
+  questions: {
+    byTenant: (tenantId: number | undefined) => ['/api', 'question-bank', tenantId] as const,
+  },
+
   // Badge queries
   badges: {
     all: () => ['/api', 'badges'] as const,

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Dialog,
   DialogContent,
@@ -85,6 +86,8 @@ const defaultFormData: QuestionFormData = {
   text: '',
   categoryId: 0,
   subcategoryId: 0,
+  // Form UI currently supports 4 options for simplicity, though schema allows 2-10.
+  // This could be made dynamic in the future if needed.
   options: ['', '', '', ''],
   correctAnswer: 0,
   explanation: '',
@@ -108,11 +111,11 @@ export default function QuestionBankPage() {
 
   // Query for questions
   const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<Question[]>({
-    queryKey: ['/api', 'question-bank', tenantId],
+    queryKey: queryKeys.questions.byTenant(tenantId),
     queryFn: async () => {
-      return await clientStorage.getQuestionsByTenant(tenantId);
+      return await clientStorage.getQuestionsByTenant(tenantId ?? 1);
     },
-    enabled: !!currentUser,
+    enabled: !!currentUser && tenantId !== undefined,
   });
 
   // Query for categories
@@ -128,9 +131,22 @@ export default function QuestionBankPage() {
   // Create question mutation
   const createQuestionMutation = useMutation({
     mutationFn: async (data: QuestionFormData) => {
-      const options: QuestionOption[] = data.options
-        .filter((opt) => opt.trim() !== '')
-        .map((text, index) => ({ id: index, text: text.trim() }));
+      // Map options first with original indices, then filter empty ones
+      const optionsWithOriginalIndices = data.options
+        .map((text, index) => ({ id: index, text: text.trim() }))
+        .filter((opt) => opt.text !== '');
+
+      // Remap correctAnswer to match the filtered array index
+      const originalCorrectAnswer = data.correctAnswer;
+      const filteredCorrectAnswer = optionsWithOriginalIndices.findIndex(
+        (opt) => opt.id === originalCorrectAnswer
+      );
+
+      // Re-index options sequentially for storage
+      const options: QuestionOption[] = optionsWithOriginalIndices.map((opt, index) => ({
+        id: index,
+        text: opt.text,
+      }));
 
       const tags = data.tags
         .split(',')
@@ -138,19 +154,19 @@ export default function QuestionBankPage() {
         .filter(Boolean);
 
       return await clientStorage.createQuestion({
-        tenantId,
+        tenantId: tenantId ?? 1,
         categoryId: data.categoryId,
         subcategoryId: data.subcategoryId,
         text: data.text,
         options,
-        correctAnswer: data.correctAnswer,
+        correctAnswer: filteredCorrectAnswer >= 0 ? filteredCorrectAnswer : 0,
         explanation: data.explanation || null,
         difficultyLevel: data.difficultyLevel,
         tags: tags.length > 0 ? tags : null,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api', 'question-bank', tenantId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.questions.byTenant(tenantId) });
       invalidateStaticData();
       setShowAddDialog(false);
       setFormData(defaultFormData);
@@ -171,9 +187,22 @@ export default function QuestionBankPage() {
   // Update question mutation
   const updateQuestionMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: QuestionFormData }) => {
-      const options: QuestionOption[] = data.options
-        .filter((opt) => opt.trim() !== '')
-        .map((text, index) => ({ id: index, text: text.trim() }));
+      // Map options first with original indices, then filter empty ones
+      const optionsWithOriginalIndices = data.options
+        .map((text, index) => ({ id: index, text: text.trim() }))
+        .filter((opt) => opt.text !== '');
+
+      // Remap correctAnswer to match the filtered array index
+      const originalCorrectAnswer = data.correctAnswer;
+      const filteredCorrectAnswer = optionsWithOriginalIndices.findIndex(
+        (opt) => opt.id === originalCorrectAnswer
+      );
+
+      // Re-index options sequentially for storage
+      const options: QuestionOption[] = optionsWithOriginalIndices.map((opt, index) => ({
+        id: index,
+        text: opt.text,
+      }));
 
       const tags = data.tags
         .split(',')
@@ -185,14 +214,14 @@ export default function QuestionBankPage() {
         subcategoryId: data.subcategoryId,
         text: data.text,
         options,
-        correctAnswer: data.correctAnswer,
+        correctAnswer: filteredCorrectAnswer >= 0 ? filteredCorrectAnswer : 0,
         explanation: data.explanation || null,
         difficultyLevel: data.difficultyLevel,
         tags: tags.length > 0 ? tags : null,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api', 'question-bank', tenantId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.questions.byTenant(tenantId) });
       invalidateStaticData();
       setShowEditDialog(false);
       setSelectedQuestion(null);
@@ -272,8 +301,12 @@ export default function QuestionBankPage() {
   };
 
   const getDifficultyBadge = (level: number | null) => {
-    const levelNum = (level ?? 1) as keyof typeof DIFFICULTY_CONFIG;
-    const config = DIFFICULTY_CONFIG[levelNum] || DIFFICULTY_CONFIG[1];
+    // Ensure level is a valid key (1-5); otherwise, default to 1
+    const validLevels = [1, 2, 3, 4, 5] as const;
+    const levelNum = validLevels.includes((level ?? 1) as 1 | 2 | 3 | 4 | 5)
+      ? ((level ?? 1) as keyof typeof DIFFICULTY_CONFIG)
+      : 1;
+    const config = DIFFICULTY_CONFIG[levelNum];
     return <Badge className={config.color}>{config.label}</Badge>;
   };
 
@@ -284,16 +317,17 @@ export default function QuestionBankPage() {
 
   const handleEditQuestion = (question: Question) => {
     setSelectedQuestion(question);
+    // Dynamically map existing options to form, padding to 4 slots if needed
+    const existingOptions = Array.isArray(question.options)
+      ? question.options.map((opt) => opt.text)
+      : [];
+    // Pad to exactly 4 options (current form UI limit)
+    const paddedOptions = [...existingOptions, '', '', '', ''].slice(0, 4);
     setFormData({
       text: question.text,
       categoryId: question.categoryId,
       subcategoryId: question.subcategoryId,
-      options: [
-        question.options?.[0]?.text || '',
-        question.options?.[1]?.text || '',
-        question.options?.[2]?.text || '',
-        question.options?.[3]?.text || '',
-      ],
+      options: paddedOptions,
       correctAnswer: question.correctAnswer,
       explanation: question.explanation || '',
       difficultyLevel: question.difficultyLevel || 1,
@@ -442,16 +476,17 @@ export default function QuestionBankPage() {
 
       <div>
         <Label id="options-label">Answer Options * (at least 2 required)</Label>
-        <div className="space-y-2 mt-1" role="radiogroup" aria-labelledby="options-label">
+        <RadioGroup
+          value={formData.correctAnswer.toString()}
+          onValueChange={(value) => setFormData({ ...formData, correctAnswer: parseInt(value) })}
+          className="space-y-2 mt-1"
+          aria-labelledby="options-label"
+        >
           {[0, 1, 2, 3].map((index) => (
             <div key={index} className="flex items-center gap-2">
-              <input
-                type="radio"
+              <RadioGroupItem
+                value={index.toString()}
                 id={`option-radio-${index}`}
-                name="correctAnswer"
-                checked={formData.correctAnswer === index}
-                onChange={() => setFormData({ ...formData, correctAnswer: index })}
-                className="h-4 w-4"
                 aria-label={`Mark option ${index + 1} as correct answer`}
               />
               <Input
@@ -464,7 +499,7 @@ export default function QuestionBankPage() {
               />
             </div>
           ))}
-        </div>
+        </RadioGroup>
         <p className="text-xs text-muted-foreground mt-1">
           Select the radio button next to the correct answer
         </p>
