@@ -61,6 +61,15 @@ import type { Question, Category, Subcategory, QuestionOption } from '@shared/sc
 
 const ITEMS_PER_PAGE = 10;
 
+// Difficulty level configuration - centralized for maintainability
+const DIFFICULTY_CONFIG = {
+  1: { label: 'Basic', color: 'bg-green-100 text-green-800' },
+  2: { label: 'Intermediate', color: 'bg-blue-100 text-blue-800' },
+  3: { label: 'Advanced', color: 'bg-yellow-100 text-yellow-800' },
+  4: { label: 'Expert', color: 'bg-orange-100 text-orange-800' },
+  5: { label: 'Master', color: 'bg-red-100 text-red-800' },
+} as const;
+
 interface QuestionFormData {
   text: string;
   categoryId: number;
@@ -263,22 +272,9 @@ export default function QuestionBankPage() {
   };
 
   const getDifficultyBadge = (level: number | null) => {
-    const levelNum = level ?? 1;
-    const colors: Record<number, string> = {
-      1: 'bg-green-100 text-green-800',
-      2: 'bg-blue-100 text-blue-800',
-      3: 'bg-yellow-100 text-yellow-800',
-      4: 'bg-orange-100 text-orange-800',
-      5: 'bg-red-100 text-red-800',
-    };
-    const labels: Record<number, string> = {
-      1: 'Basic',
-      2: 'Intermediate',
-      3: 'Advanced',
-      4: 'Expert',
-      5: 'Master',
-    };
-    return <Badge className={colors[levelNum] || colors[1]}>{labels[levelNum] || 'Basic'}</Badge>;
+    const levelNum = (level ?? 1) as keyof typeof DIFFICULTY_CONFIG;
+    const config = DIFFICULTY_CONFIG[levelNum] || DIFFICULTY_CONFIG[1];
+    return <Badge className={config.color}>{config.label}</Badge>;
   };
 
   const handleAddQuestion = () => {
@@ -383,7 +379,12 @@ export default function QuestionBankPage() {
   }
 
   const QuestionForm = ({ isEdit = false }: { isEdit?: boolean }) => (
-    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+    <div
+      className="space-y-4 max-h-[60vh] overflow-y-auto pr-2"
+      role="region"
+      aria-label={isEdit ? 'Edit question form' : 'Add question form'}
+      tabIndex={0}
+    >
       <div>
         <Label htmlFor="text">Question Text *</Label>
         <Textarea
@@ -440,22 +441,26 @@ export default function QuestionBankPage() {
       </div>
 
       <div>
-        <Label>Answer Options * (at least 2 required)</Label>
-        <div className="space-y-2 mt-1">
+        <Label id="options-label">Answer Options * (at least 2 required)</Label>
+        <div className="space-y-2 mt-1" role="radiogroup" aria-labelledby="options-label">
           {[0, 1, 2, 3].map((index) => (
             <div key={index} className="flex items-center gap-2">
               <input
                 type="radio"
+                id={`option-radio-${index}`}
                 name="correctAnswer"
                 checked={formData.correctAnswer === index}
                 onChange={() => setFormData({ ...formData, correctAnswer: index })}
                 className="h-4 w-4"
+                aria-label={`Mark option ${index + 1} as correct answer`}
               />
               <Input
+                id={`option-text-${index}`}
                 placeholder={`Option ${index + 1}`}
                 value={formData.options[index]}
                 onChange={(e) => handleOptionChange(index, e.target.value)}
                 className="flex-1"
+                aria-label={`Option ${index + 1} text`}
               />
             </div>
           ))}
@@ -550,7 +555,12 @@ export default function QuestionBankPage() {
                 <HelpCircle className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">📚 Question Bank</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                  <span role="img" aria-hidden="true">
+                    📚
+                  </span>{' '}
+                  Question Bank
+                </h1>
                 <p className="text-sm sm:text-base text-muted-foreground">
                   Manage your certification practice questions
                 </p>
@@ -911,7 +921,13 @@ export default function QuestionBankPage() {
                 )}
 
                 <DialogFooter className="pt-4 border-t">
-                  <Button variant="outline" onClick={() => handleEditQuestion(selectedQuestion)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowViewDialog(false);
+                      handleEditQuestion(selectedQuestion);
+                    }}
+                  >
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
