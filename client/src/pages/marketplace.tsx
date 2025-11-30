@@ -1,10 +1,15 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ShoppingCart, Package } from 'lucide-react';
+import { ShoppingCart, Package, Eye } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { useToast } from '@/hooks/use-toast';
+import { clientStorage } from '@/lib/client-storage';
+import { queryKeys } from '@/lib/queryClient';
+import type { Category } from '@shared/schema';
 
 // Define study material types
 interface StudyMaterial {
@@ -20,10 +25,13 @@ interface StudyMaterial {
 interface MaterialCardGridProps {
   materials: StudyMaterial[];
   onBuy: (materialId: string) => void;
+  onPreview: (material: StudyMaterial) => void;
   keyPrefix?: string;
 }
 
-function MaterialCardGrid({ materials, onBuy, keyPrefix = '' }: MaterialCardGridProps) {
+function MaterialCardGrid({ materials, onBuy, onPreview, keyPrefix = '' }: MaterialCardGridProps) {
+  const buttonClassName = 'flex-1 max-w-[80px]';
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
       {materials.map((material) => (
@@ -38,15 +46,27 @@ function MaterialCardGrid({ materials, onBuy, keyPrefix = '' }: MaterialCardGrid
             <div className="mb-4">
               <span className="text-muted-foreground">({material.tokens} tokens)</span>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full max-w-[100px]"
-              onClick={() => onBuy(material.id)}
-              aria-label={`Buy ${material.type} for ${material.tokens} tokens`}
-            >
-              Buy
-            </Button>
+            <div className="flex gap-2 w-full justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                className={buttonClassName}
+                onClick={() => onPreview(material)}
+                aria-label={`Preview ${material.type}`}
+              >
+                <Eye className="w-4 h-4 mr-1" />
+                Preview
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className={buttonClassName}
+                onClick={() => onBuy(material.id)}
+                aria-label={`Buy ${material.type} for ${material.tokens} tokens`}
+              >
+                Buy
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ))}
@@ -99,8 +119,82 @@ const gridMaterials = studyMaterials.filter((m) => !m.featured);
 
 export default function Marketplace() {
   const [activeTab, setActiveTab] = useState('categories');
+  const [, setLocation] = useLocation();
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
+
+  // Fetch categories to map material types to category IDs
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: queryKeys.categories.all(),
+  });
+
+  // Helper function to get category ID from material type
+  const getCategoryIdFromMaterial = (material: StudyMaterial): number | null => {
+    const type = material.type.toLowerCase();
+    if (type.includes('cissp')) {
+      const cisspCategory = categories.find((c) => c.name.toLowerCase() === 'cissp');
+      return cisspCategory?.id ?? null;
+    }
+    if (type.includes('cism')) {
+      const cismCategory = categories.find((c) => c.name.toLowerCase() === 'cism');
+      return cismCategory?.id ?? null;
+    }
+    // For Security+ or other certifications, try to find a matching category
+    const matchingCategory = categories.find(
+      (c) =>
+        type.includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(type.split(' ')[0])
+    );
+    return matchingCategory?.id ?? null;
+  };
+
+  // Handle preview - creates a quiz with sample questions from the material's category
+  const handlePreview = async (material: StudyMaterial) => {
+    if (!currentUser) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to preview study materials.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const categoryId = getCategoryIdFromMaterial(material);
+    if (!categoryId) {
+      toast({
+        title: 'Preview Unavailable',
+        description: 'This certification category is not yet available for preview.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // Create a preview quiz with a small number of questions (5 questions for preview)
+      const quiz = await clientStorage.createQuiz({
+        userId: currentUser.id,
+        title: `${material.name} Preview`,
+        categoryIds: [categoryId],
+        subcategoryIds: [],
+        questionCount: 5,
+        mode: 'study',
+      });
+
+      toast({
+        title: 'Preview Quiz Created',
+        description: `Starting preview for ${material.name}`,
+      });
+
+      // Navigate to the quiz page
+      setLocation(`/app/quiz/${quiz.id}`);
+    } catch (error) {
+      console.error('Error creating preview quiz:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create preview quiz. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   // TODO: Implement purchase flow with token validation, authentication check, and transaction logging
   const handleBuyNow = (materialId: string) => {
@@ -205,7 +299,17 @@ export default function Marketplace() {
                     <CardDescription className="text-base md:text-lg mb-6 max-w-xl">
                       {featuredMaterial.description}
                     </CardDescription>
-                    <div>
+                    <div className="flex gap-3">
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="px-6"
+                        onClick={() => handlePreview(featuredMaterial)}
+                        aria-label={`Preview ${featuredMaterial.name}`}
+                      >
+                        <Eye className="w-5 h-5 mr-2" />
+                        Preview
+                      </Button>
                       <Button
                         size="lg"
                         className="px-8"
@@ -221,7 +325,11 @@ export default function Marketplace() {
             )}
 
             {/* Study Material Cards Grid */}
-            <MaterialCardGrid materials={gridMaterials} onBuy={handleBuyNow} />
+            <MaterialCardGrid
+              materials={gridMaterials}
+              onBuy={handleBuyNow}
+              onPreview={handlePreview}
+            />
           </TabsContent>
 
           <TabsContent value="topics">
@@ -235,7 +343,12 @@ export default function Marketplace() {
             </div>
 
             {/* Topics Grid - same materials for now */}
-            <MaterialCardGrid materials={gridMaterials} onBuy={handleBuyNow} keyPrefix="topic-" />
+            <MaterialCardGrid
+              materials={gridMaterials}
+              onBuy={handleBuyNow}
+              onPreview={handlePreview}
+              keyPrefix="topic-"
+            />
           </TabsContent>
         </Tabs>
       </div>
