@@ -1,29 +1,24 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/auth-provider";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest, queryKeys } from "@/lib/queryClient";
-import { Link } from "wouter";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/auth-provider';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, queryKeys } from '@/lib/queryClient';
+import { clientStorage } from '@/lib/client-storage';
+import { Link } from 'wouter';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   User,
   Clock,
@@ -41,10 +36,10 @@ import {
   Crown,
   Shield,
   Lock,
-} from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { clientAuth } from "@/lib/client-auth";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+} from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { clientAuth } from '@/lib/client-auth';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface UserProfile {
   id: string;
@@ -55,15 +50,15 @@ interface UserProfile {
   certificationGoals?: string[];
   studyPreferences?: {
     dailyTimeMinutes?: number;
-    preferredDifficulty?: "beginner" | "intermediate" | "advanced";
+    preferredDifficulty?: 'beginner' | 'intermediate' | 'advanced';
     focusAreas?: string[];
     studyDays?: string[];
     reminderTime?: string;
   };
   skillsAssessment?: {
-    experienceLevel?: "beginner" | "intermediate" | "advanced" | "expert";
+    experienceLevel?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
     relevantExperience?: string[];
-    learningStyle?: "visual" | "auditory" | "kinesthetic" | "reading";
+    learningStyle?: 'visual' | 'auditory' | 'kinesthetic' | 'reading';
     completedCertifications?: string[];
     motivations?: string[];
   };
@@ -74,21 +69,21 @@ export default function ProfilePage() {
   const { toast } = useToast();
 
   const [profileData, setProfileData] = useState<Partial<UserProfile>>({
-    email: "",
-    firstName: "",
-    lastName: "",
+    email: '',
+    firstName: '',
+    lastName: '',
     certificationGoals: [],
     studyPreferences: {
       dailyTimeMinutes: 30,
-      preferredDifficulty: "intermediate",
+      preferredDifficulty: 'intermediate',
       focusAreas: [],
       studyDays: [],
-      reminderTime: "09:00",
+      reminderTime: '09:00',
     },
     skillsAssessment: {
-      experienceLevel: "beginner",
+      experienceLevel: 'beginner',
       relevantExperience: [],
-      learningStyle: "visual",
+      learningStyle: 'visual',
       completedCertifications: [],
       motivations: [],
     },
@@ -96,9 +91,9 @@ export default function ProfilePage() {
 
   // Password management state
   const [hasPassword, setHasPassword] = useState<boolean>(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
   // Check if user has password on mount
@@ -124,29 +119,34 @@ export default function ProfilePage() {
     enabled: !!user?.id,
   });
 
-
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<UserProfile>) => {
-      const response = await apiRequest({
-        method: "PATCH",
-        endpoint: `/api/user/${user?.id}/profile`,
-        data: data,
+      if (!user?.id) throw new Error('No user ID');
+      const result = await clientStorage.updateUser(user.id, {
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        certificationGoals: data.certificationGoals,
+        studyPreferences: data.studyPreferences,
+        skillsAssessment: data.skillsAssessment,
       });
-      return response.json();
+      if (!result) throw new Error('Failed to update profile');
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.detail(user?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
       toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
+        title: 'Profile Updated',
+        description: 'Your profile has been successfully updated.',
       });
     },
     onError: () => {
       toast({
-        title: "Update Failed",
-        description: "Failed to update your profile. Please try again.",
-        variant: "destructive",
+        title: 'Update Failed',
+        description: 'Failed to update your profile. Please try again.',
+        variant: 'destructive',
       });
     },
   });
@@ -155,21 +155,21 @@ export default function ProfilePage() {
   useEffect(() => {
     if (userProfile) {
       setProfileData({
-        email: userProfile.email || "",
-        firstName: userProfile.firstName || "",
-        lastName: userProfile.lastName || "",
+        email: userProfile.email || '',
+        firstName: userProfile.firstName || '',
+        lastName: userProfile.lastName || '',
         certificationGoals: userProfile.certificationGoals || [],
         studyPreferences: userProfile.studyPreferences || {
           dailyTimeMinutes: 30,
-          preferredDifficulty: "intermediate",
+          preferredDifficulty: 'intermediate',
           focusAreas: [],
           studyDays: [],
-          reminderTime: "09:00",
+          reminderTime: '09:00',
         },
         skillsAssessment: userProfile.skillsAssessment || {
-          experienceLevel: "beginner",
+          experienceLevel: 'beginner',
           relevantExperience: [],
-          learningStyle: "visual",
+          learningStyle: 'visual',
           completedCertifications: [],
           motivations: [],
         },
@@ -181,9 +181,9 @@ export default function ProfilePage() {
     // Validate email if provided
     if (profileData.email && !isValidEmail(profileData.email)) {
       toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
+        title: 'Invalid Email',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive',
       });
       return;
     }
@@ -198,9 +198,9 @@ export default function ProfilePage() {
       // Validate new password
       if (newPassword.length < 8) {
         toast({
-          title: "Password Too Short",
-          description: "Password must be at least 8 characters long.",
-          variant: "destructive",
+          title: 'Password Too Short',
+          description: 'Password must be at least 8 characters long.',
+          variant: 'destructive',
         });
         setIsPasswordLoading(false);
         return;
@@ -210,8 +210,8 @@ export default function ProfilePage() {
       if (newPassword !== confirmPassword) {
         toast({
           title: "Passwords Don't Match",
-          description: "New password and confirmation password must match.",
-          variant: "destructive",
+          description: 'New password and confirmation password must match.',
+          variant: 'destructive',
         });
         setIsPasswordLoading(false);
         return;
@@ -222,72 +222,57 @@ export default function ProfilePage() {
 
       if (result.success) {
         toast({
-          title: "Password Updated",
-          description: result.message || "Your password has been successfully updated.",
+          title: 'Password Updated',
+          description: result.message || 'Your password has been successfully updated.',
         });
-        
+
         // Clear form
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-        
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+
         // Update password status
         setHasPassword(true);
       } else {
         toast({
-          title: "Password Update Failed",
-          description: result.message || "Unable to update password.",
-          variant: "destructive",
+          title: 'Password Update Failed',
+          description: result.message || 'Unable to update password.',
+          variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
       });
     } finally {
       setIsPasswordLoading(false);
     }
   };
 
-  const certificationOptions = [
-    "CC",
-    "CISSP",
-    "Cloud+",
-    "CISM",
-    "CGRC",
-    "CISA",
-  ];
+  const certificationOptions = ['CC', 'CISSP', 'Cloud+', 'CISM', 'CGRC', 'CISA'];
 
-  const weekDays = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
+  const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const motivationOptions = [
-    "Career advancement",
-    "Salary increase",
-    "Job requirement",
-    "Personal development",
-    "Industry recognition",
-    "Compliance requirement",
+    'Career advancement',
+    'Salary increase',
+    'Job requirement',
+    'Personal development',
+    'Industry recognition',
+    'Compliance requirement',
   ];
 
   const experienceOptions = [
-    "Network Security",
-    "Cloud Computing",
-    "Risk Management",
-    "Incident Response",
-    "Compliance",
-    "Security Architecture",
-    "DevSecOps",
-    "Cryptography",
+    'Network Security',
+    'Cloud Computing',
+    'Risk Management',
+    'Incident Response',
+    'Compliance',
+    'Security Architecture',
+    'DevSecOps',
+    'Cryptography',
   ];
 
   if (isLoading) {
@@ -362,9 +347,7 @@ export default function ProfilePage() {
                   <Input
                     id="firstName"
                     value={profileData.firstName}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, firstName: e.target.value })
-                    }
+                    onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
                     placeholder="Enter your first name"
                     data-testid="input-firstname"
                   />
@@ -374,9 +357,7 @@ export default function ProfilePage() {
                   <Input
                     id="lastName"
                     value={profileData.lastName}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, lastName: e.target.value })
-                    }
+                    onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
                     placeholder="Enter your last name"
                     data-testid="input-lastname"
                   />
@@ -388,16 +369,18 @@ export default function ProfilePage() {
                 <Input
                   id="email"
                   type="email"
-                  value={profileData.email || ""}
+                  value={profileData.email || ''}
                   onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                   placeholder="Enter your email address"
-                  className={profileData.email && !isValidEmail(profileData.email) ? "border-red-500" : ""}
+                  className={
+                    profileData.email && !isValidEmail(profileData.email) ? 'border-red-500' : ''
+                  }
                   data-testid="input-email"
                 />
                 <p className="text-xs text-muted-foreground">
-                  {userProfile?.email ? 
-                    "You can update your email address if needed" : 
-                    "Please provide an email address to receive notifications"}
+                  {userProfile?.email
+                    ? 'You can update your email address if needed'
+                    : 'Please provide an email address to receive notifications'}
                 </p>
                 {profileData.email && !isValidEmail(profileData.email) && (
                   <p className="text-xs text-red-500">Please enter a valid email address</p>
@@ -408,7 +391,8 @@ export default function ProfilePage() {
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Email Recommended:</strong> Please add your email address to receive important notifications and updates.
+                    <strong>Email Recommended:</strong> Please add your email address to receive
+                    important notifications and updates.
                   </AlertDescription>
                 </Alert>
               )}
@@ -420,9 +404,7 @@ export default function ProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>Learning Preferences</CardTitle>
-              <CardDescription>
-                Customize your study schedule and learning goals
-              </CardDescription>
+              <CardDescription>Customize your study schedule and learning goals</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -444,10 +426,7 @@ export default function ProfilePage() {
                         }}
                         data-testid={`checkbox-cert-${cert}`}
                       />
-                      <Label
-                        htmlFor={cert}
-                        className="text-sm font-normal cursor-pointer"
-                      >
+                      <Label htmlFor={cert} className="text-sm font-normal cursor-pointer">
                         {cert}
                       </Label>
                     </div>
@@ -479,7 +458,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label htmlFor="difficulty">Preferred Difficulty</Label>
                 <Select
-                  value={profileData.studyPreferences?.preferredDifficulty || "intermediate"}
+                  value={profileData.studyPreferences?.preferredDifficulty || 'intermediate'}
                   onValueChange={(value: any) =>
                     setProfileData({
                       ...profileData,
@@ -515,18 +494,13 @@ export default function ProfilePage() {
                             ...profileData,
                             studyPreferences: {
                               ...profileData.studyPreferences,
-                              studyDays: checked
-                                ? [...days, day]
-                                : days.filter((d) => d !== day),
+                              studyDays: checked ? [...days, day] : days.filter((d) => d !== day),
                             },
                           });
                         }}
                         data-testid={`checkbox-day-${day.toLowerCase()}`}
                       />
-                      <Label
-                        htmlFor={day}
-                        className="text-sm font-normal cursor-pointer"
-                      >
+                      <Label htmlFor={day} className="text-sm font-normal cursor-pointer">
                         {day}
                       </Label>
                     </div>
@@ -539,7 +513,7 @@ export default function ProfilePage() {
                 <Input
                   id="reminderTime"
                   type="time"
-                  value={profileData.studyPreferences?.reminderTime || "09:00"}
+                  value={profileData.studyPreferences?.reminderTime || '09:00'}
                   onChange={(e) =>
                     setProfileData({
                       ...profileData,
@@ -560,15 +534,13 @@ export default function ProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>Skills Assessment</CardTitle>
-              <CardDescription>
-                Help us personalize your learning experience
-              </CardDescription>
+              <CardDescription>Help us personalize your learning experience</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="experience">Experience Level</Label>
                 <Select
-                  value={profileData.skillsAssessment?.experienceLevel || "beginner"}
+                  value={profileData.skillsAssessment?.experienceLevel || 'beginner'}
                   onValueChange={(value: any) =>
                     setProfileData({
                       ...profileData,
@@ -594,7 +566,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label htmlFor="learningStyle">Learning Style</Label>
                 <Select
-                  value={profileData.skillsAssessment?.learningStyle || "visual"}
+                  value={profileData.skillsAssessment?.learningStyle || 'visual'}
                   onValueChange={(value: any) =>
                     setProfileData({
                       ...profileData,
@@ -624,12 +596,9 @@ export default function ProfilePage() {
                     <div key={area} className="flex items-center space-x-2">
                       <Checkbox
                         id={area}
-                        checked={profileData.skillsAssessment?.relevantExperience?.includes(
-                          area
-                        )}
+                        checked={profileData.skillsAssessment?.relevantExperience?.includes(area)}
                         onCheckedChange={(checked) => {
-                          const experience =
-                            profileData.skillsAssessment?.relevantExperience || [];
+                          const experience = profileData.skillsAssessment?.relevantExperience || [];
                           setProfileData({
                             ...profileData,
                             skillsAssessment: {
@@ -642,10 +611,7 @@ export default function ProfilePage() {
                         }}
                         data-testid={`checkbox-exp-${area.toLowerCase().replace(/\s+/g, '-')}`}
                       />
-                      <Label
-                        htmlFor={area}
-                        className="text-sm font-normal cursor-pointer"
-                      >
+                      <Label htmlFor={area} className="text-sm font-normal cursor-pointer">
                         {area}
                       </Label>
                     </div>
@@ -660,12 +626,9 @@ export default function ProfilePage() {
                     <div key={motivation} className="flex items-center space-x-2">
                       <Checkbox
                         id={motivation}
-                        checked={profileData.skillsAssessment?.motivations?.includes(
-                          motivation
-                        )}
+                        checked={profileData.skillsAssessment?.motivations?.includes(motivation)}
                         onCheckedChange={(checked) => {
-                          const motivations =
-                            profileData.skillsAssessment?.motivations || [];
+                          const motivations = profileData.skillsAssessment?.motivations || [];
                           setProfileData({
                             ...profileData,
                             skillsAssessment: {
@@ -678,10 +641,7 @@ export default function ProfilePage() {
                         }}
                         data-testid={`checkbox-motivation-${motivation.toLowerCase().replace(/\s+/g, '-')}`}
                       />
-                      <Label
-                        htmlFor={motivation}
-                        className="text-sm font-normal cursor-pointer"
-                      >
+                      <Label htmlFor={motivation} className="text-sm font-normal cursor-pointer">
                         {motivation}
                       </Label>
                     </div>
@@ -697,9 +657,9 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle>Password Security</CardTitle>
               <CardDescription>
-                {hasPassword 
-                  ? "Change your account password" 
-                  : "Set a password to secure your account"}
+                {hasPassword
+                  ? 'Change your account password'
+                  : 'Set a password to secure your account'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -707,8 +667,8 @@ export default function ProfilePage() {
                 <Alert className="mb-6">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>No Password Set:</strong> Your account currently has no password. 
-                    Anyone with access to this device can login. Set a password below for added security.
+                    <strong>No Password Set:</strong> Your account currently has no password. Anyone
+                    with access to this device can login. Set a password below for added security.
                   </AlertDescription>
                 </Alert>
               )}
@@ -731,9 +691,7 @@ export default function ProfilePage() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">
-                    {hasPassword ? "New Password" : "Password"}
-                  </Label>
+                  <Label htmlFor="new-password">{hasPassword ? 'New Password' : 'Password'}</Label>
                   <Input
                     id="new-password"
                     type="password"
@@ -779,7 +737,7 @@ export default function ProfilePage() {
                   ) : (
                     <>
                       <Lock className="h-4 w-4 mr-2" />
-                      {hasPassword ? "Change Password" : "Set Password"}
+                      {hasPassword ? 'Change Password' : 'Set Password'}
                     </>
                   )}
                 </Button>
@@ -787,7 +745,6 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         </TabsContent>
-
       </Tabs>
 
       <div className="mt-6 flex justify-end">
