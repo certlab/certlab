@@ -222,7 +222,10 @@ export default function PracticeTestMode() {
         {/* Quick Start */}
         <div className="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/40 dark:to-purple-900/40 rounded-lg p-5 border border-blue-200/70 dark:border-blue-700/50 shadow-sm">
           <h3 className="font-semibold text-sm mb-3 text-blue-900 dark:text-blue-100 flex items-center gap-2">
-            <span className="inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+            <span
+              className="inline-block w-2 h-2 bg-blue-500 rounded-full motion-safe:animate-pulse"
+              aria-hidden="true"
+            ></span>
             Quick Practice Test
           </h3>
           <div className="flex gap-3">
@@ -324,7 +327,7 @@ export default function PracticeTestMode() {
                 return (
                   <Card
                     key={test.id}
-                    className="border-2 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 hover:shadow-md"
+                    className="border-2 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all duration-200 hover:shadow-md"
                   >
                     <CardContent className="p-5">
                       <div className="space-y-4">
