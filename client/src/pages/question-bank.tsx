@@ -930,7 +930,10 @@ export default function QuestionBankPage() {
                     <span className="hidden sm:inline">Previous</span>
                     <span className="sm:hidden">Prev</span>
                   </Button>
-                  <span className="text-sm text-muted-foreground whitespace-nowrap px-2">
+                  <span
+                    className="text-sm text-muted-foreground whitespace-nowrap px-2"
+                    aria-label={`Page ${currentPage} of ${totalPages}`}
+                  >
                     {currentPage} / {totalPages}
                   </span>
                   <Button
