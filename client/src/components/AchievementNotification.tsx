@@ -7,6 +7,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
 
+/**
+ * Base64-encoded achievement sound effect.
+ * A short celebratory chime for when badges are unlocked.
+ */
+const ACHIEVEMENT_SOUND_DATA =
+  'data:audio/wav;base64,UklGRvIBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU4BAABhbZNXnF+eKq1V2Xv/5dnrfQHAOD7mWPPP9xTB5F+HT4Z4XB7fHPHO2zxfGO8xHPDN7PVnNwKG3XVP5OWj7G4qPu37wv7/+v3t0fjYGVGzx3UZTLt+hY9y6Z1qHr9/vfrzxfWUVfv8+d3v6fftxe8XtO/Rv55q2r3N9pNDvfwcXe65e9Pv4uy7/ufE2aWq7fT/+vz7ZjWyf2Xy4f7s6pGYNfX25e6Vbfzo6/BZ7fHnxeb4ufXvwufX9/Yf/fHn3Yjv9v7z8s3xjfX2x+/7/ev359fHu+Hj1sj53uj74f//9t75yfTt8a7xwfPZ7/n16f37///g+8Pq4/Hg7Hxm8tPC8vwUufP8Eujv6Pf/+aTb3e/3+9OT2vHB7Oz7++7n+//n+Pv1/dz1+sT1zPHlxe/u8PDm4ubn7uz79dH7xfLq8OX/+/L1xvLD+vf1/eBZMUX5/PP5+8GUfvbY/fj799zx6vf/+/Hv7/P5/ev/8fT/+9b12vHkxeznUNf74PD79u7z+vLz+P3j7Pv52fPs+vr9+8P/5uj37+Xj7OPu7fP28eL78/Z//PP/9/f/f2Nv8f/6z+T5XfT3/7sB8vL+/eb39s7s8uL2+fL5/v/';
+
 interface BadgeData {
   id: number;
   badgeId: number;
@@ -55,8 +62,7 @@ export function AchievementNotification({ userId, onClose }: AchievementNotifica
         // Play achievement sound
         try {
           const audio = new Audio();
-          audio.src =
-            'data:audio/wav;base64,UklGRvIBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU4BAABhbZNXnF+eKq1V2Xv/5dnrfQHAOD7mWPPP9xTB5F+HT4Z4XB7fHPHO2zxfGO8xHPDN7PVnNwKG3XVP5OWj7G4qPu37wv7/+v3t0fjYGVGzx3UZTLt+hY9y6Z1qHr9/vfrzxfWUVfv8+d3v6fftxe8XtO/Rv55q2r3N9pNDvfwcXe65e9Pv4uy7/ufE2aWq7fT/+vz7ZjWyf2Xy4f7s6pGYNfX25e6Vbfzo6/BZ7fHnxeb4ufXvwufX9/Yf/fHn3Yjv9v7z8s3xjfX2x+/7/ev359fHu+Hj1sj53uj74f//9t75yfTt8a7xwfPZ7/n16f37///g+8Pq4/Hg7Hxm8tPC8vwUufP8Eujv6Pf/+aTb3e/3+9OT2vHB7Oz7++7n+//n+Pv1/dz1+sT1zPHlxe/u8PDm4ubn7uz79dH7xfLq8OX/+/L1xvLD+vf1/eBZMUX5/PP5+8GUfvbY/fj799zx6vf/+/Hv7/P5/ev/8fT/+9b12vHkxeznUNf74PD79u7z+vLz+P3j7Pv52fPs+vr9+8P/5uj37+Xj7OPu7fP28eL78/Z//PP/9/f/f2Nv8f/6z+T5XfT3/7sB8vL+/eb39s7s8uL2+fL5/v/';
+          audio.src = ACHIEVEMENT_SOUND_DATA;
           audio.volume = 0.3;
           audio.play().catch(() => {}); // Ignore autoplay policy errors
         } catch (error) {
