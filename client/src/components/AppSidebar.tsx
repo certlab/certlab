@@ -65,7 +65,10 @@ const getNavigationItems = (isAdmin: boolean) => [
   {
     title: 'Data',
     icon: Database,
-    items: [{ title: 'Import Sample Data', url: '/app/data-import' }],
+    items: [
+      { title: 'Question Bank', url: '/app/question-bank' },
+      { title: 'Import Sample Data', url: '/app/data-import' },
+    ],
   },
   ...(isAdmin
     ? [
