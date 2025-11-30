@@ -1,6 +1,6 @@
 /**
  * Quiz State Management Hook
- * 
+ *
  * This hook encapsulates all quiz-taking state and logic, providing a clean
  * interface for components to manage quiz sessions. It handles:
  * - Question navigation (next/previous)
@@ -8,22 +8,23 @@
  * - Timer countdown with auto-submit
  * - Flagged question review workflow
  * - Quiz submission
- * 
+ *
  * The hook uses React's useReducer for efficient batched state updates
  * and prevents unnecessary re-renders during quiz interactions.
- * 
+ *
  * @module useQuizState
  */
 
-import { useReducer, useState, useEffect, useCallback, useRef } from "react";
-import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
-import { queryClient, queryKeys } from "@/lib/queryClient";
-import { clientStorage } from "@/lib/client-storage";
-import { useToast } from "@/hooks/use-toast";
-import { quizReducer } from "@/components/quiz/quizReducer";
-import type { QuizState, Question, Quiz } from "@/components/quiz/types";
-import { initialQuizState } from "@/components/quiz/types";
+import { useReducer, useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation } from 'wouter';
+import { useMutation } from '@tanstack/react-query';
+import { queryClient, queryKeys } from '@/lib/queryClient';
+import { clientStorage } from '@/lib/client-storage';
+import { achievementService } from '@/lib/achievement-service';
+import { useToast } from '@/hooks/use-toast';
+import { quizReducer } from '@/components/quiz/quizReducer';
+import type { QuizState, Question, Quiz } from '@/components/quiz/types';
+import { initialQuizState } from '@/components/quiz/types';
 
 /**
  * Configuration options for the useQuizState hook
@@ -39,17 +40,17 @@ interface UseQuizStateOptions {
 
 /**
  * Custom hook for managing quiz session state and interactions.
- * 
+ *
  * This hook provides comprehensive quiz state management including:
  * - Answer selection with immediate feedback
  * - Timed quiz support with auto-submit on timeout
  * - Question flagging for review before submission
  * - Navigation between questions (normal and review modes)
  * - Quiz submission with TanStack Query mutation
- * 
+ *
  * @param options - Configuration including quizId, quiz config, and questions
  * @returns Object containing state and handler functions for quiz interactions
- * 
+ *
  * @example
  * ```tsx
  * function QuizComponent({ quizId, quiz, questions }) {
@@ -63,7 +64,7 @@ interface UseQuizStateOptions {
  *     handleFlagQuestion,
  *     handleSubmitQuiz,
  *   } = useQuizState({ quizId, quiz, questions });
- *   
+ *
  *   return (
  *     <div>
  *       <ProgressBar value={progress} />
@@ -77,10 +78,10 @@ interface UseQuizStateOptions {
 export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
+
   // Initialize quiz state with useReducer for batched updates
   const [state, dispatch] = useReducer(quizReducer, initialQuizState);
-  
+
   // Separate state for time and dialogs (don't need batching)
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [showFlaggedQuestionsDialog, setShowFlaggedQuestionsDialog] = useState(false);
@@ -92,25 +93,57 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
 
   /**
    * Mutation for submitting quiz answers to IndexedDB storage.
-   * On success, invalidates relevant queries and navigates to results page.
+   * On success, processes achievements and navigates to results page.
    */
   const submitQuizMutation = useMutation({
     mutationFn: async (quizAnswers: { questionId: number; answer: number }[]) => {
-      return await clientStorage.submitQuiz(quizId, quizAnswers);
+      const completedQuiz = await clientStorage.submitQuiz(quizId, quizAnswers);
+
+      // Process achievements after quiz completion
+      if (completedQuiz.userId) {
+        const achievementResult = await achievementService.processQuizCompletion(
+          completedQuiz.userId,
+          completedQuiz,
+          completedQuiz.tenantId
+        );
+
+        // Return both quiz and achievement results
+        return { quiz: completedQuiz, achievements: achievementResult };
+      }
+
+      return { quiz: completedQuiz, achievements: null };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       // Invalidate user-related queries using the quiz's userId if available
       if (quiz?.userId) {
         queryClient.invalidateQueries({ queryKey: queryKeys.user.all(quiz.userId) });
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.quiz.detail(quizId) });
+
+      // Show toast for new badges earned
+      if (result.achievements?.newBadges && result.achievements.newBadges.length > 0) {
+        const badgeNames = result.achievements.newBadges.map((b) => b.name).join(', ');
+        toast({
+          title: '🏆 Achievement Unlocked!',
+          description: `You earned: ${badgeNames}`,
+        });
+      }
+
+      // Show toast for level up
+      if (result.achievements?.levelUp) {
+        toast({
+          title: '🎉 Level Up!',
+          description: `You've reached level ${result.achievements.newLevel}!`,
+        });
+      }
+
       setLocation(`/app/results/${quizId}`);
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to submit quiz. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to submit quiz. Please try again.',
+        variant: 'destructive',
       });
     },
   });
@@ -138,7 +171,7 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
 
     if (!timerRef.current) {
       timerRef.current = setInterval(() => {
-        setTimeRemaining(prev => {
+        setTimeRemaining((prev) => {
           if (prev === null || prev <= 1) {
             // Time's up - auto submit using ref to avoid stale closure
             submitQuizRef.current();
@@ -160,36 +193,40 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
   /** Current question being displayed */
   const currentQuestion = questions[state.currentQuestionIndex];
   /** Progress percentage (0-100) through the quiz */
-  const progress = questions.length > 0 ? ((state.currentQuestionIndex + 1) / questions.length) * 100 : 0;
+  const progress =
+    questions.length > 0 ? ((state.currentQuestionIndex + 1) / questions.length) * 100 : 0;
 
   /**
    * Handles answer selection for the current question.
    * Once an answer is selected, it cannot be changed (locked in).
    * Immediately shows feedback on whether the answer was correct.
    */
-  const handleAnswerChange = useCallback((value: string) => {
-    // Prevent changing answer once selected
-    if (state.selectedAnswer !== undefined) {
-      return;
-    }
-    
-    const answerValue = parseInt(value);
-    
-    if (currentQuestion) {
-      const correct = answerValue === currentQuestion.correctAnswer;
-      
-      // Batch all state updates in a single dispatch
-      dispatch({
-        type: 'SELECT_ANSWER',
-        payload: {
-          questionId: currentQuestion.id,
-          answer: answerValue,
-          isCorrect: correct,
-          showFeedback: true
-        }
-      });
-    }
-  }, [state.selectedAnswer, currentQuestion]);
+  const handleAnswerChange = useCallback(
+    (value: string) => {
+      // Prevent changing answer once selected
+      if (state.selectedAnswer !== undefined) {
+        return;
+      }
+
+      const answerValue = parseInt(value);
+
+      if (currentQuestion) {
+        const correct = answerValue === currentQuestion.correctAnswer;
+
+        // Batch all state updates in a single dispatch
+        dispatch({
+          type: 'SELECT_ANSWER',
+          payload: {
+            questionId: currentQuestion.id,
+            answer: answerValue,
+            isCorrect: correct,
+            showFeedback: true,
+          },
+        });
+      }
+    },
+    [state.selectedAnswer, currentQuestion]
+  );
 
   /**
    * Handles quiz submission.
@@ -202,7 +239,7 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
       setShowFlaggedQuestionsDialog(true);
     } else {
       // Submit the quiz directly
-      const quizAnswers = questions.map(question => {
+      const quizAnswers = questions.map((question) => {
         const answer = state.answers[question.id];
         return {
           questionId: question.id,
@@ -212,7 +249,13 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
 
       submitQuizMutation.mutate(quizAnswers);
     }
-  }, [state.flaggedQuestions, state.isReviewingFlagged, state.answers, questions, submitQuizMutation]);
+  }, [
+    state.flaggedQuestions,
+    state.isReviewingFlagged,
+    state.answers,
+    questions,
+    submitQuizMutation,
+  ]);
 
   // Keep the ref updated with the latest handleSubmitQuiz function
   useEffect(() => {
@@ -233,13 +276,13 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
           type: 'MOVE_TO_FLAGGED',
           payload: {
             flaggedIndex: nextFlaggedIndex,
-            questionIndex: state.flaggedQuestionIndices[nextFlaggedIndex]
-          }
+            questionIndex: state.flaggedQuestionIndices[nextFlaggedIndex],
+          },
         });
       } else {
         // Finished reviewing all flagged questions, auto-submit
         dispatch({ type: 'END_FLAGGED_REVIEW' });
-        const quizAnswers = questions.map(question => {
+        const quizAnswers = questions.map((question) => {
           const answer = state.answers[question.id];
           return {
             questionId: question.id,
@@ -258,8 +301,8 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
           type: 'CHANGE_QUESTION',
           payload: {
             index: nextIndex,
-            savedAnswer
-          }
+            savedAnswer,
+          },
         });
       } else {
         handleSubmitQuiz();
@@ -281,8 +324,8 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
           type: 'MOVE_TO_FLAGGED',
           payload: {
             flaggedIndex: prevFlaggedIndex,
-            questionIndex: state.flaggedQuestionIndices[prevFlaggedIndex]
-          }
+            questionIndex: state.flaggedQuestionIndices[prevFlaggedIndex],
+          },
         });
       }
     } else {
@@ -295,8 +338,8 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
           type: 'CHANGE_QUESTION',
           payload: {
             index: prevIndex,
-            savedAnswer
-          }
+            savedAnswer,
+          },
         });
       }
     }
@@ -310,7 +353,7 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
     if (currentQuestion) {
       dispatch({
         type: 'TOGGLE_FLAG',
-        payload: { questionId: currentQuestion.id }
+        payload: { questionId: currentQuestion.id },
       });
     }
   }, [currentQuestion]);
@@ -321,19 +364,19 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
    */
   const handleReviewFlaggedQuestions = useCallback(() => {
     setShowFlaggedQuestionsDialog(false);
-    
+
     // Find indices of flagged questions
     const flaggedIndices = questions
       .map((q, index) => ({ question: q, index }))
-      .filter(item => state.flaggedQuestions.has(item.question.id))
-      .map(item => item.index);
-    
+      .filter((item) => state.flaggedQuestions.has(item.question.id))
+      .map((item) => item.index);
+
     if (flaggedIndices.length > 0) {
       dispatch({
         type: 'START_FLAGGED_REVIEW',
-        payload: { indices: flaggedIndices }
+        payload: { indices: flaggedIndices },
       });
-      
+
       // Navigate to the first flagged question
       const firstIndex = flaggedIndices[0];
       const firstQuestion = questions[firstIndex];
@@ -342,8 +385,8 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
         type: 'CHANGE_QUESTION',
         payload: {
           index: firstIndex,
-          savedAnswer
-        }
+          savedAnswer,
+        },
       });
     }
   }, [state, questions]);
@@ -355,7 +398,7 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
   const handleSubmitWithoutReview = useCallback(() => {
     setShowFlaggedQuestionsDialog(false);
     // Submit the quiz directly
-    const quizAnswers = questions.map(question => {
+    const quizAnswers = questions.map((question) => {
       const answer = state.answers[question.id];
       return {
         questionId: question.id,
@@ -370,17 +413,20 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
    * Directly navigates to a specific question by index.
    * Used for question overview/navigation panel.
    */
-  const navigateToQuestion = useCallback((index: number) => {
-    const targetQuestion = questions[index];
-    const savedAnswer = targetQuestion ? state.answers[targetQuestion.id] : undefined;
-    dispatch({
-      type: 'CHANGE_QUESTION',
-      payload: {
-        index,
-        savedAnswer
-      }
-    });
-  }, [state, questions]);
+  const navigateToQuestion = useCallback(
+    (index: number) => {
+      const targetQuestion = questions[index];
+      const savedAnswer = targetQuestion ? state.answers[targetQuestion.id] : undefined;
+      dispatch({
+        type: 'CHANGE_QUESTION',
+        payload: {
+          index,
+          savedAnswer,
+        },
+      });
+    },
+    [state, questions]
+  );
 
   return {
     /** Current quiz state from reducer */

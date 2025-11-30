@@ -52,7 +52,7 @@
 import { clientStorage } from './client-storage';
 import { indexedDBService } from './indexeddb';
 
-const SEED_VERSION = 3;
+const SEED_VERSION = 4;
 
 export async function seedInitialData(): Promise<void> {
   // Check seed version - this is the primary mechanism for determining whether to reseed
@@ -441,6 +441,193 @@ export async function seedInitialData(): Promise<void> {
     color: 'green',
     rarity: 'common',
     points: 25,
+    createdAt: new Date(),
+  });
+
+  // Additional progress badges
+  await indexedDBService.put('badges', {
+    id: 6,
+    name: 'Getting Started',
+    description: 'Complete 5 quizzes',
+    icon: '🚀',
+    category: 'progress',
+    requirement: { type: 'quizzes_completed', value: 5 },
+    color: 'blue',
+    rarity: 'common',
+    points: 25,
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('badges', {
+    id: 7,
+    name: 'Quiz Veteran',
+    description: 'Complete 25 quizzes',
+    icon: '🎖️',
+    category: 'progress',
+    requirement: { type: 'quizzes_completed', value: 25 },
+    color: 'gold',
+    rarity: 'rare',
+    points: 100,
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('badges', {
+    id: 8,
+    name: 'Quiz Legend',
+    description: 'Complete 50 quizzes',
+    icon: '👑',
+    category: 'progress',
+    requirement: { type: 'quizzes_completed', value: 50 },
+    color: 'rainbow',
+    rarity: 'legendary',
+    points: 250,
+    createdAt: new Date(),
+  });
+
+  // Performance badges
+  await indexedDBService.put('badges', {
+    id: 9,
+    name: 'High Achiever',
+    description: 'Score 90% or higher on a quiz',
+    icon: '⭐',
+    category: 'performance',
+    requirement: { type: 'high_score', value: 90 },
+    color: 'yellow',
+    rarity: 'uncommon',
+    points: 30,
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('badges', {
+    id: 10,
+    name: 'Perfectionist',
+    description: 'Score 100% on 5 quizzes',
+    icon: '✨',
+    category: 'performance',
+    requirement: { type: 'perfect_score', value: 5 },
+    color: 'purple',
+    rarity: 'legendary',
+    points: 200,
+    createdAt: new Date(),
+  });
+
+  // Streak badges
+  await indexedDBService.put('badges', {
+    id: 11,
+    name: 'Consistency',
+    description: 'Maintain a 3-day study streak',
+    icon: '⚡',
+    category: 'streak',
+    requirement: { type: 'study_streak', value: 3 },
+    color: 'orange',
+    rarity: 'common',
+    points: 20,
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('badges', {
+    id: 12,
+    name: 'Streak Master',
+    description: 'Maintain a 14-day study streak',
+    icon: '🌟',
+    category: 'streak',
+    requirement: { type: 'study_streak', value: 14 },
+    color: 'orange',
+    rarity: 'rare',
+    points: 150,
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('badges', {
+    id: 13,
+    name: 'Unstoppable',
+    description: 'Maintain a 30-day study streak',
+    icon: '💫',
+    category: 'streak',
+    requirement: { type: 'study_streak', value: 30 },
+    color: 'rainbow',
+    rarity: 'legendary',
+    points: 300,
+    createdAt: new Date(),
+  });
+
+  // Mastery badges (questions answered)
+  await indexedDBService.put('badges', {
+    id: 14,
+    name: 'Question Crusher',
+    description: 'Answer 50 questions correctly',
+    icon: '🎯',
+    category: 'mastery',
+    requirement: { type: 'questions_answered', value: 50 },
+    color: 'green',
+    rarity: 'common',
+    points: 30,
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('badges', {
+    id: 15,
+    name: 'Knowledge Expert',
+    description: 'Answer 200 questions correctly',
+    icon: '🧠',
+    category: 'mastery',
+    requirement: { type: 'questions_answered', value: 200 },
+    color: 'purple',
+    rarity: 'rare',
+    points: 100,
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('badges', {
+    id: 16,
+    name: 'Master Scholar',
+    description: 'Answer 500 questions correctly',
+    icon: '🏅',
+    category: 'mastery',
+    requirement: { type: 'questions_answered', value: 500 },
+    color: 'gold',
+    rarity: 'legendary',
+    points: 250,
+    createdAt: new Date(),
+  });
+
+  // Special point-based badges
+  await indexedDBService.put('badges', {
+    id: 17,
+    name: 'Point Collector',
+    description: 'Earn 500 total points',
+    icon: '💎',
+    category: 'special',
+    requirement: { type: 'total_points', value: 500 },
+    color: 'blue',
+    rarity: 'uncommon',
+    points: 50,
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('badges', {
+    id: 18,
+    name: 'Point Master',
+    description: 'Earn 2000 total points',
+    icon: '💰',
+    category: 'special',
+    requirement: { type: 'total_points', value: 2000 },
+    color: 'gold',
+    rarity: 'rare',
+    points: 100,
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('badges', {
+    id: 19,
+    name: 'Elite Learner',
+    description: 'Earn 5000 total points',
+    icon: '🌈',
+    category: 'special',
+    requirement: { type: 'total_points', value: 5000 },
+    color: 'rainbow',
+    rarity: 'legendary',
+    points: 250,
     createdAt: new Date(),
   });
 
