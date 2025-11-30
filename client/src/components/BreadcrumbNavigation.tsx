@@ -37,7 +37,6 @@ export default function BreadcrumbNavigation({ className }: { className?: string
       review: 'Review Sessions',
       results: 'Results',
       'practice-tests': 'Practice Tests',
-      challenges: 'Challenges',
       accessibility: 'Accessibility',
       admin: 'Admin Panel',
       'ui-structure': 'UI Structure',

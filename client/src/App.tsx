@@ -27,7 +27,7 @@ const Achievements = lazy(() => import('@/pages/achievements'));
 const Accessibility = lazy(() => import('@/pages/accessibility'));
 const AdminDashboard = lazy(() => import('@/pages/admin'));
 const UIStructurePage = lazy(() => import('@/pages/ui-structure'));
-const ChallengesPage = lazy(() => import('@/pages/challenges'));
+
 const CreditsPage = lazy(() => import('@/pages/credits'));
 const ProfilePage = lazy(() => import('@/pages/profile'));
 const PracticeTests = lazy(() => import('@/pages/practice-tests'));
@@ -95,7 +95,7 @@ function Router() {
                 <Route path="/app/achievements" component={Achievements} />
                 <Route path="/app/accessibility" component={Accessibility} />
                 <Route path="/app/practice-tests" component={PracticeTests} />
-                <Route path="/app/challenges" component={ChallengesPage} />
+
                 <Route path="/app/marketplace" component={MarketplacePage} />
                 {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
                 <Route path="/app/credits" component={CreditsPage} />

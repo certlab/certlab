@@ -162,9 +162,6 @@ export const queryKeys = {
       ['/api', 'user', userId, 'practice-test-attempts'] as const,
     tokenBalance: (userId: string | undefined) =>
       ['/api', 'user', userId, 'token-balance'] as const,
-    challenges: (userId: string | undefined) => ['/api', 'user', userId, 'challenges'] as const,
-    challengeAttempts: (userId: string | undefined) =>
-      ['/api', 'user', userId, 'challenge-attempts'] as const,
     studyPlan: (userId: string | undefined) => ['/api', 'user', userId, 'study-plan'] as const,
   },
 

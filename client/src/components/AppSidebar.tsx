@@ -50,7 +50,6 @@ const getNavigationItems = (isAdmin: boolean) => [
     items: [
       { title: 'Practice Tests', url: '/app/practice-tests' },
       { title: 'Study Notes', url: '/app/study-notes' },
-      { title: 'Challenges', url: '/app/challenges' },
       { title: 'Study Materials', url: '/app/marketplace' },
     ],
   },

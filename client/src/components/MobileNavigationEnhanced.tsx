@@ -17,7 +17,6 @@ import {
   Settings,
   ChevronRight,
   X,
-  Zap,
   Target,
   BarChart3,
   Crown,
@@ -84,15 +83,6 @@ export default function MobileNavigationEnhanced() {
           icon: <BookOpen className="w-4 h-4" />,
           href: '/app/study-notes',
           description: 'View and export saved study notes',
-        },
-        {
-          id: 'challenges',
-          label: 'Daily Challenges',
-          icon: <Zap className="w-4 h-4" />,
-          href: '/challenges',
-          badge: 'Soon',
-          description: 'Quick practice sessions',
-          comingSoon: true,
         },
         {
           id: 'marketplace',

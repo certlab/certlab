@@ -453,38 +453,6 @@
       ]
     },
     {
-      "name": "challenges",
-      "type": "page",
-      "file": "pages/challenges.tsx",
-      "imports": [
-        "@/components/ui/card",
-        "@/components/ui/button",
-        "@/components/ui/badge",
-        "@/components/ui/progress",
-        "@/components/ui/tabs",
-        "@/components/Header",
-        "@/hooks/useAuth",
-        "@/hooks/use-toast",
-        "@/lib/queryClient"
-      ],
-      "apiCalls": [
-        {
-          "type": "apiRequest",
-          "endpoint": "/api/user/${currentUser?.id}/generate-daily-challenges"
-        },
-        {
-          "type": "apiRequest",
-          "endpoint": "/api/challenge/${challengeId}/start"
-        }
-      ],
-      "hooks": [
-        "useLocation",
-        "useAuth",
-        "useToast",
-        "useMutation"
-      ]
-    },
-    {
       "name": "dashboard",
       "type": "page",
       "file": "pages/dashboard.tsx",
