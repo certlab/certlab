@@ -66,6 +66,7 @@ import type {
   Lecture,
   InsertLecture,
   StudyNote,
+  MarketplacePurchase,
 } from '@shared/schema';
 import type {
   IClientStorage,
@@ -1113,6 +1114,138 @@ class ClientStorage implements IClientStorage {
   // Get all users (for account selection on login)
   async getAllUsers(): Promise<User[]> {
     return await indexedDBService.getAll<User>(STORES.users);
+  }
+
+  // ==========================================
+  // Marketplace Operations
+  // ==========================================
+
+  /**
+   * Purchases a study material from the marketplace.
+   * This is a transactional operation that:
+   * 1. Validates the user has sufficient tokens
+   * 2. Checks if the material is already purchased
+   * 3. Deducts tokens from user balance
+   * 4. Records the purchase
+   *
+   * @param userId - The user making the purchase
+   * @param materialId - Unique identifier for the study material
+   * @param materialName - Name of the study material
+   * @param materialType - Type/category of the material
+   * @param tokensCost - Cost in tokens
+   * @returns Purchase result with success status and updated balance
+   */
+  async purchaseMaterial(
+    userId: string,
+    materialId: string,
+    materialName: string,
+    materialType: string,
+    tokensCost: number
+  ): Promise<{
+    success: boolean;
+    purchase?: MarketplacePurchase;
+    newBalance: number;
+    message?: string;
+  }> {
+    // Get user to validate and get current balance
+    const user = await this.getUser(userId);
+    if (!user) {
+      return {
+        success: false,
+        newBalance: 0,
+        message: 'User not found',
+      };
+    }
+
+    const currentBalance = user.tokenBalance ?? 0;
+
+    // Check if already purchased
+    const existingPurchase = await this.getUserPurchase(userId, materialId);
+    if (existingPurchase) {
+      return {
+        success: false,
+        newBalance: currentBalance,
+        message: 'You have already purchased this material.',
+      };
+    }
+
+    // Check if user has sufficient tokens
+    if (currentBalance < tokensCost) {
+      return {
+        success: false,
+        newBalance: currentBalance,
+        message: `Insufficient tokens. You need ${tokensCost} tokens but only have ${currentBalance}.`,
+      };
+    }
+
+    // Deduct tokens
+    const newBalance = currentBalance - tokensCost;
+    await this.updateUser(userId, { tokenBalance: newBalance });
+
+    // Record the purchase
+    const purchase: Omit<MarketplacePurchase, 'id'> = {
+      userId,
+      materialId,
+      materialName,
+      materialType,
+      tokensCost,
+      purchasedAt: new Date(),
+    };
+
+    const id = await indexedDBService.add(STORES.marketplacePurchases, purchase);
+
+    return {
+      success: true,
+      purchase: { ...purchase, id: Number(id) },
+      newBalance,
+    };
+  }
+
+  /**
+   * Gets a specific purchase for a user and material
+   * @param userId - The user ID
+   * @param materialId - The material ID
+   * @returns The purchase if found, undefined otherwise
+   */
+  async getUserPurchase(
+    userId: string,
+    materialId: string
+  ): Promise<MarketplacePurchase | undefined> {
+    const allPurchases = await indexedDBService.getByIndex<MarketplacePurchase>(
+      STORES.marketplacePurchases,
+      'userId',
+      userId
+    );
+    return allPurchases.find((p) => p.materialId === materialId);
+  }
+
+  /**
+   * Gets all purchases for a user
+   * @param userId - The user ID
+   * @returns Array of purchases sorted by date (newest first)
+   */
+  async getUserPurchases(userId: string): Promise<MarketplacePurchase[]> {
+    const purchases = await indexedDBService.getByIndex<MarketplacePurchase>(
+      STORES.marketplacePurchases,
+      'userId',
+      userId
+    );
+    return purchases.sort((a, b) => {
+      const aDate = a.purchasedAt ? new Date(a.purchasedAt).getTime() : 0;
+      const bDate = b.purchasedAt ? new Date(b.purchasedAt).getTime() : 0;
+      return bDate - aDate;
+    });
+  }
+
+  /**
+   * Checks if a user has purchased a specific material
+   * @param userId - The user ID
+   * @param materialId - The material ID
+   * @returns true if the material has been purchased
+   */
+  async hasPurchasedMaterial(userId: string, materialId: string): Promise<boolean> {
+    const purchase = await this.getUserPurchase(userId, materialId);
+    return purchase !== undefined;
   }
 }
 

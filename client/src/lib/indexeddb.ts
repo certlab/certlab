@@ -66,7 +66,7 @@
  */
 
 const DB_NAME = 'certlab';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 // Define all stores (tables)
 const STORES = {
@@ -90,6 +90,7 @@ const STORES = {
   practiceTests: 'practiceTests',
   practiceTestAttempts: 'practiceTestAttempts',
   settings: 'settings', // For storing app settings and current user
+  marketplacePurchases: 'marketplacePurchases', // For tracking purchased study materials
 } as const;
 
 class IndexedDBService {
@@ -308,6 +309,17 @@ class IndexedDBService {
 
         if (!db.objectStoreNames.contains(STORES.settings)) {
           db.createObjectStore(STORES.settings, { keyPath: 'key' });
+        }
+
+        // Marketplace purchases store (added in version 5)
+        if (!db.objectStoreNames.contains(STORES.marketplacePurchases)) {
+          const purchasesStore = db.createObjectStore(STORES.marketplacePurchases, {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          purchasesStore.createIndex('userId', 'userId');
+          purchasesStore.createIndex('materialId', 'materialId');
+          purchasesStore.createIndex('userMaterial', ['userId', 'materialId'], { unique: true });
         }
       };
     });
