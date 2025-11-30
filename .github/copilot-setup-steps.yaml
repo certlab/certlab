@@ -1,0 +1,16 @@
+# Copilot Setup Steps
+# This file configures the environment for GitHub Copilot coding agent.
+# Copilot uses these steps to set up the development environment before working on issues.
+
+steps:
+  # Install Node.js dependencies
+  - name: Install dependencies
+    run: npm install
+
+  # Verify the build works
+  - name: Build project
+    run: npm run build
+
+  # Run tests to ensure environment is working
+  - name: Run tests
+    run: npm run test:run

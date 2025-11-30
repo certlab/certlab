@@ -88,8 +88,21 @@ npm run preview
 **Purpose**: Serves the `dist/` folder to test production build locally
 
 ### Test Suite
-**Status**: No test framework configured. No test files exist (no `*.test.ts`, `*.spec.ts`, or test config files).  
-**Action**: Do not add tests unless specifically requested. Focus on manual verification.
+```bash
+npm run test:run
+```
+**Framework**: Vitest (configured in `vitest.config.ts`)  
+**Test Files**: Located in `client/src/` and `shared/` directories (`*.test.ts`, `*.test.tsx`, `*.spec.ts`, `*.spec.tsx`)  
+**Time**: ~5-10 seconds  
+**Current Coverage**: 6 test files, 67 tests  
+**Setup File**: `client/src/test/setup.ts`  
+
+**Test Commands**:
+- `npm run test` - Run tests in watch mode
+- `npm run test:run` - Run tests once
+- `npm run test:coverage` - Run tests with coverage report
+
+**Action**: Run tests after making changes. Add tests for new functionality when appropriate.
 
 ## Project Structure
 
@@ -275,9 +288,10 @@ The app uses these stores (defined in `client/src/lib/indexeddb.ts`):
 
 ### After Making Changes
 1. **Run type check**: `npm run check` - fix new errors you introduced
-2. **Run build**: `npm run build` - must succeed
-3. **Test locally**: `npm run dev` - verify functionality at http://localhost:5000
-4. **Test production**: `npm run build && npm run preview` - verify production build
+2. **Run tests**: `npm run test:run` - ensure tests pass
+3. **Run build**: `npm run build` - must succeed
+4. **Test locally**: `npm run dev` - verify functionality at http://localhost:5000
+5. **Test production**: `npm run build && npm run preview` - verify production build
 
 ### File Modifications
 - **Components**: Located in `/client/src/components/` - 37 files
@@ -316,6 +330,7 @@ import type { User } from '@shared/schema';
 
 **Install**: `npm install` (~10-15s)  
 **Type Check**: `npm run check` (~5-10s, 19 pre-existing errors OK)  
+**Tests**: `npm run test:run` (~5-10s)  
 **Build**: `npm run build` (~5-7s, outputs to `dist/`)  
 **Dev Server**: `npm run dev` (port 5000)  
 **Preview Build**: `npm run preview` (after build)  
@@ -324,7 +339,7 @@ import type { User } from '@shared/schema';
 **App Root**: `/client/src/App.tsx`  
 **Storage**: `/client/src/lib/client-storage.ts`  
 **Types**: `/shared/schema.ts`  
-**Config**: `vite.config.ts`, `tsconfig.json`, `tailwind.config.ts`  
+**Config**: `vite.config.ts`, `tsconfig.json`, `tailwind.config.ts`, `vitest.config.ts`  
 
 **Deploy**: Push to `main` → GitHub Actions → GitHub Pages
 
@@ -337,6 +352,8 @@ import type { User } from '@shared/schema';
 **Always run**: `npm install` before building (never `npm ci` in development).
 
 **Type errors are OK**: 19 pre-existing TypeScript errors exist. Fix only new errors you introduce.
+
+**Run tests**: Execute `npm run test:run` to verify tests pass. Add tests for new functionality when appropriate.
 
 **Build must succeed**: `npm run build` must complete successfully. Test this early and often.
 
