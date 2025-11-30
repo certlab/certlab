@@ -646,6 +646,17 @@ export type PracticeTest = typeof practiceTests.$inferSelect;
 export type InsertPracticeTestAttempt = z.infer<typeof insertPracticeTestAttemptSchema>;
 export type PracticeTestAttempt = typeof practiceTestAttempts.$inferSelect;
 
+// Marketplace purchase type (client-side only, no DB table)
+export type MarketplacePurchase = {
+  id: number;
+  userId: string;
+  materialId: string;
+  materialName: string;
+  materialType: string;
+  tokensCost: number;
+  purchasedAt: Date;
+};
+
 // User statistics type for dashboard
 export type UserStats = {
   totalQuizzes: number;
