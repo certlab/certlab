@@ -556,7 +556,7 @@ export async function seedInitialData(): Promise<void> {
     id: 14,
     name: 'Question Crusher',
     description: 'Answer 50 questions correctly',
-    icon: '🎯',
+    icon: '✅',
     category: 'mastery',
     requirement: { type: 'questions_answered', value: 50 },
     color: 'green',

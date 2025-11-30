@@ -15,6 +15,7 @@
  * - `lectures_read`: Number of lectures read
  * - `high_score`: Achieving a specific score threshold
  * - `questions_answered`: Total questions answered correctly
+ * - `total_points`: Total gamification points earned
  *
  * ## Usage
  *
@@ -60,8 +61,6 @@ const POINTS_CONFIG = {
   PASSING_BONUS: 25,
   /** Bonus points for perfect score */
   PERFECT_SCORE_BONUS: 50,
-  /** Points multiplier per streak day (max 7x) */
-  STREAK_MULTIPLIER_MAX: 7,
   /** Points needed per level (level * this value) */
   POINTS_PER_LEVEL: 100,
 };
@@ -289,9 +288,6 @@ class AchievementService {
           // Check if user has achieved a specific score threshold
           const highScores = completedQuizzes.filter((q) => (q.score || 0) >= requirement.value);
           earned = highScores.length > 0;
-          progress = earned
-            ? 100
-            : Math.min(99, Math.round(((quiz.score || 0) / requirement.value) * 100));
           break;
 
         case 'questions_answered':

@@ -100,18 +100,22 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
       const completedQuiz = await clientStorage.submitQuiz(quizId, quizAnswers);
 
       // Process achievements after quiz completion
+      // Wrapped in try-catch to ensure quiz submission succeeds even if achievement processing fails
+      let achievementResult = null;
       if (completedQuiz.userId) {
-        const achievementResult = await achievementService.processQuizCompletion(
-          completedQuiz.userId,
-          completedQuiz,
-          completedQuiz.tenantId
-        );
-
-        // Return both quiz and achievement results
-        return { quiz: completedQuiz, achievements: achievementResult };
+        try {
+          achievementResult = await achievementService.processQuizCompletion(
+            completedQuiz.userId,
+            completedQuiz,
+            completedQuiz.tenantId
+          );
+        } catch (error) {
+          console.error('Failed to process achievements:', error);
+          // Achievement processing failed, but quiz submission succeeded
+        }
       }
 
-      return { quiz: completedQuiz, achievements: null };
+      return { quiz: completedQuiz, achievements: achievementResult };
     },
     onSuccess: (result) => {
       // Invalidate user-related queries using the quiz's userId if available
