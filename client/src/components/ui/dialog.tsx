@@ -38,7 +38,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed z-50 grid w-full gap-4 border bg-background p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+        'fixed z-50 grid w-full gap-4 border-2 border-primary/20 bg-card p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-xl ring-1 ring-primary/10 duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         'inset-0 h-full max-h-screen overflow-y-auto pt-[calc(1.5rem+env(safe-area-inset-top))]',
         'sm:inset-auto sm:left-[50%] sm:top-[50%] sm:h-auto sm:max-h-[85vh] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:pt-6 sm:pb-6 data-[state=closed]:sm:zoom-out-95 data-[state=open]:sm:zoom-in-95 data-[state=closed]:sm:slide-out-to-left-1/2 data-[state=closed]:sm:slide-out-to-top-[48%] data-[state=open]:sm:slide-in-from-left-1/2 data-[state=open]:sm:slide-in-from-top-[48%]',
         className
@@ -56,7 +56,13 @@ const DialogContent = React.forwardRef<
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col space-y-1.5 text-center sm:text-left', className)} {...props} />
+  <div
+    className={cn(
+      'flex flex-col space-y-1.5 text-center sm:text-left pb-4 border-b border-primary/10',
+      className
+    )}
+    {...props}
+  />
 );
 DialogHeader.displayName = 'DialogHeader';
 
@@ -74,7 +80,10 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn('text-lg font-semibold leading-none tracking-tight', className)}
+    className={cn(
+      'text-lg font-semibold leading-none tracking-tight text-card-foreground',
+      className
+    )}
     {...props}
   />
 ));
