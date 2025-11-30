@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -10,18 +9,15 @@ import { useAuth } from '@/lib/auth-provider';
 import TenantSwitcher from '@/components/TenantSwitcher';
 import {
   Menu,
-  Search,
   Home,
   BookOpen,
   Trophy,
   Settings,
   ChevronRight,
   X,
+  Zap,
   Target,
   BarChart3,
-  Crown,
-  Star,
-  Sparkles,
   Building,
   ShoppingCart,
 } from 'lucide-react';
@@ -48,7 +44,6 @@ export default function MobileNavigationEnhanced() {
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin';
 
@@ -133,18 +128,6 @@ export default function MobileNavigationEnhanced() {
       : []),
   ];
 
-  // Filter items based on search query
-  const filteredSections = navigationSections
-    .map((section) => ({
-      ...section,
-      items: section.items.filter(
-        (item) =>
-          item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      ),
-    }))
-    .filter((section) => section.items.length > 0);
-
   const handleItemClick = (href: string, comingSoon?: boolean) => {
     if (comingSoon) return;
     setIsOpen(false);
@@ -205,27 +188,10 @@ export default function MobileNavigationEnhanced() {
             )}
           </SheetHeader>
 
-          {/* Search */}
-          <div className="p-4 border-b">
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <Input
-                placeholder="Search navigation..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-10"
-                aria-label="Search navigation"
-              />
-            </div>
-          </div>
-
           {/* Navigation sections */}
           <ScrollArea className="flex-1">
             <div className="p-4 space-y-4">
-              {filteredSections.map((section) => (
+              {navigationSections.map((section) => (
                 <div key={section.id}>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
@@ -312,7 +278,7 @@ export default function MobileNavigationEnhanced() {
                     </div>
                   )}
 
-                  {section.id !== filteredSections[filteredSections.length - 1].id && (
+                  {section.id !== navigationSections[navigationSections.length - 1].id && (
                     <Separator className="my-3" />
                   )}
                 </div>

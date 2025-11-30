@@ -8,7 +8,6 @@ import {
   Settings,
   Shield,
   ChevronDown,
-  Search,
   Target,
   GraduationCap,
   Coins,
@@ -16,7 +15,6 @@ import {
 import { cn, getInitials, getUserDisplayName } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sidebar,
@@ -92,7 +90,6 @@ export function AppSidebar() {
     Learning: true,
     Progress: true,
   });
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Get token balance
   const { data: tokenData } = useQuery<{ balance: number }>({
@@ -118,17 +115,6 @@ export function AppSidebar() {
     return location.startsWith(path);
   };
 
-  // Filter navigation items based on search
-  const filteredItems = searchQuery
-    ? navigationItems.filter((item) => {
-        const matchesTitle = item.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesSubItems = item.items?.some((subItem) =>
-          subItem.title.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        return matchesTitle || matchesSubItems;
-      })
-    : navigationItems;
-
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -146,18 +132,6 @@ export function AppSidebar() {
         <div className="mt-3">
           <TenantSwitcher />
         </div>
-
-        {/* Search */}
-        <div className="mt-3 relative">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl bg-muted pl-9 pr-4 py-2"
-          />
-        </div>
       </SidebarHeader>
 
       <SidebarContent>
@@ -165,7 +139,7 @@ export function AppSidebar() {
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {filteredItems.map((item) => (
+                {navigationItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     {item.items ? (
                       <>
@@ -189,23 +163,17 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                         {expandedItems[item.title] && (
                           <SidebarMenuSub>
-                            {item.items
-                              .filter((subItem) =>
-                                searchQuery
-                                  ? subItem.title.toLowerCase().includes(searchQuery.toLowerCase())
-                                  : true
-                              )
-                              .map((subItem) => (
-                                <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton
-                                    onClick={() => setLocation(subItem.url)}
-                                    isActive={isPathActive(subItem.url)}
-                                    className="cursor-pointer rounded-lg"
-                                  >
-                                    {subItem.title}
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              ))}
+                            {item.items.map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.title}>
+                                <SidebarMenuSubButton
+                                  onClick={() => setLocation(subItem.url)}
+                                  isActive={isPathActive(subItem.url)}
+                                  className="cursor-pointer rounded-lg"
+                                >
+                                  {subItem.title}
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
                           </SidebarMenuSub>
                         )}
                       </>

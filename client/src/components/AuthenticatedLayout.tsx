@@ -1,12 +1,11 @@
 import { ReactNode, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Search, Settings } from 'lucide-react';
+import { Bell, Settings } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-provider';
 import { RightSidebarProvider, useRightSidebar } from '@/lib/right-sidebar-provider';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/AppSidebar';
 import { RightSidebar } from '@/components/RightSidebar';
@@ -45,12 +44,6 @@ function AuthenticatedHeader() {
         <h1 className="text-xl font-semibold">Cert Lab</h1>
 
         <div className="flex items-center gap-3">
-          {/* TODO: Search functionality - currently a placeholder for future implementation */}
-          <div className="hidden md:block relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input type="search" placeholder="Search..." className="w-[200px] rounded-xl pl-9" />
-          </div>
-
           {/* Settings/Theme Toggle - Opens right sidebar */}
           <Tooltip>
             <TooltipTrigger asChild>
