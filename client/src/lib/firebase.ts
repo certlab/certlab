@@ -96,7 +96,8 @@ export function getFirebaseAuth(): Auth {
 export async function signInWithGoogle(): Promise<UserCredential> {
   if (!auth || !googleProvider) {
     throw new Error(
-      'Firebase is not initialized. Ensure VITE_FIREBASE_* environment variables are set.'
+      'Firebase is not initialized. Please set the required environment variables: ' +
+        'VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, and VITE_FIREBASE_PROJECT_ID.'
     );
   }
 

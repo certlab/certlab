@@ -781,7 +781,13 @@ class ClientAuth {
       // Set as current user
       await clientStorage.setCurrentUserId(user.id);
 
-      // Set session timestamp (Google accounts are treated similar to password-less)
+      // Set session timestamp for Google accounts.
+      // Google-authenticated users are treated similarly to password-less accounts with a 24-hour
+      // session timeout because:
+      // 1. No local password is stored for Google accounts (passwordHash is null)
+      // 2. Google manages the actual authentication state server-side
+      // 3. The 24-hour timeout provides a reasonable balance between security and convenience
+      // 4. Users can always re-authenticate quickly via Google popup if the session expires
       await this.setSessionTimestamp(true);
 
       // Return without password hash
