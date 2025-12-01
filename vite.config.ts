@@ -1,28 +1,27 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
-import { getBasePath } from "./shared/env";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'path';
+import { getBasePath } from './shared/env';
 
 export default defineConfig({
-  plugins: [
-    react(),
-  ],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+      '@': path.resolve(import.meta.dirname, 'client', 'src'),
+      '@shared': path.resolve(import.meta.dirname, 'shared'),
+      '@assets': path.resolve(import.meta.dirname, 'attached_assets'),
     },
   },
-  root: path.resolve(import.meta.dirname, "client"),
+  root: path.resolve(import.meta.dirname, 'client'),
   // Base path for GitHub Pages deployment
   // Set VITE_BASE_PATH environment variable to override (e.g., for forks or different repo names)
   // Default production path assumes repository name is 'certlab'
   // For root domain deployment (e.g., custom domain), set VITE_BASE_PATH='/'
   base: getBasePath(),
-  publicDir: path.resolve(import.meta.dirname, "client", "public"),
+  publicDir: path.resolve(import.meta.dirname, 'client', 'public'),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist"),
+    outDir: path.resolve(import.meta.dirname, 'dist'),
     emptyOutDir: true,
     rollupOptions: {
       output: {
@@ -71,7 +70,7 @@ export default defineConfig({
     port: 5000,
     fs: {
       strict: true,
-      deny: ["**/.*"],
+      deny: ['**/.*'],
     },
   },
 });
