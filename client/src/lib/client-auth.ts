@@ -734,9 +734,12 @@ class ClientAuth {
       if (user) {
         // User exists, update profile image if changed
         if (firebaseUser.photoURL && user.profileImageUrl !== firebaseUser.photoURL) {
-          user = await clientStorage.updateUser(user.id, {
+          const updatedUser = await clientStorage.updateUser(user.id, {
             profileImageUrl: firebaseUser.photoURL,
           });
+          if (updatedUser) {
+            user = updatedUser;
+          }
         }
 
         // Log Google sign-in for existing user
