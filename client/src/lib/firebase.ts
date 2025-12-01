@@ -30,6 +30,10 @@ import {
 } from 'firebase/auth';
 
 // Firebase configuration from environment variables
+// NOTE: These values are intentionally bundled into the client-side JavaScript.
+// Firebase API keys are designed to be used client-side and are safe to expose publicly.
+// Firebase Security Rules (configured in Firebase Console) protect actual data access.
+// See: https://firebase.google.com/docs/projects/api-keys
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',

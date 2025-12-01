@@ -20,7 +20,7 @@ import { Separator } from '@/components/ui/separator';
  */
 function GoogleIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24">
+    <svg className={className} viewBox="0 0 24 24" role="img" aria-label="Google logo">
       <path
         fill="#4285F4"
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -60,12 +60,13 @@ export default function Login() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [availableAccounts, setAvailableAccounts] = useState<StoredUser[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<StoredUser | null>(null);
-  const [isGoogleAuthAvailable, setIsGoogleAuthAvailable] = useState(false);
+  // Check Google auth availability once at initialization since it depends on build-time env vars
+  const [isGoogleAuthAvailable] = useState(() => clientAuth.isGoogleAuthAvailable());
   const { toast } = useToast();
   const { isAuthenticated, refreshUser } = useAuth();
   const [, setLocation] = useLocation();
 
-  // Check if Google auth is available and load accounts on mount
+  // Load accounts on mount
   useEffect(() => {
     const loadAccounts = async () => {
       try {
@@ -77,9 +78,6 @@ export default function Login() {
       }
     };
     loadAccounts();
-
-    // Check if Google auth is configured
-    setIsGoogleAuthAvailable(clientAuth.isGoogleAuthAvailable());
   }, []);
 
   // Check if manually entered email matches a password-less account

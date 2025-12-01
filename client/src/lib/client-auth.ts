@@ -740,7 +740,7 @@ class ClientAuth {
         }
 
         // Log Google sign-in for existing user
-        logSecurityEvent('GOOGLE_LOGIN_SUCCESS', {
+        logSecurityEvent('GOOGLE_SIGN_IN_SUCCESS', {
           userId: user?.id,
           email: firebaseUser.email,
           isNewUser: false,
@@ -761,8 +761,8 @@ class ClientAuth {
           tenantId: 1,
         });
 
-        // Log Google registration
-        logSecurityEvent('GOOGLE_REGISTRATION_SUCCESS', {
+        // Log Google sign-up for new user
+        logSecurityEvent('GOOGLE_SIGN_UP_SUCCESS', {
           userId: user.id,
           email: firebaseUser.email,
           isNewUser: true,
@@ -788,6 +788,9 @@ class ClientAuth {
       // 2. Google manages the actual authentication state server-side
       // 3. The 24-hour timeout provides a reasonable balance between security and convenience
       // 4. Users can always re-authenticate quickly via Google popup if the session expires
+      // Security note: Since Google-authenticated users do not have a local password and rely on
+      // Google's authentication state, clearing browser data (cookies, local storage, IndexedDB)
+      // or using a different device will require re-authentication with Google.
       await this.setSessionTimestamp(true);
 
       // Return without password hash
