@@ -112,7 +112,8 @@ export async function signInWithGoogle(): Promise<UserCredential> {
     // Provide detailed error messages based on Firebase error codes
     if (error instanceof Error) {
       const errorMessage = error.message.toLowerCase();
-      const errorCode = (error as any).code;
+      // Firebase errors have a 'code' property we can check
+      const errorCode = 'code' in error ? (error as { code: string }).code : undefined;
 
       // Log the full error for debugging
       console.error('[Firebase] Google sign-in error:', {
