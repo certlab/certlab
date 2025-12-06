@@ -109,8 +109,66 @@ export async function signInWithGoogle(): Promise<UserCredential> {
     const result = await signInWithPopup(auth, googleProvider);
     return result;
   } catch (error) {
-    // Re-throw with more context
+    // Provide detailed error messages based on Firebase error codes
     if (error instanceof Error) {
+      const errorMessage = error.message.toLowerCase();
+      const errorCode = (error as any).code;
+
+      // Log the full error for debugging
+      console.error('[Firebase] Google sign-in error:', {
+        code: errorCode,
+        message: error.message,
+        config: {
+          apiKey: firebaseConfig.apiKey ? '(set)' : '(not set)',
+          authDomain: firebaseConfig.authDomain,
+          projectId: firebaseConfig.projectId,
+        },
+      });
+
+      // Provide user-friendly error messages based on error codes
+      if (
+        errorCode === 'auth/unauthorized-domain' ||
+        errorMessage.includes('unauthorized-domain')
+      ) {
+        throw new Error(
+          `This domain is not authorized for Google Sign-In. ` +
+            `Please add "${window.location.hostname}" to the authorized domains in Firebase Console ` +
+            `(Authentication > Settings > Authorized domains).`
+        );
+      }
+
+      if (
+        errorCode === 'auth/operation-not-allowed' ||
+        errorMessage.includes('operation-not-allowed')
+      ) {
+        throw new Error(
+          'Google Sign-In is not enabled in Firebase Console. ' +
+            'Please enable it in Authentication > Sign-in method > Google.'
+        );
+      }
+
+      if (errorCode === 'auth/popup-blocked' || errorMessage.includes('popup-blocked')) {
+        throw new Error(
+          'Sign-in popup was blocked by your browser. ' +
+            'Please allow popups for this site and try again.'
+        );
+      }
+
+      if (errorCode === 'auth/popup-closed-by-user' || errorMessage.includes('popup-closed')) {
+        throw new Error('Google sign-in was cancelled.');
+      }
+
+      if (errorCode === 'auth/network-request-failed' || errorMessage.includes('network')) {
+        throw new Error(
+          'Network error occurred. Please check your internet connection and try again.'
+        );
+      }
+
+      if (errorCode === 'auth/invalid-api-key' || errorMessage.includes('api-key')) {
+        throw new Error('Firebase API key is invalid. Please check the Firebase configuration.');
+      }
+
+      // For other errors, include the original message
       throw new Error(`Google sign-in failed: ${error.message}`);
     }
     throw error;

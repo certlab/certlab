@@ -802,20 +802,23 @@ class ClientAuth {
     } catch (error) {
       logError('signInWithGoogle', error);
 
-      // Handle specific Firebase errors
+      // Handle specific Firebase errors with detailed messages
       if (error instanceof Error) {
-        const errorMessage = error.message.toLowerCase();
-        if (errorMessage.includes('popup-closed-by-user') || errorMessage.includes('cancelled')) {
+        const errorMessage = error.message;
+
+        // Return specific Firebase error messages directly
+        // These are already user-friendly from firebase.ts
+        if (
+          errorMessage.includes('domain is not authorized') ||
+          errorMessage.includes('not enabled in Firebase') ||
+          errorMessage.includes('popup was blocked') ||
+          errorMessage.includes('API key is invalid') ||
+          errorMessage.includes('cancelled') ||
+          errorMessage.includes('Network error')
+        ) {
           return {
             success: false,
-            message: 'Google sign-in was cancelled.',
-            errorCode: AuthErrorCode.LOGIN_FAILED,
-          };
-        }
-        if (errorMessage.includes('network')) {
-          return {
-            success: false,
-            message: 'Network error. Please check your connection and try again.',
+            message: errorMessage,
             errorCode: AuthErrorCode.LOGIN_FAILED,
           };
         }
@@ -826,11 +829,14 @@ class ClientAuth {
         return { success: false, message: authError.message, errorCode: authError.code };
       }
 
-      const authError = new AuthError(AuthErrorCode.LOGIN_FAILED);
+      // For any other errors, include the original error message if available
+      const errorMsg =
+        error instanceof Error ? error.message : 'Failed to sign in with Google. Please try again.';
+
       return {
         success: false,
-        message: 'Failed to sign in with Google. Please try again.',
-        errorCode: authError.code,
+        message: errorMsg,
+        errorCode: AuthErrorCode.LOGIN_FAILED,
       };
     }
   }
