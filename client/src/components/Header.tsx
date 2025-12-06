@@ -64,13 +64,14 @@ export default function Header() {
         title: 'Signed out successfully',
         description: 'You have been logged out of your account.',
       });
-      // Note: logout() handles the redirect to the production URL
     } catch (error) {
       toast({
         title: 'Signed out',
         description: 'You have been logged out of your account.',
       });
-      // Note: logout() handles the redirect to the production URL
+    } finally {
+      // Navigate to home page after logout (client-side navigation, no page reload)
+      setLocation('/');
     }
   };
 

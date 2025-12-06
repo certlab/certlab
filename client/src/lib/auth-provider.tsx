@@ -46,26 +46,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadUser]);
 
   const logout = useCallback(async () => {
-    // Construct the logout redirect URL dynamically based on environment configuration
-    // Uses BASE_URL from vite.config.ts combined with current origin
-    const logoutUrl = window.location.origin + (import.meta.env.BASE_URL || '/');
-
-    // Delay before redirect to allow toast notifications to be visible
-    const LOGOUT_DELAY_MS = 1000;
-
     try {
       const result = await clientAuth.logout();
       if (!result.success) {
         logError('logout', new Error(result.message || 'Logout failed'));
       }
       setUser(null);
-      // Wait briefly to allow any toast notifications to be visible
-      await new Promise((resolve) => setTimeout(resolve, LOGOUT_DELAY_MS));
     } catch (error) {
       logError('logout', error);
-    } finally {
-      // Always redirect to the landing page, even on error
-      window.location.href = logoutUrl;
     }
   }, []);
 

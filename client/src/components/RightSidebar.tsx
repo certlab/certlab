@@ -85,7 +85,6 @@ function UserPanel() {
         title: 'Signed out successfully',
         description: 'You have been logged out of your account.',
       });
-      closePanel();
     } catch (error) {
       console.error('Error during sign out:', error);
       toast({
@@ -93,6 +92,10 @@ function UserPanel() {
         description:
           'You have been logged out locally, but there was a problem completing the sign out process.',
       });
+    } finally {
+      closePanel();
+      // Navigate to home page after logout (client-side navigation, no page reload)
+      setLocation('/');
     }
   };
 
