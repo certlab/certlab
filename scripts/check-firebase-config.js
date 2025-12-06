@@ -31,6 +31,19 @@ console.log('━'.repeat(60));
 let hasErrors = false;
 let hasWarnings = false;
 
+/**
+ * Mask a sensitive value for display
+ * Shows first 8 and last 4 characters, masks the middle
+ */
+function maskValue(value) {
+  if (value.length <= 12) {
+    // For short values, just show first 8 chars
+    return value.substring(0, 8) + '...';
+  }
+  // For longer values, show first 8 and last 4
+  return value.substring(0, 8) + '...' + value.substring(value.length - 4);
+}
+
 // Check required variables
 console.log('\n📋 Required Variables:\n');
 requiredVars.forEach(varName => {
@@ -39,9 +52,7 @@ requiredVars.forEach(varName => {
     console.log(`❌ ${varName}: NOT SET`);
     hasErrors = true;
   } else {
-    // Mask the value for security
-    const maskedValue = value.substring(0, 8) + '...' + value.substring(value.length - 4);
-    console.log(`✅ ${varName}: ${maskedValue}`);
+    console.log(`✅ ${varName}: ${maskValue(value)}`);
     
     // Basic validation
     if (varName === 'VITE_FIREBASE_API_KEY') {
@@ -67,10 +78,7 @@ optionalVars.forEach(varName => {
   if (!value || value.trim() === '') {
     console.log(`⚪ ${varName}: NOT SET (optional)`);
   } else {
-    const maskedValue = value.length > 20 
-      ? value.substring(0, 8) + '...' + value.substring(value.length - 4)
-      : value.substring(0, 8) + '...';
-    console.log(`✅ ${varName}: ${maskedValue}`);
+    console.log(`✅ ${varName}: ${maskValue(value)}`);
   }
 });
 

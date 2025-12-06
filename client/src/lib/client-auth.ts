@@ -804,21 +804,21 @@ class ClientAuth {
 
       // Handle specific Firebase errors with detailed messages
       if (error instanceof Error) {
-        const errorMessage = error.message;
+        const userMessage = error.message;
 
         // Return specific Firebase error messages directly
         // These are already user-friendly from firebase.ts
         if (
-          errorMessage.includes('domain is not authorized') ||
-          errorMessage.includes('not enabled in Firebase') ||
-          errorMessage.includes('popup was blocked') ||
-          errorMessage.includes('API key is invalid') ||
-          errorMessage.includes('cancelled') ||
-          errorMessage.includes('Network error')
+          userMessage.includes('domain is not authorized') ||
+          userMessage.includes('not enabled in Firebase') ||
+          userMessage.includes('popup was blocked') ||
+          userMessage.includes('API key is invalid') ||
+          userMessage.includes('cancelled') ||
+          userMessage.includes('Network error')
         ) {
           return {
             success: false,
-            message: errorMessage,
+            message: userMessage,
             errorCode: AuthErrorCode.LOGIN_FAILED,
           };
         }
