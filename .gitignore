@@ -6,3 +6,15 @@ vite.config.ts.*
 *.tar.gz
 coverage
 .firebase
+
+# Firebase debug logs
+*-debug.log
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.runtimeconfig.json
+
+# Environment files
+.env
+.env.local
+.env.production

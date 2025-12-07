@@ -20,6 +20,12 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "deploy:firebase": "npm run build:firebase && firebase deploy --only hosting",
+    "deploy:firestore:rules": "firebase deploy --only firestore:rules",
+    "deploy:firestore:indexes": "firebase deploy --only firestore:indexes",
+    "deploy:firestore": "firebase deploy --only firestore",
+    "deploy:all": "npm run build:firebase && firebase deploy",
+    "emulators:start": "firebase emulators:start",
+    "emulators:exec": "firebase emulators:exec",
     "prepare": "husky"
   },
   "lint-staged": {
