@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { 
-  buildEnvSchema, 
-  serverEnvSchema, 
-  validateBuildEnv, 
+import {
+  buildEnvSchema,
+  serverEnvSchema,
+  validateBuildEnv,
   validateServerEnv,
   getBasePath,
-  requireDatabaseUrl 
+  requireDatabaseUrl,
 } from './env';
 
 describe('Environment validation schemas', () => {
@@ -109,7 +109,7 @@ describe('Environment validation functions', () => {
     it('should return validated build environment', () => {
       process.env.VITE_BASE_PATH = '/test/';
       process.env.NODE_ENV = 'production';
-      
+
       const result = validateBuildEnv();
       expect(result.VITE_BASE_PATH).toBe('/test/');
       expect(result.NODE_ENV).toBe('production');
@@ -118,7 +118,7 @@ describe('Environment validation functions', () => {
     it('should handle undefined environment variables', () => {
       delete process.env.VITE_BASE_PATH;
       delete process.env.NODE_ENV;
-      
+
       const result = validateBuildEnv();
       expect(result.VITE_BASE_PATH).toBeUndefined();
       expect(result.NODE_ENV).toBe('development');
@@ -128,14 +128,14 @@ describe('Environment validation functions', () => {
   describe('validateServerEnv', () => {
     it('should return validated server environment with defaults', () => {
       delete process.env.APP_URL;
-      
+
       const result = validateServerEnv();
       expect(result.APP_URL).toBe('http://localhost:5000');
     });
 
     it('should preserve valid APP_URL', () => {
       process.env.APP_URL = 'https://example.com';
-      
+
       const result = validateServerEnv();
       expect(result.APP_URL).toBe('https://example.com');
     });
@@ -145,28 +145,28 @@ describe('Environment validation functions', () => {
     it('should return VITE_BASE_PATH if set', () => {
       process.env.VITE_BASE_PATH = '/custom/';
       process.env.NODE_ENV = 'production';
-      
+
       expect(getBasePath()).toBe('/custom/');
     });
 
-    it('should return /certlab/ in production without VITE_BASE_PATH', () => {
+    it('should return / in production without VITE_BASE_PATH (Firebase default)', () => {
       delete process.env.VITE_BASE_PATH;
       process.env.NODE_ENV = 'production';
-      
-      expect(getBasePath()).toBe('/certlab/');
+
+      expect(getBasePath()).toBe('/');
     });
 
     it('should return / in development without VITE_BASE_PATH', () => {
       delete process.env.VITE_BASE_PATH;
       delete process.env.NODE_ENV;
-      
+
       expect(getBasePath()).toBe('/');
     });
 
     it('should return / in test environment without VITE_BASE_PATH', () => {
       delete process.env.VITE_BASE_PATH;
       process.env.NODE_ENV = 'test';
-      
+
       expect(getBasePath()).toBe('/');
     });
   });
@@ -174,25 +174,25 @@ describe('Environment validation functions', () => {
   describe('requireDatabaseUrl', () => {
     it('should return DATABASE_URL when valid', () => {
       process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/db';
-      
+
       expect(requireDatabaseUrl()).toBe('postgresql://user:pass@localhost:5432/db');
     });
 
     it('should throw when DATABASE_URL is not set', () => {
       delete process.env.DATABASE_URL;
-      
+
       expect(() => requireDatabaseUrl()).toThrow('DATABASE_URL environment variable is required');
     });
 
     it('should throw when DATABASE_URL is empty', () => {
       process.env.DATABASE_URL = '';
-      
+
       expect(() => requireDatabaseUrl()).toThrow('DATABASE_URL environment variable is required');
     });
 
     it('should throw when DATABASE_URL is not a valid URL', () => {
       process.env.DATABASE_URL = 'not-a-url';
-      
+
       expect(() => requireDatabaseUrl()).toThrow('DATABASE_URL must be a valid URL');
     });
   });
