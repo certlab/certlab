@@ -1,17 +1,19 @@
-# CertLab - Client-Side Certification Learning Platform
+# CertLab - Certification Learning Platform
 
-CertLab is a browser-based certification study platform that uses IndexedDB for local data storage. Study for certifications like CISSP, CISM, and more with adaptive quizzes, achievements, and progress tracking.
+CertLab is a modern certification study platform with optional cloud sync. Study for certifications like CISSP, CISM, and more with adaptive quizzes, achievements, and progress tracking.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🌟 Features
 
-- **Client-Side Storage**: All data stored in browser's IndexedDB - no server required
-- **Offline Capable**: Works completely offline after initial load  
+- **Hybrid Storage**: Local IndexedDB cache with optional Firebase cloud sync
+- **Offline-First**: Works completely offline after initial load
+- **Cloud Backup**: Optional account creation for multi-device sync and backup
+- **Firebase Authentication**: Secure sign-in with email/password or Google
 - **Adaptive Learning**: Quiz difficulty adapts to your performance
 - **Achievement System**: Earn badges and track your progress
 - **Multi-Tenancy**: Switch between different learning environments
-- **Study Groups**: Create and join study groups (local to your browser)
+- **Study Groups**: Create and join study groups
 - **Practice Tests**: Full-length practice exams
 - **Export/Import**: Backup and restore your data
 - **Theme Options**: Seven themes including dark mode
@@ -21,6 +23,7 @@ CertLab is a browser-based certification study platform that uses IndexedDB for 
 
 - [Quick Start](#-quick-start)
 - [Installation](#-installation)
+- [Firebase Setup](#-firebase-setup-optional)
 - [Architecture](#-architecture)
 - [Usage](#-usage)
 - [Deployment](#-deployment)
@@ -89,32 +92,55 @@ npm test
 ### First Time Setup
 
 1. Open the app in your browser
-2. Click "Get Started" to create an account
+2. Choose your mode:
+   - **Local-Only**: Click "Get Started" (no account needed)
+   - **Cloud Sync**: Click "Sign Up" to create a Firebase account
 3. Initial sample data (categories, questions, badges) will be automatically seeded
 4. Select your certification goals and start learning!
 
+### Firebase Setup (Optional)
+
+For cloud sync and multi-device access, set up Firebase:
+
+1. **Create Firebase Project**: Follow [FIREBASE_SETUP.md](FIREBASE_SETUP.md)
+2. **Configure Environment**: Copy `.env.example` to `.env.local` and add your Firebase credentials
+3. **Deploy Rules**: Run `npm run deploy:firestore` to deploy security rules
+4. **Start Using**: Sign up in the app to enable cloud sync
+
+See [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for detailed instructions.
+
 ## 🏗️ Architecture
 
-### Client-Side Only
+### Hybrid Storage Model
 
-CertLab runs entirely in your browser using:
+CertLab uses a hybrid architecture supporting both local-only and cloud-sync modes:
 
 | Technology | Purpose |
 |------------|---------|
-| **React** | UI framework |
+| **React 18** | UI framework |
 | **TypeScript** | Type safety |
-| **IndexedDB** | Data persistence |
-| **TanStack Query** | State management |
+| **IndexedDB** | Local cache and offline storage |
+| **Firebase/Firestore** | Optional cloud sync and backup |
+| **Firebase Auth** | Optional authentication (email/Google) |
+| **TanStack Query** | State management and caching |
 | **Vite** | Build tool |
 | **TailwindCSS** | Styling |
 
-### No Backend Required
+### Storage Modes
 
-All features run locally:
-- Authentication is browser-based with SHA-256 password hashing
-- Data stays in your browser's IndexedDB
-- No API calls or server communication
-- Perfect for static hosting platforms like Firebase Hosting
+**Local-Only Mode** (default):
+- No account required
+- All data in browser's IndexedDB
+- Works completely offline
+- No cloud dependencies
+
+**Cloud Sync Mode** (optional):
+- Requires Firebase account
+- IndexedDB as local cache
+- Firestore as source of truth
+- Multi-device sync
+- Automatic cloud backup
+- Offline-first (queues changes when offline)
 
 ### Data Flow
 
@@ -194,11 +220,19 @@ For more details, see [TENANT_SWITCHING.md](TENANT_SWITCHING.md).
 
 ## 🔒 Security & Privacy
 
+### Local-Only Mode
 - **Local Only**: Your data never leaves your browser
-- **Password Hashing**: Passwords hashed using SHA-256 via Web Crypto API
+- **Password Hashing**: Passwords hashed using PBKDF2 via Web Crypto API
 - **No Tracking**: No analytics or external tracking
 - **Private**: Single-user per browser, no data sharing
 - **Offline**: Works completely without internet after initial load
+
+### Cloud Sync Mode (Optional)
+- **Firebase Auth**: Industry-standard authentication
+- **Firestore Security Rules**: Per-user data isolation
+- **Encryption**: TLS in transit, Google Cloud encryption at rest
+- **Privacy**: Your data is yours - not shared or sold
+- **Offline-First**: Works offline, syncs when online
 
 ## 🌐 Deployment
 
@@ -274,6 +308,8 @@ For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE
 
 | Document | Description |
 |----------|-------------|
+| [FIREBASE_SETUP.md](FIREBASE_SETUP.md) | Firebase configuration for cloud sync |
+| [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) | Migrate from local-only to cloud sync |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System design, data flow, and technical decisions |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute, code style, and PR process |
 | [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Detailed deployment instructions |
@@ -284,16 +320,29 @@ For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE
 
 ## ⚠️ Limitations
 
-As a client-side only application:
+### Local-Only Mode
 
 | Limitation | Description |
 |------------|-------------|
 | **Single User** | One user per browser/profile |
 | **Browser-Bound** | Data doesn't sync across devices |
 | **Local Storage** | Data tied to browser (can be cleared) |
+
+### Both Modes
+
+| Limitation | Description |
+|------------|-------------|
 | **No AI Features** | Original AI lecture generation removed |
 | **No Payments** | Credit system and payments removed |
-| **No Real-time Collaboration** | Study groups are local only |
+| **Study Groups** | Local to device (no real-time collaboration) |
+
+### Cloud Sync Benefits
+
+With Firebase/Firestore enabled:
+- ✅ Multi-device sync
+- ✅ Cloud backup
+- ✅ Data persistence across browser clears
+- ✅ Access from any device
 
 ## 🔄 Migration from Server Version
 
