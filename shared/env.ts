@@ -1,14 +1,14 @@
 /**
  * Environment variable validation using zod.
- * 
+ *
  * This module provides type-safe access to environment variables with
  * validation and sensible defaults where appropriate.
- * 
+ *
  * Build-time variables (VITE_*) are validated at build time.
  * Server-side variables are validated at runtime startup.
  */
 
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * URL validation schema (reused to avoid creating new instances).
@@ -22,8 +22,8 @@ const urlSchema = z.string().url();
 export const buildEnvSchema = z.object({
   /**
    * The base path for the application.
-   * Used for GitHub Pages deployment where the app is at /certlab/.
-   * Defaults to '/certlab/' in production, '/' in development.
+   * Used for deployment configuration.
+   * Defaults to '/' (root path) for Firebase Hosting.
    */
   VITE_BASE_PATH: z.string().optional(),
 
@@ -31,7 +31,7 @@ export const buildEnvSchema = z.object({
    * Node environment.
    * Used to determine build mode and defaults.
    */
-  NODE_ENV: z.enum(["development", "production", "test"]).optional().default("development"),
+  NODE_ENV: z.enum(['development', 'production', 'test']).optional().default('development'),
 });
 
 /**
@@ -57,7 +57,7 @@ export const serverEnvSchema = z.object({
    * Defaults to http://localhost:5000 if not set or empty.
    */
   APP_URL: z.preprocess(
-    (val) => (val === "" || val === undefined) ? "http://localhost:5000" : val,
+    (val) => (val === '' || val === undefined ? 'http://localhost:5000' : val),
     z.string().url()
   ),
 
@@ -100,7 +100,7 @@ export type ServerEnv = z.infer<typeof serverEnvSchema>;
 /**
  * Validates and returns build environment variables.
  * Used in vite.config.ts and build-time configuration.
- * 
+ *
  * @returns Validated build environment variables with defaults applied
  * @throws ZodError if validation fails
  */
@@ -109,14 +109,14 @@ export function validateBuildEnv(): BuildEnv {
     VITE_BASE_PATH: process.env.VITE_BASE_PATH,
     NODE_ENV: process.env.NODE_ENV,
   };
-  
+
   return buildEnvSchema.parse(env);
 }
 
 /**
  * Validates and returns server environment variables.
  * Used in server scripts and runtime configuration.
- * 
+ *
  * @returns Validated server environment variables with defaults applied
  * @throws ZodError if validation fails
  */
@@ -131,58 +131,57 @@ export function validateServerEnv(): ServerEnv {
     POLAR_ENTERPRISE_PRODUCT_ID: process.env.POLAR_ENTERPRISE_PRODUCT_ID,
     POLAR_WEBHOOK_SECRET: process.env.POLAR_WEBHOOK_SECRET,
   };
-  
+
   return serverEnvSchema.parse(env);
 }
 
 /**
  * Gets the base path for the application.
- * 
+ *
  * Priority:
  * 1. VITE_BASE_PATH environment variable if set
- * 2. '/certlab/' if NODE_ENV is 'production'
- * 3. '/' otherwise (development/test)
- * 
+ * 2. '/' (root path) as default for Firebase Hosting
+ *
  * @returns The base path for the application
  */
 export function getBasePath(): string {
   const env = validateBuildEnv();
-  
+
   if (env.VITE_BASE_PATH) {
     return env.VITE_BASE_PATH;
   }
-  
-  return env.NODE_ENV === "production" ? "/certlab/" : "/";
+
+  return '/';
 }
 
 /**
  * Validates that required database environment is present.
  * Throws a descriptive error if DATABASE_URL is missing or invalid.
- * 
+ *
  * @throws Error if DATABASE_URL is not set or is not a valid URL
  */
 export function requireDatabaseUrl(): string {
   const env = validateServerEnv();
   const databaseUrl = env.DATABASE_URL;
-  
+
   if (!databaseUrl) {
     throw new Error(
-      "DATABASE_URL environment variable is required.\n" +
-      "Please set it in your .env file or environment.\n" +
-      "See .env.example for the expected format."
+      'DATABASE_URL environment variable is required.\n' +
+        'Please set it in your .env file or environment.\n' +
+        'See .env.example for the expected format.'
     );
   }
-  
+
   // Validate it's a proper URL using the module-level schema
   const result = urlSchema.safeParse(databaseUrl);
-  
+
   if (!result.success) {
     throw new Error(
-      "DATABASE_URL must be a valid URL.\n" +
-      `Current value: ${databaseUrl}\n` +
-      "Expected format: postgresql://user:password@host:port/database"
+      'DATABASE_URL must be a valid URL.\n' +
+        `Current value: ${databaseUrl}\n` +
+        'Expected format: postgresql://user:password@host:port/database'
     );
   }
-  
+
   return databaseUrl;
 }

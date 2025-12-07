@@ -1,10 +1,5 @@
 name: Deploy to Firebase Hosting
 
-# Note: This workflow runs alongside deploy.yml (GitHub Pages).
-# Both workflows trigger on push to main, deploying to both platforms.
-# To deploy to only one platform, manually trigger the desired workflow
-# or remove/disable the workflow you don't need.
-
 on:
   push:
     branches:

@@ -2,13 +2,12 @@
 
 CertLab is a browser-based certification study platform that uses IndexedDB for local data storage. Study for certifications like CISSP, CISM, and more with adaptive quizzes, achievements, and progress tracking.
 
-[![Deploy to GitHub Pages](https://github.com/archubbuck/certlab/actions/workflows/deploy.yml/badge.svg)](https://github.com/archubbuck/certlab/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🌟 Features
 
 - **Client-Side Storage**: All data stored in browser's IndexedDB - no server required
-- **Offline Capable**: Works completely offline after initial load
+- **Offline Capable**: Works completely offline after initial load  
 - **Adaptive Learning**: Quiz difficulty adapts to your performance
 - **Achievement System**: Earn badges and track your progress
 - **Multi-Tenancy**: Switch between different learning environments
@@ -115,7 +114,7 @@ All features run locally:
 - Authentication is browser-based with SHA-256 password hashing
 - Data stays in your browser's IndexedDB
 - No API calls or server communication
-- Perfect for GitHub Pages hosting
+- Perfect for static hosting platforms like Firebase Hosting
 
 ### Data Flow
 
@@ -203,31 +202,9 @@ For more details, see [TENANT_SWITCHING.md](TENANT_SWITCHING.md).
 
 ## 🌐 Deployment
 
-### GitHub Pages (Recommended)
+### Firebase Hosting (Recommended)
 
-The app is configured for automatic deployment to GitHub Pages:
-
-1. Fork this repository
-2. Enable GitHub Pages in repository settings
-3. Set source to "GitHub Actions"
-4. Push to `main` branch - automatic deployment via GitHub Actions
-5. Access at `https://[username].github.io/certlab/`
-
-**For Forks/Different Repository Names:**
-
-Set the `VITE_BASE_PATH` environment variable:
-
-```bash
-# For a repository named "my-certlab"
-VITE_BASE_PATH=/my-certlab/ npm run build
-
-# For root domain (custom domain)
-VITE_BASE_PATH=/ npm run build
-```
-
-### Firebase Hosting
-
-CertLab supports deployment to Firebase Hosting as an alternative to GitHub Pages:
+CertLab is configured for automatic deployment to Firebase Hosting:
 
 **Automatic Deployment (GitHub Actions):**
 
@@ -260,12 +237,10 @@ For detailed Firebase deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYM
 
 | Platform | Build Command | Output Directory |
 |----------|--------------|------------------|
-| **Netlify** | `npm run build` | `dist` |
-| **Vercel** | `npm run build` | `dist` |
-| **Cloudflare Pages** | `npm run build` | `dist` |
 | **Firebase Hosting** | `npm run build:firebase` | `dist` |
-
-For custom domains, set `VITE_BASE_PATH=/` in your environment.
+| **Netlify** | `npm run build:firebase` | `dist` |
+| **Vercel** | `npm run build:firebase` | `dist` |
+| **Cloudflare Pages** | `npm run build:firebase` | `dist` |
 
 ### Manual Deployment
 
@@ -392,8 +367,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 Built for certification students worldwide who want a free, private, and offline-capable study tool.
 
 ---
-
-**Live Demo**: [https://archubbuck.github.io/certlab/](https://archubbuck.github.io/certlab/)
 
 **Report Issues**: [GitHub Issues](https://github.com/archubbuck/certlab/issues)
 

@@ -1,10 +1,11 @@
 # CertLab Deployment Guide
 
-## Quick Start for GitHub Pages
+## Quick Start for Firebase Hosting
 
 ### Prerequisites
-- GitHub repository with this code
-- GitHub Pages enabled (happens automatically with the workflow)
+- A Google account
+- A Firebase project (create at [console.firebase.google.com](https://console.firebase.google.com))
+- Firebase CLI (included as dev dependency)
 
 ### Automatic Deployment
 
@@ -15,13 +16,13 @@
 
 2. **GitHub Actions runs automatically**
    - Builds the application
-   - Deploys to GitHub Pages
-   - Available at `https://[username].github.io/certlab/`
+   - Deploys to Firebase Hosting
+   - Available at your Firebase Hosting URL
 
 3. **First-Time Setup**
-   - Go to repository **Settings** → **Pages**
-   - Set **Source** to: **GitHub Actions**
-   - Save (if not already set)
+   - Follow the Firebase setup instructions below
+   - Add required secrets to your GitHub repository
+   - Push to `main` branch to trigger deployment
 
 ### Manual Deployment
 
@@ -29,49 +30,17 @@ If you prefer manual deployment:
 
 ```bash
 # Build the application
-npm run build
+npm run build:firebase
 
 # The dist/ folder contains the static site
 # Upload to any static hosting service
 ```
 
-## Environment Variables
-
-### Base Path Configuration
-
-For different repository names:
-
-```bash
-# Set before building
-export VITE_BASE_PATH=/your-repo-name/
-npm run build
-```
-
-Or in GitHub Actions:
-```yaml
-- name: Build
-  run: npm run build
-  env:
-    VITE_BASE_PATH: /your-repo-name/
-```
-
-### Default Behavior
-- **Development**: Base path is `/`
-- **Production**: Base path is `/certlab/` (or VITE_BASE_PATH if set)
-
 ## Deployment Targets
 
-### GitHub Pages (Recommended)
-✅ Free hosting
-✅ Automatic HTTPS
-✅ GitHub Actions integration
-✅ CDN distribution
+### Firebase Hosting (Recommended)
 
-**URL**: `https://[username].github.io/[repo-name]/`
-
-### Firebase Hosting
-
-Firebase Hosting is an excellent alternative with fast global CDN and easy setup.
+Firebase Hosting provides fast global CDN and easy setup.
 
 ✅ Free tier available (10 GB storage, 360 MB/day transfer)
 ✅ Automatic HTTPS with SSL certificates
@@ -166,21 +135,19 @@ The configuration includes:
 
 ### Netlify
 1. Connect GitHub repository
-2. Build command: `npm run build`
+2. Build command: `npm run build:firebase`
 3. Publish directory: `dist`
-4. Set `VITE_BASE_PATH=/` for root domain
 
 ### Vercel
 1. Import GitHub repository
 2. Framework: Vite
-3. Build command: `npm run build`
+3. Build command: `npm run build:firebase`
 4. Output directory: `dist`
-5. Set `VITE_BASE_PATH=/` for root domain
 
 ### Custom Server
 ```bash
 # Build
-npm run build
+npm run build:firebase
 
 # Serve with any static server
 cd dist
@@ -255,7 +222,7 @@ npm run build
 ```
 
 ### Deployment Fails
-1. Check GitHub Pages is enabled
+1. Check Firebase configuration and secrets
 2. Verify workflow permissions
 3. Check Actions tab for errors
 
@@ -266,9 +233,9 @@ npm run build
 4. Check IndexedDB is available
 
 ### Routes Not Working
-- Ensure .nojekyll file is present
+- Check Firebase hosting configuration (firebase.json)
+- Verify SPA rewrite rules are in place
 - Check base path configuration
-- Verify GitHub Pages settings
 
 ### Data Not Persisting
 1. Check browser privacy settings

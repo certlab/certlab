@@ -14,10 +14,9 @@ export default defineConfig({
     },
   },
   root: path.resolve(import.meta.dirname, 'client'),
-  // Base path for GitHub Pages deployment
-  // Set VITE_BASE_PATH environment variable to override (e.g., for forks or different repo names)
-  // Default production path assumes repository name is 'certlab'
-  // For root domain deployment (e.g., custom domain), set VITE_BASE_PATH='/'
+  // Base path for deployment
+  // Firebase Hosting uses root path by default
+  // Set VITE_BASE_PATH environment variable to override if needed
   base: getBasePath(),
   publicDir: path.resolve(import.meta.dirname, 'client', 'public'),
   build: {

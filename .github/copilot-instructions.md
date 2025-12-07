@@ -11,7 +11,7 @@
 - **Framework**: React 18 with Vite
 - **Runtime**: Node.js 20.x (development), Browser (production)
 - **Package Manager**: npm (lockfile version 3)
-- **Hosting**: GitHub Pages at `/certlab/` base path
+- **Hosting**: Firebase Hosting
 
 ## Technology Stack
 
@@ -110,7 +110,7 @@ npm run test:run
 ```
 .env.example          # Environment variable template (not used for client-only deployment)
 .gitignore           # Excludes: node_modules, dist, .DS_Store, server/public, *.tar.gz
-.github/             # Contains workflows/deploy.yml for GitHub Pages deployment
+.github/             # Contains workflows/firebase-deploy.yml for Firebase Hosting deployment
 components.json      # Radix UI component configuration
 drizzle.config.ts    # Database config (legacy from server version, not used in client-only)
 package.json         # Dependencies and scripts
@@ -140,8 +140,6 @@ vite.config.ts       # Vite build configuration with path aliases
     /data/                 # Static data files
     /hooks/                # Custom React hooks
   /public/                 # Static assets
-    .nojekyll              # Required for GitHub Pages routing
-    404.html               # GitHub Pages fallback for client-side routing
 
 /server/                   # Legacy server code (not used in client-only version)
   *.ts                     # Server routes and logic (ignore for client-only deployments)
@@ -158,14 +156,14 @@ vite.config.ts       # Vite build configuration with path aliases
 
 /.github/
   /workflows/
-    deploy.yml             # GitHub Actions workflow for deployment
+    firebase-deploy.yml    # GitHub Actions workflow for Firebase deployment
 ```
 
 ### Key Configuration Files
 
 **vite.config.ts**:
 - Root set to `./client`
-- Base path: `/certlab/` in production, `/` in development
+- Base path: `/` (root) for Firebase Hosting
 - Can override with `VITE_BASE_PATH` environment variable
 - Path aliases: `@/` → `client/src/`, `@shared/` → `shared/`
 - Build output: `./dist/` at project root
@@ -184,25 +182,22 @@ vite.config.ts       # Vite build configuration with path aliases
 
 ## GitHub Actions Workflow
 
-**File**: `.github/workflows/deploy.yml`  
+**File**: `.github/workflows/firebase-deploy.yml`  
 **Trigger**: Push to `main` branch or manual dispatch  
 **Jobs**:
-1. **Build**:
+1. **Build and Deploy**:
    - Runs on: `ubuntu-latest`
    - Node.js: v20 (with npm cache)
-   - Steps: `npm ci` → `npm run build` → upload `dist/` as artifact
+   - Steps: `npm ci` → `npm run build:firebase` → deploy to Firebase Hosting
    - Environment: `NODE_ENV=production`
-2. **Deploy**:
-   - Deploys artifact to GitHub Pages
-   - URL: `https://archubbuck.github.io/certlab/`
 
 **To Replicate Locally**:
 ```bash
 # Clean install
 npm ci
 
-# Build with production environment
-NODE_ENV=production npm run build
+# Build for Firebase with production environment
+NODE_ENV=production npm run build:firebase
 
 # Verify dist/ folder contents
 ls -lh dist/
@@ -267,10 +262,9 @@ The app uses these stores (defined in `client/src/lib/indexeddb.ts`):
 - **Action**: Ignore server code unless working on legacy features or migration
 
 ### Base Path Configuration
-- **Issue**: App must work at `/certlab/` path (not root `/`)
-- **Configuration**: `vite.config.ts` sets base to `/certlab/` in production
-- **Workaround**: For forks or custom domains, set `VITE_BASE_PATH` environment variable
-- **Example**: `VITE_BASE_PATH=/my-repo/ npm run build`
+- **Default**: App uses root path `/` for Firebase Hosting
+- **Configuration**: `vite.config.ts` can be overridden with `VITE_BASE_PATH` environment variable
+- **Example**: `VITE_BASE_PATH=/my-path/ npm run build`
 
 ## Best Practices for Code Changes
 
@@ -302,10 +296,9 @@ The app uses these stores (defined in `client/src/lib/indexeddb.ts`):
 
 ### Common Pitfalls
 1. **Don't modify** `vite.config.ts` base path without understanding deployment impact
-2. **Don't remove** `.nojekyll` from `/client/public/` (breaks GitHub Pages routing)
-3. **Don't add** backend dependencies - this is a client-only app
-4. **Don't break** IndexedDB schema without migration plan
-5. **Don't commit** `dist/`, `node_modules/`, or `.env` files (already in .gitignore)
+2. **Don't add** backend dependencies - this is a client-only app
+3. **Don't break** IndexedDB schema without migration plan
+4. **Don't commit** `dist/`, `node_modules/`, or `.env` files (already in .gitignore)
 
 ## Path Aliases
 When importing, use these aliases:
@@ -320,7 +313,7 @@ import type { User } from '@shared/schema';
 
 ## Environment Variables
 **Client-side only** (no `.env` file needed for development):
-- `VITE_BASE_PATH` - Override base path (default: `/certlab/` in production)
+- `VITE_BASE_PATH` - Override base path (default: `/` for root deployment)
 - `NODE_ENV` - Set to `production` for production builds
 
 **Server-side** (in `.env.example`, not used for client-only deployment):
@@ -341,7 +334,7 @@ import type { User } from '@shared/schema';
 **Types**: `/shared/schema.ts`  
 **Config**: `vite.config.ts`, `tsconfig.json`, `tailwind.config.ts`, `vitest.config.ts`  
 
-**Deploy**: Push to `main` → GitHub Actions → GitHub Pages
+**Deploy**: Push to `main` → GitHub Actions → Firebase Hosting
 
 ---
 
@@ -363,4 +356,4 @@ import type { User } from '@shared/schema';
 
 **IndexedDB is critical**: Don't break the storage layer without a migration strategy.
 
-**Base path matters**: The app deploys to `/certlab/` on GitHub Pages. Don't change `vite.config.ts` base path without good reason.
+**Base path matters**: The app deploys to root path `/` on Firebase Hosting. Don't change `vite.config.ts` base path without good reason.

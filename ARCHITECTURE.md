@@ -27,7 +27,7 @@ CertLab is a **client-side only** web application designed for certification exa
 | **Runtime** | Browser (Chrome, Firefox, Safari, Edge) |
 | **Storage** | IndexedDB (browser storage) |
 | **Authentication** | Client-side, browser-based |
-| **Hosting** | Static file hosting (GitHub Pages) |
+| **Hosting** | Static file hosting (Firebase Hosting) |
 | **Offline Support** | Full offline capability after initial load |
 
 ## Architecture Diagram
@@ -294,12 +294,12 @@ See `hooks/useQuizState.ts` and `components/quiz/quizReducer.ts` for implementat
 
 ### Base Path Configuration
 
-For GitHub Pages deployment:
+For Firebase Hosting deployment:
 
 ```typescript
 // From vite.config.ts
-base: process.env.VITE_BASE_PATH || 
-      (process.env.NODE_ENV === 'production' ? '/certlab/' : '/')
+// Firebase Hosting uses root path
+base: process.env.VITE_BASE_PATH || '/'
 ```
 
 ## Multi-Tenancy
@@ -382,13 +382,13 @@ npm run test:coverage
 
 Test configuration is in `vitest.config.ts` with jsdom environment for React component testing.
 
-### Deployment (GitHub Pages)
+### Deployment (Firebase Hosting)
 
 ```yaml
-# .github/workflows/deploy.yml
+# .github/workflows/firebase-deploy.yml
 - npm ci
-- npm run build
-- Deploy ./dist to GitHub Pages
+- npm run build:firebase
+- Deploy ./dist to Firebase Hosting
 ```
 
 ## Key Design Decisions
@@ -399,7 +399,7 @@ Test configuration is in `vitest.config.ts` with jsdom environment for React com
 2. **Cost**: No server infrastructure needed
 3. **Offline**: Works completely offline
 4. **Simplicity**: No API complexity
-5. **Hosting**: Free hosting on GitHub Pages
+5. **Hosting**: Free hosting on Firebase Hosting
 
 ### Why IndexedDB?
 
