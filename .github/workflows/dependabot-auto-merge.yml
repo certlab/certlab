@@ -47,6 +47,8 @@ jobs:
 
       - name: Approve Dependabot PR
         # Approve the PR to help meet approval requirements if needed
+        # Note: This auto-approves safe updates (patches and dev-only minors)
+        # For production dependencies or major updates, manual review is still required
         if: steps.should-auto-merge.outputs.should-merge == 'true'
         run: gh pr review --approve "$PR_URL"
         env:

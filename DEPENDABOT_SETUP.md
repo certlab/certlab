@@ -101,6 +101,21 @@ Handles automated merging:
 3. **Grouped Updates**: Related packages updated together for compatibility
 4. **Manual Override**: Maintainers can always close or modify PRs
 5. **Audit Trail**: All merges logged in PR history with approval
+6. **Selective Auto-Approval**: Only safe updates (patches and dev-only minors) are auto-approved; production dependency minors and all major updates require manual review
+
+## Branch Protection (Optional)
+
+To enhance security, you can configure branch protection rules:
+
+1. Go to: Settings → Branches → Add branch protection rule
+2. Pattern: `main` (or your default branch)
+3. Enable: **Require status checks to pass before merging**
+4. Select required checks:
+   - `lint` (from lint.yml workflow)
+   - `build-and-deploy` (from firebase-deploy.yml workflow)
+5. Enable: **Require branches to be up to date before merging**
+
+**Note**: With branch protection, auto-merge will only proceed after all required checks pass. This is already the behavior with `gh pr merge --auto`, but branch protection provides an additional layer of enforcement.
 
 ## Monitoring
 
@@ -157,7 +172,7 @@ git push
 1. **Check workflow runs**: Actions → Dependabot Auto-Merge
 2. **Verify metadata**: PR should have Dependabot labels
 3. **Check permissions**: Workflow needs `contents: write` and `pull-requests: write`
-4. **CI status**: All checks must pass before merge
+4. **CI status**: All checks must pass before merge (see [Required Status Checks](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches#require-status-checks-before-merging))
 
 ### PR stuck in "auto-merge enabled" state
 
