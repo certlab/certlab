@@ -129,6 +129,35 @@ gh pr list --author "dependabot[bot]"
 gh pr view <PR_NUMBER> --json autoMergeRequest
 ```
 
+### Process Existing Dependabot PRs
+
+The auto-merge workflow automatically processes **new** Dependabot PRs and PRs that are updated. For PRs that were already open before this workflow was added, you have two options:
+
+**Option 1: Trigger via workflow_dispatch (Recommended)**
+
+1. Go to: Actions → Dependabot Auto-Merge → Run workflow
+2. Enter the PR number in the `pr_number` input field
+3. Click "Run workflow"
+
+The workflow will evaluate the PR and enable auto-merge if it meets the criteria.
+
+**Option 2: Close and reopen the PR**
+
+Dependabot allows you to close and reopen PRs by commenting:
+```bash
+# On the PR, comment:
+@dependabot reopen
+```
+
+This will trigger the `reopened` event and the workflow will process it automatically.
+
+**Option 3: Wait for updates**
+
+The workflow will automatically process existing PRs when:
+- Dependabot updates them (e.g., due to new commits to the base branch)
+- Dependabot rebases them (e.g., due to conflicts)
+- The dependencies are updated by Dependabot's schedule
+
 ### Disable Auto-Merge
 
 To disable auto-merge for a specific PR:
