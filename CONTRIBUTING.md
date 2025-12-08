@@ -11,6 +11,7 @@ Thank you for your interest in contributing to CertLab! This guide will help you
 - [Code Style Guidelines](#code-style-guidelines)
 - [Testing](#testing)
 - [Submitting Changes](#submitting-changes)
+- [Dependency Management](#dependency-management)
 - [Reporting Issues](#reporting-issues)
 
 ## Getting Started
@@ -287,6 +288,59 @@ Use conventional commit format:
 - PRs require review before merging
 - Address review comments promptly
 - Keep PRs focused and small when possible
+
+## Dependency Management
+
+### Dependabot Integration
+
+CertLab uses Dependabot for automated dependency updates with the following features:
+
+#### Dependency Grouping
+
+Dependencies are grouped by ecosystem to reduce the number of PRs:
+
+- **radix**: All `@radix-ui/*` packages
+- **testing**: Testing libraries (`@testing-library/*`, `vitest`, `jsdom`)
+- **typescript**: TypeScript and type definition packages
+- **build-tools**: Vite, esbuild, and build-related tools
+- **react**: React ecosystem packages
+- **linting**: ESLint, Prettier, and linting tools
+- **styling**: Tailwind CSS and PostCSS packages
+- **firebase**: Firebase SDK packages
+
+#### Automated Merge Policy
+
+Dependabot PRs are automatically merged when:
+
+1. **Patch updates** (e.g., `1.0.0` → `1.0.1`): All dependencies
+2. **Minor updates** (e.g., `1.0.0` → `1.1.0`): Development dependencies only
+3. **All CI checks pass**: Linting, type checking, and build must succeed
+
+**Manual review required for:**
+- Major version updates (e.g., `1.0.0` → `2.0.0`)
+- Minor updates to production dependencies
+
+#### How It Works
+
+1. Dependabot creates PRs weekly on Mondays
+2. The auto-merge workflow evaluates the update type
+3. Safe updates are automatically approved and merged after CI passes
+4. Major updates receive a comment alerting that manual review is needed
+
+### Updating Dependencies Manually
+
+If you need to update dependencies manually:
+
+```bash
+# Check for outdated packages
+npm outdated
+
+# Update a specific package
+npm update <package-name>
+
+# Update all packages (use with caution)
+npm update
+```
 
 ## Reporting Issues
 
