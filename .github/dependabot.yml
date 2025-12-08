@@ -25,12 +25,47 @@ updates:
           - "@testing-library/*"
           - "vitest"
           - "@vitest/*"
+          - "jsdom"
       # Group all TypeScript related packages
       typescript:
         patterns:
           - "typescript"
           - "@types/*"
           - "@typescript-eslint/*"
+      # Group all Vite and build tools
+      build-tools:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
+          - "esbuild"
+          - "tsx"
+      # Group all React ecosystem packages
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-*"
+      # Group all linting and formatting tools
+      linting:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "prettier"
+          - "lint-staged"
+      # Group all Tailwind and styling packages
+      styling:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+          - "tailwind-*"
+          - "postcss"
+          - "autoprefixer"
+      # Group all Firebase packages
+      firebase:
+        patterns:
+          - "firebase"
+          - "firebase-*"
 
   # GitHub Actions dependencies
   - package-ecosystem: "github-actions"
