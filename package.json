@@ -81,7 +81,7 @@
     "tailwind-merge": "^3.4.0",
     "tw-animate-css": "^1.2.5",
     "vaul": "^1.1.2",
-    "wouter": "^3.8.0",
+    "wouter": "^3.8.1",
     "zod": "^4.1.13"
   },
   "devDependencies": {
