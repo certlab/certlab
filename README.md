@@ -309,7 +309,6 @@ For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE
 | Document | Description |
 |----------|-------------|
 | [FIREBASE_SETUP.md](FIREBASE_SETUP.md) | Firebase configuration for cloud sync |
-| [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) | Migrate from local-only to cloud sync |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System design, data flow, and technical decisions |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute, code style, and PR process |
 | [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Detailed deployment instructions |

@@ -3,7 +3,7 @@
 This document tracks the implementation progress of Firebase/Firestore integration for CertLab.
 
 **Last Updated**: December 2024  
-**Implementation Phase**: Foundation Complete (70%)
+**Implementation Phase**: Foundation Complete (60%)
 
 ## 🎯 Implementation Overview
 
@@ -45,21 +45,6 @@ All foundational infrastructure is in place:
   - Email verification
   - Google OAuth (already existed)
 
-### Phase 3: Migration & Sync Logic (100% Complete)
-
-Complete migration system from IndexedDB to Firestore:
-
-- ✅ **Migration Service** (`client/src/lib/firestore-migration.ts`)
-  - User profile migration
-  - Quiz history migration
-  - Progress tracking migration
-  - Badge and achievement migration
-  - Game statistics migration
-  - Sync metadata tracking
-  - Idempotent operations (safe to run multiple times)
-  - Progress reporting
-  - Error handling and recovery
-
 ### Phase 8: Documentation (100% Complete)
 
 Comprehensive documentation for setup and usage:
@@ -73,15 +58,6 @@ Comprehensive documentation for setup and usage:
   - Emulator usage guide
   - Troubleshooting section
   - Security best practices
-
-- ✅ **Migration Guide** (`MIGRATION_GUIDE.md`)
-  - User-facing migration documentation
-  - Local-only vs cloud sync comparison
-  - Migration process explanation
-  - Data security and privacy
-  - Offline mode documentation
-  - FAQ section
-  - Troubleshooting
 
 - ✅ **Updated README.md**
   - Hybrid storage architecture explained
@@ -186,12 +162,6 @@ User-facing components for cloud sync:
   - Real-time connection indicator
   - Display in header or navigation
 
-- [ ] **Migration Modal**
-  - "Upload to Cloud" prompt for existing users
-  - Progress bar during migration
-  - Success/error messages
-  - Settings integration
-
 - [ ] **Settings Page Updates**
   - Cloud sync enable/disable toggle
   - Manual sync trigger button
@@ -251,11 +221,9 @@ Comprehensive testing:
 - [ ] **Unit Tests**
   - Test `firestore-service.ts` operations
   - Test `firestore-storage.ts` adapter
-  - Test migration logic
   - Mock Firestore for fast tests
 
 - [ ] **Integration Tests**
-  - Test IndexedDB → Firestore migration
   - Test two-way sync
   - Test offline/online transitions
   - Test conflict resolution
@@ -272,7 +240,6 @@ Comprehensive testing:
 |-------|--------|----------|----------|
 | 1. Infrastructure Setup | ✅ Complete | 100% | High |
 | 2. Service Layer | 🔴 Not Started | 0% | High |
-| 3. Migration & Sync | ✅ Complete | 100% | High |
 | 4. Authentication | 🟡 In Progress | 20% | High |
 | 5. UI Components | 🔴 Not Started | 0% | Medium |
 | 6. Storage Adapter | 🔴 Not Started | 0% | High |
@@ -280,7 +247,7 @@ Comprehensive testing:
 | 8. Documentation | ✅ Complete | 100% | High |
 | 9. Build & Config | ✅ Complete | 100% | High |
 
-**Overall Progress**: ~70% Foundation Complete
+**Overall Progress**: ~60% Foundation Complete
 
 ## 🎯 Next Steps
 
@@ -300,7 +267,6 @@ To get a minimal viable cloud sync implementation working:
 
 3. **Add Basic UI** (Phase 5)
    - Minimal sync indicator
-   - Simple migration prompt
    - Basic settings toggle
 
 4. **Implement Storage Routing** (Phase 6)
@@ -349,7 +315,7 @@ After MVP is working:
 
 - Local-only mode must continue to work
 - Existing users' IndexedDB data preserved
-- Migration is opt-in, not forced
+- Cloud sync is opt-in for new users
 - Clear communication about changes
 
 ## 📝 Implementation Notes
@@ -360,7 +326,6 @@ After MVP is working:
 client/src/lib/
 ├── firebase.ts              ✅ Auth (email/password/Google)
 ├── firestore-service.ts     ✅ Firestore CRUD operations
-├── firestore-migration.ts   ✅ IndexedDB → Firestore migration
 ├── firestore-storage.ts     ❌ TODO: IClientStorage implementation
 ├── client-storage.ts        ✅ Current IndexedDB implementation
 ├── storage-factory.ts       ❌ TODO: Backend selection
@@ -371,9 +336,10 @@ client/src/lib/
 
 1. **Hybrid Storage**: Keep IndexedDB + Firestore (not replace)
 2. **Offline-First**: IndexedDB cache for instant access
-3. **Opt-In**: Cloud sync is optional, not mandatory
+3. **Opt-In**: Cloud sync is optional for new users
 4. **Server Wins**: Firestore is source of truth for conflicts
 5. **Per-User Collections**: `/users/{userId}/` structure in Firestore
+6. **No Data Migration**: Users start fresh with cloud sync (no migrating existing IndexedDB data)
 
 ### Testing Strategy
 
