@@ -1,9 +1,11 @@
 /**
  * @deprecated This script is for legacy PostgreSQL data import only.
- * CertLab now uses Firebase/Firestore as its exclusive backend.
- * This script is maintained for historical reference but is not used in current deployments.
  * 
- * For Firebase data import, use the Data Import page in the application UI.
+ * CertLab no longer uses PostgreSQL. The app now uses IndexedDB for local storage
+ * with optional Firebase/Firestore integration (in development).
+ * 
+ * This script is maintained for historical reference only and is not used in
+ * current deployments. For data import, use the Data Import page in the application UI.
  */
 
 import { Pool } from '@neondatabase/serverless';
@@ -14,7 +16,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Database connection (PostgreSQL - legacy)
+// Database connection (PostgreSQL - legacy, no longer used)
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 console.log('=== AUTHENTIC QUESTION IMPORT SYSTEM ===');

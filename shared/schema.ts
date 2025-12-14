@@ -102,17 +102,17 @@ export function validateQuestionData(data: { options: unknown; correctAnswer: nu
 // Data Model Definitions
 // ============================================================================
 //
-// NOTE: These use drizzle-orm's pgTable for type inference only.
-// CertLab uses Firebase/Firestore as its backend, not PostgreSQL.
-// The pgTable definitions provide TypeScript types that are used by:
-// 1. IndexedDB implementation (local cache)
-// 2. Firestore service (cloud backend)
-// 3. Shared type definitions across the application
+// NOTE: These use drizzle-orm's pgTable for TypeScript type inference only.
+// CertLab currently uses IndexedDB as its primary storage, not PostgreSQL.
+// The pgTable definitions provide consistent TypeScript types used by:
+// 1. IndexedDB implementation (client/src/lib/indexeddb.ts)
+// 2. Shared type definitions across the application
+// 3. Future storage implementations (e.g., optional Firebase/Firestore integration)
 //
-// At runtime, no PostgreSQL connection is used.
+// At runtime, only IndexedDB is used for storage. No PostgreSQL connection exists.
 // ============================================================================
 
-// Session storage table (legacy - Firebase Auth handles sessions)
+// Session storage table (legacy - not used in current IndexedDB implementation)
 export const sessions = pgTable(
   'sessions',
   {

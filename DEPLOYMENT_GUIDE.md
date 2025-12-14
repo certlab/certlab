@@ -162,48 +162,42 @@ npx serve
 
 1. **Landing Page Loads**
    - Shows feature overview
-   - "Sign Up" button
+   - "Get Started" button
 
-2. **Firebase Registration**
-   - User creates Firebase account
-   - Credentials managed by Firebase Auth
-   - Secure password hashing via Firebase
+2. **Registration**
+   - User creates account
+   - Credentials stored in IndexedDB
+   - SHA-256 password hashing
 
 3. **Seed Data Auto-Loads**
    - 2 certification categories (CISSP, CISM)
    - 5 subcategories
    - 6 sample questions
    - 5 achievement badges
-   - Data stored in Firestore
-   - Cached locally in IndexedDB
+   - Version tracked (prevents duplicates)
 
 4. **Dashboard Access**
    - Full quiz functionality
    - Progress tracking
    - Achievement system
-   - Automatic cloud sync
 
 ## Data Persistence
 
-### Firebase/Firestore (Cloud Backend)
-- All user data stored in Google Firestore
-- Persists across devices and sessions
-- Automatic backup and redundancy
-- Per-user security rules
-
-### IndexedDB (Local Cache)
-- Local cache for offline support
-- Persists across browser sessions
-- Automatic sync when online
-- Improves performance
+### Browser Storage
+- All data stored in IndexedDB
+- Persists across sessions
+- Cleared if browser data is cleared
+- Unique per browser/profile
 
 ### Backup Strategy
-Firebase automatically backs up your data:
+Users should export their data regularly:
 
-- Firestore provides automatic replication
-- Users can export data via the UI
-- Data survives browser cache clears
-- Multi-device access to same data
+```javascript
+// In browser console or via UI
+import { clientStorage } from './lib/client-storage';
+const data = await clientStorage.exportData();
+// Download or save the JSON
+```
 
 ## Monitoring
 
@@ -214,9 +208,8 @@ Firebase automatically backs up your data:
 
 ### Browser Console
 - Check for errors on first load
-- Verify Firebase connection
-- Check Firestore initialization
-- Verify IndexedDB cache is working
+- Verify IndexedDB is working
+- Check seed data version
 
 ## Troubleshooting
 
@@ -234,29 +227,21 @@ npm run build
 3. Check Actions tab for errors
 
 ### App Not Loading
-1. Check Firebase configuration in .env.local
-2. Verify Firebase project is active
-3. Check browser console for errors
-4. Verify JavaScript is enabled
-5. Check network connectivity
-
-### Authentication Not Working
-1. Verify Firebase Auth is enabled in Firebase Console
-2. Check authorized domains in Firebase Console
-3. Verify Firebase API key is correct
-4. Check browser console for auth errors
+1. Clear browser cache
+2. Check browser console for errors
+3. Verify JavaScript is enabled
+4. Check IndexedDB is available
 
 ### Routes Not Working
 - Check Firebase hosting configuration (firebase.json)
 - Verify SPA rewrite rules are in place
 - Check base path configuration
 
-### Data Not Syncing
-1. Check Firebase/Firestore connection
-2. Verify user is authenticated
-3. Check Firestore security rules
-4. Verify network connectivity
-5. Check browser console for Firestore errors
+### Data Not Persisting
+1. Check browser privacy settings
+2. Verify IndexedDB quota
+3. Try different browser
+4. Check browser console errors
 
 ## Browser Compatibility
 
@@ -267,15 +252,15 @@ npm run build
 ✅ Edge 88+
 
 ### Required Features
-- Internet connection for initial setup
-- IndexedDB for local cache
+- IndexedDB
+- Web Crypto API (SHA-256)
 - ES6+ JavaScript
 - LocalStorage (for settings)
 
 ### Not Supported
 ❌ IE 11 and older
-❌ Browsers with JavaScript disabled
-❌ Offline mode for initial setup (requires Firebase connection)
+❌ Browsers with IndexedDB disabled
+❌ Private/Incognito mode (data won't persist)
 
 ## Performance
 
@@ -285,9 +270,9 @@ npm run build
 - < 1 second load time on good connection
 
 ### Runtime
-- Cached data provides instant responses
-- Local IndexedDB cache for offline access
-- Background sync to Firebase when online
+- All operations local (IndexedDB)
+- No network latency
+- Instant responses
 - Smooth UI transitions
 
 ### Optimization Tips
@@ -298,24 +283,22 @@ npm run build
 ## Security
 
 ### Data Security
-✅ Firebase Auth for secure authentication
-✅ Firestore security rules enforce data isolation
-✅ TLS encryption in transit
-✅ Google Cloud encryption at rest
-✅ No tracking or third-party analytics
+✅ All data stored locally
+✅ No external transmission
+✅ SHA-256 password hashing
+✅ crypto.randomUUID() for IDs
+✅ No tracking or analytics
 
 ### Privacy
-- Per-user data isolation via Firestore rules
-- Data stored securely in Google Cloud
-- No data sharing or selling
+- Single user per browser
+- Data never leaves browser
+- No server to compromise
 - User controls all data
-- Export functionality available
 
-### Firebase Security
-- Industry-standard authentication
-- Firestore security rules tested and deployed
-- Regular security updates from Google
-- Audit logging available in Firebase Console
+### Known Limitations
+- Passwords hashed with SHA-256 (not bcrypt)
+- For local storage only (acceptable trade-off)
+- No rate limiting (not needed for local app)
 
 ## Updates and Maintenance
 
@@ -340,19 +323,16 @@ const SEED_VERSION = 2; // Increment this
 
 ### User Issues
 Direct users to:
-1. Check Firebase configuration
-2. Verify network connectivity
-3. Check browser compatibility
-4. Review Firebase Console for errors
-5. Export data if needed
-6. Create GitHub issue
+1. Check browser compatibility
+2. Try different browser
+3. Export/import data if needed
+4. Create GitHub issue
 
 ### Developer Issues
-1. Check FIREBASE_SETUP.md
-2. Review Firebase Console logs
-3. Test with Firebase Emulator
-4. Review build logs
-5. Create issue with details
+1. Check MIGRATION_STATUS.md
+2. Review build logs
+3. Test locally first
+4. Create issue with details
 
 ## Success Metrics
 
@@ -384,9 +364,6 @@ After deployment, verify:
 ## Additional Resources
 
 - **README.md** - Architecture and features
-- **FIREBASE_SETUP.md** - Firebase configuration guide
-- **ARCHITECTURE.md** - Technical architecture
+- **MIGRATION_STATUS.md** - Migration progress
 - **Firebase Hosting Docs** - https://firebase.google.com/docs/hosting
-- **Firestore Docs** - https://firebase.google.com/docs/firestore
-- **Firebase Auth Docs** - https://firebase.google.com/docs/auth
 - **Vite Docs** - https://vitejs.dev/

@@ -1,6 +1,9 @@
 # Firebase Setup Guide for CertLab
 
-This guide walks you through setting up Firebase, which is **required** to run CertLab. Firebase provides the backend storage (Firestore) and authentication services for the application.
+This guide walks you through setting up Firebase for CertLab's optional cloud sync features.
+
+> **Note**: Firebase setup is **optional**. CertLab works fully offline using IndexedDB for local storage.
+> Firebase integration is currently in development (60% complete - see [FIREBASE_IMPLEMENTATION_STATUS.md](FIREBASE_IMPLEMENTATION_STATUS.md)).
 
 ## Table of Contents
 
@@ -16,12 +19,19 @@ This guide walks you through setting up Firebase, which is **required** to run C
 
 ## Overview
 
-CertLab uses Firebase as its exclusive backend:
-- **Authentication**: Email/password and Google sign-in (required)
-- **Cloud Firestore**: Cloud database for all user data, progress, and quizzes (required)
-- **Hosting**: Static site hosting (required for deployment)
+Firebase integration (in development) will provide:
+- **Authentication**: Email/password and Google sign-in (planned)
+- **Cloud Firestore**: Optional cloud storage for multi-device sync (in progress)
+- **Hosting**: Static site hosting (already configured)
 
-All user data is stored per-user in Firestore with security rules enforcing data isolation. IndexedDB serves as a local cache for offline support and performance optimization.
+**Current Status**: 
+- ✅ Firebase infrastructure foundation complete (60%)
+- ⏳ Storage layer integration in progress
+- ⏳ Authentication integration not yet implemented
+- ✅ Local storage via IndexedDB fully functional
+
+The app currently uses IndexedDB for all data storage and local PBKDF2 authentication. 
+Firebase features are being developed but are not required to use the application.
 
 ## Prerequisites
 

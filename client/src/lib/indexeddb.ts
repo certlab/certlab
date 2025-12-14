@@ -2,21 +2,19 @@
  * IndexedDB Service for CertLab
  *
  * This module provides a low-level IndexedDB wrapper that serves as the
- * local cache layer for the client-side application.
+ * primary storage layer for the application. All user data is stored
+ * locally in the browser's IndexedDB.
  *
- * CertLab uses Firebase/Firestore as its backend with IndexedDB providing
- * offline support and performance optimization through local caching.
+ * The schema design provides TypeScript types that could be used by future
+ * storage implementations (e.g., optional Firebase/Firestore integration).
  *
  * ## Architecture Overview
  *
  * IndexedDBService <-- ClientStorage <-- TanStack Query <-- React Components
- *                                    ↑
- *                         Firebase/Firestore (Backend)
  *
- * - IndexedDBService: Low-level CRUD operations on IndexedDB stores (local cache)
+ * - IndexedDBService: Low-level CRUD operations on IndexedDB stores
  * - ClientStorage (client-storage.ts): Business logic and API abstraction
  * - TanStack Query (queryClient.ts): Caching and async state management
- * - Firebase/Firestore: Cloud backend (source of truth)
  * - React Components: UI layer
  *
  * ## Database Schema

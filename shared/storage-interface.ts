@@ -2,12 +2,14 @@
  * Shared Storage Interface
  *
  * This file defines the common interface for storage operations.
- * CertLab uses Google Firebase/Firestore as its exclusive backend with
- * IndexedDB as a local cache for offline support.
+ * CertLab currently uses IndexedDB as its primary storage mechanism.
  *
- * Using the adapter pattern, the storage layer can provide different
- * implementations (Firestore with cache, testing mocks, etc.) while
- * maintaining consistent API contracts across the application.
+ * Using the adapter pattern, the storage layer can support different
+ * implementations (IndexedDB, future Firebase/Firestore integration, testing mocks)
+ * while maintaining consistent API contracts across the application.
+ *
+ * Note: References to "server" implementations are legacy from the previous
+ * PostgreSQL-based architecture and are maintained for backward compatibility.
  */
 
 import type {
@@ -103,9 +105,11 @@ export interface CertificationMasteryScore {
 /**
  * Core storage interface for data operations.
  *
- * This interface defines the storage operations for CertLab. The primary
- * implementation uses Firebase/Firestore as the backend with IndexedDB
- * as a local cache for offline support.
+ * This interface defines storage operations for CertLab. The current
+ * implementation uses IndexedDB as the primary storage mechanism.
+ *
+ * The adapter pattern allows for different implementations (testing mocks,
+ * future cloud sync integrations) while maintaining consistent API contracts.
  *
  * Note: Some methods have optional tenantId parameters for multi-tenancy support.
  */
@@ -356,14 +360,13 @@ export interface IStorageAdapter {
 }
 
 /**
- * Extended storage interface for Firebase-specific operations.
+ * Extended storage interface for advanced operations.
  *
- * This interface extends IStorageAdapter with additional methods for
- * advanced operations like tenant management, complex badge/achievement
- * operations, and administrative functions.
+ * @deprecated This interface is maintained for backward compatibility.
+ * CertLab no longer uses a server-side backend. These methods are part of
+ * the legacy architecture when the app used PostgreSQL.
  *
- * Note: This interface is maintained for backward compatibility but most
- * operations are handled through the IClientStorage interface.
+ * Current implementation uses IClientStorage with IndexedDB.
  */
 export interface IServerStorage extends IStorageAdapter {
   // ==========================================
@@ -573,9 +576,9 @@ export interface IServerStorage extends IStorageAdapter {
 /**
  * Extended storage interface for client-specific operations.
  *
- * This interface extends IStorageAdapter with additional methods for
- * client-side functionality such as session management, data export/import,
- * offline cache management, and token management.
+ * This interface extends IStorageAdapter with additional methods that are
+ * only needed on the client side, such as session management, data
+ * export/import, and token management.
  */
 export interface IClientStorage extends IStorageAdapter {
   // ==========================================

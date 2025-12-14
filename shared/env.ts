@@ -35,25 +35,20 @@ export const buildEnvSchema = z.object({
 });
 
 /**
- * @deprecated CertLab now uses Firebase/Firestore exclusively as its backend.
- * These variables are maintained for backward compatibility only.
+ * @deprecated Legacy server/script environment variables.
+ * CertLab no longer uses a PostgreSQL backend or server-side sessions.
+ * The app uses IndexedDB for local storage with optional Firebase cloud sync.
  *
- * Server/script environment variables schema.
- * These were used by legacy server-side scripts.
+ * These variables are maintained for backward compatibility with legacy scripts only.
  */
 export const serverEnvSchema = z.object({
   /**
-   * @deprecated No longer used. Firebase Auth handles session management.
-   * Session secret for secure session management.
-   * Optional - only needed for server-side session handling.
+   * @deprecated No longer used. CertLab uses local authentication (PBKDF2) stored in IndexedDB.
    */
   SESSION_SECRET: z.string().optional(),
 
   /**
-   * @deprecated No longer used. CertLab uses Firebase/Firestore as backend.
-   * Database connection string.
-   * Optional - only needed for database operations in server scripts.
-   * Use requireDatabaseUrl() for scripts that require database access.
+   * @deprecated No longer used. CertLab uses IndexedDB for storage, not PostgreSQL.
    */
   DATABASE_URL: z.string().optional(),
 
@@ -119,11 +114,8 @@ export function validateBuildEnv(): BuildEnv {
 }
 
 /**
- * @deprecated CertLab now uses Firebase/Firestore exclusively as its backend.
- * This function is maintained for backward compatibility only.
- *
- * Validates and returns server environment variables.
- * Used in server scripts and runtime configuration.
+ * @deprecated CertLab no longer uses server-side infrastructure.
+ * This function is maintained for backward compatibility with legacy scripts only.
  *
  * @returns Validated server environment variables with defaults applied
  * @throws ZodError if validation fails
@@ -162,11 +154,8 @@ export function getBasePath(): string {
 }
 
 /**
- * @deprecated CertLab now uses Firebase/Firestore exclusively as its backend.
- * This function is maintained for backward compatibility only.
- *
- * Validates that required database environment is present.
- * Throws a descriptive error if DATABASE_URL is missing or invalid.
+ * @deprecated CertLab no longer uses PostgreSQL or any database server.
+ * This function is maintained for backward compatibility with legacy scripts only.
  *
  * @throws Error if DATABASE_URL is not set or is not a valid URL
  */
