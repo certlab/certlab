@@ -8,23 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Comprehensive documentation for developers (CONTRIBUTING.md, ARCHITECTURE.md)
-- Code comments for complex logic in key files
-- Developer onboarding instructions
-- Test infrastructure documentation
+- Firebase/Firestore as exclusive backend for cloud storage
+- Firebase Authentication for secure user management
+- Firestore security rules for per-user data isolation
+- Firebase Hosting deployment automation
+- IndexedDB as local cache for offline support
 
 ### Changed
-- Updated README with expanded installation and setup instructions
-- Updated project structure documentation to include test directory and vitest configuration
-- Added Vitest to technology stack documentation
+- **BREAKING**: Firebase is now required (no longer optional)
+- Updated all documentation to reflect Firebase as exclusive backend
+- Removed PostgreSQL/server references from documentation
+- Updated architecture diagrams to show Firebase backend
+- Deprecated DATABASE_URL and server-related environment variables
+
+### Removed
+- Support for non-Firebase storage backends
+- PostgreSQL/server configuration options
+- Legacy server-side environment variables
 
 ## [2.0.0] - 2024-01
 
 ### Changed
-- Complete migration to client-side only architecture
-- All data now stored in browser's IndexedDB
+- Complete migration to client-side architecture
+- Transitioned from PostgreSQL to local-first storage
 - Removed server-side dependencies and code
-- Application now runs entirely in the browser
+- Application runs in the browser with local storage
 
 ### Added
 - Multi-tenancy support with tenant switching
@@ -40,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Server-side Express application
-- PostgreSQL database dependency
+- PostgreSQL database (replaced with IndexedDB)
 - Server-side authentication (Passport.js)
 - AI lecture generation (OpenAI integration)
 - Payment system (Polar integration)
@@ -49,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Migration Notes
 - Users migrating from v1.x should export their data before upgrading
 - Some features like AI lectures are no longer available
-- All user data now stored locally in the browser
+- Data initially stored locally in browser (Firebase integration added later)
 
 ## [1.0.0] - 2023
 
@@ -72,7 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Release | Architecture | Key Features |
 |---------|---------|--------------|--------------|
-| 2.0.0 | 2024 | Client-side (IndexedDB) | Multi-tenant, offline-capable |
+| Unreleased | 2024 | Firebase backend + IndexedDB cache | Cloud sync, Firebase Auth, offline support |
+| 2.0.0 | 2024 | Client-side (IndexedDB only) | Multi-tenant, local-only |
 | 1.0.0 | 2023 | Server-side (PostgreSQL) | Full-featured with AI/payments |
 
 ## Upgrade Guide
@@ -87,7 +96,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Breaking Changes in 2.0
 
 - No server required - deploy to static hosting only
-- User sessions are browser-specific (no cross-device sync)
+- User sessions are browser-specific (no cross-device sync in v2.0)
+- Note: Firebase integration in future releases will add cloud sync
+
+### From 2.x to Future (Firebase-based)
+
+The latest version requires Firebase:
+1. **Set up Firebase** following [FIREBASE_SETUP.md](FIREBASE_SETUP.md)
+2. **Configure environment** with Firebase credentials in `.env.local`
+3. **Deploy Firestore rules** using `npm run deploy:firestore`
+4. **Existing data** will be migrated to Firestore on first Firebase login
 - Single user per browser profile
 - Study groups are local only (no real collaboration)
 
