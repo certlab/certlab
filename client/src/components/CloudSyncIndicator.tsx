@@ -5,7 +5,7 @@
  * Shows whether the user is synced with Firebase or using local-only mode.
  */
 
-import { CloudOff, CloudCheck } from 'lucide-react';
+import { CloudOff, Cloud } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -25,7 +25,7 @@ export function CloudSyncIndicator({ className, showLabel = false }: CloudSyncIn
     switch (syncStatus) {
       case 'synced':
         return {
-          icon: CloudCheck,
+          icon: Cloud,
           label: 'Cloud Sync Active',
           description: 'Your data is synced with Firebase',
           color: 'text-green-500',
