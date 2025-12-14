@@ -70,8 +70,9 @@ export function getDynatraceConfig(): DynatraceConfig | null {
   const environmentId = import.meta.env.VITE_DYNATRACE_ENVIRONMENT_ID;
   const applicationId = import.meta.env.VITE_DYNATRACE_APPLICATION_ID;
   const beaconUrl = import.meta.env.VITE_DYNATRACE_BEACON_URL;
-  const enabled = import.meta.env.VITE_ENABLE_DYNATRACE !== false;
-  const devMode = import.meta.env.VITE_DYNATRACE_DEV_MODE === true;
+  // Parse boolean environment variables (they come as strings)
+  const enabled = String(import.meta.env.VITE_ENABLE_DYNATRACE || 'true') === 'true';
+  const devMode = String(import.meta.env.VITE_DYNATRACE_DEV_MODE || 'false') === 'true';
   const appName = import.meta.env.VITE_DYNATRACE_APP_NAME || 'CertLab';
   const actionPrefix = import.meta.env.VITE_DYNATRACE_ACTION_PREFIX;
 
@@ -84,8 +85,8 @@ export function getDynatraceConfig(): DynatraceConfig | null {
     return null;
   }
 
-  // Validate required configuration
-  if (!environmentId || !applicationId || !beaconUrl) {
+  // Validate required configuration (empty string is falsy but explicitly allowed)
+  if (!environmentId || !applicationId || (beaconUrl !== '' && !beaconUrl)) {
     if (enabled) {
       console.warn('[Dynatrace] Configuration incomplete. Missing required environment variables.');
       console.warn(

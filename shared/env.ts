@@ -58,7 +58,8 @@ export const buildEnvSchema = z.object({
   VITE_ENABLE_DYNATRACE: z
     .enum(['true', 'false'])
     .optional()
-    .transform((val) => val !== 'false'),
+    .default('true')
+    .transform((val) => val === 'true'),
 
   /**
    * Enable Dynatrace in development mode.
@@ -67,6 +68,7 @@ export const buildEnvSchema = z.object({
   VITE_DYNATRACE_DEV_MODE: z
     .enum(['true', 'false'])
     .optional()
+    .default('false')
     .transform((val) => val === 'true'),
 
   /**

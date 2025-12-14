@@ -25,9 +25,21 @@ const envPath = path.join(__dirname, '..', '.env');
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf-8');
   envContent.split('\n').forEach(line => {
+    // Skip comments and empty lines
+    if (line.trim().startsWith('#') || !line.trim()) {
+      return;
+    }
+    
+    // Match KEY=value or KEY="value" or KEY='value'
     const match = line.match(/^([^=:#]+)=(.*)$/);
     if (match && !process.env[match[1]]) {
-      process.env[match[1]] = match[2].trim();
+      let value = match[2].trim();
+      // Remove surrounding quotes if present
+      if ((value.startsWith('"') && value.endsWith('"')) || 
+          (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      process.env[match[1]] = value;
     }
   });
 }
