@@ -33,6 +33,33 @@
       }(window.location))
     </script>
     <!-- End Single Page Apps for GitHub Pages -->
+    
+    <!-- Dynatrace RUM Monitoring -->
+    <!-- 
+      To enable Dynatrace monitoring:
+      1. Configure Dynatrace environment variables in .env (see .env.example)
+      2. Run: node scripts/generate-dynatrace-snippet.js
+      3. Replace this comment with the generated snippet
+      
+      The snippet should be placed here (early in <head>) for optimal performance.
+      It loads asynchronously and won't block page rendering.
+      
+      For detailed setup instructions, see DYNATRACE_SETUP.md
+      
+      Example snippet format:
+      <script type="text/javascript">
+      (function() {
+        var dt = document.createElement('script');
+        dt.type = 'text/javascript';
+        dt.async = true;
+        dt.crossOrigin = 'anonymous';
+        dt.src = 'https://YOUR_ENVIRONMENT.live.dynatrace.com/bf/jstag/YOUR_APP_ID';
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(dt, s);
+      })();
+      </script>
+    -->
+    <!-- End Dynatrace RUM Monitoring -->
   </head>
   <body>
     <div id="root"></div>

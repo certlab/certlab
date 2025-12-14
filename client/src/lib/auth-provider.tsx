@@ -10,6 +10,7 @@ import {
 } from './firebase';
 import { initializeStorage, setStorageMode, isCloudSyncAvailable } from './storage-factory';
 import { storage } from './storage-factory';
+import { identifyUser, endSession } from './dynatrace';
 
 interface User {
   id: string;
@@ -71,6 +72,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = await clientAuth.getCurrentUser();
       setUser(currentUser);
 
+      // Identify user in Dynatrace for session tracking
+      if (currentUser) {
+        identifyUser(currentUser.id);
+      }
+
       // If we have a Firebase user, sync with Firestore
       if (firebaseUser && isCloudSyncAvailable()) {
         try {
@@ -79,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (firestoreUser) {
             setUser(firestoreUser);
+            identifyUser(firestoreUser.id);
           } else if (currentUser) {
             // Create user in Firestore if they don't exist
             await storage.createUser({
@@ -95,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const newUser = await storage.getUser(firebaseUser.uid);
             if (newUser) {
               setUser(newUser);
+              identifyUser(newUser.id);
             }
           }
         } catch (error) {
@@ -142,6 +150,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
+      // End Dynatrace session
+      endSession();
+
       // Sign out from Firebase if authenticated
       if (firebaseUser) {
         await signOutFromGoogle();

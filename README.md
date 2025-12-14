@@ -109,6 +109,24 @@ For cloud sync and multi-device access, set up Firebase:
 
 See [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for detailed instructions.
 
+### Dynatrace Observability (Optional)
+
+For production monitoring and analytics, configure Dynatrace:
+
+1. **Create Dynatrace Account**: Sign up at [dynatrace.com/trial](https://www.dynatrace.com/trial)
+2. **Configure Environment**: Add Dynatrace credentials to `.env` (see `.env.example`)
+3. **Deploy Monitoring**: Dynatrace automatically begins collecting metrics after deployment
+4. **Set Up Dashboards**: Configure monitoring dashboards and alerts
+
+See [DYNATRACE_SETUP.md](DYNATRACE_SETUP.md) for detailed instructions.
+
+**Benefits**:
+- Real user monitoring (RUM) for actual user experience tracking
+- Performance metrics and bottleneck identification
+- JavaScript error tracking and debugging
+- User journey analytics and conversion funnels
+- Custom action tracking for business metrics
+
 ## 🏗️ Architecture
 
 ### Hybrid Storage Model
@@ -300,12 +318,14 @@ For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE
 | **Validation** | Zod | Schema validation |
 | **Animation** | Framer Motion | UI animations |
 | **Charts** | Recharts | Data visualization |
+| **Observability** | Dynatrace RUM | Real user monitoring and analytics |
 
 ## 📖 Documentation
 
 | Document | Description |
 |----------|-------------|
 | [FIREBASE_SETUP.md](FIREBASE_SETUP.md) | Firebase configuration for cloud sync |
+| [DYNATRACE_SETUP.md](DYNATRACE_SETUP.md) | Dynatrace observability and monitoring setup |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System design, data flow, and technical decisions |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute, code style, and PR process |
 | [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Detailed deployment instructions |

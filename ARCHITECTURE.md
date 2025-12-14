@@ -51,6 +51,12 @@ CertLab is a **client-side only** web application designed for certification exa
 │  │                           │ (State Mgmt)  │                          │ │
 │  │                           └───────┬───────┘                          │ │
 │  │                                   │                                   │ │
+│  │  ┌────────────────────────────────┼────────────────────────────────┐  │ │
+│  │  │              Observability Layer (Dynatrace RUM)                 │  │ │
+│  │  │  - User session tracking      - Error monitoring                 │  │ │
+│  │  │  - Performance metrics        - Custom action tracking           │  │ │
+│  │  └────────────────────────────────┼────────────────────────────────┘  │ │
+│  │                                   │                                   │ │
 │  └───────────────────────────────────┼───────────────────────────────────┘ │
 │                                      │                                      │
 │  ┌───────────────────────────────────▼───────────────────────────────────┐ │
@@ -60,8 +66,20 @@ CertLab is a **client-side only** web application designed for certification exa
 │  │  │  (API Layer)    │    │ (DB Operations) │    │  (Browser Store) │   │ │
 │  │  └─────────────────┘    └─────────────────┘    └──────────────────┘   │ │
 │  └───────────────────────────────────────────────────────────────────────┘ │
-│                                                                             │
+│                                      │                                      │
+│                                      │ Beacon (HTTPS)                       │
+│                                      ▼                                      │
 └─────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       │
+                                       ▼
+                          ┌──────────────────────────┐
+                          │  Dynatrace Environment   │
+                          │  - Data Collection       │
+                          │  - Analytics             │
+                          │  - Alerting              │
+                          │  - Dashboards            │
+                          └──────────────────────────┘
 ```
 
 ## Frontend Architecture
@@ -78,6 +96,7 @@ CertLab is a **client-side only** web application designed for certification exa
 | Radix UI | Latest | Component primitives |
 | TanStack Query | 5.x | Async state management |
 | Wouter | 3.x | Client-side routing |
+| Dynatrace RUM | Latest | Real user monitoring and observability |
 
 ### Component Organization
 
@@ -339,6 +358,85 @@ const switchTenant = async (tenantId: number) => {
   }
 };
 ```
+
+## Observability
+
+CertLab integrates Dynatrace Real User Monitoring (RUM) for comprehensive observability and analytics.
+
+### Observability Stack
+
+| Component | Purpose | Integration Point |
+|-----------|---------|------------------|
+| Dynatrace RUM | Real user monitoring | `client/index.html` (script injection) |
+| Dynatrace API | Custom action tracking | `client/src/lib/dynatrace.ts` |
+| Session Tracking | User identification | `client/src/lib/auth-provider.tsx` |
+| Error Reporting | Exception monitoring | Automatic via Dynatrace agent |
+
+### Monitored Metrics
+
+**Automatic Metrics**:
+- Page load times and performance
+- JavaScript errors and exceptions
+- Resource loading (CSS, JS, images)
+- User sessions and geographic distribution
+- Browser and device analytics
+- Network timing and latency
+
+**Custom Actions**:
+- User authentication (login, logout, registration)
+- Quiz lifecycle (start, complete, results)
+- Badge earning events
+- Study group interactions
+- Practice test completion
+- Tenant switching
+
+### Implementation
+
+```typescript
+// From main.tsx - Initialize on startup
+import { initializeDynatrace } from './lib/dynatrace';
+initializeDynatrace();
+
+// From auth-provider.tsx - Track user sessions
+import { identifyUser, endSession } from './lib/dynatrace';
+identifyUser(user.id);  // On login
+endSession();            // On logout
+
+// Custom action tracking example
+import { trackAction, completeAction } from './lib/dynatrace';
+const actionId = trackAction('Quiz Completed');
+// ... perform action ...
+completeAction(actionId);
+```
+
+### Configuration
+
+Dynatrace is configured via environment variables:
+
+```bash
+VITE_DYNATRACE_ENVIRONMENT_ID=your_env_id
+VITE_DYNATRACE_APPLICATION_ID=your_app_id
+VITE_DYNATRACE_BEACON_URL=https://your_env.live.dynatrace.com/bf
+VITE_ENABLE_DYNATRACE=true
+VITE_DYNATRACE_DEV_MODE=false  # Disabled in dev by default
+```
+
+For detailed setup instructions, see [DYNATRACE_SETUP.md](DYNATRACE_SETUP.md).
+
+### Dashboards and Alerts
+
+**Pre-configured Dashboards**:
+1. Overview Dashboard - User sessions, page views, errors
+2. Performance Dashboard - Load times, resource loading
+3. User Behavior Dashboard - User journeys, conversion funnels
+
+**Recommended Alerts**:
+- High JavaScript error rate (> 10 per 1000 sessions)
+- Slow page load times (> 3s median)
+- Drop in user sessions (< 10 per hour during business hours)
+- High quiz failure rate (< 70% completion)
+
+See [DYNATRACE_SETUP.md](DYNATRACE_SETUP.md) for complete dashboard and alerting configuration.
 
 ## Build and Deployment
 
