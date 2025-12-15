@@ -164,6 +164,18 @@ export function dateToTimestamp(date: Date | string | null | undefined): Timesta
 }
 
 /**
+ * Check if an error is a Firebase permission error
+ * These errors are expected when trying to access Firestore before authentication completes
+ */
+function isFirebasePermissionError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  const messageLower = error.message.toLowerCase();
+  return messageLower.includes('permission') || messageLower.includes('insufficient');
+}
+
+/**
  * Get a document from a user's collection
  */
 export async function getUserDocument<T>(
@@ -182,11 +194,7 @@ export async function getUserDocument<T>(
     return null;
   } catch (error) {
     // Don't log permission errors as they're expected when user is not authenticated
-    const isPermissionError =
-      error instanceof Error &&
-      (error.message.includes('permission') || error.message.includes('insufficient'));
-
-    if (!isPermissionError) {
+    if (!isFirebasePermissionError(error)) {
       logError('getUserDocument', error, { userId, collectionName, documentId });
     }
     throw error;
@@ -212,11 +220,7 @@ export async function getUserDocuments<T>(
     return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as T);
   } catch (error) {
     // Don't log permission errors as they're expected when user is not authenticated
-    const isPermissionError =
-      error instanceof Error &&
-      (error.message.includes('permission') || error.message.includes('insufficient'));
-
-    if (!isPermissionError) {
+    if (!isFirebasePermissionError(error)) {
       logError('getUserDocuments', error, { userId, collectionName });
     }
     throw error;
@@ -357,11 +361,7 @@ export async function getUserProfile(userId: string): Promise<DocumentData | nul
   } catch (error) {
     // Don't log permission errors as they're expected when user is not authenticated
     // Firebase throws "Missing or insufficient permissions" before authentication completes
-    const isPermissionError =
-      error instanceof Error &&
-      (error.message.includes('permission') || error.message.includes('insufficient'));
-
-    if (!isPermissionError) {
+    if (!isFirebasePermissionError(error)) {
       logError('getUserProfile', error, { userId });
     }
     throw error;
