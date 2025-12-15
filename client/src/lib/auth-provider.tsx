@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             identifyUser(firestoreUser.id);
           } else {
             // Create user in Firestore if they don't exist
-            // Use Firebase user data as the source of truth
+            // firebaseUser is guaranteed to be non-null here due to parent condition check
             await storage.createUser({
               id: firebaseUser.uid,
               email: firebaseUser.email || '',

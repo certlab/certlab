@@ -147,8 +147,10 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
   );
 
   // Calculate level progress
-  const currentLevelProgress =
-    ((gameStats.totalPoints % gameStats.nextLevelPoints) / gameStats.nextLevelPoints) * 100;
+  // Handle case where gameStats might be undefined during data loading
+  const currentLevelProgress = gameStats
+    ? ((gameStats.totalPoints % gameStats.nextLevelPoints) / gameStats.nextLevelPoints) * 100
+    : 0;
 
   return (
     <div className="space-y-6">
