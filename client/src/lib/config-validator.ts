@@ -38,39 +38,22 @@ function validateFirebaseConfig(): string[] {
 
 /**
  * Validate Dynatrace configuration
- * Supports both script URL method and individual config method
+ * Uses script URL method for configuration
  */
 function validateDynatraceConfig(): string[] {
   const errors: string[] = [];
 
   const scriptUrl = import.meta.env.VITE_DYNATRACE_SCRIPT_URL;
-  const environmentId = import.meta.env.VITE_DYNATRACE_ENVIRONMENT_ID;
-  const applicationId = import.meta.env.VITE_DYNATRACE_APPLICATION_ID;
-  const beaconUrl = import.meta.env.VITE_DYNATRACE_BEACON_URL;
 
-  // Check if using script URL method (preferred)
-  const hasScriptUrl = scriptUrl && scriptUrl !== '';
+  // Check if script URL is configured
+  const hasScriptUrl = scriptUrl && scriptUrl !== '' && scriptUrl.startsWith('https://');
 
-  // Check if using individual config method
-  const hasIndividualConfig = environmentId && applicationId && beaconUrl;
-
-  // If neither method is configured, report error
-  if (!hasScriptUrl && !hasIndividualConfig) {
-    if (!scriptUrl && !environmentId) {
-      errors.push(
-        'Dynatrace configuration is missing. Set either VITE_DYNATRACE_SCRIPT_URL or (VITE_DYNATRACE_ENVIRONMENT_ID + VITE_DYNATRACE_APPLICATION_ID + VITE_DYNATRACE_BEACON_URL)'
-      );
-    } else if (!hasIndividualConfig) {
-      // Partial individual config
-      if (!environmentId) {
-        errors.push('Dynatrace Environment ID (VITE_DYNATRACE_ENVIRONMENT_ID) is missing');
-      }
-      if (!applicationId) {
-        errors.push('Dynatrace Application ID (VITE_DYNATRACE_APPLICATION_ID) is missing');
-      }
-      if (!beaconUrl) {
-        errors.push('Dynatrace Beacon URL (VITE_DYNATRACE_BEACON_URL) is missing');
-      }
+  // If not configured, report error
+  if (!hasScriptUrl) {
+    if (!scriptUrl || scriptUrl === '') {
+      errors.push('Dynatrace configuration is missing. Set VITE_DYNATRACE_SCRIPT_URL');
+    } else if (!scriptUrl.startsWith('https://')) {
+      errors.push('VITE_DYNATRACE_SCRIPT_URL must be an HTTPS URL from Dynatrace');
     }
   }
 

@@ -23,9 +23,7 @@
  * Dynatrace configuration interface
  */
 export interface DynatraceConfig {
-  environmentId: string;
-  applicationId: string;
-  beaconUrl: string;
+  scriptUrl: string;
   enabled: boolean;
   devMode: boolean;
   appName: string;
@@ -67,9 +65,7 @@ declare global {
  * Get Dynatrace configuration from environment variables
  */
 export function getDynatraceConfig(): DynatraceConfig | null {
-  const environmentId = import.meta.env.VITE_DYNATRACE_ENVIRONMENT_ID;
-  const applicationId = import.meta.env.VITE_DYNATRACE_APPLICATION_ID;
-  const beaconUrl = import.meta.env.VITE_DYNATRACE_BEACON_URL;
+  const scriptUrl = import.meta.env.VITE_DYNATRACE_SCRIPT_URL;
   // Parse boolean environment variables (they come as strings)
   // Only explicitly enable if set to 'true', otherwise remain silent
   const enabledEnv = import.meta.env.VITE_ENABLE_DYNATRACE;
@@ -90,15 +86,12 @@ export function getDynatraceConfig(): DynatraceConfig | null {
   }
 
   // Validate required configuration
-  const hasConfig = environmentId || applicationId || beaconUrl;
-  const hasValidConfig = environmentId && applicationId && beaconUrl !== undefined;
+  const hasValidConfig = scriptUrl && scriptUrl.startsWith('https://');
   if (!hasValidConfig) {
-    // Only warn if user explicitly enabled Dynatrace or provided partial config
-    if (enabled || (hasConfig && !explicitlyDisabled)) {
-      console.warn('[Dynatrace] Configuration incomplete. Missing required environment variables.');
-      console.warn(
-        'Required: VITE_DYNATRACE_ENVIRONMENT_ID, VITE_DYNATRACE_APPLICATION_ID, VITE_DYNATRACE_BEACON_URL'
-      );
+    // Only warn if user explicitly enabled Dynatrace
+    if (enabled) {
+      console.warn('[Dynatrace] Configuration incomplete. Missing required environment variable.');
+      console.warn('Required: VITE_DYNATRACE_SCRIPT_URL (must be an HTTPS URL)');
     }
     return null;
   }
@@ -109,9 +102,7 @@ export function getDynatraceConfig(): DynatraceConfig | null {
   }
 
   return {
-    environmentId,
-    applicationId,
-    beaconUrl,
+    scriptUrl,
     enabled: true,
     devMode,
     appName,
@@ -156,7 +147,7 @@ export function initializeDynatrace(): boolean {
       window.dT_.initReact();
     }
 
-    console.log(`[Dynatrace] Initialized for ${config.appName} (${config.environmentId})`);
+    console.log(`[Dynatrace] Initialized for ${config.appName}`);
     return true;
   } catch (error) {
     console.error('[Dynatrace] Initialization failed:', error);
