@@ -89,9 +89,10 @@ export function getDynatraceConfig(): DynatraceConfig | null {
     return null;
   }
 
-  // Validate required configuration (empty string is falsy but explicitly allowed)
+  // Validate required configuration
   const hasConfig = environmentId || applicationId || beaconUrl;
-  if (!environmentId || !applicationId || (beaconUrl !== '' && !beaconUrl)) {
+  const hasValidConfig = environmentId && applicationId && beaconUrl !== undefined;
+  if (!hasValidConfig) {
     // Only warn if user explicitly enabled Dynatrace or provided partial config
     if (enabled || (hasConfig && !explicitlyDisabled)) {
       console.warn('[Dynatrace] Configuration incomplete. Missing required environment variables.');

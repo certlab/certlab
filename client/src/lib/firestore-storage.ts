@@ -216,12 +216,9 @@ class FirestoreStorage implements IClientStorage {
       return user ? convertTimestamps(user as User) : undefined;
     } catch (error) {
       // Don't log permission denied errors - this is expected when user doesn't exist yet
-      const isPermissionError =
-        error instanceof Error &&
-        (error.message.includes('Missing or insufficient permissions') ||
-          error.message.includes('permission-denied'));
-
-      if (!isPermissionError) {
+      // (first-time sign-up scenario)
+      const { isFirestorePermissionError } = await import('./firebase-utils');
+      if (!isFirestorePermissionError(error)) {
         logError('getUser', error, { id });
       }
       return undefined;
