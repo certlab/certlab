@@ -86,8 +86,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (firestoreUser) {
             setUser(firestoreUser);
             identifyUser(firestoreUser.id);
-          } else if (currentUser) {
+          } else {
             // Create user in Firestore if they don't exist
+            // Use Firebase user data as the source of truth
             await storage.createUser({
               id: firebaseUser.uid,
               email: firebaseUser.email || '',
@@ -123,6 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!firebaseInitialized) return;
 
     const unsubscribe = onFirebaseAuthStateChanged(async (fbUser) => {
+      // Set loading state while Firebase auth state is changing
+      setIsLoading(true);
       setFirebaseUser(fbUser);
 
       if (fbUser) {
@@ -135,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Trigger user load whenever Firebase auth state changes
+      // loadUser() will set isLoading to false when done
       await loadUser();
     });
 
