@@ -86,20 +86,26 @@ CertLab uses Dynatrace Real User Monitoring (RUM) for comprehensive observabilit
    - **Framework**: React
 5. Click **Save and continue**
 
-### Step 3: Get Configuration Values
+### Step 3: Get the Script URL
 
-After creating the application, Dynatrace will show you the monitoring code snippet. You need to extract these values:
+After creating the application, Dynatrace will provide the monitoring code snippet:
 
-1. **Environment ID**: Found in your Dynatrace URL
-   - Example: `abc12345` from `https://abc12345.live.dynatrace.com`
+1. In Dynatrace, go to **Applications & Microservices** → **Web applications** → **CertLab**
+2. Click **Browse [...] → Edit**
+3. Navigate to **Setup** → **Instrumentation code**
+4. Copy the **src** URL from the `<script>` tag Dynatrace provides
 
-2. **Application ID**: Found in the JavaScript snippet
-   - Look for: `src="https://...jstag/{YOUR_APP_ID}"`
-   - Example: `APPLICATION-123ABC456DEF`
+Example script tag from Dynatrace:
+```html
+<script type="text/javascript" 
+        src="https://js-cdn.dynatrace.com/jstag/176fb25782e/bf44908ztj/f8fcbfc83426566d_complete.js" 
+        crossorigin="anonymous"></script>
+```
 
-3. **Beacon URL**: The base URL for data collection
-   - Format: `https://{environmentId}.live.dynatrace.com/bf`
-   - Example: `https://abc12345.live.dynatrace.com/bf`
+You need the **src** URL:
+```
+https://js-cdn.dynatrace.com/jstag/176fb25782e/bf44908ztj/f8fcbfc83426566d_complete.js
+```
 
 ### Step 4: Configure Domain Settings
 
@@ -117,22 +123,11 @@ After creating the application, Dynatrace will show you the monitoring code snip
 Add the following to your `.env` file (copy from `.env.example`):
 
 ```bash
-# Dynatrace Configuration
-VITE_DYNATRACE_ENVIRONMENT_ID=abc12345
-VITE_DYNATRACE_APPLICATION_ID=APPLICATION-123ABC456DEF
-VITE_DYNATRACE_BEACON_URL=https://abc12345.live.dynatrace.com/bf
+# Dynatrace Configuration - Complete script URL from Dynatrace
+VITE_DYNATRACE_SCRIPT_URL=https://js-cdn.dynatrace.com/jstag/176fb25782e/bf44908ztj/f8fcbfc83426566d_complete.js
 
-# Optional: Enable/disable Dynatrace
-VITE_ENABLE_DYNATRACE=true
-
-# Optional: Enable in development (false by default to avoid polluting production metrics)
-VITE_DYNATRACE_DEV_MODE=false
-
-# Optional: Customize application name
-VITE_DYNATRACE_APP_NAME=CertLab
-
-# Optional: Add prefix to custom actions (useful for multi-environment tracking)
-VITE_DYNATRACE_ACTION_PREFIX=
+# Optional: Enable/disable Dynatrace (defaults to enabled when script URL is set)
+VITE_ENABLE_DYNATRACE=false
 ```
 
 ### GitHub Actions Configuration
@@ -141,10 +136,8 @@ For production deployment via GitHub Actions, add these secrets to your reposito
 
 1. Go to **Settings** → **Secrets and variables** → **Actions**
 2. Add the following repository secrets:
-   - `VITE_DYNATRACE_ENVIRONMENT_ID`
-   - `VITE_DYNATRACE_APPLICATION_ID`
-   - `VITE_DYNATRACE_BEACON_URL`
-   - `VITE_ENABLE_DYNATRACE` (set to `true`)
+   - `VITE_DYNATRACE_SCRIPT_URL` (the complete script URL from Dynatrace)
+   - `VITE_ENABLE_DYNATRACE` (optional, set to `false` to disable)
 
 The deployment workflow (`.github/workflows/firebase-deploy.yml`) will automatically include these during the build.
 

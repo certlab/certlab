@@ -34,54 +34,21 @@ export const buildEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).optional().default('development'),
 
   /**
-   * Dynatrace environment ID.
-   * Required for Dynatrace RUM integration.
+   * Dynatrace RUM script URL.
+   * Complete script URL from Dynatrace instrumentation code.
+   * Example: https://js-cdn.dynatrace.com/jstag/176fb25782e/bf44908ztj/f8fcbfc83426566d_complete.js
    */
-  VITE_DYNATRACE_ENVIRONMENT_ID: z.string().optional(),
-
-  /**
-   * Dynatrace application ID.
-   * Required for Dynatrace RUM integration.
-   */
-  VITE_DYNATRACE_APPLICATION_ID: z.string().optional(),
-
-  /**
-   * Dynatrace beacon URL.
-   * Required for Dynatrace RUM integration.
-   */
-  VITE_DYNATRACE_BEACON_URL: z.string().url().optional().or(z.literal('')),
+  VITE_DYNATRACE_SCRIPT_URL: z.string().url().optional().or(z.literal('')),
 
   /**
    * Enable Dynatrace monitoring.
-   * Defaults to true when Dynatrace credentials are configured.
+   * Defaults to enabled when script URL is configured.
+   * Set to 'false' to explicitly disable.
    */
   VITE_ENABLE_DYNATRACE: z
     .enum(['true', 'false'])
     .optional()
-    .default('true')
     .transform((val) => val === 'true'),
-
-  /**
-   * Enable Dynatrace in development mode.
-   * Defaults to false to avoid polluting production metrics.
-   */
-  VITE_DYNATRACE_DEV_MODE: z
-    .enum(['true', 'false'])
-    .optional()
-    .default('false')
-    .transform((val) => val === 'true'),
-
-  /**
-   * Dynatrace application name.
-   * Defaults to 'CertLab' if not specified.
-   */
-  VITE_DYNATRACE_APP_NAME: z.string().optional(),
-
-  /**
-   * Dynatrace custom action name prefix.
-   * Useful for distinguishing between multiple deployments.
-   */
-  VITE_DYNATRACE_ACTION_PREFIX: z.string().optional(),
 });
 
 /**

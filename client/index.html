@@ -40,59 +40,43 @@
       This script loads asynchronously to avoid blocking page rendering.
       
       Configuration is injected at build time from environment variables:
-      - VITE_DYNATRACE_ENVIRONMENT_ID
-      - VITE_DYNATRACE_APPLICATION_ID
-      - VITE_DYNATRACE_BEACON_URL
-      - VITE_ENABLE_DYNATRACE
+      - VITE_DYNATRACE_SCRIPT_URL (the complete script URL from Dynatrace)
+      - VITE_ENABLE_DYNATRACE (optional, defaults to enabled when script URL is set)
+      
+      Get the script URL from Dynatrace:
+      1. Go to Applications & Microservices > Web applications > Your app
+      2. Click "..." > Edit > Setup > Instrumentation code
+      3. Copy the src URL from the script tag (e.g., https://js-cdn.dynatrace.com/jstag/...)
       
       For detailed setup instructions, see DYNATRACE_SETUP.md
     -->
     <script type="text/javascript">
     (function() {
-      // Environment variables are injected by Vite at build time
-      var envId = '%VITE_DYNATRACE_ENVIRONMENT_ID%';
-      var appId = '%VITE_DYNATRACE_APPLICATION_ID%';
-      var beaconUrl = '%VITE_DYNATRACE_BEACON_URL%';
+      // Dynatrace script URL injected by Vite at build time
+      var scriptUrl = '%VITE_DYNATRACE_SCRIPT_URL%';
       var enabled = '%VITE_ENABLE_DYNATRACE%';
       
-      // Check if environment variables were actually set (Vite leaves placeholders unchanged if not set)
-      var ENV_ID_PLACEHOLDER = '%VITE_DYNATRACE_ENVIRONMENT_ID%';
-      var APP_ID_PLACEHOLDER = '%VITE_DYNATRACE_APPLICATION_ID%';
-      var BEACON_URL_PLACEHOLDER = '%VITE_DYNATRACE_BEACON_URL%';
-      
-      var isConfigured = envId !== ENV_ID_PLACEHOLDER && 
-                         appId !== APP_ID_PLACEHOLDER && 
-                         beaconUrl !== BEACON_URL_PLACEHOLDER;
-      
-      // Check if Dynatrace is explicitly disabled
+      // Check if script URL was set (Vite leaves placeholder unchanged if not set)
+      // Use a marker that won't be replaced
+      var PLACEHOLDER = '%' + 'VITE_DYNATRACE_SCRIPT_URL' + '%';
+      var isConfigured = scriptUrl !== PLACEHOLDER && scriptUrl.indexOf('https://') === 0;
       var isExplicitlyDisabled = enabled === 'false';
-      var isEnabled = isConfigured && !isExplicitlyDisabled;
       
-      if (isEnabled) {
-        // Validate beacon URL format (must be HTTPS)
-        if (!/^https:\/\/[a-zA-Z0-9.-]+\.dynatrace\.com\/bf$/.test(beaconUrl) &&
-            !/^https:\/\/[a-zA-Z0-9.-]+\.live\.dynatrace\.com\/bf$/.test(beaconUrl)) {
+      if (isConfigured && !isExplicitlyDisabled) {
+        // Validate script URL format (must be HTTPS from Dynatrace CDN or domain)
+        if (!/^https:\/\/(js-cdn\.dynatrace\.com|[a-zA-Z0-9.-]+\.(?:live\.)?dynatrace\.com)\//.test(scriptUrl)) {
           if (typeof console !== 'undefined' && console.error) {
-            console.error('[Dynatrace] Invalid beacon URL format. Must be HTTPS Dynatrace domain.');
+            console.error('[Dynatrace] Invalid script URL. Must be HTTPS from Dynatrace domain.');
           }
           return;
         }
         
-        // Validate application ID format (should be APPLICATION-* or similar)
-        if (!/^[A-Z0-9_-]+$/.test(appId)) {
-          if (typeof console !== 'undefined' && console.error) {
-            console.error('[Dynatrace] Invalid application ID format.');
-          }
-          return;
-        }
-        
-        // Load Dynatrace RUM agent asynchronously
+        // Load Dynatrace RUM agent
         var dt = document.createElement('script');
         dt.type = 'text/javascript';
         dt.async = true;
         dt.crossOrigin = 'anonymous';
-        // Use setAttribute to safely set the src without string concatenation risks
-        dt.setAttribute('src', beaconUrl + '/jstag/' + appId);
+        dt.setAttribute('src', scriptUrl);
         
         var s = document.getElementsByTagName('script')[0];
         if (s && s.parentNode) {
@@ -104,7 +88,7 @@
           console.log('[Dynatrace] Disabled via VITE_ENABLE_DYNATRACE=false');
         }
       }
-      // When not configured, don't log anything to avoid console noise in production
+      // When not configured, remain silent to avoid console noise
     })();
     </script>
     <!-- End Dynatrace RUM Monitoring -->

@@ -41,38 +41,44 @@ Dynatrace Real User Monitoring (RUM) has been fully integrated into CertLab to p
 # Sign up for free 15-day trial (no credit card required)
 ```
 
-### 2. Configure Environment Variables
+### 2. Get Your Script URL
 
 ```bash
-# Copy .env.example to .env and add your Dynatrace credentials
-cp .env.example .env
-
-# Edit .env and add:
-VITE_DYNATRACE_ENVIRONMENT_ID=your_env_id
-VITE_DYNATRACE_APPLICATION_ID=your_app_id
-VITE_DYNATRACE_BEACON_URL=https://your_env.live.dynatrace.com/bf
-VITE_ENABLE_DYNATRACE=true
+# In Dynatrace:
+# 1. Go to Applications & Microservices > Web applications > Your app
+# 2. Click "..." > Edit > Setup > Instrumentation code
+# 3. Copy the src URL from the <script> tag
+#    Example: https://js-cdn.dynatrace.com/jstag/176fb25782e/bf44908ztj/f8fcbfc83426566d_complete.js
 ```
 
-### 3. Build and Deploy
+### 3. Configure Environment Variables
 
 ```bash
-# Build with Dynatrace enabled (no manual snippet generation needed!)
+# Copy .env.example to .env
+cp .env.example .env
+
+# Edit .env and add the script URL from Dynatrace:
+VITE_DYNATRACE_SCRIPT_URL=https://js-cdn.dynatrace.com/jstag/YOUR_ENV/YOUR_APP/YOUR_SCRIPT.js
+```
+
+### 4. Build and Deploy
+
+```bash
+# Build with Dynatrace enabled
 npm run build
 
 # Deploy to Firebase (automatically includes Dynatrace)
 npm run deploy:firebase
 ```
 
-**Note**: The Dynatrace RUM script is automatically injected during the build process. No manual snippet generation or HTML editing is required!
+**Note**: The Dynatrace RUM script is automatically injected during the build process. Simply set the `VITE_DYNATRACE_SCRIPT_URL` environment variable, and the script will be loaded automatically!
 
-### 4. Verify Integration
+### 5. Verify Integration
 
 1. Open your deployed application
 2. Open browser DevTools → Network tab
-3. Look for requests to `https://{your_env}.live.dynatrace.com/bf`
-4. Check browser console for: `[Dynatrace] RUM agent loading from: ...`
-5. Check Dynatrace dashboard for incoming data (wait 2-5 minutes)
+3. Look for requests to `https://js-cdn.dynatrace.com/jstag/...` (or your Dynatrace domain)
+4. Check Dynatrace dashboard for incoming data (wait 2-5 minutes)
 
 ## 🔧 Features Implemented
 
