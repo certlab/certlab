@@ -46,13 +46,14 @@ function validateDynatraceConfig(): string[] {
   const scriptUrl = import.meta.env.VITE_DYNATRACE_SCRIPT_URL;
 
   // Check if script URL is configured
-  const hasScriptUrl = scriptUrl && scriptUrl !== '' && scriptUrl.startsWith('https://');
+  const hasScriptUrl =
+    typeof scriptUrl === 'string' && scriptUrl !== '' && scriptUrl.startsWith('https://');
 
   // If not configured, report error
   if (!hasScriptUrl) {
     if (!scriptUrl || scriptUrl === '') {
       errors.push('Dynatrace configuration is missing. Set VITE_DYNATRACE_SCRIPT_URL');
-    } else if (!scriptUrl.startsWith('https://')) {
+    } else if (typeof scriptUrl === 'string' && !scriptUrl.startsWith('https://')) {
       errors.push('VITE_DYNATRACE_SCRIPT_URL must be an HTTPS URL from Dynatrace');
     }
   }

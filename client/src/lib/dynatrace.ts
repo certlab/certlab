@@ -86,7 +86,7 @@ export function getDynatraceConfig(): DynatraceConfig | null {
   }
 
   // Validate required configuration
-  const hasValidConfig = scriptUrl && scriptUrl.startsWith('https://');
+  const hasValidConfig = typeof scriptUrl === 'string' && scriptUrl.startsWith('https://');
   if (!hasValidConfig) {
     // Only warn if user explicitly enabled Dynatrace
     if (enabled) {
