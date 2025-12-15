@@ -3,8 +3,12 @@
 /**
  * Firebase Configuration Checker
  * 
- * This script helps verify that Firebase environment variables are properly configured.
- * Run this script to check if Firebase Authentication and Firestore will work in your deployment.
+ * This script verifies that Firebase environment variables are properly configured.
+ * Firebase is OPTIONAL - the app works fully offline with IndexedDB when not configured.
+ * 
+ * This check always succeeds (exit code 0) to allow CI/CD to pass without Firebase.
+ * When Firebase is not configured, it provides helpful information about enabling cloud sync.
+ * When Firebase IS configured, it validates the configuration is correct.
  * 
  * Usage:
  *   node scripts/check-firebase-config.js
