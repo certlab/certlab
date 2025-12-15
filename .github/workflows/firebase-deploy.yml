@@ -51,14 +51,13 @@ jobs:
           VITE_DYNATRACE_SCRIPT_URL: ${{ secrets.VITE_DYNATRACE_SCRIPT_URL }}
           VITE_ENABLE_DYNATRACE: ${{ secrets.VITE_ENABLE_DYNATRACE }}
 
-      - name: Deploy Firestore Rules
-        uses: w9jds/firebase-action@v13.14.0
-        with:
-          args: deploy --only firestore:rules,firestore:indexes --project ${{ secrets.FIREBASE_PROJECT_ID }}
+      - name: Deploy Firestore Rules and Indexes
+        run: |
+          echo "$FIREBASE_SERVICE_ACCOUNT" > $HOME/gcp-key.json
+          export GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcp-key.json
+          npx firebase-tools deploy --only firestore:rules,firestore:indexes --project ${{ secrets.FIREBASE_PROJECT_ID }} --non-interactive
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        continue-on-error: true
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0.10.0
