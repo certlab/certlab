@@ -352,7 +352,9 @@ export function getQueryFn<T>(options: { on401: UnauthorizedBehavior }): QueryFu
         // This prevents race conditions during Firebase authentication where
         // queries may execute before setCurrentUserId() completes
         const userId = key[2] as string | undefined;
-        if (!userId) throw new Error('Not authenticated');
+        if (!userId || typeof userId !== 'string') {
+          throw new Error('Not authenticated');
+        }
 
         // Get user's current tenant for data isolation
         const user = await clientStorage.getUser(userId);
