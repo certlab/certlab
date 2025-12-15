@@ -181,7 +181,14 @@ export async function getUserDocument<T>(
     }
     return null;
   } catch (error) {
-    logError('getUserDocument', error, { userId, collectionName, documentId });
+    // Don't log permission errors as they're expected when user is not authenticated
+    const isPermissionError =
+      error instanceof Error &&
+      (error.message.includes('permission') || error.message.includes('insufficient'));
+
+    if (!isPermissionError) {
+      logError('getUserDocument', error, { userId, collectionName, documentId });
+    }
     throw error;
   }
 }
@@ -204,7 +211,14 @@ export async function getUserDocuments<T>(
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as T);
   } catch (error) {
-    logError('getUserDocuments', error, { userId, collectionName });
+    // Don't log permission errors as they're expected when user is not authenticated
+    const isPermissionError =
+      error instanceof Error &&
+      (error.message.includes('permission') || error.message.includes('insufficient'));
+
+    if (!isPermissionError) {
+      logError('getUserDocuments', error, { userId, collectionName });
+    }
     throw error;
   }
 }
@@ -341,7 +355,15 @@ export async function getUserProfile(userId: string): Promise<DocumentData | nul
     }
     return null;
   } catch (error) {
-    logError('getUserProfile', error, { userId });
+    // Don't log permission errors as they're expected when user is not authenticated
+    // Firebase throws "Missing or insufficient permissions" before authentication completes
+    const isPermissionError =
+      error instanceof Error &&
+      (error.message.includes('permission') || error.message.includes('insufficient'));
+
+    if (!isPermissionError) {
+      logError('getUserProfile', error, { userId });
+    }
     throw error;
   }
 }
