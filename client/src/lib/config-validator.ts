@@ -53,7 +53,8 @@ function validateDynatraceConfig(): string[] {
   if (!hasScriptUrl) {
     if (!scriptUrl || scriptUrl === '') {
       errors.push('Dynatrace configuration is missing. Set VITE_DYNATRACE_SCRIPT_URL');
-    } else if (typeof scriptUrl === 'string' && !scriptUrl.startsWith('https://')) {
+    } else {
+      // scriptUrl exists but doesn't start with https://
       errors.push('VITE_DYNATRACE_SCRIPT_URL must be an HTTPS URL from Dynatrace');
     }
   }
