@@ -128,7 +128,8 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
   // Handle case where badges might be undefined during Firebase sign-in
   const badgesByCategory = (badges || []).reduce(
     (acc, badgeData) => {
-      const category = badgeData.badge.category;
+      const category = badgeData?.badge?.category;
+      if (!category) return acc; // Skip invalid badge data
       if (!acc[category]) acc[category] = [];
       acc[category].push(badgeData);
       return acc;

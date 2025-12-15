@@ -503,7 +503,7 @@ class ClientAuth {
       const { passwordHash: _, ...sanitizedUser } = updatedUser;
       return { success: true, user: sanitizedUser };
     } catch (error) {
-      logError('updateProfile', error, { updates: Object.keys(updates) });
+      logError('updateProfile', error, { updates: updates ? Object.keys(updates) : [] });
 
       if (isStorageError(error)) {
         const authError = new AuthError(AuthErrorCode.STORAGE_ERROR);
