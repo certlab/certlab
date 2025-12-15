@@ -341,7 +341,15 @@ export async function getUserProfile(userId: string): Promise<DocumentData | nul
     }
     return null;
   } catch (error) {
-    logError('getUserProfile', error, { userId });
+    // Don't log permission denied errors - this is expected when user doesn't exist yet (first sign-up)
+    const isPermissionError =
+      error instanceof Error &&
+      (error.message.includes('Missing or insufficient permissions') ||
+        error.message.includes('permission-denied'));
+
+    if (!isPermissionError) {
+      logError('getUserProfile', error, { userId });
+    }
     throw error;
   }
 }

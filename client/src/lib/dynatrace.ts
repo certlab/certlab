@@ -71,7 +71,10 @@ export function getDynatraceConfig(): DynatraceConfig | null {
   const applicationId = import.meta.env.VITE_DYNATRACE_APPLICATION_ID;
   const beaconUrl = import.meta.env.VITE_DYNATRACE_BEACON_URL;
   // Parse boolean environment variables (they come as strings)
-  const enabled = String(import.meta.env.VITE_ENABLE_DYNATRACE || 'true') === 'true';
+  // Only explicitly enable if set to 'true', otherwise remain silent
+  const enabledEnv = import.meta.env.VITE_ENABLE_DYNATRACE;
+  const enabled = enabledEnv === 'true';
+  const explicitlyDisabled = enabledEnv === 'false';
   const devMode = String(import.meta.env.VITE_DYNATRACE_DEV_MODE || 'false') === 'true';
   const appName = import.meta.env.VITE_DYNATRACE_APP_NAME || 'CertLab';
   const actionPrefix = import.meta.env.VITE_DYNATRACE_ACTION_PREFIX;
@@ -79,15 +82,18 @@ export function getDynatraceConfig(): DynatraceConfig | null {
   // Check if we're in development mode and dev mode is disabled
   const isDevelopment = import.meta.env.DEV;
   if (isDevelopment && !devMode) {
-    console.log(
-      '[Dynatrace] Disabled in development mode (set VITE_DYNATRACE_DEV_MODE=true to enable)'
-    );
+    // Only log if explicitly enabled in dev
+    if (enabled) {
+      console.log('[Dynatrace] Dev mode disabled (set VITE_DYNATRACE_DEV_MODE=true to enable)');
+    }
     return null;
   }
 
   // Validate required configuration (empty string is falsy but explicitly allowed)
+  const hasConfig = environmentId || applicationId || beaconUrl;
   if (!environmentId || !applicationId || (beaconUrl !== '' && !beaconUrl)) {
-    if (enabled) {
+    // Only warn if user explicitly enabled Dynatrace or provided partial config
+    if (enabled || (hasConfig && !explicitlyDisabled)) {
       console.warn('[Dynatrace] Configuration incomplete. Missing required environment variables.');
       console.warn(
         'Required: VITE_DYNATRACE_ENVIRONMENT_ID, VITE_DYNATRACE_APPLICATION_ID, VITE_DYNATRACE_BEACON_URL'
@@ -96,7 +102,7 @@ export function getDynatraceConfig(): DynatraceConfig | null {
     return null;
   }
 
-  if (!enabled) {
+  if (explicitlyDisabled) {
     console.log('[Dynatrace] Monitoring disabled via VITE_ENABLE_DYNATRACE=false');
     return null;
   }
@@ -105,7 +111,7 @@ export function getDynatraceConfig(): DynatraceConfig | null {
     environmentId,
     applicationId,
     beaconUrl,
-    enabled,
+    enabled: true,
     devMode,
     appName,
     actionPrefix,

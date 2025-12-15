@@ -80,7 +80,8 @@ function validateDynatraceConfig(): string[] {
 /**
  * Validate all required configuration
  *
- * In production mode, both Firebase and Dynatrace must be configured.
+ * In production mode, Firebase must be configured for cloud sync.
+ * Dynatrace is optional but recommended for production monitoring.
  * In development mode, validation is skipped (warnings only).
  *
  * @returns Validation result with any errors found
@@ -93,16 +94,21 @@ export function validateRequiredConfiguration(): ConfigValidationResult {
     return { isValid: true, errors: [] };
   }
 
-  // In production mode, validate all required configuration
+  // In production mode, validate required configuration
   const errors: string[] = [];
 
-  // Validate Firebase
+  // Validate Firebase (required for cloud sync in production)
   const firebaseErrors = validateFirebaseConfig();
   errors.push(...firebaseErrors);
 
-  // Validate Dynatrace
+  // Check Dynatrace but only warn (not required)
   const dynatraceErrors = validateDynatraceConfig();
-  errors.push(...dynatraceErrors);
+  if (dynatraceErrors.length > 0) {
+    console.warn(
+      '[Config Validator] Dynatrace not configured (optional but recommended for production)'
+    );
+    dynatraceErrors.forEach((error) => console.warn(`  - ${error}`));
+  }
 
   const isValid = errors.length === 0;
 
