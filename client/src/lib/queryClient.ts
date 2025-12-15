@@ -347,7 +347,11 @@ export function getQueryFn<T>(options: { on401: UnauthorizedBehavior }): QueryFu
     try {
       // Handle user queries
       if (path.startsWith('/api/user/')) {
-        const userId = await clientStorage.getCurrentUserId();
+        // Extract userId from the query key instead of calling getCurrentUserId()
+        // Query key format: ['/api', 'user', userId, ...]
+        // This prevents race conditions during Firebase authentication where
+        // queries may execute before setCurrentUserId() completes
+        const userId = key[2] as string | undefined;
         if (!userId) throw new Error('Not authenticated');
 
         // Get user's current tenant for data isolation
