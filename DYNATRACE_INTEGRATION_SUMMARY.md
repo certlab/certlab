@@ -54,32 +54,25 @@ VITE_DYNATRACE_BEACON_URL=https://your_env.live.dynatrace.com/bf
 VITE_ENABLE_DYNATRACE=true
 ```
 
-### 3. Generate Monitoring Snippet
+### 3. Build and Deploy
 
 ```bash
-# Generate the Dynatrace RUM script snippet
-npm run dynatrace:snippet
-
-# Copy the generated snippet from dynatrace-snippet.html
-# Paste it into client/index.html (replace the placeholder comment)
-```
-
-### 4. Build and Deploy
-
-```bash
-# Build with Dynatrace enabled
+# Build with Dynatrace enabled (no manual snippet generation needed!)
 npm run build
 
 # Deploy to Firebase (automatically includes Dynatrace)
 npm run deploy:firebase
 ```
 
-### 5. Verify Integration
+**Note**: The Dynatrace RUM script is automatically injected during the build process. No manual snippet generation or HTML editing is required!
+
+### 4. Verify Integration
 
 1. Open your deployed application
 2. Open browser DevTools → Network tab
 3. Look for requests to `https://{your_env}.live.dynatrace.com/bf`
-4. Check Dynatrace dashboard for incoming data (wait 2-5 minutes)
+4. Check browser console for: `[Dynatrace] RUM agent loading from: ...`
+5. Check Dynatrace dashboard for incoming data (wait 2-5 minutes)
 
 ## 🔧 Features Implemented
 

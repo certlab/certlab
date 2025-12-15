@@ -152,33 +152,49 @@ The deployment workflow (`.github/workflows/firebase-deploy.yml`) will automatic
 
 ### Automatic Integration
 
-The Dynatrace integration is automatically enabled when you configure the environment variables. The application will:
+The Dynatrace integration is **fully automated** when you configure the environment variables. The application will:
 
-1. Load the Dynatrace RUM script from `index.html`
-2. Initialize Dynatrace on application startup (`main.tsx`)
-3. Track user sessions when users log in (`auth-provider.tsx`)
-4. End sessions on user logout
+1. **Automatically inject** the Dynatrace RUM script during the build process using environment variables
+2. **Initialize** Dynatrace on application startup (`main.tsx`)
+3. **Track** user sessions when users log in (`auth-provider.tsx`)
+4. **End** sessions on user logout
 
-### Manual Script Injection
+**No manual script insertion required!** The `index.html` file contains an inline script that dynamically loads the Dynatrace RUM agent using environment variables injected by Vite at build time.
 
-To add the Dynatrace monitoring snippet to `index.html`:
+### Verifying Integration
 
-1. Generate the snippet:
+To verify Dynatrace is working:
+
+1. Build the application with Dynatrace environment variables:
    ```bash
-   node scripts/generate-dynatrace-snippet.js
-   ```
-
-2. Copy the generated snippet from `dynatrace-snippet.html`
-
-3. Paste it into `client/index.html` in the `<head>` section (replace the placeholder comment)
-
-4. Verify the script is loading by:
-   ```bash
+   # Set environment variables (or configure in GitHub Secrets for CI/CD)
+   export VITE_DYNATRACE_ENVIRONMENT_ID=your_env_id
+   export VITE_DYNATRACE_APPLICATION_ID=your_app_id
+   export VITE_DYNATRACE_BEACON_URL=https://your_env.live.dynatrace.com/bf
+   export VITE_ENABLE_DYNATRACE=true
+   
+   # Build
    npm run build
-   npm run preview
-   # Open browser DevTools → Network tab
-   # Look for requests to your Dynatrace beacon URL
    ```
+
+2. Preview the built application:
+   ```bash
+   npm run preview
+   ```
+
+3. Open browser DevTools → Network tab and look for:
+   - Request to your Dynatrace beacon URL (e.g., `https://your_env.live.dynatrace.com/bf/jstag/...`)
+   - Subsequent beacon requests with user data
+
+4. Check the browser console for confirmation:
+   ```
+   [Dynatrace] RUM agent loading from: https://your_env.live.dynatrace.com/bf/jstag/...
+   [Dynatrace] Initialized for CertLab (your_env_id)
+   ```
+
+### Manual Script Generation (Optional)
+
+The `scripts/generate-dynatrace-snippet.js` script is maintained for reference purposes but is **no longer required** for integration. The dynamic injection approach in `index.html` is the recommended and active method.
 
 ### Custom Action Tracking
 

@@ -36,29 +36,55 @@
     
     <!-- Dynatrace RUM Monitoring -->
     <!-- 
-      To enable Dynatrace monitoring:
-      1. Configure Dynatrace environment variables in .env (see .env.example)
-      2. Run: node scripts/generate-dynatrace-snippet.js
-      3. Replace this comment with the generated snippet
+      Dynatrace Real User Monitoring (RUM) integration.
+      This script loads asynchronously to avoid blocking page rendering.
       
-      The snippet should be placed here (early in <head>) for optimal performance.
-      It loads asynchronously and won't block page rendering.
+      Configuration is injected at build time from environment variables:
+      - VITE_DYNATRACE_ENVIRONMENT_ID
+      - VITE_DYNATRACE_APPLICATION_ID
+      - VITE_DYNATRACE_BEACON_URL
+      - VITE_ENABLE_DYNATRACE
       
       For detailed setup instructions, see DYNATRACE_SETUP.md
+    -->
+    <script type="text/javascript">
+    (function() {
+      // Environment variables are injected by Vite at build time
+      var envId = '%VITE_DYNATRACE_ENVIRONMENT_ID%';
+      var appId = '%VITE_DYNATRACE_APPLICATION_ID%';
+      var beaconUrl = '%VITE_DYNATRACE_BEACON_URL%';
+      var enabled = '%VITE_ENABLE_DYNATRACE%';
       
-      Example snippet format:
-      <script type="text/javascript">
-      (function() {
+      // Check if Dynatrace is enabled and configured
+      // Vite leaves %VITE_*% unchanged if env var is not set
+      var isConfigured = envId && appId && beaconUrl && 
+                         !envId.includes('%') && 
+                         !appId.includes('%') && 
+                         !beaconUrl.includes('%');
+      var isEnabled = enabled === 'true' || enabled === '%VITE_ENABLE_DYNATRACE%';
+      
+      if (isConfigured && isEnabled) {
+        // Load Dynatrace RUM agent asynchronously
         var dt = document.createElement('script');
         dt.type = 'text/javascript';
         dt.async = true;
         dt.crossOrigin = 'anonymous';
-        dt.src = 'https://YOUR_ENVIRONMENT.live.dynatrace.com/bf/jstag/YOUR_APP_ID';
+        dt.src = beaconUrl + '/jstag/' + appId;
+        
         var s = document.getElementsByTagName('script')[0];
         s.parentNode.insertBefore(dt, s);
-      })();
-      </script>
-    -->
+        
+        console.log('[Dynatrace] RUM agent loading from:', dt.src);
+      } else if (!isConfigured) {
+        // Only log in development mode (production won't see this)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          console.log('[Dynatrace] Not configured. Set VITE_DYNATRACE_* environment variables to enable.');
+        }
+      } else {
+        console.log('[Dynatrace] Disabled via VITE_ENABLE_DYNATRACE=false');
+      }
+    })();
+    </script>
     <!-- End Dynatrace RUM Monitoring -->
   </head>
   <body>
