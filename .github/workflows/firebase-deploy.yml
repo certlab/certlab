@@ -55,11 +55,13 @@ jobs:
         run: |
           # Create temporary credentials file
           CREDS_FILE=$(mktemp)
-          cat > "$CREDS_FILE" <<< "$FIREBASE_SERVICE_ACCOUNT"
+          cat > "$CREDS_FILE" <<EOF
+          $FIREBASE_SERVICE_ACCOUNT
+          EOF
           export GOOGLE_APPLICATION_CREDENTIALS="$CREDS_FILE"
           
           # Deploy Firestore rules and indexes
-          npx firebase-tools deploy --only firestore:rules,firestore:indexes --project "$FIREBASE_PROJECT_ID" --non-interactive
+          npx firebase deploy --only firestore:rules,firestore:indexes --project "$FIREBASE_PROJECT_ID" --non-interactive
           
           # Securely clean up credentials file
           shred -u "$CREDS_FILE" 2>/dev/null || rm -f "$CREDS_FILE"
