@@ -30,7 +30,6 @@ jobs:
 
       - name: Validate Firebase Config
         run: npm run check:firebase
-        continue-on-error: true
 
       - name: Build
         run: npm run build:firebase
