@@ -1,15 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import {
-  Badge,
-  Trophy,
-  Star,
-  Target,
-  Flame,
-  BookOpen,
-  Award,
-  RotateCcw,
-  Medal,
-} from 'lucide-react';
+import { Badge, Trophy, Star, Target, Flame, Award } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge as BadgeUI } from '@/components/ui/badge';
 import { LevelProgress } from '@/components/LevelProgress';
@@ -145,12 +135,6 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
     },
     {} as Record<string, BadgeData[]>
   );
-
-  // Calculate level progress
-  // Handle case where gameStats might be undefined during data loading
-  const currentLevelProgress = gameStats
-    ? ((gameStats.totalPoints % gameStats.nextLevelPoints) / gameStats.nextLevelPoints) * 100
-    : 0;
 
   return (
     <div className="space-y-6">

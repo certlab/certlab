@@ -124,8 +124,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!firebaseInitialized) return;
 
     const unsubscribe = onFirebaseAuthStateChanged(async (fbUser) => {
-      // Set loading state while Firebase auth state is changing
-      setIsLoading(true);
+      const previousFirebaseUser = firebaseUser;
+
+      // Only set loading state for substantive auth changes (sign-in/sign-out)
+      // Skip loading for token refreshes and minor state updates
+      const isSubstantiveChange =
+        (!previousFirebaseUser && fbUser) || // User signed in
+        (previousFirebaseUser && !fbUser); // User signed out
+
+      if (isSubstantiveChange) {
+        setIsLoading(true);
+      }
+
       setFirebaseUser(fbUser);
 
       if (fbUser) {
@@ -143,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [firebaseInitialized, loadUser]);
+  }, [firebaseInitialized, loadUser, firebaseUser]);
 
   // Initial load from local storage
   useEffect(() => {
