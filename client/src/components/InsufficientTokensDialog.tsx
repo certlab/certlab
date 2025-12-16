@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,12 +6,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Coins, AlertCircle } from "lucide-react";
-import { useAuth } from "@/lib/auth-provider";
-import { clientStorage } from "@/lib/client-storage";
-import { useToast } from "@/hooks/use-toast";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Coins, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/lib/auth-provider';
+import { storage } from '@/lib/storage-factory';
+import { useToast } from '@/hooks/use-toast';
 
 interface InsufficientTokensDialogProps {
   open: boolean;
@@ -31,7 +31,7 @@ export function InsufficientTokensDialog({
   const { user } = useAuth();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
-  
+
   const tokensNeeded = requiredTokens - currentBalance;
   const suggestedAmount = Math.max(tokensNeeded, 50); // Suggest at least 50 tokens
 
@@ -40,20 +40,20 @@ export function InsufficientTokensDialog({
 
     setIsAdding(true);
     try {
-      await clientStorage.addTokens(user.id, suggestedAmount);
-      
+      await storage.addTokens(user.id, suggestedAmount);
+
       toast({
-        title: "Tokens Added",
+        title: 'Tokens Added',
         description: `Added ${suggestedAmount} tokens to your account.`,
       });
-      
+
       onOpenChange(false);
       onTokensAdded();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to add tokens. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to add tokens. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsAdding(false);
@@ -68,11 +68,9 @@ export function InsufficientTokensDialog({
             <AlertCircle className="w-5 h-5 text-orange-500" />
             Insufficient Tokens
           </DialogTitle>
-          <DialogDescription>
-            You don't have enough tokens to create this quiz.
-          </DialogDescription>
+          <DialogDescription>You don't have enough tokens to create this quiz.</DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-800">
             <div className="flex items-center gap-2">
@@ -96,7 +94,11 @@ export function InsufficientTokensDialog({
           </div>
 
           <div className="text-sm text-muted-foreground">
-            <p className="mb-2">We'll add <span className="font-semibold text-foreground">{suggestedAmount} tokens</span> to your account (free) so you can create this quiz and have extras for future quizzes.</p>
+            <p className="mb-2">
+              We'll add{' '}
+              <span className="font-semibold text-foreground">{suggestedAmount} tokens</span> to
+              your account (free) so you can create this quiz and have extras for future quizzes.
+            </p>
             <p className="text-xs">💡 Tokens are completely free in this client-side version!</p>
           </div>
         </div>
@@ -117,7 +119,7 @@ export function InsufficientTokensDialog({
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           >
             <Coins className="w-4 h-4 mr-2" />
-            {isAdding ? "Adding Tokens..." : `Add ${suggestedAmount} Tokens & Continue`}
+            {isAdding ? 'Adding Tokens...' : `Add ${suggestedAmount} Tokens & Continue`}
           </Button>
         </DialogFooter>
       </DialogContent>

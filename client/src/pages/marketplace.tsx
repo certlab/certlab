@@ -18,6 +18,7 @@ import {
 import { ShoppingCart, Package, Eye, Coins, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { useToast } from '@/hooks/use-toast';
+import { storage } from '@/lib/storage-factory';
 import { clientStorage } from '@/lib/client-storage';
 import { queryKeys, queryClient } from '@/lib/queryClient';
 import type { Category, MarketplacePurchase } from '@shared/schema';
@@ -325,10 +326,10 @@ export default function Marketplace() {
 
     try {
       // Check if questions are available before creating the quiz
-      const user = await clientStorage.getUser(currentUser.id);
+      const user = await storage.getUser(currentUser.id);
       const tenantId = user?.tenantId || DEFAULT_TENANT_ID;
 
-      const availableQuestions = await clientStorage.getQuestionsByCategories(
+      const availableQuestions = await storage.getQuestionsByCategories(
         [categoryId],
         undefined,
         undefined,
@@ -345,7 +346,7 @@ export default function Marketplace() {
       }
 
       // Create a preview quiz with the minimum of 5 or available questions
-      const quiz = await clientStorage.createQuiz({
+      const quiz = await storage.createQuiz({
         userId: currentUser.id,
         title: `${material.name} Preview`,
         categoryIds: [categoryId],
@@ -418,7 +419,7 @@ export default function Marketplace() {
     const amountToAdd = Math.max(tokensNeeded, MIN_TOKENS_TO_ADD);
 
     try {
-      await clientStorage.addTokens(currentUser.id, amountToAdd);
+      await storage.addTokens(currentUser.id, amountToAdd);
       // Wait for query invalidation to complete before showing purchase dialog
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser.id) }),

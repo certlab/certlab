@@ -1,19 +1,19 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/lib/auth-provider";
-import { clientStorage } from "@/lib/client-storage";
-import { queryClient, queryKeys } from "@/lib/queryClient";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Coins, Plus } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useAuth } from '@/lib/auth-provider';
+import { storage } from '@/lib/storage-factory';
+import { queryClient, queryKeys } from '@/lib/queryClient';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Coins, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export function TokenBalance() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [tokensToAdd, setTokensToAdd] = useState("50");
+  const [tokensToAdd, setTokensToAdd] = useState('50');
 
   const { data: tokenData } = useQuery({
     queryKey: queryKeys.user.tokenBalance(user?.id),
@@ -22,23 +22,23 @@ export function TokenBalance() {
 
   const addTokensMutation = useMutation({
     mutationFn: async (amount: number) => {
-      if (!user?.id) throw new Error("Not authenticated");
-      return await clientStorage.addTokens(user.id, amount);
+      if (!user?.id) throw new Error('Not authenticated');
+      return await storage.addTokens(user.id, amount);
     },
     onSuccess: (newBalance) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(user?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
       toast({
-        title: "Tokens Added",
+        title: 'Tokens Added',
         description: `Your new balance is ${newBalance} tokens.`,
       });
-      setTokensToAdd("50");
+      setTokensToAdd('50');
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to add tokens",
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to add tokens',
+        variant: 'destructive',
       });
     },
   });
@@ -47,9 +47,9 @@ export function TokenBalance() {
     const amount = parseInt(tokensToAdd);
     if (isNaN(amount) || amount <= 0) {
       toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid positive number",
-        variant: "destructive",
+        title: 'Invalid Amount',
+        description: 'Please enter a valid positive number',
+        variant: 'destructive',
       });
       return;
     }
@@ -86,13 +86,13 @@ export function TokenBalance() {
               onChange={(e) => setTokensToAdd(e.target.value)}
               placeholder="Enter amount"
             />
-            <Button 
+            <Button
               onClick={handleAddTokens}
               disabled={addTokensMutation.isPending}
               className="whitespace-nowrap"
             >
               <Plus className="w-4 h-4 mr-2" />
-              {addTokensMutation.isPending ? "Adding..." : "Add Tokens"}
+              {addTokensMutation.isPending ? 'Adding...' : 'Add Tokens'}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
