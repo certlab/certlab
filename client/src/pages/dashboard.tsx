@@ -28,7 +28,7 @@ import {
 import type { UserStats, Quiz, Category } from '@shared/schema';
 
 export default function Dashboard() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshUser } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showInsufficientTokensDialog, setShowInsufficientTokensDialog] = useState(false);
@@ -110,6 +110,9 @@ export default function Dashboard() {
       });
 
       if (quiz?.id) {
+        // Refresh user state in auth provider to keep it in sync
+        await refreshUser();
+
         // Invalidate cache
         queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser.id) });
         queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser.id) });

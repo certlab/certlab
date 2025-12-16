@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export function TokenBalance() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const [tokensToAdd, setTokensToAdd] = useState('50');
 
@@ -27,9 +27,14 @@ export function TokenBalance() {
       if (!user?.id) throw new Error('Not authenticated');
       return await storage.addTokens(user.id, amount);
     },
-    onSuccess: (newBalance) => {
+    onSuccess: async (newBalance) => {
+      // Refresh user state in auth provider to keep it in sync
+      await refreshUser();
+
+      // Invalidate queries to update all components displaying token balance
       queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(user?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
+
       toast({
         title: 'Tokens Added',
         description: `Your new balance is ${newBalance} tokens.`,
