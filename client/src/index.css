@@ -101,15 +101,15 @@
   --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Sidebar variables */
-  --sidebar-background: hsl(0, 0%, 100%);
-  --sidebar-foreground: hsl(215, 25%, 20%);
-  --sidebar-primary: hsl(221, 83%, 53%);
-  --sidebar-primary-foreground: hsl(210, 40%, 98%);
-  --sidebar-accent: hsl(210, 40%, 96%);
-  --sidebar-accent-foreground: hsl(215, 25%, 27%);
-  --sidebar-border: hsl(214, 32%, 89%);
-  --sidebar-ring: hsl(221, 83%, 53%);
+  /* Sidebar variables - CLAY OS Dark Slate Theme */
+  --sidebar-background: hsl(210, 22%, 35%);
+  --sidebar-foreground: hsl(210, 20%, 85%);
+  --sidebar-primary: hsl(210, 22%, 45%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(210, 22%, 40%);
+  --sidebar-accent-foreground: hsl(210, 20%, 90%);
+  --sidebar-border: hsl(210, 22%, 30%);
+  --sidebar-ring: hsl(210, 100%, 60%);
 }
 
 .dark {

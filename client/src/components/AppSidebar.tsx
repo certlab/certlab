@@ -1,20 +1,17 @@
-import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/lib/auth-provider';
 import {
   Home,
   BookOpen,
-  Database,
   Settings,
   Shield,
-  ChevronDown,
-  Target,
-  GraduationCap,
-  Coins,
+  ShoppingBag,
+  Wallet,
+  User,
+  Download,
+  Box,
 } from 'lucide-react';
-import { cn, getInitials, getUserDisplayName } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sidebar,
@@ -24,89 +21,79 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
   SidebarGroup,
   SidebarGroupContent,
 } from '@/components/ui/sidebar';
-import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/queryClient';
-import TenantSwitcher from '@/components/TenantSwitcher';
 
-// Navigation items for the sidebar
-const getNavigationItems = (isAdmin: boolean) => [
-  {
-    title: 'Dashboard',
-    icon: Home,
-    url: '/app',
-    isActive: true,
-  },
-  {
-    title: 'Learning',
-    icon: BookOpen,
-    items: [
-      { title: 'Practice Tests', url: '/app/practice-tests' },
-      { title: 'Study Notes', url: '/app/study-notes' },
-      { title: 'Study Materials', url: '/app/marketplace' },
-    ],
-  },
-  {
-    title: 'Progress',
-    icon: Target,
-    items: [
-      { title: 'Achievements', url: '/app/achievements' },
-      { title: 'My Profile', url: '/app/profile' },
-    ],
-  },
-  {
-    title: 'Data',
-    icon: Database,
-    items: [
-      { title: 'Question Bank', url: '/app/question-bank' },
-      { title: 'Import Sample Data', url: '/app/data-import' },
-    ],
-  },
-  ...(isAdmin
+// Navigation items for the sidebar - CLAY OS style
+const getNavigationItems = (isAdmin: boolean) => {
+  const studentItems = [
+    {
+      section: 'STUDENT',
+      items: [
+        {
+          title: 'Dashboard',
+          icon: Home,
+          url: '/app',
+        },
+        {
+          title: 'Marketplace',
+          icon: ShoppingBag,
+          url: '/app/marketplace',
+        },
+        {
+          title: 'My Courses',
+          icon: BookOpen,
+          url: '/app/practice-tests',
+        },
+        {
+          title: 'Wallet',
+          icon: Wallet,
+          url: '/app/profile',
+        },
+        {
+          title: 'Profile',
+          icon: User,
+          url: '/app/profile',
+        },
+        {
+          title: 'Settings',
+          icon: Settings,
+          url: '/app/profile',
+        },
+        {
+          title: 'Import',
+          icon: Download,
+          url: '/app/data-import',
+        },
+      ],
+    },
+  ];
+
+  const adminItems = isAdmin
     ? [
         {
-          title: 'Admin',
-          icon: Shield,
+          section: 'ADMIN',
           items: [
-            { title: 'Admin Dashboard', url: '/admin' },
-            { title: 'UI Structure', url: '/app/ui-structure' },
-            { title: 'Accessibility', url: '/app/accessibility' },
+            {
+              title: 'Admin Panel',
+              icon: Shield,
+              url: '/admin',
+            },
           ],
         },
       ]
-    : []),
-];
+    : [];
+
+  return [...studentItems, ...adminItems];
+};
 
 export function AppSidebar() {
   const [location, setLocation] = useLocation();
   const { user: currentUser } = useAuth();
   const isAdmin = currentUser?.role === 'admin';
-  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
-    Learning: true,
-    Progress: true,
-  });
-
-  // Get token balance
-  const { data: tokenData } = useQuery<{ balance: number }>({
-    queryKey: queryKeys.user.tokenBalance(currentUser?.id),
-    enabled: !!currentUser?.id,
-    staleTime: 30000, // 30 seconds to reduce unnecessary queries
-    gcTime: 5 * 60 * 1000,
-  });
 
   const navigationItems = getNavigationItems(isAdmin);
-
-  const toggleExpanded = (title: string) => {
-    setExpandedItems((prev) => ({
-      ...prev,
-      [title]: !prev[title],
-    }));
-  };
 
   const isPathActive = (path: string) => {
     if (path === '/app') {
@@ -116,142 +103,84 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
-      <SidebarHeader className="p-4">
+    <Sidebar className="bg-sidebar-background border-sidebar-border">
+      <SidebarHeader className="p-4 border-b border-sidebar-border/50">
         <div className="flex items-center gap-3">
-          <div className="flex aspect-square size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 text-white shadow-lg">
-            <GraduationCap className="size-5" />
+          <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-transparent text-sidebar-foreground">
+            <Box className="size-6" />
           </div>
           <div>
-            <h2 className="font-semibold">Cert Lab</h2>
-            <p className="text-xs text-muted-foreground">Certification Training</p>
+            <h2 className="font-bold text-lg text-sidebar-foreground tracking-wide">CLAY OS</h2>
           </div>
-        </div>
-
-        {/* Tenant Switcher */}
-        <div className="mt-3">
-          <TenantSwitcher />
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
-        <ScrollArea className="flex-1 px-3">
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {navigationItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    {item.items ? (
-                      <>
+      <SidebarContent className="bg-sidebar-background">
+        <ScrollArea className="flex-1">
+          {navigationItems.map((section) => (
+            <div key={section.section} className="mb-6">
+              <div className="px-4 mb-2">
+                <p className="text-xs font-semibold text-sidebar-foreground/60 tracking-wider">
+                  {section.section}
+                </p>
+              </div>
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {section.items.map((item) => (
+                      <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
-                          onClick={() => toggleExpanded(item.title)}
+                          onClick={() => item.url && setLocation(item.url)}
+                          isActive={item.url ? isPathActive(item.url) : false}
                           className={cn(
-                            'w-full justify-between rounded-xl',
-                            expandedItems[item.title] && 'bg-accent/50'
+                            'rounded-lg mx-2 my-0.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                            item.url &&
+                              isPathActive(item.url) &&
+                              'bg-sidebar-primary text-sidebar-primary-foreground'
                           )}
                         >
-                          <div className="flex items-center gap-3">
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                          </div>
-                          <ChevronDown
-                            className={cn(
-                              'h-4 w-4 transition-transform',
-                              expandedItems[item.title] && 'rotate-180'
-                            )}
-                          />
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
                         </SidebarMenuButton>
-                        {expandedItems[item.title] && (
-                          <SidebarMenuSub>
-                            {item.items.map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.title}>
-                                <SidebarMenuSubButton
-                                  onClick={() => setLocation(subItem.url)}
-                                  isActive={isPathActive(subItem.url)}
-                                  className="cursor-pointer rounded-lg"
-                                >
-                                  {subItem.title}
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
-                          </SidebarMenuSub>
-                        )}
-                      </>
-                    ) : (
-                      <SidebarMenuButton
-                        onClick={() => item.url && setLocation(item.url)}
-                        isActive={item.url ? isPathActive(item.url) : false}
-                        className="rounded-xl"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    )}
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </div>
+          ))}
         </ScrollArea>
       </SidebarContent>
 
-      <SidebarFooter className="border-t p-3">
-        {/* Token Balance */}
-        {tokenData && (
-          <div
-            className="flex items-center gap-2 rounded-xl bg-accent/50 px-3 py-2 mb-2 cursor-pointer hover:bg-accent transition-colors"
-            onClick={() => setLocation('/app/dashboard')}
-            onKeyDown={(e) => {
-              if (e.key === ' ') {
-                e.preventDefault();
-                setLocation('/app/dashboard');
-              } else if (e.key === 'Enter') {
-                setLocation('/app/dashboard');
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label={`${tokenData.balance} tokens available`}
-          >
-            <Coins className="h-4 w-4 text-amber-500" />
-            <span className="text-sm font-medium">{tokenData.balance}</span>
-            <span className="text-xs text-muted-foreground">tokens</span>
-          </div>
-        )}
-
-        {/* Settings */}
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => setLocation('/app/profile')} className="rounded-xl">
-              <Settings className="h-4 w-4" />
-              <span>Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-
-        {/* User Profile */}
-        {currentUser && (
-          <div className="flex items-center justify-between rounded-xl px-3 py-2 mt-2 hover:bg-accent/50 transition-colors">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-white text-xs">
-                  {getInitials(currentUser.firstName, currentUser.lastName)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium truncate max-w-[120px]">
-                  {getUserDisplayName(currentUser)}
-                </span>
-                <span className="text-xs text-muted-foreground">Student</span>
-              </div>
-            </div>
-            {isAdmin && (
-              <Badge variant="outline" className="text-xs">
-                Admin
-              </Badge>
-            )}
-          </div>
-        )}
+      <SidebarFooter className="border-t border-sidebar-border/50 p-4 bg-sidebar-background">
+        {/* Theme Selector Dots */}
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <button
+            className="w-5 h-5 rounded-full bg-[hsl(210,22%,35%)] border-2 border-sidebar-foreground/20 hover:border-sidebar-foreground/40 transition-colors"
+            aria-label="Default theme"
+            title="Default"
+          />
+          <button
+            className="w-5 h-5 rounded-full bg-[hsl(25,75%,47%)] border-2 border-transparent hover:border-sidebar-foreground/40 transition-colors"
+            aria-label="Warm theme"
+            title="Warm"
+          />
+          <button
+            className="w-5 h-5 rounded-full bg-[hsl(140,60%,45%)] border-2 border-transparent hover:border-sidebar-foreground/40 transition-colors"
+            aria-label="Green theme"
+            title="Green"
+          />
+          <button
+            className="w-5 h-5 rounded-full bg-[hsl(265,85%,58%)] border-2 border-transparent hover:border-sidebar-foreground/40 transition-colors"
+            aria-label="Purple theme"
+            title="Purple"
+          />
+          <button
+            className="w-5 h-5 rounded-full bg-[hsl(220,15%,25%)] border-2 border-transparent hover:border-sidebar-foreground/40 transition-colors"
+            aria-label="Dark theme"
+            title="Dark"
+          />
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

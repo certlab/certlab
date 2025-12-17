@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Settings } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-provider';
 import { RightSidebarProvider, useRightSidebar } from '@/lib/right-sidebar-provider';
@@ -40,56 +40,64 @@ function AuthenticatedHeader() {
     <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur">
       <SidebarTrigger className="rounded-xl" />
 
-      <div className="flex flex-1 items-center justify-between">
-        <h1 className="text-xl font-semibold">Cert Lab</h1>
-
-        <div className="flex items-center gap-3">
-          {/* Settings/Theme Toggle - Opens right sidebar */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 rounded-xl"
-                onClick={() => togglePanel('settings')}
-                aria-label="Open settings panel"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Settings</TooltipContent>
-          </Tooltip>
-
-          {/* Notifications - Opens right sidebar */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-xl relative"
-                onClick={() => togglePanel('notifications')}
-                aria-label="Open notifications panel"
-              >
-                <Bell className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Notifications</TooltipContent>
-          </Tooltip>
-
-          {/* User Avatar - Opens right sidebar */}
-          <Button
-            variant="ghost"
-            className="relative h-9 w-9 rounded-full p-0"
-            onClick={() => togglePanel('user')}
-            aria-label="Open user panel"
-          >
-            <Avatar className="h-9 w-9 border-2 border-primary">
-              <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-white text-sm">
-                {currentUser ? getInitials(currentUser.firstName, currentUser.lastName) : '?'}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
+      <div className="flex flex-1 items-center justify-center max-w-2xl mx-auto">
+        {/* Centered Search Bar */}
+        <div className="relative w-full">
+          <input
+            type="text"
+            placeholder="Search dashboard..."
+            className="w-full px-4 py-2 pr-10 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <button className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+          </button>
         </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        {/* Notifications - Opens right sidebar */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full relative bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => togglePanel('notifications')}
+              aria-label="Open notifications panel"
+            >
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Notifications</TooltipContent>
+        </Tooltip>
+
+        {/* User Avatar - Opens right sidebar */}
+        <Button
+          variant="ghost"
+          className="relative h-9 w-9 rounded-full p-0 bg-white hover:bg-white/90"
+          onClick={() => togglePanel('user')}
+          aria-label="Open user panel"
+        >
+          <Avatar className="h-9 w-9">
+            <AvatarFallback className="bg-white text-foreground font-semibold text-sm border border-border">
+              {currentUser ? getInitials(currentUser.firstName, currentUser.lastName) : '?'}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
       </div>
     </header>
   );
