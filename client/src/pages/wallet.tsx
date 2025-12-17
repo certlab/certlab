@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Wallet as WalletIcon, Zap, Coins } from 'lucide-react';
@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { clientStorage } from '@/lib/client-storage';
 import { queryKeys, queryClient } from '@/lib/queryClient';
+import { calculateLevelAndXP } from '@/lib/level-utils';
 import type { UserStats } from '@shared/schema';
 
 interface TokenPackage {
@@ -57,12 +58,8 @@ export default function WalletPage() {
     enabled: !!currentUser?.id,
   });
 
-  // Calculate level and XP
-  const level = stats ? Math.floor((stats.totalQuizzes || 0) / 10) + 1 : 1;
-  const currentXP = stats
-    ? ((stats.totalQuizzes || 0) % 10) * 250 + Math.floor((stats.averageScore || 0) * 5)
-    : 0;
-  const xpGoal = level * 1000;
+  // Calculate level and XP using shared utility
+  const { level, currentXP, xpGoal, xpProgress } = calculateLevelAndXP(stats);
 
   const purchaseTokensMutation = useMutation({
     mutationFn: async (packageId: string) => {
@@ -117,7 +114,12 @@ export default function WalletPage() {
                 <div className="relative w-full bg-secondary rounded-full h-3">
                   <div
                     className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min((currentXP / xpGoal) * 100, 100)}%` }}
+                    style={{ width: `${xpProgress}%` }}
+                    role="progressbar"
+                    aria-valuenow={currentXP}
+                    aria-valuemin={0}
+                    aria-valuemax={xpGoal}
+                    aria-label="Experience progress"
                   ></div>
                 </div>
                 <div className="text-sm text-muted-foreground text-right mt-1">

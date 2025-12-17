@@ -1,5 +1,6 @@
 import { useLocation } from 'wouter';
 import { useAuth } from '@/lib/auth-provider';
+import { useTheme } from '@/lib/theme-provider';
 import {
   Home,
   BookOpen,
@@ -91,6 +92,7 @@ const getNavigationItems = (isAdmin: boolean) => {
 export function AppSidebar() {
   const [location, setLocation] = useLocation();
   const { user: currentUser } = useAuth();
+  const { theme, setTheme } = useTheme();
   const isAdmin = currentUser?.role === 'admin';
 
   const navigationItems = getNavigationItems(isAdmin);
@@ -156,27 +158,57 @@ export function AppSidebar() {
         {/* Theme Selector Dots */}
         <div className="flex items-center justify-center gap-2 mb-3">
           <button
-            className="w-5 h-5 rounded-full bg-[hsl(210,22%,35%)] border-2 border-sidebar-foreground/20 hover:border-sidebar-foreground/40 transition-colors"
-            aria-label="Default theme"
-            title="Default"
+            onClick={() => setTheme('light')}
+            className={cn(
+              'w-5 h-5 rounded-full bg-[hsl(210,22%,35%)] border-2 transition-colors',
+              theme === 'light'
+                ? 'border-sidebar-foreground/80 ring-2 ring-sidebar-foreground/40'
+                : 'border-sidebar-foreground/20 hover:border-sidebar-foreground/40'
+            )}
+            aria-label="Light theme"
+            title="Light"
           />
           <button
-            className="w-5 h-5 rounded-full bg-[hsl(25,75%,47%)] border-2 border-transparent hover:border-sidebar-foreground/40 transition-colors"
-            aria-label="Warm theme"
-            title="Warm"
+            onClick={() => setTheme('dracula')}
+            className={cn(
+              'w-5 h-5 rounded-full bg-[hsl(265,89%,78%)] border-2 transition-colors',
+              theme === 'dracula'
+                ? 'border-sidebar-foreground/80 ring-2 ring-sidebar-foreground/40'
+                : 'border-transparent hover:border-sidebar-foreground/40'
+            )}
+            aria-label="Dracula theme"
+            title="Dracula"
           />
           <button
-            className="w-5 h-5 rounded-full bg-[hsl(140,60%,45%)] border-2 border-transparent hover:border-sidebar-foreground/40 transition-colors"
-            aria-label="Green theme"
-            title="Green"
+            onClick={() => setTheme('nord')}
+            className={cn(
+              'w-5 h-5 rounded-full bg-[hsl(213,32%,52%)] border-2 transition-colors',
+              theme === 'nord'
+                ? 'border-sidebar-foreground/80 ring-2 ring-sidebar-foreground/40'
+                : 'border-transparent hover:border-sidebar-foreground/40'
+            )}
+            aria-label="Nord theme"
+            title="Nord"
           />
           <button
-            className="w-5 h-5 rounded-full bg-[hsl(265,85%,58%)] border-2 border-transparent hover:border-sidebar-foreground/40 transition-colors"
-            aria-label="Purple theme"
-            title="Purple"
+            onClick={() => setTheme('catppuccin')}
+            className={cn(
+              'w-5 h-5 rounded-full bg-[hsl(217,92%,76%)] border-2 transition-colors',
+              theme === 'catppuccin'
+                ? 'border-sidebar-foreground/80 ring-2 ring-sidebar-foreground/40'
+                : 'border-transparent hover:border-sidebar-foreground/40'
+            )}
+            aria-label="Catppuccin theme"
+            title="Catppuccin"
           />
           <button
-            className="w-5 h-5 rounded-full bg-[hsl(220,15%,25%)] border-2 border-transparent hover:border-sidebar-foreground/40 transition-colors"
+            onClick={() => setTheme('dark')}
+            className={cn(
+              'w-5 h-5 rounded-full bg-[hsl(240,10%,8%)] border-2 transition-colors',
+              theme === 'dark'
+                ? 'border-sidebar-foreground/80 ring-2 ring-sidebar-foreground/40'
+                : 'border-transparent hover:border-sidebar-foreground/40'
+            )}
             aria-label="Dark theme"
             title="Dark"
           />

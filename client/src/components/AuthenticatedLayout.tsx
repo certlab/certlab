@@ -12,6 +12,7 @@ import { RightSidebar } from '@/components/RightSidebar';
 import { SidebarProvider, SidebarInset, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
+import { calculateLevelAndXP } from '@/lib/level-utils';
 import type { UserStats } from '@shared/schema';
 
 interface AuthenticatedLayoutProps {
@@ -72,7 +73,12 @@ function AuthenticatedHeader() {
           <div className="relative w-full bg-secondary rounded-full h-2">
             <div
               className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-300"
-              style={{ width: `${Math.min(xpProgress, 100)}%` }}
+              style={{ width: `${xpProgress}%` }}
+              role="progressbar"
+              aria-valuenow={currentXP}
+              aria-valuemin={0}
+              aria-valuemax={xpGoal}
+              aria-label="Experience progress"
             ></div>
           </div>
           <div className="text-xs text-muted-foreground text-right mt-0.5">{xpGoal} XP GOAL</div>
