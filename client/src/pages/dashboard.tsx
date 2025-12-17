@@ -236,16 +236,93 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
+        {/* Welcome Card - CLAY OS Style */}
+        <Card className="mb-8 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
+          <CardContent className="p-8">
+            <h1 className="text-3xl font-bold mb-2">
+              Welcome back, {currentUser?.firstName || currentUser?.lastName || 'Student'}
+            </h1>
+            <p className="text-primary-foreground/90 mb-6">
+              You're on a {stats?.studyStreak || 0} day streak! Keep it up.
+            </p>
+            <div className="flex gap-8 flex-wrap">
+              <div>
+                <p className="text-sm text-primary-foreground/80 mb-1">DAILY GOAL</p>
+                <p className="text-4xl font-bold">
+                  {stats?.totalQuizzes > 0
+                    ? Math.min(Math.round((stats?.totalQuizzes / 10) * 100), 100)
+                    : 0}
+                  %
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-primary-foreground/80 mb-1">STUDY TIME</p>
+                <p className="text-4xl font-bold">
+                  {stats?.totalQuizzes ? (stats.totalQuizzes * 0.45).toFixed(1) : '0.0'}h
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Jump Back In Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Welcome back, {currentUser?.firstName || 'Student'}!
-          </h1>
-          <div className="flex items-center gap-2 text-muted-foreground mb-2">
-            <Calendar className="w-4 h-4" />
-            <span>{getCurrentDateTime()}</span>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-foreground">Jump Back In</h2>
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              •••
+            </Button>
           </div>
-          <p className="text-lg text-muted-foreground italic">{motivationalMessage}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recentQuizzes.slice(0, 3).map((quiz) => (
+              <Card
+                key={quiz.id}
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() =>
+                  quiz.completedAt
+                    ? setLocation(`/app/results/${quiz.id}`)
+                    : setLocation(`/app/quiz/${quiz.id}`)
+                }
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-primary/10 mb-4 mx-auto">
+                    <PlayCircle className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-center mb-2 line-clamp-2">
+                    {quiz.title || 'Practice Quiz'}
+                  </h3>
+                  {quiz.completedAt ? (
+                    <div className="w-full bg-secondary rounded-full h-2 mb-1">
+                      <div
+                        className="bg-primary h-2 rounded-full"
+                        style={{ width: `${quiz.score || 0}%` }}
+                      ></div>
+                    </div>
+                  ) : (
+                    <div className="w-full bg-secondary rounded-full h-2 mb-1">
+                      <div className="bg-primary h-2 rounded-full" style={{ width: '50%' }}></div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+            {recentQuizzes.length === 0 && (
+              <Card
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={handleStartPractice}
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-primary/10 mb-4 mx-auto">
+                    <PlayCircle className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-center mb-2">Start Your First Quiz</h3>
+                  <div className="w-full bg-secondary rounded-full h-2 mb-1">
+                    <div className="bg-primary h-2 rounded-full" style={{ width: '0%' }}></div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
 
         {/* Main Content Grid */}
