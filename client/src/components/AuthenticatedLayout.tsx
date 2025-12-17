@@ -42,13 +42,25 @@ function AuthenticatedHeader() {
 
       <div className="flex flex-1 items-center justify-center max-w-2xl mx-auto">
         {/* Centered Search Bar */}
-        <div className="relative w-full">
+        <form
+          className="relative w-full"
+          onSubmit={(e) => {
+            e.preventDefault();
+            // TODO: Implement search functionality
+          }}
+          role="search"
+        >
           <input
-            type="text"
+            type="search"
             placeholder="Search dashboard..."
+            aria-label="Search dashboard"
             className="w-full px-4 py-2 pr-10 rounded-xl border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          <button className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+          <button
+            type="submit"
+            aria-label="Submit search"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -59,12 +71,13 @@ function AuthenticatedHeader() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.3-4.3" />
             </svg>
           </button>
-        </div>
+        </form>
       </div>
 
       <div className="flex items-center gap-3">

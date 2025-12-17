@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/lib/auth-provider';
@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { TokenBalance } from '@/components/TokenBalance';
 import { InsufficientTokensDialog } from '@/components/InsufficientTokensDialog';
 import { CertificationSelectionDialog } from '@/components/CertificationSelectionDialog';
-import { getPersonalizedMessage } from '@/data/motivational-messages';
 import {
   BookOpen,
   PlayCircle,
@@ -18,7 +17,6 @@ import {
   Clock,
   Trophy,
   Target,
-  Calendar,
   History,
   ChartBar,
   Crown,
@@ -45,10 +43,6 @@ export default function Dashboard() {
     enabled: !!currentUser?.id,
   });
 
-  // Get personalized motivational message based on user stats
-  // useMemo ensures the message is stable and only recalculated when stats change
-  const motivationalMessage = useMemo(() => getPersonalizedMessage(stats), [stats]);
-
   // Get recent quizzes
   const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
     queryKey: queryKeys.user.quizzes(currentUser?.id),
@@ -65,17 +59,6 @@ export default function Dashboard() {
     .filter((quiz) => quiz.completedAt)
     .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())
     .slice(0, 5);
-
-  // Get current date and time
-  const getCurrentDateTime = () => {
-    const now = new Date();
-    return now.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
 
   const createQuickPractice = async (categoryId: number, categoryName: string) => {
     if (!currentUser?.id) return;
