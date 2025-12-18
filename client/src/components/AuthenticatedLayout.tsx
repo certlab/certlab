@@ -1,16 +1,6 @@
 import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Bell,
-  Home,
-  ShoppingBag,
-  BookOpen,
-  Wallet,
-  User,
-  Settings,
-  Download,
-  Shield,
-} from 'lucide-react';
+import { Bell, Home, ShoppingBag, BookOpen, Wallet, User, Download, Shield } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-provider';
 import { RightSidebarProvider, useRightSidebar } from '@/lib/right-sidebar-provider';
