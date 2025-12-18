@@ -58,7 +58,7 @@ function AuthenticatedHeader() {
   }, [isRightSidebarOpen, setLeftSidebarOpen]);
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 backdrop-blur-sm shadow-sm">
+    <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b bg-background px-4 backdrop-blur-sm shadow-sm flex-shrink-0">
       <SidebarTrigger className="rounded-xl flex-shrink-0" />
 
       {/* Level and XP Progress Bar - New Design */}
@@ -158,7 +158,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
           <AppSidebar />
           <SidebarInset>
             <AuthenticatedHeader />
-            <main id="main-content" tabIndex={-1} className="flex-1 p-4 md:p-6">
+            <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto p-4 md:p-6">
               {children}
             </main>
           </SidebarInset>
