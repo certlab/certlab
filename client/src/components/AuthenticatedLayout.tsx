@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Shield } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-provider';
 import { RightSidebarProvider, useRightSidebar } from '@/lib/right-sidebar-provider';
@@ -63,12 +63,6 @@ function AuthenticatedHeader() {
 
       {/* Level and XP Progress Bar - New Design */}
       <div className="hidden lg:flex items-center gap-3 flex-1">
-        {/* SCHOLAR Badge */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-600 text-white shadow-md">
-          <Shield className="w-5 h-5 fill-current" aria-hidden="true" />
-          <span className="text-sm font-bold tracking-wide">SCHOLAR</span>
-        </div>
-
         {/* Level and Progress Container */}
         <div className="flex-1 flex items-center gap-4">
           {/* Level Text */}

@@ -110,8 +110,7 @@ export default function WalletPage() {
                   <span className="text-lg font-semibold">Level {level}</span>
                   <span className="text-sm text-muted-foreground">{currentXP} XP</span>
                 </div>
-                <div className="text-sm text-muted-foreground mb-2">SCHOLAR</div>
-                <div className="relative w-full bg-secondary rounded-full h-3">
+                <div className="relative w-full bg-secondary rounded-full h-3 mt-2">
                   <div
                     className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-300"
                     style={{ width: `${xpProgress}%` }}

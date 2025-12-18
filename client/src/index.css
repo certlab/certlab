@@ -425,7 +425,6 @@
   
   .card-borderless:hover {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    transform: translateY(-4px);
   }
 
   /* Section background alternation */
@@ -479,7 +478,6 @@
   
   .card-inset:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    transform: translateY(-2px);
   }
   
   .card-raised {
@@ -491,7 +489,6 @@
   
   .card-raised:hover {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
   }
   
   /* Interactive hover effects */
@@ -521,7 +518,6 @@
   }
   
   .interactive-scale:hover {
-    transform: scale(1.02);
     box-shadow: var(--shadow-lg);
   }
   
@@ -530,7 +526,6 @@
   }
   
   .interactive-lift:hover {
-    transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
   }
   
@@ -970,7 +965,7 @@
   }
   
   .quiz-legend-dot:hover {
-    transform: scale(1.2);
+    /* No transform to prevent bouncing effect */
   }
   
   /* Quiz Animations */

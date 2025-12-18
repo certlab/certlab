@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { X, LogOut, User, Trophy, Bell, Settings, Check } from 'lucide-react';
+import { X, LogOut, User, Trophy, Bell, Settings, Check, Palette } from 'lucide-react';
 
 function SettingsPanel() {
   const { theme, setTheme } = useTheme();
@@ -77,6 +77,7 @@ function UserPanel() {
   const { user: currentUser, logout } = useAuth();
   const { closePanel } = useRightSidebar();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
 
   const handleSignOut = async () => {
     // Close panel and navigate to home page BEFORE logout to prevent 404 flash
@@ -125,23 +126,69 @@ function UserPanel() {
       </div>
 
       <ScrollArea className="flex-1 -mx-4 px-4">
-        <div className="space-y-2">
-          <Button
-            variant="ghost"
-            className="w-full justify-start rounded-xl h-12"
-            onClick={() => handleNavigate('/app/profile')}
-          >
-            <User className="mr-3 h-5 w-5" />
-            My Profile
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full justify-start rounded-xl h-12"
-            onClick={() => handleNavigate('/app/achievements')}
-          >
-            <Trophy className="mr-3 h-5 w-5" />
-            Achievements
-          </Button>
+        <div className="space-y-6">
+          {/* User Actions */}
+          <div className="space-y-2">
+            <Button
+              variant="ghost"
+              className="w-full justify-start rounded-xl h-12"
+              onClick={() => handleNavigate('/app/profile')}
+            >
+              <User className="mr-3 h-5 w-5" />
+              My Profile
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start rounded-xl h-12"
+              onClick={() => handleNavigate('/app/achievements')}
+            >
+              <Trophy className="mr-3 h-5 w-5" />
+              Achievements
+            </Button>
+          </div>
+
+          <Separator />
+
+          {/* Theme Selection */}
+          <div>
+            <div className="flex items-center gap-2 mb-3 px-3">
+              <Palette className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium">Theme</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-2 p-0.5">
+              {themes.map((themeOption) => {
+                const Icon = themeOption.icon;
+                const isSelected = theme === themeOption.value;
+                return (
+                  <button
+                    key={themeOption.value}
+                    onClick={() => setTheme(themeOption.value)}
+                    className={cn(
+                      'flex items-center gap-3 p-3 rounded-xl text-left transition-all',
+                      'hover:bg-accent/50',
+                      isSelected && 'bg-accent ring-2 ring-primary'
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        'flex aspect-square size-8 items-center justify-center rounded-lg',
+                        isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                      )}
+                    >
+                      <Icon className="size-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{themeOption.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {themeOption.description}
+                      </p>
+                    </div>
+                    {isSelected && <Check className="size-4 text-primary flex-shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </ScrollArea>
 
