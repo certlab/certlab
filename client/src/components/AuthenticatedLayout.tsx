@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Bell } from 'lucide-react';
+import { Bell, Shield } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-provider';
 import { RightSidebarProvider, useRightSidebar } from '@/lib/right-sidebar-provider';
@@ -40,6 +40,9 @@ function AuthenticatedHeader() {
   const xpGoal = level * 1000; // Each level requires progressively more XP
   const xpProgress = (currentXP / xpGoal) * 100;
 
+  // Calculate streak
+  const dayStreak = stats?.currentStreak || 0;
+
   // Collapse left sidebar when right sidebar opens, restore when it closes
   useEffect(() => {
     if (isRightSidebarOpen && !wasRightSidebarOpen.current) {
@@ -58,33 +61,42 @@ function AuthenticatedHeader() {
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur">
       <SidebarTrigger className="rounded-xl flex-shrink-0" />
 
-      {/* Level and XP Progress Bar - Spread horizontally */}
+      {/* Level and XP Progress Bar - New Design */}
       <div className="hidden lg:flex items-center gap-3 flex-1">
-        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-sm">
-          {level}
+        {/* SCHOLAR Badge */}
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-600 text-white shadow-md">
+          <Shield className="w-5 h-5 fill-current" />
+          <span className="text-sm font-bold tracking-wide">SCHOLAR</span>
         </div>
-        <div className="flex-1 max-w-2xl">
-          <div className="flex items-center justify-between mb-0.5">
-            <span className="text-xs font-semibold">Level {level}</span>
-            <span className="text-[10px] text-muted-foreground">{currentXP} XP</span>
+
+        {/* Level and Progress Container */}
+        <div className="flex-1 flex items-center gap-4">
+          {/* Level Text */}
+          <div className="text-sm font-semibold whitespace-nowrap">Level {level}</div>
+
+          {/* Progress Bar */}
+          <div className="flex-1 relative">
+            <div className="relative w-full bg-secondary/50 rounded-full h-6 border border-border/50">
+              <div
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-300"
+                style={{ width: `${xpProgress}%` }}
+                role="progressbar"
+                aria-valuenow={currentXP}
+                aria-valuemin={0}
+                aria-valuemax={xpGoal}
+                aria-label="Experience progress"
+              ></div>
+              {/* XP Text Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs font-medium text-foreground mix-blend-difference">
+                  {currentXP} / {xpGoal} XP
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="text-[10px] text-muted-foreground font-medium tracking-wider mb-1">
-            SCHOLAR
-          </div>
-          <div className="relative w-full bg-secondary rounded-full h-1.5">
-            <div
-              className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-300"
-              style={{ width: `${xpProgress}%` }}
-              role="progressbar"
-              aria-valuenow={currentXP}
-              aria-valuemin={0}
-              aria-valuemax={xpGoal}
-              aria-label="Experience progress"
-            ></div>
-          </div>
-          <div className="text-[10px] text-muted-foreground text-right mt-0.5">
-            {xpGoal} XP GOAL
-          </div>
+
+          {/* Day Streak */}
+          <div className="text-sm font-medium whitespace-nowrap">{dayStreak} Day Streak</div>
         </div>
       </div>
 
