@@ -1315,8 +1315,8 @@ class FirestoreStorage implements IClientStorage {
 
   async getUserTokenBalance(userId: string): Promise<number> {
     try {
-      const stats = await this.getUserGameStats(userId);
-      return stats?.totalPoints || 0; // Using points as tokens for now
+      const user = await this.getUser(userId);
+      return user?.tokenBalance ?? 0;
     } catch (error) {
       logError('getUserTokenBalance', error, { userId });
       return 0;
@@ -1325,9 +1325,13 @@ class FirestoreStorage implements IClientStorage {
 
   async addTokens(userId: string, amount: number): Promise<number> {
     try {
-      const stats = await this.getUserGameStats(userId);
-      const newBalance = (stats?.totalPoints || 0) + amount;
-      await this.updateUserGameStats(userId, { totalPoints: newBalance });
+      const user = await this.getUser(userId);
+      if (!user) throw new Error('User not found');
+
+      const currentBalance = user.tokenBalance ?? 0;
+      const newBalance = currentBalance + amount;
+
+      await this.updateUser(userId, { tokenBalance: newBalance });
       return newBalance;
     } catch (error) {
       logError('addTokens', error, { userId, amount });
@@ -1350,7 +1354,7 @@ class FirestoreStorage implements IClientStorage {
       }
 
       const newBalance = currentBalance - amount;
-      await this.updateUserGameStats(userId, { totalPoints: newBalance });
+      await this.updateUser(userId, { tokenBalance: newBalance });
       return { success: true, newBalance };
     } catch (error) {
       logError('consumeTokens', error, { userId, amount });
