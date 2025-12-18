@@ -58,7 +58,7 @@ function AuthenticatedHeader() {
   }, [isRightSidebarOpen, setLeftSidebarOpen]);
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur">
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 backdrop-blur-sm shadow-sm">
       <SidebarTrigger className="rounded-xl flex-shrink-0" />
 
       {/* Level and XP Progress Bar - New Design */}
