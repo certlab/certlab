@@ -1344,7 +1344,10 @@ class FirestoreStorage implements IClientStorage {
     amount: number
   ): Promise<{ success: boolean; newBalance: number; message?: string }> {
     try {
-      const currentBalance = await this.getUserTokenBalance(userId);
+      const user = await this.getUser(userId);
+      if (!user) throw new Error('User not found');
+
+      const currentBalance = user.tokenBalance ?? 0;
       if (currentBalance < amount) {
         return {
           success: false,
