@@ -69,33 +69,35 @@ function AuthenticatedHeader() {
   }, [isRightSidebarOpen, setLeftSidebarOpen]);
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur">
-      <SidebarTrigger className="rounded-xl" />
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur">
+      <SidebarTrigger className="rounded-xl flex-shrink-0" />
 
       {/* Search Bar - CLAY OS Style */}
-      <div className="flex-1 max-w-md">
+      <div className="flex-1 max-w-md min-w-0">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             type="search"
             placeholder={getSearchPlaceholder()}
-            className="pl-10 bg-background border-border rounded-full"
+            className="pl-10 bg-background border-border rounded-full h-10"
           />
         </div>
       </div>
 
       {/* Level and XP Progress Bar */}
-      <div className="hidden lg:flex items-center gap-3 max-w-xs">
-        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground font-bold text-lg">
+      <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-sm">
           {level}
         </div>
-        <div className="flex-1">
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-sm font-semibold">Level {level}</span>
-            <span className="text-xs text-muted-foreground">{currentXP} XP</span>
+        <div className="w-40">
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="text-xs font-semibold">Level {level}</span>
+            <span className="text-[10px] text-muted-foreground">{currentXP} XP</span>
           </div>
-          <div className="text-xs text-muted-foreground mb-1">SCHOLAR</div>
-          <div className="relative w-full bg-secondary rounded-full h-2">
+          <div className="text-[10px] text-muted-foreground font-medium tracking-wider mb-1">
+            SCHOLAR
+          </div>
+          <div className="relative w-full bg-secondary rounded-full h-1.5">
             <div
               className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-300"
               style={{ width: `${xpProgress}%` }}
@@ -106,23 +108,25 @@ function AuthenticatedHeader() {
               aria-label="Experience progress"
             ></div>
           </div>
-          <div className="text-xs text-muted-foreground text-right mt-0.5">{xpGoal} XP GOAL</div>
+          <div className="text-[10px] text-muted-foreground text-right mt-0.5">
+            {xpGoal} XP GOAL
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 flex-shrink-0">
         {/* Notifications - Opens right sidebar */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full relative bg-primary text-primary-foreground hover:bg-primary/90"
+              className="rounded-full relative bg-primary text-primary-foreground hover:bg-primary/90 h-10 w-10"
               onClick={() => togglePanel('notifications')}
               aria-label="Open notifications panel"
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-background"></span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>Notifications</TooltipContent>
@@ -131,12 +135,12 @@ function AuthenticatedHeader() {
         {/* User Avatar - Opens right sidebar */}
         <Button
           variant="ghost"
-          className="relative h-9 w-9 rounded-full p-0 bg-white hover:bg-white/90"
+          className="relative h-10 w-10 rounded-full p-0 bg-white hover:bg-white/90"
           onClick={() => togglePanel('user')}
           aria-label="Open user panel"
         >
-          <Avatar className="h-9 w-9">
-            <AvatarFallback className="bg-white text-foreground font-semibold text-sm border border-border">
+          <Avatar className="h-10 w-10">
+            <AvatarFallback className="bg-white text-foreground font-semibold text-sm border-2 border-border">
               {currentUser ? getInitials(currentUser.firstName, currentUser.lastName) : '?'}
             </AvatarFallback>
           </Avatar>
