@@ -106,13 +106,15 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="bg-sidebar-background border-sidebar-border">
-      <SidebarHeader className="p-4 border-b border-sidebar-border/50">
-        <div className="flex items-center gap-3">
-          <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-transparent text-sidebar-foreground">
-            <Box className="size-6" />
+      <SidebarHeader className="px-4 py-4 border-b border-sidebar-border/50">
+        <div className="flex items-center gap-2">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-transparent text-sidebar-foreground">
+            <Box className="size-5" />
           </div>
           <div>
-            <h2 className="font-bold text-lg text-sidebar-foreground tracking-wide">CertLab</h2>
+            <h2 className="font-semibold text-base text-sidebar-foreground tracking-tight">
+              CertLab
+            </h2>
           </div>
         </div>
       </SidebarHeader>
@@ -120,9 +122,9 @@ export function AppSidebar() {
       <SidebarContent className="bg-sidebar-background">
         <ScrollArea className="flex-1">
           {navigationItems.map((section) => (
-            <div key={section.section} className="mb-6">
-              <div className="px-4 mb-2">
-                <p className="text-xs font-semibold text-sidebar-foreground/60 tracking-wider">
+            <div key={section.section} className="mb-4">
+              <div className="px-4 py-2 mb-1">
+                <p className="text-[10px] font-semibold text-sidebar-foreground/50 tracking-widest uppercase">
                   {section.section}
                 </p>
               </div>
@@ -135,7 +137,7 @@ export function AppSidebar() {
                           onClick={() => item.url && setLocation(item.url)}
                           isActive={item.url ? isPathActive(item.url) : false}
                           className={cn(
-                            'rounded-lg mx-2 my-0.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                            'rounded-lg mx-2 my-1 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-10',
                             item.url &&
                               isPathActive(item.url) &&
                               'bg-sidebar-primary text-sidebar-primary-foreground'
@@ -156,7 +158,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border/50 p-4 bg-sidebar-background">
         {/* Theme Selector Dots */}
-        <div className="flex items-center justify-center gap-2 mb-3">
+        <div className="flex items-center justify-center gap-2.5">
           <button
             onClick={() => setTheme('light')}
             className={cn(
