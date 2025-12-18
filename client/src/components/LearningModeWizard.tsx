@@ -13,8 +13,6 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/lib/auth-provider';
 import { queryClient, queryKeys } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
@@ -22,7 +20,6 @@ import { useToast } from '@/hooks/use-toast';
 import {
   ArrowRight,
   ArrowLeft,
-  Clock,
   Target,
   Settings,
   Brain,
@@ -30,7 +27,6 @@ import {
   Trophy,
   CheckCircle,
   Timer,
-  Users,
   BookOpen,
 } from 'lucide-react';
 import type { Category, Subcategory } from '@shared/schema';

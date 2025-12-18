@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-provider';
 import { queryKeys, queryClient } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
 import { useToast } from '@/hooks/use-toast';
-import { TrendingUp, Calendar, Award, BookOpen, Brain, ClipboardCheck } from 'lucide-react';
+import { BookOpen, Brain } from 'lucide-react';
 import type { UserStats, Category, MasteryScore } from '@shared/schema';
 
 export default function DashboardHero() {
@@ -34,6 +34,16 @@ export default function DashboardHero() {
     }
 
     try {
+      if (categories.length === 0) {
+        toast({
+          title: 'No Categories Available',
+          description:
+            'Unable to start a quiz because no categories are available. Please try again later.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const categoryIds = categories.slice(0, 2).map((c) => c.id);
       const questionCount = 15;
       const tokenCost = clientStorage.calculateQuizTokenCost(questionCount);

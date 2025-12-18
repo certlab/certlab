@@ -1,10 +1,9 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-provider';
 import { useLocation } from 'wouter';
 import { getScoreColor } from '@/lib/questions';
-import { queryClient, queryKeys } from '@/lib/queryClient';
+import { queryClient, queryKeys, apiRequest } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
 import { useToast } from '@/hooks/use-toast';
 import ImprovedCardSpacing from '@/components/ImprovedCardSpacing';
