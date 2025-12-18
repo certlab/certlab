@@ -65,7 +65,7 @@ function AuthenticatedHeader() {
       <div className="hidden lg:flex items-center gap-3 flex-1">
         {/* SCHOLAR Badge */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-600 text-white shadow-md">
-          <Shield className="w-5 h-5 fill-current" />
+          <Shield className="w-5 h-5 fill-current" aria-hidden="true" />
           <span className="text-sm font-bold tracking-wide">SCHOLAR</span>
         </div>
 
@@ -88,7 +88,7 @@ function AuthenticatedHeader() {
               ></div>
               {/* XP Text Overlay */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs font-medium text-foreground mix-blend-difference">
+                <span className="text-xs font-medium text-foreground drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                   {currentXP} / {xpGoal} XP
                 </span>
               </div>
