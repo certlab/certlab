@@ -56,6 +56,8 @@ export default function WalletPage() {
   const { data: tokenData } = useQuery<{ balance: number }>({
     queryKey: queryKeys.user.tokenBalance(currentUser?.id),
     enabled: !!currentUser?.id,
+    staleTime: 0, // Always refetch when invalidated
+    refetchOnMount: true, // Always get fresh balance on mount
   });
 
   // Calculate level and XP using shared utility
