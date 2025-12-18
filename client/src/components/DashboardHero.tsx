@@ -1,22 +1,16 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/lib/auth-provider";
-import { apiRequest, queryKeys } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import {
-  TrendingUp,
-  Calendar,
-  Award,
-  BookOpen,
-  Brain,
-  ClipboardCheck,
-} from "lucide-react";
-import type { UserStats, Category, MasteryScore } from "@shared/schema";
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/lib/auth-provider';
+import { queryKeys, queryClient } from '@/lib/queryClient';
+import { clientStorage } from '@/lib/client-storage';
+import { useToast } from '@/hooks/use-toast';
+import { TrendingUp, Calendar, Award, BookOpen, Brain, ClipboardCheck } from 'lucide-react';
+import type { UserStats, Category, MasteryScore } from '@shared/schema';
 
 export default function DashboardHero() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshUser } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -32,34 +26,58 @@ export default function DashboardHero() {
   const handleQuickQuiz = async (mode: string) => {
     if (!currentUser?.id) {
       toast({
-        title: "Login Required",
-        description: "Please log in to start a quiz.",
-        variant: "destructive",
+        title: 'Login Required',
+        description: 'Please log in to start a quiz.',
+        variant: 'destructive',
       });
       return;
     }
 
     try {
       const categoryIds = categories.slice(0, 2).map((c) => c.id);
-      const response = await apiRequest({
-        endpoint: "/api/quiz",
-        method: "POST",
-        data: {
-          categoryIds,
-          questionCount: 15,
-          title: `${mode} Session - ${new Date().toLocaleDateString()}`,
-        },
+      const questionCount = 15;
+      const tokenCost = clientStorage.calculateQuizTokenCost(questionCount);
+
+      // Check and consume tokens
+      const tokenResult = await clientStorage.consumeTokens(currentUser.id, tokenCost);
+
+      if (!tokenResult.success) {
+        toast({
+          title: 'Insufficient Tokens',
+          description: `You need ${tokenCost} tokens but only have ${tokenResult.newBalance}.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Create the quiz
+      const quiz = await clientStorage.createQuiz({
+        userId: currentUser.id,
+        categoryIds,
+        questionCount,
+        title: `${mode} Session - ${new Date().toLocaleDateString()}`,
       });
 
-      const quiz = await response.json();
+      // Refresh user state in auth provider to keep it in sync
+      await refreshUser();
+
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
+
+      toast({
+        title: 'Quiz Created',
+        description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
+      });
+
       if (quiz?.id) {
         setLocation(`/app/quiz/${quiz.id}`);
       }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create quiz session",
-        variant: "destructive",
+        title: 'Error',
+        description: error.message || 'Failed to create quiz session',
+        variant: 'destructive',
       });
     }
   };
@@ -93,9 +111,7 @@ export default function DashboardHero() {
               {/* Chat Content */}
               <div className="card-breathing rounded-xl bg-gradient-to-br from-card to-purple-50/30 dark:to-purple-950/30 shadow-xl">
                 <div className="flex items-center gap-3 section-rhythm">
-                  <h3 className="font-bold text-purple-700 dark:text-purple-300 text-2xl">
-                    Helen
-                  </h3>
+                  <h3 className="font-bold text-purple-700 dark:text-purple-300 text-2xl">Helen</h3>
                   <Badge
                     variant="secondary"
                     className="text-sm bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200 px-3 py-1"
@@ -104,13 +120,12 @@ export default function DashboardHero() {
                   </Badge>
                 </div>
                 <p className="text-foreground text-comfortable text-2xl font-semibold">
-                  Welcome back, {currentUser?.firstName || "Student"}!
+                  Welcome back, {currentUser?.firstName || 'Student'}!
                 </p>
                 <p className="text-muted-foreground text-relaxed text-lg section-rhythm">
-                  I've been analyzing your learning patterns and progress data.
-                  Based on your recent performance, I've identified optimal
-                  study opportunities that align with your certification goals.
-                  Let me guide your next learning session for maximum
+                  I've been analyzing your learning patterns and progress data. Based on your recent
+                  performance, I've identified optimal study opportunities that align with your
+                  certification goals. Let me guide your next learning session for maximum
                   effectiveness.
                 </p>
 
@@ -118,7 +133,7 @@ export default function DashboardHero() {
                 <div className="flex flex-wrap gap-3">
                   <Button
                     size="lg"
-                    onClick={() => handleQuickQuiz("AI Recommended")}
+                    onClick={() => handleQuickQuiz('AI Recommended')}
                     className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg text-base px-6 py-3"
                   >
                     <Brain className="w-5 h-5 mr-3" />
@@ -127,7 +142,7 @@ export default function DashboardHero() {
                   <Button
                     size="lg"
                     variant="outline"
-                    onClick={() => handleQuickQuiz("Quick Practice")}
+                    onClick={() => handleQuickQuiz('Quick Practice')}
                     className="bg-white/80 hover:bg-purple-50 dark:bg-gray-800/80 dark:hover:bg-purple-950/50 text-base px-6 py-3 shadow-md hover:shadow-lg transition-all duration-300"
                   >
                     <BookOpen className="w-5 h-5 mr-3" />

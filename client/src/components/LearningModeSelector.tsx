@@ -1,30 +1,37 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/lib/auth-provider";
-import { apiRequest, queryClient, queryKeys } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import type { Category, Subcategory } from "@shared/schema";
+import { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/lib/auth-provider';
+import { queryClient, queryKeys } from '@/lib/queryClient';
+import { clientStorage } from '@/lib/client-storage';
+import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import type { Category, Subcategory } from '@shared/schema';
 
-type LearningMode = "study" | "quiz" | "challenge";
+type LearningMode = 'study' | 'quiz' | 'challenge';
 
 export default function LearningModeSelector() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user: currentUser } = useAuth();
-  
-  const [selectedMode, setSelectedMode] = useState<LearningMode>("study");
+  const { user: currentUser, refreshUser } = useAuth();
+
+  const [selectedMode, setSelectedMode] = useState<LearningMode>('study');
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [selectedSubcategories, setSelectedSubcategories] = useState<number[]>([]);
-  const [timeLimit, setTimeLimit] = useState("30");
+  const [timeLimit, setTimeLimit] = useState('30');
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: queryKeys.categories.all(),
@@ -37,34 +44,53 @@ export default function LearningModeSelector() {
 
   const createQuizMutation = useMutation({
     mutationFn: async (quizData: any) => {
-      const response = await apiRequest({ method: "POST", endpoint: "/api/quiz", data: quizData });
-      return response.json();
-    },
-    onSuccess: (quiz) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
-      
-      // Show adaptive learning feedback if applicable
-      if (quiz.adaptiveInfo && quiz.adaptiveInfo.increasePercentage > 0) {
-        toast({
-          title: "Adaptive Learning Activated",
-          description: `Question count increased by ${quiz.adaptiveInfo.increasePercentage}% based on your performance (${quiz.adaptiveInfo.originalQuestionCount} → ${quiz.adaptiveInfo.adaptedQuestionCount} questions)`,
-          variant: "default",
-        });
+      if (!currentUser?.id) throw new Error('Not authenticated');
+
+      const tokenCost = clientStorage.calculateQuizTokenCost(quizData.questionCount);
+
+      // Check and consume tokens
+      const tokenResult = await clientStorage.consumeTokens(currentUser.id, tokenCost);
+
+      if (!tokenResult.success) {
+        throw new Error(
+          `Insufficient tokens. You need ${tokenCost} tokens but only have ${tokenResult.newBalance}.`
+        );
       }
-      
+
+      // Create the quiz
+      const quiz = await clientStorage.createQuiz({
+        userId: currentUser.id,
+        ...quizData,
+      });
+
+      return { quiz, tokenResult, tokenCost };
+    },
+    onSuccess: async ({ quiz, tokenResult, tokenCost }) => {
+      // Refresh user state in auth provider to keep it in sync
+      await refreshUser();
+
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
+
+      toast({
+        title: 'Quiz Created',
+        description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
+      });
+
       setLocation(`/app/quiz/${quiz.id}`);
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
-        title: "Error",
-        description: "Failed to create session. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: error?.message || 'Failed to create session. Please try again.',
+        variant: 'destructive',
       });
     },
   });
 
   const handleCategoryToggle = (categoryId: number, checked: boolean, categoryName: string) => {
-    if (selectedMode === "quiz" && checked && selectedCategories.length > 0) {
+    if (selectedMode === 'quiz' && checked && selectedCategories.length > 0) {
       // For quiz mode, only allow one category at a time
       setSelectedCategories([categoryId]);
       // Clear subcategories when switching categories
@@ -72,13 +98,13 @@ export default function LearningModeSelector() {
     } else if (checked) {
       setSelectedCategories([...selectedCategories, categoryId]);
     } else {
-      setSelectedCategories(selectedCategories.filter(id => id !== categoryId));
+      setSelectedCategories(selectedCategories.filter((id) => id !== categoryId));
       // Remove subcategories from deselected category
       const categorySubcategories = subcategories
-        .filter(sub => sub.categoryId === categoryId)
-        .map(sub => sub.id);
+        .filter((sub) => sub.categoryId === categoryId)
+        .map((sub) => sub.id);
       setSelectedSubcategories(
-        selectedSubcategories.filter(id => !categorySubcategories.includes(id))
+        selectedSubcategories.filter((id) => !categorySubcategories.includes(id))
       );
     }
   };
@@ -87,21 +113,21 @@ export default function LearningModeSelector() {
     if (checked) {
       setSelectedSubcategories([...selectedSubcategories, subcategoryId]);
     } else {
-      setSelectedSubcategories(selectedSubcategories.filter(id => id !== subcategoryId));
+      setSelectedSubcategories(selectedSubcategories.filter((id) => id !== subcategoryId));
     }
   };
 
   const handleModeChange = (mode: LearningMode) => {
     setSelectedMode(mode);
-    if (mode === "quiz" && selectedCategories.length > 1) {
+    if (mode === 'quiz' && selectedCategories.length > 1) {
       // For quiz mode, keep only the first selected category
       setSelectedCategories([selectedCategories[0]]);
       // Clear subcategories that don't belong to the kept category
       const keptCategorySubcategories = subcategories
-        .filter(sub => sub.categoryId === selectedCategories[0])
-        .map(sub => sub.id);
+        .filter((sub) => sub.categoryId === selectedCategories[0])
+        .map((sub) => sub.id);
       setSelectedSubcategories(
-        selectedSubcategories.filter(id => keptCategorySubcategories.includes(id))
+        selectedSubcategories.filter((id) => keptCategorySubcategories.includes(id))
       );
     }
   };
@@ -109,48 +135,49 @@ export default function LearningModeSelector() {
   const handleStartSession = () => {
     if (selectedCategories.length === 0) {
       toast({
-        title: "Error",
-        description: "Please select at least one certification.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Please select at least one certification.',
+        variant: 'destructive',
       });
       return;
     }
 
     if (!currentUser) {
       toast({
-        title: "Error",
-        description: "Please log in to start a learning session.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Please log in to start a learning session.',
+        variant: 'destructive',
       });
       return;
     }
 
     // Handle challenge mode differently
-    if (selectedMode === "challenge") {
-      setLocation("/challenges");
+    if (selectedMode === 'challenge') {
+      setLocation('/challenges');
       return;
     }
 
     const selectedCertNames = categories
-      .filter(c => selectedCategories.includes(c.id))
-      .map(c => c.name)
-      .join(", ");
+      .filter((c) => selectedCategories.includes(c.id))
+      .map((c) => c.name)
+      .join(', ');
 
     const quizData = {
-      title: selectedMode === "study" 
-        ? `${selectedCertNames} Study Session`
-        : `${selectedCertNames} Quiz`,
+      title:
+        selectedMode === 'study'
+          ? `${selectedCertNames} Study Session`
+          : `${selectedCertNames} Quiz`,
       categoryIds: selectedCategories,
       subcategoryIds: selectedSubcategories.length > 0 ? selectedSubcategories : undefined,
-      questionCount: selectedMode === "study" ? 10 : 25, // Study: continuous, Quiz: fixed assessment
-      timeLimit: timeLimit === "0" ? undefined : parseInt(timeLimit),
+      questionCount: selectedMode === 'study' ? 10 : 25, // Study: continuous, Quiz: fixed assessment
+      timeLimit: timeLimit === '0' ? undefined : parseInt(timeLimit),
       mode: selectedMode,
     };
 
     createQuizMutation.mutate(quizData);
   };
 
-  const filteredSubcategories = subcategories.filter(sub => 
+  const filteredSubcategories = subcategories.filter((sub) =>
     selectedCategories.includes(sub.categoryId)
   );
 
@@ -171,15 +198,15 @@ export default function LearningModeSelector() {
           <Label className="text-xs sm:text-sm font-bold text-foreground mb-3 sm:mb-4 block uppercase tracking-wider">
             Learning Mode
           </Label>
-          <Tabs 
-            value={selectedMode} 
+          <Tabs
+            value={selectedMode}
             onValueChange={(value) => handleModeChange(value as LearningMode)}
             orientation="vertical"
             className="w-full flex gap-6"
           >
             <TabsList className="flex-col h-auto w-56 bg-muted/30 p-2 flex-shrink-0">
-              <TabsTrigger 
-                value="study" 
+              <TabsTrigger
+                value="study"
                 className="w-full justify-start data-[state=active]:bg-primary data-[state=active]:text-primary-foreground p-3 mb-2"
               >
                 <div className="flex items-center gap-3">
@@ -187,8 +214,8 @@ export default function LearningModeSelector() {
                   <span className="font-semibold">Study Mode</span>
                 </div>
               </TabsTrigger>
-              <TabsTrigger 
-                value="quiz" 
+              <TabsTrigger
+                value="quiz"
                 className="w-full justify-start data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground p-3 mb-2"
               >
                 <div className="flex items-center gap-3">
@@ -196,8 +223,8 @@ export default function LearningModeSelector() {
                   <span className="font-semibold">Quiz Mode</span>
                 </div>
               </TabsTrigger>
-              <TabsTrigger 
-                value="challenge" 
+              <TabsTrigger
+                value="challenge"
                 className="w-full justify-start data-[state=active]:bg-orange-500 data-[state=active]:text-white p-3"
               >
                 <div className="flex items-center gap-3">
@@ -217,7 +244,8 @@ export default function LearningModeSelector() {
                     </Badge>
                   </div>
                   <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
-                    Practice questions with immediate feedback. No limits, adaptive learning based on performance.
+                    Practice questions with immediate feedback. No limits, adaptive learning based
+                    on performance.
                   </p>
                   <ul className="text-xs text-foreground/60 space-y-2">
                     <li className="flex items-center gap-2">
@@ -244,12 +272,11 @@ export default function LearningModeSelector() {
                 <div className="border-2 border-secondary rounded-xl p-4 sm:p-5 lg:p-6 bg-gradient-to-br from-secondary/10 to-secondary/5 shadow-glow">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-bold text-foreground text-lg">Quiz Mode</h3>
-                    <Badge className="bg-secondary text-white border-0">
-                      Graded Assessment
-                    </Badge>
+                    <Badge className="bg-secondary text-white border-0">Graded Assessment</Badge>
                   </div>
                   <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
-                    Formal assessment that counts toward your mastery score for certification progress.
+                    Formal assessment that counts toward your mastery score for certification
+                    progress.
                   </p>
                   <ul className="text-xs text-foreground/60 space-y-2">
                     <li className="flex items-center gap-2">
@@ -276,9 +303,7 @@ export default function LearningModeSelector() {
                 <div className="border-2 border-orange-500 rounded-xl p-4 sm:p-5 lg:p-6 bg-gradient-to-br from-orange-500/10 to-orange-500/5 shadow-glow">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-bold text-foreground text-lg">Challenge Mode</h3>
-                    <Badge className="bg-orange-500 text-white border-0">
-                      Micro-Learning
-                    </Badge>
+                    <Badge className="bg-orange-500 text-white border-0">Micro-Learning</Badge>
                   </div>
                   <p className="text-sm text-foreground/70 mb-4 leading-relaxed">
                     Short 5-10 minute focused challenges with streak rewards and daily goals.
@@ -310,7 +335,7 @@ export default function LearningModeSelector() {
         {/* Category Selection */}
         <div className="mb-6 sm:mb-8">
           <Label className="text-xs sm:text-sm font-bold text-foreground mb-3 sm:mb-4 block uppercase tracking-wider">
-            Select Certification{selectedMode === "quiz" ? " (Choose One)" : "s"}
+            Select Certification{selectedMode === 'quiz' ? ' (Choose One)' : 's'}
           </Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {categories.map((category) => {
@@ -319,10 +344,16 @@ export default function LearningModeSelector() {
                   key={category.id}
                   className={`relative border-2 rounded-xl p-3 sm:p-4 lg:p-5 cursor-pointer transition-all duration-300 ${
                     selectedCategories.includes(category.id)
-                      ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-glow"
-                      : "border-border hover:border-primary/50 hover:shadow-medium bg-card"
+                      ? 'border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-glow'
+                      : 'border-border hover:border-primary/50 hover:shadow-medium bg-card'
                   }`}
-                  onClick={() => handleCategoryToggle(category.id, !selectedCategories.includes(category.id), category.name)}
+                  onClick={() =>
+                    handleCategoryToggle(
+                      category.id,
+                      !selectedCategories.includes(category.id),
+                      category.name
+                    )
+                  }
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
@@ -330,15 +361,15 @@ export default function LearningModeSelector() {
                         <i className={`${category.icon} text-primary text-lg`}></i>
                       </div>
                       <div>
-                        <h3 className="font-semibold text-foreground">
-                          {category.name}
-                        </h3>
+                        <h3 className="font-semibold text-foreground">{category.name}</h3>
                         <p className="text-xs text-foreground/60 mt-0.5">{category.description}</p>
                       </div>
                     </div>
                     <Checkbox
                       checked={selectedCategories.includes(category.id)}
-                      onCheckedChange={(checked) => handleCategoryToggle(category.id, checked as boolean, category.name)}
+                      onCheckedChange={(checked) =>
+                        handleCategoryToggle(category.id, checked as boolean, category.name)
+                      }
                       onClick={(e) => e.stopPropagation()}
                       className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     />
@@ -363,7 +394,9 @@ export default function LearningModeSelector() {
                 >
                   <Checkbox
                     checked={selectedSubcategories.includes(subcategory.id)}
-                    onCheckedChange={(checked) => handleSubcategoryToggle(subcategory.id, checked as boolean)}
+                    onCheckedChange={(checked) =>
+                      handleSubcategoryToggle(subcategory.id, checked as boolean)
+                    }
                     className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
                   <span className="text-sm text-foreground/80 font-medium">{subcategory.name}</span>
@@ -395,40 +428,47 @@ export default function LearningModeSelector() {
         </div>
 
         {/* Session Information */}
-        <div className={`mb-8 p-6 rounded-xl border-2 ${
-          selectedMode === "study" 
-            ? "bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20"
-            : "bg-gradient-to-br from-secondary/5 to-secondary/10 border-secondary/20"
-        }`}>
+        <div
+          className={`mb-8 p-6 rounded-xl border-2 ${
+            selectedMode === 'study'
+              ? 'bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20'
+              : 'bg-gradient-to-br from-secondary/5 to-secondary/10 border-secondary/20'
+          }`}
+        >
           <div className="flex items-center space-x-4 mb-4">
-            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-              selectedMode === "study" ? "bg-primary/20" : "bg-secondary/20"
-            }`}>
-              <i className={`fas ${selectedMode === "study" ? "fa-brain" : "fa-clipboard-check"} text-2xl ${
-                selectedMode === "study" ? "text-primary" : "text-secondary"
-              }`}></i>
+            <div
+              className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                selectedMode === 'study' ? 'bg-primary/20' : 'bg-secondary/20'
+              }`}
+            >
+              <i
+                className={`fas ${selectedMode === 'study' ? 'fa-brain' : 'fa-clipboard-check'} text-2xl ${
+                  selectedMode === 'study' ? 'text-primary' : 'text-secondary'
+                }`}
+              ></i>
             </div>
             <div>
               <h4 className="font-bold text-foreground text-lg">
-                {selectedMode === "study" ? "Study Session" : "Quiz Assessment"}
+                {selectedMode === 'study' ? 'Study Session' : 'Quiz Assessment'}
               </h4>
               <p className="text-sm text-foreground/70">
-                {selectedMode === "study" 
-                  ? "Practice with unlimited questions and immediate feedback"
-                  : "Formal assessment that contributes to your mastery progress"
-                }
+                {selectedMode === 'study'
+                  ? 'Practice with unlimited questions and immediate feedback'
+                  : 'Formal assessment that contributes to your mastery progress'}
               </p>
             </div>
           </div>
           <div className="bg-background/50 p-4 rounded-lg border border-border/50">
             <ul className="text-sm space-y-2">
-              {selectedMode === "study" ? (
+              {selectedMode === 'study' ? (
                 <>
                   <li className="flex items-center gap-3">
                     <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                       <i className="fas fa-check text-primary text-xs"></i>
                     </span>
-                    <span className="text-foreground/80">Unlimited questions from selected areas</span>
+                    <span className="text-foreground/80">
+                      Unlimited questions from selected areas
+                    </span>
                   </li>
                   <li className="flex items-center gap-3">
                     <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -440,13 +480,17 @@ export default function LearningModeSelector() {
                     <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                       <i className="fas fa-check text-primary text-xs"></i>
                     </span>
-                    <span className="text-foreground/80">Adaptive difficulty based on performance</span>
+                    <span className="text-foreground/80">
+                      Adaptive difficulty based on performance
+                    </span>
                   </li>
                   <li className="flex items-center gap-3">
                     <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                       <i className="fas fa-check text-primary text-xs"></i>
                     </span>
-                    <span className="text-foreground/80">No impact on certification mastery scores</span>
+                    <span className="text-foreground/80">
+                      No impact on certification mastery scores
+                    </span>
                   </li>
                 </>
               ) : (
@@ -473,7 +517,9 @@ export default function LearningModeSelector() {
                     <span className="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
                       <i className="fas fa-check text-secondary text-xs"></i>
                     </span>
-                    <span className="text-foreground/80">Contributes to certification readiness</span>
+                    <span className="text-foreground/80">
+                      Contributes to certification readiness
+                    </span>
                   </li>
                 </>
               )}
@@ -486,20 +532,22 @@ export default function LearningModeSelector() {
           onClick={handleStartSession}
           disabled={createQuizMutation.isPending || selectedCategories.length === 0}
           className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 shadow-glow ${
-            selectedMode === "study"
-              ? "gradient-primary hover:opacity-90 text-white"
-              : "bg-secondary hover:bg-secondary/90 text-white"
+            selectedMode === 'study'
+              ? 'gradient-primary hover:opacity-90 text-white'
+              : 'bg-secondary hover:bg-secondary/90 text-white'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {createQuizMutation.isPending ? (
             <div className="flex items-center justify-center space-x-3">
               <LoadingSpinner size="sm" variant="white" />
-              <span>Starting {selectedMode === "study" ? "Study" : "Quiz"} Session...</span>
+              <span>Starting {selectedMode === 'study' ? 'Study' : 'Quiz'} Session...</span>
             </div>
           ) : (
             <div className="flex items-center justify-center space-x-3">
-              <i className={`fas ${selectedMode === "study" ? "fa-brain" : "fa-clipboard-check"} text-xl`}></i>
-              <span>Start {selectedMode === "study" ? "Study" : "Quiz"} Session</span>
+              <i
+                className={`fas ${selectedMode === 'study' ? 'fa-brain' : 'fa-clipboard-check'} text-xl`}
+              ></i>
+              <span>Start {selectedMode === 'study' ? 'Study' : 'Quiz'} Session</span>
             </div>
           )}
         </Button>

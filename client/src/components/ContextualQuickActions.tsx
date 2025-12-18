@@ -1,25 +1,18 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/lib/auth-provider";
-import { apiRequest, queryClient, queryKeys } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  Play, 
-  RotateCcw, 
-  TrendingUp, 
-  Clock,
-  Target,
-  BookOpen,
-  Award
-} from "lucide-react";
-import type { Quiz, UserStats, Category } from "@shared/schema";
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/lib/auth-provider';
+import { queryClient, queryKeys } from '@/lib/queryClient';
+import { clientStorage } from '@/lib/client-storage';
+import { useToast } from '@/hooks/use-toast';
+import { Play, RotateCcw, TrendingUp, Clock, Target, BookOpen, Award } from 'lucide-react';
+import type { Quiz, UserStats, Category } from '@shared/schema';
 
 export default function ContextualQuickActions() {
   const [location, setLocation] = useLocation();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshUser } = useAuth();
   const { toast } = useToast();
 
   const { data: stats } = useQuery<UserStats>({
@@ -38,22 +31,47 @@ export default function ContextualQuickActions() {
 
   const createQuizMutation = useMutation({
     mutationFn: async (quizData: any) => {
-      const response = await apiRequest({
-        method: "POST",
-        endpoint: "/api/quiz",
-        data: quizData,
+      if (!currentUser?.id) throw new Error('Not authenticated');
+
+      const tokenCost = clientStorage.calculateQuizTokenCost(quizData.questionCount);
+
+      // Check and consume tokens
+      const tokenResult = await clientStorage.consumeTokens(currentUser.id, tokenCost);
+
+      if (!tokenResult.success) {
+        throw new Error(
+          `Insufficient tokens. You need ${tokenCost} tokens but only have ${tokenResult.newBalance}.`
+        );
+      }
+
+      // Create the quiz
+      const quiz = await clientStorage.createQuiz({
+        userId: currentUser.id,
+        ...quizData,
       });
-      return response.json();
+
+      return { quiz, tokenResult, tokenCost };
     },
-    onSuccess: (quiz) => {
+    onSuccess: async ({ quiz, tokenResult, tokenCost }) => {
+      // Refresh user state in auth provider to keep it in sync
+      await refreshUser();
+
       queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
+
+      toast({
+        title: 'Quiz Created',
+        description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
+      });
+
       setLocation(`/app/quiz/${quiz.id}`);
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
-        title: "Error",
-        description: "Failed to create learning session.",
-        variant: "destructive",
+        title: 'Error',
+        description: error?.message || 'Failed to create learning session.',
+        variant: 'destructive',
       });
     },
   });
@@ -62,9 +80,9 @@ export default function ContextualQuickActions() {
   const getContextualActions = () => {
     const actions = [];
     const currentPath = location;
-    
+
     // Use all available categories
-    const accessibleCategoryIds = categories.map(cat => cat.id);
+    const accessibleCategoryIds = categories.map((cat) => cat.id);
 
     // Universal quick actions
     actions.push({
@@ -76,13 +94,13 @@ export default function ContextualQuickActions() {
       onClick: () => {
         if (accessibleCategoryIds.length === 0) {
           toast({
-            title: "No Categories Available",
-            description: "Please contact support to add certification categories.",
-            variant: "default",
+            title: 'No Categories Available',
+            description: 'Please contact support to add certification categories.',
+            variant: 'default',
           });
           return;
         }
-        
+
         if (currentUser?.id) {
           createQuizMutation.mutate({
             categoryIds: [accessibleCategoryIds[0]], // Use first category
@@ -90,7 +108,7 @@ export default function ContextualQuickActions() {
             title: `Quick Session - ${new Date().toLocaleDateString()}`,
           });
         }
-      }
+      },
     });
 
     // Page-specific contextual actions
@@ -109,10 +127,10 @@ export default function ContextualQuickActions() {
               categoryIds: accessibleCategoryIds.length > 0 ? [accessibleCategoryIds[0]] : [],
               questionCount: 20,
               title: `Review Session - ${new Date().toLocaleDateString()}`,
-              mode: 'study' // Study mode for reviewing weak areas
+              mode: 'study', // Study mode for reviewing weak areas
             });
           }
-        }
+        },
       });
 
       actions.push({
@@ -121,7 +139,7 @@ export default function ContextualQuickActions() {
         description: 'Check badges and milestones',
         icon: <Award className="w-4 h-4" />,
         variant: 'ghost' as const,
-        onClick: () => setLocation('/app/achievements')
+        onClick: () => setLocation('/app/achievements'),
       });
     }
 
@@ -142,7 +160,7 @@ export default function ContextualQuickActions() {
               title: `Timed Practice - ${new Date().toLocaleDateString()}`,
             });
           }
-        }
+        },
       });
     }
 
@@ -162,7 +180,7 @@ export default function ContextualQuickActions() {
               title: `Badge Quest - ${new Date().toLocaleDateString()}`,
             });
           }
-        }
+        },
       });
 
       if (recentQuizzes.length > 0) {
@@ -174,7 +192,7 @@ export default function ContextualQuickActions() {
           variant: 'ghost' as const,
           onClick: () => {
             const bestQuiz = recentQuizzes
-              .filter(quiz => quiz.completedAt && (quiz.score || 0) >= 70)
+              .filter((quiz) => quiz.completedAt && (quiz.score || 0) >= 70)
               .sort((a, b) => (b.score || 0) - (a.score || 0))[0];
 
             if (bestQuiz && currentUser?.id) {
@@ -184,7 +202,7 @@ export default function ContextualQuickActions() {
                 title: `Repeat Success - ${new Date().toLocaleDateString()}`,
               });
             }
-          }
+          },
         });
       }
     }
@@ -229,7 +247,7 @@ export default function ContextualQuickActions() {
             </Button>
           ))}
         </div>
-        
+
         {/* Contextual description */}
         <div className="mt-3 text-xs text-muted-foreground">
           {actions[0]?.description && (

@@ -1,27 +1,21 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/lib/auth-provider";
-import { useLocation } from "wouter";
-import { apiRequest, queryClient, queryKeys } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  Play, 
-  RotateCcw, 
-  Brain, 
-  Clock,
-  TrendingUp,
-  BookOpen
-} from "lucide-react";
-import type { Quiz, Category, UserStats } from "@shared/schema";
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/lib/auth-provider';
+import { useLocation } from 'wouter';
+import { queryClient, queryKeys } from '@/lib/queryClient';
+import { clientStorage } from '@/lib/client-storage';
+import { useToast } from '@/hooks/use-toast';
+import { Play, RotateCcw, Brain, Clock, TrendingUp, BookOpen } from 'lucide-react';
+import type { Quiz, Category, UserStats } from '@shared/schema';
 
 interface QuickStartModeProps {
   onToggleMode?: () => void;
 }
 
 export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshUser } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -41,22 +35,47 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
 
   const createQuizMutation = useMutation({
     mutationFn: async (quizData: any) => {
-      const response = await apiRequest({
-        method: "POST",
-        endpoint: "/api/quiz",
-        data: quizData,
+      if (!currentUser?.id) throw new Error('Not authenticated');
+
+      const tokenCost = clientStorage.calculateQuizTokenCost(quizData.questionCount);
+
+      // Check and consume tokens
+      const tokenResult = await clientStorage.consumeTokens(currentUser.id, tokenCost);
+
+      if (!tokenResult.success) {
+        throw new Error(
+          `Insufficient tokens. You need ${tokenCost} tokens but only have ${tokenResult.newBalance}.`
+        );
+      }
+
+      // Create the quiz
+      const quiz = await clientStorage.createQuiz({
+        userId: currentUser.id,
+        ...quizData,
       });
-      return response.json();
+
+      return { quiz, tokenResult, tokenCost };
     },
-    onSuccess: (quiz) => {
+    onSuccess: async ({ quiz, tokenResult, tokenCost }) => {
+      // Refresh user state in auth provider to keep it in sync
+      await refreshUser();
+
       queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
+
+      toast({
+        title: 'Quiz Created',
+        description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
+      });
+
       setLocation(`/app/quiz/${quiz.id}`);
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
-        title: "Error",
-        description: "Failed to create quiz session. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: error?.message || 'Failed to create quiz session. Please try again.',
+        variant: 'destructive',
       });
     },
   });
@@ -64,18 +83,18 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
   // Get the most recent successful quiz format
   const getLastSuccessfulQuiz = () => {
     return recentQuizzes
-      .filter(quiz => quiz.completedAt && (quiz.score || 0) >= 70)
+      .filter((quiz) => quiz.completedAt && (quiz.score || 0) >= 70)
       .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())[0];
   };
 
   // Get categories user performs best in
   const getBestPerformingCategories = () => {
-    const categoryPerformance = new Map<number, { totalScore: number, count: number }>();
-    
+    const categoryPerformance = new Map<number, { totalScore: number; count: number }>();
+
     recentQuizzes
-      .filter(quiz => quiz.completedAt && quiz.score !== undefined)
-      .forEach(quiz => {
-        const categoryIds = quiz.categoryIds as number[] || [];
+      .filter((quiz) => quiz.completedAt && quiz.score !== undefined)
+      .forEach((quiz) => {
+        const categoryIds = (quiz.categoryIds as number[]) || [];
         categoryIds.forEach((categoryId: number) => {
           const existing = categoryPerformance.get(categoryId) || { totalScore: 0, count: 0 };
           existing.totalScore += quiz.score!;
@@ -87,16 +106,16 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
     return Array.from(categoryPerformance.entries())
       .map(([categoryId, data]) => ({
         categoryId,
-        averageScore: data.totalScore / data.count
+        averageScore: data.totalScore / data.count,
       }))
       .sort((a, b) => b.averageScore - a.averageScore)
       .slice(0, 2)
-      .map(item => item.categoryId);
+      .map((item) => item.categoryId);
   };
 
   const handleContinueLastSession = () => {
     const lastQuiz = recentQuizzes
-      .filter(quiz => quiz.completedAt)
+      .filter((quiz) => quiz.completedAt)
       .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())[0];
 
     if (lastQuiz && currentUser?.id) {
@@ -110,7 +129,7 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
 
   const handleRepeatSuccessfulFormat = () => {
     const successfulQuiz = getLastSuccessfulQuiz();
-    
+
     if (successfulQuiz && currentUser?.id) {
       createQuizMutation.mutate({
         categoryIds: successfulQuiz.categoryIds,
@@ -122,9 +141,8 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
 
   const handleHelensRecommendation = () => {
     const bestCategories = getBestPerformingCategories();
-    const categoryIds = bestCategories.length > 0 
-      ? bestCategories 
-      : categories.slice(0, 2).map(c => c.id);
+    const categoryIds =
+      bestCategories.length > 0 ? bestCategories : categories.slice(0, 2).map((c) => c.id);
 
     if (currentUser?.id) {
       createQuizMutation.mutate({
@@ -137,15 +155,15 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
 
   const getCategoryNames = (categoryIds: number[]) => {
     return categoryIds
-      .map(id => categories.find(cat => cat.id === id)?.name)
+      .map((id) => categories.find((cat) => cat.id === id)?.name)
       .filter(Boolean)
-      .join(", ");
+      .join(', ');
   };
 
   const lastQuiz = recentQuizzes
-    .filter(quiz => quiz.completedAt)
+    .filter((quiz) => quiz.completedAt)
     .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())[0];
-  
+
   const successfulQuiz = getLastSuccessfulQuiz();
   const bestCategories = getBestPerformingCategories();
 
@@ -162,18 +180,13 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
             </p>
           </div>
           {onToggleMode && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onToggleMode}
-              className="text-xs"
-            >
+            <Button variant="outline" size="sm" onClick={onToggleMode} className="text-xs">
               Full Setup
             </Button>
           )}
         </div>
       </CardHeader>
-      
+
       <CardContent className="card-breathing">
         <div className="space-y-4">
           {/* Continue Last Session */}
@@ -186,7 +199,8 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-comfortable">Continue Last Session</h4>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {getCategoryNames(lastQuiz.categoryIds as number[])} • {lastQuiz.questionCount || 15} questions
+                    {getCategoryNames(lastQuiz.categoryIds as number[])} •{' '}
+                    {lastQuiz.questionCount || 15} questions
                   </p>
                   <div className="flex items-center gap-2 mt-2">
                     <Badge variant="secondary" className="text-xs">
@@ -220,10 +234,14 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-comfortable">Repeat Successful Format</h4>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {getCategoryNames(successfulQuiz.categoryIds as number[])} • {successfulQuiz.questionCount || 15} questions
+                    {getCategoryNames(successfulQuiz.categoryIds as number[])} •{' '}
+                    {successfulQuiz.questionCount || 15} questions
                   </p>
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                    >
                       Score: {successfulQuiz.score}%
                     </Badge>
                     <Badge variant="outline" className="text-xs">
@@ -253,13 +271,15 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
               <div className="flex-1 min-w-0">
                 <h4 className="font-medium text-comfortable">Helen's Top Recommendation</h4>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {bestCategories.length > 0 
+                  {bestCategories.length > 0
                     ? `${getCategoryNames(bestCategories)} • Based on your strengths`
-                    : "Mixed categories • Balanced learning approach"
-                  }
+                    : 'Mixed categories • Balanced learning approach'}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+                  >
                     AI Optimized
                   </Badge>
                   <Badge variant="outline" className="text-xs">
@@ -283,7 +303,8 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
           {stats && (
             <div className="p-3 bg-muted/20 rounded-lg text-center">
               <p className="text-xs text-muted-foreground">
-                Your Progress: {stats.totalQuizzes} sessions completed • {stats.averageScore}% average score
+                Your Progress: {stats.totalQuizzes} sessions completed • {stats.averageScore}%
+                average score
               </p>
             </div>
           )}
