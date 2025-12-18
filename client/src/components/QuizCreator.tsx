@@ -24,7 +24,7 @@ import type { Category, Subcategory } from '@shared/schema';
 export default function QuizCreator() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user: currentUser, refreshUser } = useAuth();
+  const { user: currentUser } = useAuth();
 
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [selectedSubcategories, setSelectedSubcategories] = useState<number[]>([]);
@@ -80,9 +80,8 @@ export default function QuizCreator() {
       return { quiz, tokenResult, tokenCost };
     },
     onSuccess: async ({ quiz, tokenResult, tokenCost }) => {
-      // Refresh user state in auth provider to keep it in sync
-      await refreshUser();
-
+      // Invalidate queries to update all relevant caches
+      // No need to refresh the entire user object - query invalidation is sufficient
       queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
