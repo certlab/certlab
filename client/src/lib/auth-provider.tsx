@@ -49,6 +49,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Initialize storage factory
         await initializeStorage();
 
+        // Load user from local storage immediately to prevent redirect on refresh
+        // This is crucial for page refreshes on protected routes
+        try {
+          const currentUser = await clientAuth.getCurrentUser();
+          setUser(currentUser);
+          if (currentUser) {
+            identifyUser(currentUser.id);
+          }
+        } catch (error) {
+          logError('initialLoadUser', error);
+          setUser(null);
+        } finally {
+          // Set isLoading to false so protected routes can render
+          // Firebase sync will happen asynchronously if needed
+          setIsLoading(false);
+        }
+
         // Initialize Firebase if configured
         if (isFirebaseConfigured()) {
           const initialized = initializeFirebase();
@@ -60,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         logError('initializeAuth', error);
+        setIsLoading(false);
       }
     };
 
@@ -114,8 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       logError('loadUser', error);
       setUser(null);
-    } finally {
-      setIsLoading(false);
     }
   }, [firebaseUser]);
 
@@ -148,19 +164,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Trigger user load whenever Firebase auth state changes
-      // loadUser() will set isLoading to false when done
       await loadUser();
+
+      // Set loading to false after Firebase sync completes
+      if (isSubstantiveChange) {
+        setIsLoading(false);
+      }
     });
 
     return () => unsubscribe();
   }, [firebaseInitialized, loadUser, firebaseUser]);
-
-  // Initial load from local storage
-  useEffect(() => {
-    if (!firebaseInitialized) {
-      loadUser();
-    }
-  }, [firebaseInitialized, loadUser]);
 
   const logout = useCallback(async () => {
     try {
