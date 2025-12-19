@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { queryClient } from './lib/queryClient';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
@@ -116,14 +116,21 @@ function Router() {
   }
 
   // For non-authenticated users trying to access app routes, redirect to landing
+  // Use Navigate component for declarative routing
+  if (isAppRoute && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigate to="/" replace />
+      </div>
+    );
+  }
+
+  // For all other paths (except root which is handled above), show 404
   return (
     <div className="min-h-screen bg-background">
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            {/* Redirect non-authenticated users trying to access protected routes */}
-            <Route path="/app/*" element={<Landing />} />
-            <Route path="/admin" element={<Landing />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
