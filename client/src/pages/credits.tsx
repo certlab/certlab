@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Coins, Sparkles, Zap, Crown, Check } from 'lucide-react';
 import { apiRequest, queryClient, queryKeys } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface CreditProduct {
@@ -30,7 +29,6 @@ interface CreditProduct {
 
 export default function Credits() {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [verifyingPurchase, setVerifyingPurchase] = useState(false);
 
