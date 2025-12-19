@@ -3,7 +3,7 @@ import QuizInterface from '@/components/QuizInterface';
 
 export default function Quiz() {
   const params = useParams<{ id: string }>();
-  const quizId = params.id ? parseInt(params.id) : 0;
+  const quizId = params?.id ? parseInt(params.id) : 0;
 
   if (!quizId || isNaN(quizId)) {
     return (
