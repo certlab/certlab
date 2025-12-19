@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/accordion';
 import { GraduationCap, ArrowRight, Brain, Shield, BookOpen, Menu, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 // Lazy load Login component to reduce initial bundle size
@@ -61,7 +61,7 @@ const faqs = [
 
 export default function Landing() {
   const { user, isAuthenticated } = useAuth();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -70,8 +70,8 @@ export default function Landing() {
   }, []);
 
   const handleGoToDashboard = useCallback(() => {
-    setLocation('/app');
-  }, [setLocation]);
+    navigate('/app');
+  }, [navigate]);
 
   const handleScrollToFeatures = useCallback(() => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });

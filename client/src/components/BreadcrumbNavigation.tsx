@@ -1,4 +1,4 @@
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, ChevronRight } from 'lucide-react';
 import {
   Breadcrumb,
@@ -18,10 +18,11 @@ interface BreadcrumbItemData {
 }
 
 export default function BreadcrumbNavigation({ className }: { className?: string }) {
-  const [location, setLocation] = useLocation();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const getBreadcrumbs = (): BreadcrumbItemData[] => {
-    const pathSegments = location.split('/').filter(Boolean);
+    const pathSegments = location.pathname.split('/').filter(Boolean);
 
     // Always start with home
     const breadcrumbs: BreadcrumbItemData[] = [
@@ -94,7 +95,7 @@ export default function BreadcrumbNavigation({ className }: { className?: string
   const breadcrumbs = getBreadcrumbs();
 
   // Don't show breadcrumbs on the dashboard home page
-  if (location === '/app' || location === '/app/dashboard') {
+  if (location.pathname === '/app' || location.pathname === '/app/dashboard') {
     return null;
   }
 
@@ -122,7 +123,7 @@ export default function BreadcrumbNavigation({ className }: { className?: string
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setLocation(crumb.href!)}
+                      onClick={() => navigate(crumb.href!)}
                       className={cn(
                         'h-auto py-1.5 px-2.5',
                         'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100',

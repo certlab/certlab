@@ -6,12 +6,12 @@ import { useAuth } from '@/lib/auth-provider';
 import { queryClient, queryKeys } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
 import { useToast } from '@/hooks/use-toast';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Zap, RotateCcw, Shuffle, BarChart3 } from 'lucide-react';
 import type { MasteryScore, Category } from '@shared/schema';
 
 export default function QuickActionsCard() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
   const { user: currentUser, refreshUser } = useAuth();
@@ -62,7 +62,7 @@ export default function QuickActionsCard() {
         description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
       });
 
-      setLocation(`/app/quiz/${quiz.id}`);
+      navigate(`/app/quiz/${quiz.id}`);
     },
     onError: (error: any) => {
       toast({

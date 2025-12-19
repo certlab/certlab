@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -71,7 +71,7 @@ async function startPracticeTest(userId: string, test: PracticeTest): Promise<Qu
 }
 
 export default function PracticeTestMode() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedTest, setSelectedTest] = useState<string>('');
   const [isCreating, setIsCreating] = useState(false);
@@ -113,7 +113,7 @@ export default function PracticeTestMode() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.user.practiceTestAttempts(currentUser?.id),
       });
-      setLocation(`/app/quiz/${quiz.id}`);
+      navigate(`/app/quiz/${quiz.id}`);
     },
     onError: (error: any) => {
       const message = error.message || 'Failed to start practice test. Please try again.';
@@ -275,7 +275,7 @@ export default function PracticeTestMode() {
                   queryClient.invalidateQueries({
                     queryKey: queryKeys.user.practiceTestAttempts(currentUser.id),
                   });
-                  setLocation(`/app/quiz/${quiz.id}`);
+                  navigate(`/app/quiz/${quiz.id}`);
                 } catch (error: any) {
                   toast({
                     title: 'Error',

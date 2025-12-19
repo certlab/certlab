@@ -60,7 +60,7 @@ export default defineConfig({
           // Vendor chunk for data/charting libraries
           'vendor-charts': ['recharts'],
           // Vendor chunk for other utilities
-          'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge', 'wouter'],
+          'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge', 'react-router-dom'],
         },
       },
     },

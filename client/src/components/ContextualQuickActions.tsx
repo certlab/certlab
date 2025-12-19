@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,8 @@ import { Play, RotateCcw, TrendingUp, Clock, Target, BookOpen, Award } from 'luc
 import type { Quiz, UserStats, Category } from '@shared/schema';
 
 export default function ContextualQuickActions() {
-  const [location, setLocation] = useLocation();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { user: currentUser, refreshUser } = useAuth();
   const { toast } = useToast();
 
@@ -65,7 +66,7 @@ export default function ContextualQuickActions() {
         description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
       });
 
-      setLocation(`/app/quiz/${quiz.id}`);
+      navigate(`/app/quiz/${quiz.id}`);
     },
     onError: (error: any) => {
       toast({
@@ -79,7 +80,7 @@ export default function ContextualQuickActions() {
   // Get contextual actions based on current page
   const getContextualActions = () => {
     const actions = [];
-    const currentPath = location;
+    const currentPath = location.pathname;
 
     // Use all available categories
     const accessibleCategoryIds = categories.map((cat) => cat.id);
@@ -139,7 +140,7 @@ export default function ContextualQuickActions() {
         description: 'Check badges and milestones',
         icon: <Award className="w-4 h-4" />,
         variant: 'ghost' as const,
-        onClick: () => setLocation('/app/achievements'),
+        onClick: () => navigate('/app/achievements'),
       });
     }
 

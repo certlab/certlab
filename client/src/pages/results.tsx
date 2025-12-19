@@ -1,4 +1,4 @@
-import { useRoute, useLocation } from 'wouter';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,9 +11,9 @@ import { queryKeys } from '@/lib/queryClient';
 import type { Quiz, Category } from '@shared/schema';
 
 export default function Results() {
-  const [, params] = useRoute('/app/results/:id');
-  const [, setLocation] = useLocation();
-  const quizId = parseInt(params?.id || '0');
+  const params = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const quizId = parseInt(params.id || '0');
 
   const { data: quiz, isLoading } = useQuery<Quiz>({
     queryKey: queryKeys.quiz.detail(quizId),
@@ -50,7 +50,7 @@ export default function Results() {
               The quiz you're looking for doesn't exist.
             </p>
             <Button
-              onClick={() => setLocation('/app')}
+              onClick={() => navigate('/app')}
               className="mt-4 bg-primary hover:bg-primary/90"
             >
               Return to Dashboard
@@ -74,12 +74,12 @@ export default function Results() {
             </p>
             <div className="flex gap-4 justify-center mt-4">
               <Button
-                onClick={() => setLocation(`/app/quiz/${quizId}`)}
+                onClick={() => navigate(`/app/quiz/${quizId}`)}
                 className="bg-primary hover:bg-primary/90"
               >
                 Continue Quiz
               </Button>
-              <Button variant="outline" onClick={() => setLocation('/app')}>
+              <Button variant="outline" onClick={() => navigate('/app')}>
                 Return to Dashboard
               </Button>
             </div>
@@ -283,7 +283,7 @@ export default function Results() {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button
-                onClick={() => setLocation('/app')}
+                onClick={() => navigate('/app')}
                 className="flex-1 bg-primary text-white hover:bg-primary/90"
                 size="sm"
               >
@@ -292,13 +292,13 @@ export default function Results() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setLocation(`/app/review/${quizId}`)}
+                onClick={() => navigate(`/app/review/${quizId}`)}
                 className="flex-1"
               >
                 <i className="fas fa-eye mr-2"></i>
                 Review Answers
               </Button>
-              <Button variant="outline" onClick={() => setLocation('/app')} className="flex-1">
+              <Button variant="outline" onClick={() => navigate('/app')} className="flex-1">
                 <i className="fas fa-redo mr-2"></i>
                 Take Another Quiz
               </Button>

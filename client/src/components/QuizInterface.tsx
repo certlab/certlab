@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import { useEffect, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { useEffect, useCallback } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,19 +12,19 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { QuizHeader, QuestionDisplay, QuestionNavigator } from "@/components/quiz";
-import { useQuizState } from "@/hooks/useQuizState";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { queryKeys } from "@/lib/queryClient";
-import type { Question, Quiz } from "@shared/schema";
+} from '@/components/ui/alert-dialog';
+import { QuizHeader, QuestionDisplay, QuestionNavigator } from '@/components/quiz';
+import { useQuizState } from '@/hooks/useQuizState';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { queryKeys } from '@/lib/queryClient';
+import type { Question, Quiz } from '@shared/schema';
 
 interface QuizInterfaceProps {
   quizId: number;
 }
 
 export default function QuizInterface({ quizId }: QuizInterfaceProps) {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   const { data: quiz } = useQuery<Quiz>({
     queryKey: queryKeys.quiz.detail(quizId),
@@ -53,66 +53,74 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   } = useQuizState({ quizId, quiz, questions });
 
   // Keyboard navigation for quiz interface
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    // Don't handle keyboard shortcuts when a dialog is open
-    if (showFlaggedQuestionsDialog) return;
-    
-    // Don't handle shortcuts when focus is on an input or button
-    const activeElement = document.activeElement;
-    if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA') return;
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      // Don't handle keyboard shortcuts when a dialog is open
+      if (showFlaggedQuestionsDialog) return;
 
-    switch (event.key) {
-      case 'ArrowLeft':
-      case 'p':
-      case 'P':
-        // Previous question
-        if (state.isReviewingFlagged ? state.currentFlaggedIndex > 0 : state.currentQuestionIndex > 0) {
-          event.preventDefault();
-          handlePreviousQuestion();
-        }
-        break;
-      case 'ArrowRight':
-      case 'n':
-      case 'N':
-        // Next question
-        event.preventDefault();
-        handleNextQuestion();
-        break;
-      case 'f':
-      case 'F':
-        // Flag/unflag current question
-        event.preventDefault();
-        handleFlagQuestion();
-        break;
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-        // Quick answer selection (for questions with up to 5 options)
-        if (currentQuestion && state.selectedAnswer === undefined) {
-          const optionIndex = parseInt(event.key) - 1;
-          const options = currentQuestion.options as any[];
-          if (optionIndex < options.length) {
+      // Don't handle shortcuts when focus is on an input or button
+      const activeElement = document.activeElement;
+      if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA') return;
+
+      switch (event.key) {
+        case 'ArrowLeft':
+        case 'p':
+        case 'P':
+          // Previous question
+          if (
+            state.isReviewingFlagged
+              ? state.currentFlaggedIndex > 0
+              : state.currentQuestionIndex > 0
+          ) {
             event.preventDefault();
-            const optionId = options[optionIndex].id !== undefined ? options[optionIndex].id : optionIndex;
-            handleAnswerChange(optionId.toString());
+            handlePreviousQuestion();
           }
-        }
-        break;
-    }
-  }, [
-    showFlaggedQuestionsDialog,
-    state.isReviewingFlagged,
-    state.currentFlaggedIndex,
-    state.currentQuestionIndex,
-    state.selectedAnswer,
-    currentQuestion,
-    handlePreviousQuestion,
-    handleNextQuestion,
-    handleFlagQuestion,
-    handleAnswerChange
-  ]);
+          break;
+        case 'ArrowRight':
+        case 'n':
+        case 'N':
+          // Next question
+          event.preventDefault();
+          handleNextQuestion();
+          break;
+        case 'f':
+        case 'F':
+          // Flag/unflag current question
+          event.preventDefault();
+          handleFlagQuestion();
+          break;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+          // Quick answer selection (for questions with up to 5 options)
+          if (currentQuestion && state.selectedAnswer === undefined) {
+            const optionIndex = parseInt(event.key) - 1;
+            const options = currentQuestion.options as any[];
+            if (optionIndex < options.length) {
+              event.preventDefault();
+              const optionId =
+                options[optionIndex].id !== undefined ? options[optionIndex].id : optionIndex;
+              handleAnswerChange(optionId.toString());
+            }
+          }
+          break;
+      }
+    },
+    [
+      showFlaggedQuestionsDialog,
+      state.isReviewingFlagged,
+      state.currentFlaggedIndex,
+      state.currentQuestionIndex,
+      state.selectedAnswer,
+      currentQuestion,
+      handlePreviousQuestion,
+      handleNextQuestion,
+      handleFlagQuestion,
+      handleAnswerChange,
+    ]
+  );
 
   // Set up keyboard event listener
   useEffect(() => {
@@ -131,12 +139,10 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
             <i className="fas fa-exclamation-triangle text-4xl text-warning mb-4"></i>
             <h2 className="text-xl font-semibold mb-2">No Questions Available</h2>
             <p className="text-muted-foreground mb-4">
-              Unfortunately, there are no questions available for this quiz. This might be because the selected categories don't have any questions in the database yet.
+              Unfortunately, there are no questions available for this quiz. This might be because
+              the selected categories don't have any questions in the database yet.
             </p>
-            <Button 
-              onClick={() => setLocation("/app/dashboard")}
-              className="w-full sm:w-auto"
-            >
+            <Button onClick={() => navigate('/app/dashboard')} className="w-full sm:w-auto">
               Return to Dashboard
             </Button>
           </div>
@@ -180,31 +186,37 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
               <Button
                 variant="outline"
                 onClick={handlePreviousQuestion}
-                disabled={state.isReviewingFlagged ? state.currentFlaggedIndex === 0 : state.currentQuestionIndex === 0}
+                disabled={
+                  state.isReviewingFlagged
+                    ? state.currentFlaggedIndex === 0
+                    : state.currentQuestionIndex === 0
+                }
                 size="sm"
                 className="flex-1 sm:flex-initial"
-                aria-label={state.isReviewingFlagged 
-                  ? `Previous flagged question (${state.currentFlaggedIndex + 1} of ${state.flaggedQuestionIndices.length})`
-                  : `Previous question (${state.currentQuestionIndex + 1} of ${questions.length})`
+                aria-label={
+                  state.isReviewingFlagged
+                    ? `Previous flagged question (${state.currentFlaggedIndex + 1} of ${state.flaggedQuestionIndices.length})`
+                    : `Previous question (${state.currentQuestionIndex + 1} of ${questions.length})`
                 }
               >
                 <i className="fas fa-chevron-left mr-1 sm:mr-2" aria-hidden="true"></i>
                 <span className="hidden sm:inline">Previous</span>
                 <span className="sm:hidden">Prev</span>
               </Button>
-              
+
               <Button
                 variant="outline"
                 onClick={handleFlagQuestion}
                 size="sm"
                 className={`flex-1 sm:flex-initial quiz-flag-button ${
-                  state.flaggedQuestions.has(currentQuestion.id) 
-                    ? 'bg-accent text-white hover:bg-accent/90' 
+                  state.flaggedQuestions.has(currentQuestion.id)
+                    ? 'bg-accent text-white hover:bg-accent/90'
                     : ''
                 }`}
-                aria-label={state.flaggedQuestions.has(currentQuestion.id) 
-                  ? 'Remove flag from this question' 
-                  : 'Flag this question for review'
+                aria-label={
+                  state.flaggedQuestions.has(currentQuestion.id)
+                    ? 'Remove flag from this question'
+                    : 'Flag this question for review'
                 }
                 aria-pressed={state.flaggedQuestions.has(currentQuestion.id)}
               >
@@ -217,7 +229,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                 </span>
               </Button>
             </div>
-            
+
             <Button
               onClick={handleNextQuestion}
               disabled={submitQuizMutation.isPending}
@@ -235,7 +247,11 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
             >
               {state.isReviewingFlagged ? (
                 state.currentFlaggedIndex === state.flaggedQuestionIndices.length - 1 ? (
-                  submitQuizMutation.isPending ? 'Submitting...' : 'Finish Review & Submit'
+                  submitQuizMutation.isPending ? (
+                    'Submitting...'
+                  ) : (
+                    'Finish Review & Submit'
+                  )
                 ) : (
                   <>
                     <span className="hidden sm:inline">Next Flagged</span>
@@ -243,16 +259,18 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
                     <i className="fas fa-chevron-right ml-1 sm:ml-2" aria-hidden="true"></i>
                   </>
                 )
-              ) : (
-                state.currentQuestionIndex === questions.length - 1 ? (
-                  submitQuizMutation.isPending ? 'Submitting...' : 'Submit Quiz'
+              ) : state.currentQuestionIndex === questions.length - 1 ? (
+                submitQuizMutation.isPending ? (
+                  'Submitting...'
                 ) : (
-                  <>
-                    <span className="hidden sm:inline">Next</span>
-                    <span className="sm:hidden">Next</span>
-                    <i className="fas fa-chevron-right ml-1 sm:ml-2" aria-hidden="true"></i>
-                  </>
+                  'Submit Quiz'
                 )
+              ) : (
+                <>
+                  <span className="hidden sm:inline">Next</span>
+                  <span className="sm:hidden">Next</span>
+                  <i className="fas fa-chevron-right ml-1 sm:ml-2" aria-hidden="true"></i>
+                </>
               )}
             </Button>
           </div>
@@ -260,12 +278,8 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
       </Card>
 
       {/* Question Navigator */}
-      <QuestionNavigator
-        questions={questions}
-        state={state}
-        onNavigate={navigateToQuestion}
-      />
-      
+      <QuestionNavigator questions={questions} state={state} onNavigate={navigateToQuestion} />
+
       {/* Flagged Questions Review Dialog */}
       <AlertDialog open={showFlaggedQuestionsDialog} onOpenChange={setShowFlaggedQuestionsDialog}>
         <AlertDialogContent>
@@ -275,8 +289,9 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
               Review Flagged Questions?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              You have {state.flaggedQuestions.size} flagged question{state.flaggedQuestions.size !== 1 ? 's' : ''} for review.
-              Would you like to review {state.flaggedQuestions.size === 1 ? 'it' : 'them'} before submitting the quiz?
+              You have {state.flaggedQuestions.size} flagged question
+              {state.flaggedQuestions.size !== 1 ? 's' : ''} for review. Would you like to review{' '}
+              {state.flaggedQuestions.size === 1 ? 'it' : 'them'} before submitting the quiz?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

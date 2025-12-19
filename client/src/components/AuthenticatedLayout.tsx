@@ -11,7 +11,7 @@ import { RightSidebar } from '@/components/RightSidebar';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
 import type { UserStats } from '@shared/schema';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import MobileNavigationEnhanced from '@/components/MobileNavigationEnhanced';
 
@@ -40,7 +40,8 @@ const getNavigationItems = (isAdmin: boolean) => {
 function AuthenticatedHeader() {
   const { user: currentUser } = useAuth();
   const { togglePanel } = useRightSidebar();
-  const [location, setLocation] = useLocation();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Get user stats for level and XP
   const { data: stats } = useQuery<UserStats>({
@@ -64,9 +65,9 @@ function AuthenticatedHeader() {
 
   const isPathActive = (path: string) => {
     if (path === '/app') {
-      return location === '/app' || location === '/app/dashboard';
+      return location.pathname === '/app' || location.pathname === '/app/dashboard';
     }
-    return location.startsWith(path);
+    return location.pathname.startsWith(path);
   };
 
   return (
@@ -92,7 +93,7 @@ function AuthenticatedHeader() {
                 key={item.url}
                 variant="ghost"
                 size="sm"
-                onClick={() => setLocation(item.url)}
+                onClick={() => navigate(item.url)}
                 className={cn(
                   'flex items-center gap-2 text-sm font-medium rounded-lg h-9 px-3',
                   isActive

@@ -16,7 +16,7 @@
  */
 
 import { useReducer, useState, useEffect, useCallback, useRef } from 'react';
-import { useLocation } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { queryClient, queryKeys } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
@@ -76,7 +76,7 @@ interface UseQuizStateOptions {
  * ```
  */
 export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Initialize quiz state with useReducer for batched updates
@@ -141,7 +141,7 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
         });
       }
 
-      setLocation(`/app/results/${quizId}`);
+      navigate(`/app/results/${quizId}`);
     },
     onError: () => {
       toast({

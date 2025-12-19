@@ -1,15 +1,19 @@
-import { useParams } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { BookOpen } from "lucide-react";
-import { ContentSkeleton } from "@/components/ui/content-skeleton";
-import { queryKeys } from "@/lib/queryClient";
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { BookOpen } from 'lucide-react';
+import { ContentSkeleton } from '@/components/ui/content-skeleton';
+import { queryKeys } from '@/lib/queryClient';
 
 export default function LecturePage() {
   const { id } = useParams<{ id: string }>();
-  
-  const { data: lecture, isLoading, error } = useQuery({
+
+  const {
+    data: lecture,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: queryKeys.lecture.detail(id),
     queryFn: async () => {
       const response = await fetch(`/api/lecture/${id}`);
@@ -18,7 +22,7 @@ export default function LecturePage() {
       }
       return response.json();
     },
-    enabled: !!id
+    enabled: !!id,
   });
 
   if (isLoading) {
@@ -44,7 +48,7 @@ export default function LecturePage() {
               <p className="text-gray-600 mb-4">
                 The study guide you're looking for could not be found or may have been removed.
               </p>
-              <Button onClick={() => window.location.href = '/app/dashboard'}>
+              <Button onClick={() => (window.location.href = '/app/dashboard')}>
                 Back to Dashboard
               </Button>
             </CardContent>
@@ -86,7 +90,10 @@ export default function LecturePage() {
                 // Handle headers
                 if (line.startsWith('# ')) {
                   return (
-                    <h1 key={index} className="text-3xl font-bold text-gray-900 mb-4 border-b border-gray-200 pb-2">
+                    <h1
+                      key={index}
+                      className="text-3xl font-bold text-gray-900 mb-4 border-b border-gray-200 pb-2"
+                    >
                       {line.replace('# ', '')}
                     </h1>
                   );
@@ -105,15 +112,19 @@ export default function LecturePage() {
                     </h3>
                   );
                 }
-                
+
                 // Handle bold text
                 if (line.includes('**')) {
                   const boldText = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                   return (
-                    <p key={index} className="mb-3 text-gray-700" dangerouslySetInnerHTML={{ __html: boldText }} />
+                    <p
+                      key={index}
+                      className="mb-3 text-gray-700"
+                      dangerouslySetInnerHTML={{ __html: boldText }}
+                    />
                   );
                 }
-                
+
                 // Handle list items
                 if (line.startsWith('- ')) {
                   return (
@@ -122,7 +133,7 @@ export default function LecturePage() {
                     </li>
                   );
                 }
-                
+
                 // Handle numbered lists
                 if (line.match(/^\d+\./)) {
                   return (
@@ -131,26 +142,29 @@ export default function LecturePage() {
                     </li>
                   );
                 }
-                
+
                 // Handle horizontal rules
                 if (line === '---') {
                   return <hr key={index} className="my-6 border-gray-200" />;
                 }
-                
+
                 // Handle empty lines
                 if (line.trim() === '') {
                   return <br key={index} />;
                 }
-                
+
                 // Handle emojis and special formatting
                 if (line.includes('🎉') || line.includes('📈') || line.includes('🎯')) {
                   return (
-                    <div key={index} className="my-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+                    <div
+                      key={index}
+                      className="my-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg"
+                    >
                       <p className="text-blue-800 font-medium">{line}</p>
                     </div>
                   );
                 }
-                
+
                 // Regular paragraphs
                 return (
                   <p key={index} className="mb-3 text-gray-700 leading-relaxed">
@@ -164,17 +178,10 @@ export default function LecturePage() {
 
         {/* Action Buttons */}
         <div className="mt-6 flex gap-4">
-          <Button 
-            variant="outline" 
-            onClick={() => window.print()}
-            className="flex-1"
-          >
+          <Button variant="outline" onClick={() => window.print()} className="flex-1">
             Print Study Guide
           </Button>
-          <Button 
-            onClick={() => window.history.back()}
-            className="flex-1"
-          >
+          <Button onClick={() => window.history.back()} className="flex-1">
             Return to Dashboard
           </Button>
         </div>

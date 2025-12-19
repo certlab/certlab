@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth-provider';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { queryClient, queryKeys } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +17,7 @@ interface QuickStartModeProps {
 export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
   const { user: currentUser, refreshUser } = useAuth();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   const { data: recentQuizzes = [] } = useQuery<Quiz[]>({
     queryKey: queryKeys.user.quizzes(currentUser?.id),
@@ -69,7 +69,7 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
         description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
       });
 
-      setLocation(`/app/quiz/${quiz.id}`);
+      navigate(`/app/quiz/${quiz.id}`);
     },
     onError: (error: any) => {
       toast({

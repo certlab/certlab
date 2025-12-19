@@ -1,9 +1,9 @@
-import { useRoute } from "wouter";
-import QuizInterface from "@/components/QuizInterface";
+import { useParams } from 'react-router-dom';
+import QuizInterface from '@/components/QuizInterface';
 
 export default function Quiz() {
-  const [, params] = useRoute("/app/quiz/:id");
-  const quizId = params?.id ? parseInt(params.id) : 0;
+  const params = useParams<{ id: string }>();
+  const quizId = params.id ? parseInt(params.id) : 0;
 
   if (!quizId || isNaN(quizId)) {
     return (

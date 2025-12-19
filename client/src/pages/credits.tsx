@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Coins, Sparkles, Zap, Crown, Check } from "lucide-react";
-import { apiRequest, queryClient, queryKeys } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Coins, Sparkles, Zap, Crown, Check } from 'lucide-react';
+import { apiRequest, queryClient, queryKeys } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface CreditProduct {
   id: string;
@@ -30,7 +30,7 @@ interface CreditProduct {
 
 export default function Credits() {
   const { toast } = useToast();
-  const [, navigate] = useLocation();
+  const navigate = useNavigate();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [verifyingPurchase, setVerifyingPurchase] = useState(false);
 
@@ -53,12 +53,12 @@ export default function Credits() {
   // Purchase credits mutation
   const purchaseMutation = useMutation({
     mutationFn: async (productId: string) => {
-      const selectedProduct = products.find(p => p.id === productId);
-      if (!selectedProduct) throw new Error("Product not found");
+      const selectedProduct = products.find((p) => p.id === productId);
+      if (!selectedProduct) throw new Error('Product not found');
 
       const response = await apiRequest({
-        method: "POST",
-        endpoint: "/api/credits/checkout",
+        method: 'POST',
+        endpoint: '/api/credits/checkout',
         data: {
           packageId: productId,
           priceId: selectedProduct.price.priceId,
@@ -68,7 +68,7 @@ export default function Credits() {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || "Failed to create checkout session");
+        throw new Error(error.message || 'Failed to create checkout session');
       }
 
       return response.json();
@@ -81,9 +81,9 @@ export default function Credits() {
     },
     onError: (error: any) => {
       toast({
-        title: "Purchase Failed",
-        description: error.message || "Unable to process purchase. Please try again.",
-        variant: "destructive",
+        title: 'Purchase Failed',
+        description: error.message || 'Unable to process purchase. Please try again.',
+        variant: 'destructive',
       });
     },
   });
@@ -116,7 +116,7 @@ export default function Credits() {
 
           if (data.success) {
             toast({
-              title: "Purchase Successful! 🎉",
+              title: 'Purchase Successful! 🎉',
               description: `${data.credits} credits added to your account. You now have ${data.balance} credits.`,
               duration: 5000,
             });
@@ -132,18 +132,19 @@ export default function Credits() {
         } catch (error: any) {
           console.error('Error verifying purchase:', error);
           toast({
-            title: "Verification Error",
-            description: "We couldn't verify your purchase. Please refresh the page or contact support.",
-            variant: "destructive",
+            title: 'Verification Error',
+            description:
+              "We couldn't verify your purchase. Please refresh the page or contact support.",
+            variant: 'destructive',
           });
         } finally {
           setVerifyingPurchase(false);
         }
       } else if (purchaseStatus === 'canceled') {
         toast({
-          title: "Purchase Canceled",
-          description: "Your purchase was canceled. No charges were made.",
-          variant: "default",
+          title: 'Purchase Canceled',
+          description: 'Your purchase was canceled. No charges were made.',
+          variant: 'default',
         });
 
         // Clear query parameters
@@ -159,14 +160,14 @@ export default function Credits() {
     if (product.features && product.features.length > 0) {
       return product.features;
     }
-    
+
     // Generate default features based on credits
     const quizCount = Math.floor(product.credits / 5);
     return [
       `${product.credits} credits`,
       `${quizCount} quizzes`,
-      "Never expires",
-      "Instant delivery",
+      'Never expires',
+      'Instant delivery',
     ];
   };
 
@@ -215,22 +216,31 @@ export default function Credits() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 rounded-lg bg-card">
-                  <div className="text-3xl font-bold text-amber-500">{creditBalance.availableCredits}</div>
+                  <div className="text-3xl font-bold text-amber-500">
+                    {creditBalance.availableCredits}
+                  </div>
                   <div className="text-sm text-muted-foreground mt-1">Available Credits</div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-card">
-                  <div className="text-3xl font-bold text-green-500">{creditBalance.totalPurchased}</div>
+                  <div className="text-3xl font-bold text-green-500">
+                    {creditBalance.totalPurchased}
+                  </div>
                   <div className="text-sm text-muted-foreground mt-1">Total Purchased</div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-card">
-                  <div className="text-3xl font-bold text-blue-500">{creditBalance.totalConsumed}</div>
+                  <div className="text-3xl font-bold text-blue-500">
+                    {creditBalance.totalConsumed}
+                  </div>
                   <div className="text-sm text-muted-foreground mt-1">Total Used</div>
                 </div>
               </div>
               <div className="mt-4 p-3 bg-muted/50 rounded-lg">
                 <p className="text-sm text-center">
                   <Sparkles className="w-4 h-4 inline mr-1" />
-                  You can create <strong>{Math.floor(creditBalance.availableCredits / 5)}</strong> more quizzes with your current balance
+                  You can create <strong>
+                    {Math.floor(creditBalance.availableCredits / 5)}
+                  </strong>{' '}
+                  more quizzes with your current balance
                 </p>
               </div>
             </CardContent>
@@ -254,14 +264,14 @@ export default function Credits() {
               const isPopular = product.metadata?.popular === true;
               const savings = product.metadata?.savings || null;
               const features = getProductFeatures(product);
-              
+
               return (
                 <Card
                   key={product.id}
                   className={`relative ${
                     isPopular
-                      ? "border-2 border-primary shadow-xl scale-105"
-                      : "border border-border"
+                      ? 'border-2 border-primary shadow-xl scale-105'
+                      : 'border border-border'
                   }`}
                 >
                   {isPopular && (
@@ -272,7 +282,7 @@ export default function Credits() {
                       </Badge>
                     </div>
                   )}
-                  
+
                   <CardHeader className="text-center pt-8">
                     <div className="flex justify-center mb-3">
                       {isPopular ? (
@@ -310,8 +320,8 @@ export default function Credits() {
                     <Button
                       className={`w-full ${
                         isPopular
-                          ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                          : ""
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
+                          : ''
                       }`}
                       size="lg"
                       onClick={() => handlePurchase(product.id)}
@@ -319,7 +329,7 @@ export default function Credits() {
                       data-testid={`button-purchase-${product.id}`}
                     >
                       {purchaseMutation.isPending && selectedPackage === product.id ? (
-                        "Processing..."
+                        'Processing...'
                       ) : (
                         <>
                           <Coins className="w-4 h-4 mr-2" />
@@ -342,15 +352,23 @@ export default function Credits() {
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <div className="flex items-start gap-2">
               <Coins className="w-4 h-4 mt-0.5 text-amber-500 flex-shrink-0" />
-              <p><strong>Credits never expire</strong> - Purchase once and use them whenever you want</p>
+              <p>
+                <strong>Credits never expire</strong> - Purchase once and use them whenever you want
+              </p>
             </div>
             <div className="flex items-start gap-2">
               <Zap className="w-4 h-4 mt-0.5 text-purple-500 flex-shrink-0" />
-              <p><strong>5 credits per quiz</strong> - Each quiz creation costs 5 credits regardless of length or difficulty</p>
+              <p>
+                <strong>5 credits per quiz</strong> - Each quiz creation costs 5 credits regardless
+                of length or difficulty
+              </p>
             </div>
             <div className="flex items-start gap-2">
               <Sparkles className="w-4 h-4 mt-0.5 text-blue-500 flex-shrink-0" />
-              <p><strong>Instant delivery</strong> - Credits are added to your account immediately after purchase</p>
+              <p>
+                <strong>Instant delivery</strong> - Credits are added to your account immediately
+                after purchase
+              </p>
             </div>
           </CardContent>
         </Card>

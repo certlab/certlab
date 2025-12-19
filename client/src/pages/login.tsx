@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { clientAuth } from '@/lib/client-auth';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { User as UserIcon, AlertTriangle } from 'lucide-react';
 import { logError, getUserFriendlyMessage, getErrorTitle } from '@/lib/errors';
@@ -64,7 +64,7 @@ export default function Login() {
   const [isGoogleAuthAvailable] = useState(() => clientAuth.isGoogleAuthAvailable());
   const { toast } = useToast();
   const { isAuthenticated, refreshUser } = useAuth();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   // Load accounts on mount
   useEffect(() => {
@@ -118,7 +118,7 @@ export default function Login() {
 
       if (result.success) {
         await refreshUser();
-        setLocation('/app');
+        navigate('/app');
       } else {
         toast({
           title: getErrorTitle(result.errorCode, 'Login Failed'),
@@ -154,7 +154,7 @@ export default function Login() {
         // Refresh the auth context to update isAuthenticated state
         await refreshUser();
         // Use relative navigation for GitHub Pages compatibility
-        setLocation('/app');
+        navigate('/app');
       } else {
         toast({
           title: getErrorTitle(result.errorCode, 'Registration Failed'),
@@ -182,7 +182,7 @@ export default function Login() {
 
       if (result.success) {
         await refreshUser();
-        setLocation('/app');
+        navigate('/app');
       } else {
         toast({
           title: getErrorTitle(result.errorCode, 'Google Sign-In Failed'),

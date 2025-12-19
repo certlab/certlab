@@ -1,4 +1,4 @@
-import { useRoute, useLocation } from 'wouter';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,12 +41,12 @@ interface Question {
 }
 
 export default function Review() {
-  const [, params] = useRoute('/app/review/:id');
-  const [, setLocation] = useLocation();
+  const params = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [showLectureDialog, setShowLectureDialog] = useState(false);
   const [generatedLecture, setGeneratedLecture] = useState<string>('');
   const [notesSaved, setNotesSaved] = useState(false);
-  const quizId = parseInt(params?.id || '0');
+  const quizId = parseInt(params.id || '0');
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user: currentUser, tenantId } = useAuth();
@@ -209,7 +209,7 @@ export default function Review() {
               This quiz hasn't been completed yet or doesn't exist.
             </p>
             <Button
-              onClick={() => setLocation('/app')}
+              onClick={() => navigate('/app')}
               className="mt-4 bg-primary hover:bg-primary/90"
             >
               Return to Dashboard
@@ -232,7 +232,7 @@ export default function Review() {
               Unable to load questions for this quiz.
             </p>
             <Button
-              onClick={() => setLocation('/app')}
+              onClick={() => navigate('/app')}
               className="mt-4 bg-primary hover:bg-primary/90"
             >
               Return to Dashboard
@@ -335,13 +335,13 @@ export default function Review() {
               <div className="grid grid-cols-2 gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => setLocation(`/app/results/${quizId}`)}
+                  onClick={() => navigate(`/app/results/${quizId}`)}
                   className="w-full"
                 >
                   <i className="fas fa-chart-bar mr-2" aria-hidden="true"></i>
                   View Results
                 </Button>
-                <Button variant="outline" onClick={() => setLocation('/app')} className="w-full">
+                <Button variant="outline" onClick={() => navigate('/app')} className="w-full">
                   <i className="fas fa-home mr-2" aria-hidden="true"></i>
                   Dashboard
                 </Button>

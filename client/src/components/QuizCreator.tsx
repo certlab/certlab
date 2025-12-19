@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -22,7 +22,7 @@ import { Sparkles } from 'lucide-react';
 import type { Category, Subcategory } from '@shared/schema';
 
 export default function QuizCreator() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
@@ -91,7 +91,7 @@ export default function QuizCreator() {
         description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
       });
 
-      setLocation(`/app/quiz/${quiz.id}`);
+      navigate(`/app/quiz/${quiz.id}`);
     },
     onError: (error: any) => {
       // Don't show error toast for insufficient tokens - dialog handles it

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-provider';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest, queryKeys } from '@/lib/queryClient';
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

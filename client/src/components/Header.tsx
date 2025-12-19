@@ -1,6 +1,6 @@
 import { useAuth } from '@/lib/auth-provider';
 import { Button } from '@/components/ui/button';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { CloudSyncIndicator } from '@/components/CloudSyncIndicator';
@@ -44,10 +44,11 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
 
 export default function Header() {
-  const [location, setLocation] = useLocation();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { user: currentUser, logout } = useAuth();
   const { toast } = useToast();
-  const isAdminArea = location.startsWith('/admin');
+  const isAdminArea = location.pathname.startsWith('/admin');
   const isAdmin = currentUser?.role === 'admin';
 
   // Get token balance
@@ -63,7 +64,7 @@ export default function Header() {
     // This ensures we're already on the landing page when auth state changes
     // Note: auth-provider's logout() always clears user state (setUser(null))
     // regardless of storage operation success, so user is always logged out
-    setLocation('/');
+    navigate('/');
 
     try {
       await logout();
@@ -112,11 +113,11 @@ export default function Header() {
                 <Badge
                   variant="secondary"
                   className="hidden lg:flex ml-2 px-3 py-1 cursor-pointer hover:bg-secondary/80 transition-colors"
-                  onClick={() => setLocation('/app/dashboard')}
+                  onClick={() => navigate('/app/dashboard')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      setLocation('/app/dashboard');
+                      navigate('/app/dashboard');
                     }
                   }}
                   data-testid="token-balance-badge"
@@ -154,7 +155,7 @@ export default function Header() {
                 </Badge>
                 <Button
                   variant="ghost"
-                  onClick={() => setLocation('/app')}
+                  onClick={() => navigate('/app')}
                   className="text-muted-foreground hover:text-primary"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
@@ -168,7 +169,7 @@ export default function Header() {
                   <NavigationMenuItem>
                     <Button
                       variant="ghost"
-                      onClick={() => setLocation('/app')}
+                      onClick={() => navigate('/app')}
                       className="text-muted-foreground hover:text-primary h-10 px-4 py-2"
                     >
                       <Home className="w-4 h-4 mr-2" />
@@ -193,7 +194,7 @@ export default function Header() {
                           <div className="grid grid-cols-4 gap-3">
                             <NavigationMenuLink
                               className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                              onClick={() => setLocation('/app/achievements')}
+                              onClick={() => navigate('/app/achievements')}
                             >
                               <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -207,7 +208,7 @@ export default function Header() {
                             </NavigationMenuLink>
                             <NavigationMenuLink
                               className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                              onClick={() => setLocation('/app/practice-tests')}
+                              onClick={() => navigate('/app/practice-tests')}
                             >
                               <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -221,7 +222,7 @@ export default function Header() {
                             </NavigationMenuLink>
                             <NavigationMenuLink
                               className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                              onClick={() => setLocation('/app/study-notes')}
+                              onClick={() => navigate('/app/study-notes')}
                             >
                               <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -235,7 +236,7 @@ export default function Header() {
                             </NavigationMenuLink>
                             <NavigationMenuLink
                               className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                              onClick={() => setLocation('/app/marketplace')}
+                              onClick={() => navigate('/app/marketplace')}
                             >
                               <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -260,7 +261,7 @@ export default function Header() {
                             <div className="grid grid-cols-2 gap-3">
                               <NavigationMenuLink
                                 className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                                onClick={() => setLocation('/accessibility')}
+                                onClick={() => navigate('/accessibility')}
                               >
                                 <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                   <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -274,7 +275,7 @@ export default function Header() {
                               </NavigationMenuLink>
                               <NavigationMenuLink
                                 className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                                onClick={() => setLocation('/ui-structure')}
+                                onClick={() => navigate('/ui-structure')}
                               >
                                 <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                   <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -299,7 +300,7 @@ export default function Header() {
                             </h3>
                             <NavigationMenuLink
                               className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                              onClick={() => setLocation('/admin')}
+                              onClick={() => navigate('/admin')}
                             >
                               <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -322,7 +323,7 @@ export default function Header() {
                           </h3>
                           <NavigationMenuLink
                             className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
-                            onClick={() => setLocation('/app/data-import')}
+                            onClick={() => navigate('/app/data-import')}
                           >
                             <div className="flex items-center text-sm font-medium leading-none text-foreground">
                               <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -423,7 +424,7 @@ export default function Header() {
                             <div className="flex items-center gap-1.5 text-xs">
                               <Sparkles className="w-3 h-3 text-purple-500" />
                               <button
-                                onClick={() => setLocation('/app/dashboard')}
+                                onClick={() => navigate('/app/dashboard')}
                                 className="text-purple-600 hover:underline"
                               >
                                 Add more tokens (free)
@@ -436,14 +437,14 @@ export default function Header() {
                   )}
                   <DropdownMenuSeparator className="my-2" />
                   <DropdownMenuItem
-                    onClick={() => setLocation('/app/achievements')}
+                    onClick={() => navigate('/app/achievements')}
                     className="cursor-pointer rounded-md py-2.5 px-3"
                   >
                     <Trophy className="w-4 h-4 mr-3 text-primary" />
                     <span className="font-medium">My Achievements</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => setLocation('/app/profile')}
+                    onClick={() => navigate('/app/profile')}
                     className="cursor-pointer rounded-md py-2.5 px-3"
                   >
                     <User className="w-4 h-4 mr-3 text-primary" />

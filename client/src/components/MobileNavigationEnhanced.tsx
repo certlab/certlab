@@ -21,7 +21,7 @@ import {
   Building,
   ShoppingCart,
 } from 'lucide-react';
-import { Link, useLocation } from 'wouter';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 interface NavigationItem {
   id: string;
@@ -42,7 +42,8 @@ interface NavigationSection {
 export default function MobileNavigationEnhanced() {
   const isMobile = useIsMobile();
   const { user } = useAuth();
-  const [location, setLocation] = useLocation();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin';
@@ -237,19 +238,19 @@ export default function MobileNavigationEnhanced() {
                               </div>
                             </div>
                           ) : (
-                            <Link href={item.href}>
+                            <Link to={item.href}>
                               <div
                                 className={`
                                   flex items-center gap-3 p-3 rounded-lg transition-colors
                                   hover:bg-muted/50 active:bg-muted
-                                  ${location === item.href ? 'bg-muted border border-border' : ''}
+                                  ${location.pathname === item.href ? 'bg-muted border border-border' : ''}
                                 `}
                                 onClick={() => handleItemClick(item.href, item.comingSoon)}
                               >
                                 <div
                                   className={`
                                   flex-shrink-0 
-                                  ${location === item.href ? 'text-primary' : 'text-muted-foreground'}
+                                  ${location.pathname === item.href ? 'text-primary' : 'text-muted-foreground'}
                                 `}
                                 >
                                   {item.icon}

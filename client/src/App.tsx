@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation, Router as WouterRouter } from 'wouter';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { queryClient } from './lib/queryClient';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
@@ -40,18 +40,18 @@ const WalletPage = lazy(() => import('@/pages/wallet'));
 
 // Get the base path from Vite's configuration
 // For GitHub Pages deployment at /certlab/, BASE_URL is '/certlab/'
-// We remove the trailing slash to match wouter's expected format
+// React Router's BrowserRouter uses basename prop which expects the trailing slash removed
 // For root deployments where BASE_URL is '/', we use an empty string
 const BASE_PATH =
   import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
-  const [location] = useLocation();
+  const location = useLocation();
   const isAdmin = user?.role === 'admin';
 
   // Determine if current route is an authenticated app route (starts with /app or /admin)
-  const isAppRoute = location.startsWith('/app') || location.startsWith('/admin');
+  const isAppRoute = location.pathname.startsWith('/app') || location.pathname.startsWith('/admin');
 
   if (isLoading) {
     return (
@@ -62,7 +62,7 @@ function Router() {
   }
 
   // Landing page should never have authenticated layout
-  if (location === '/' || location === '') {
+  if (location.pathname === '/' || location.pathname === '') {
     return (
       <div className="min-h-screen bg-background">
         <ErrorBoundary>
@@ -86,28 +86,28 @@ function Router() {
         <AuthenticatedLayout>
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
-              <Switch>
-                <Route path="/app" component={Dashboard} />
-                <Route path="/app/dashboard" component={Dashboard} />
-                <Route path="/app/profile" component={ProfilePage} />
-                <Route path="/app/wallet" component={WalletPage} />
-                <Route path="/app/quiz/:id" component={Quiz} />
-                <Route path="/app/results/:id" component={Results} />
-                <Route path="/app/review/:id" component={Review} />
-                <Route path="/app/lecture/:id" component={Lecture} />
-                <Route path="/app/study-notes" component={StudyNotesPage} />
-                <Route path="/app/achievements" component={Achievements} />
-                <Route path="/app/accessibility" component={Accessibility} />
-                <Route path="/app/practice-tests" component={PracticeTests} />
+              <Routes>
+                <Route path="/app" element={<Dashboard />} />
+                <Route path="/app/dashboard" element={<Dashboard />} />
+                <Route path="/app/profile" element={<ProfilePage />} />
+                <Route path="/app/wallet" element={<WalletPage />} />
+                <Route path="/app/quiz/:id" element={<Quiz />} />
+                <Route path="/app/results/:id" element={<Results />} />
+                <Route path="/app/review/:id" element={<Review />} />
+                <Route path="/app/lecture/:id" element={<Lecture />} />
+                <Route path="/app/study-notes" element={<StudyNotesPage />} />
+                <Route path="/app/achievements" element={<Achievements />} />
+                <Route path="/app/accessibility" element={<Accessibility />} />
+                <Route path="/app/practice-tests" element={<PracticeTests />} />
 
-                <Route path="/app/marketplace" component={MarketplacePage} />
-                {isAdmin && <Route path="/app/ui-structure" component={UIStructurePage} />}
-                <Route path="/app/credits" component={CreditsPage} />
-                <Route path="/app/data-import" component={DataImportPage} />
-                <Route path="/app/question-bank" component={QuestionBankPage} />
-                {isAdmin && <Route path="/admin" component={AdminDashboard} />}
-                <Route component={NotFound} />
-              </Switch>
+                <Route path="/app/marketplace" element={<MarketplacePage />} />
+                {isAdmin && <Route path="/app/ui-structure" element={<UIStructurePage />} />}
+                <Route path="/app/credits" element={<CreditsPage />} />
+                <Route path="/app/data-import" element={<DataImportPage />} />
+                <Route path="/app/question-bank" element={<QuestionBankPage />} />
+                {isAdmin && <Route path="/admin" element={<AdminDashboard />} />}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
             </Suspense>
           </ErrorBoundary>
         </AuthenticatedLayout>
@@ -120,12 +120,12 @@ function Router() {
     <div className="min-h-screen bg-background">
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
-          <Switch>
+          <Routes>
             {/* Redirect non-authenticated users trying to access protected routes */}
-            <Route path="/app/*" component={Landing} />
-            <Route path="/admin" component={Landing} />
-            <Route component={NotFound} />
-          </Switch>
+            <Route path="/app/*" element={<Landing />} />
+            <Route path="/admin" element={<Landing />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </Suspense>
       </ErrorBoundary>
     </div>
@@ -164,11 +164,11 @@ function App() {
       <AuthProvider>
         <ThemeProvider defaultTheme="light" storageKey="ui-theme">
           <TooltipProvider>
-            <WouterRouter base={BASE_PATH}>
+            <BrowserRouter basename={BASE_PATH}>
               <Toaster />
               <UnhandledRejectionHandler />
               <AppContent />
-            </WouterRouter>
+            </BrowserRouter>
           </TooltipProvider>
         </ThemeProvider>
       </AuthProvider>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,7 +24,7 @@ import type { Category, Subcategory } from '@shared/schema';
 type LearningMode = 'study' | 'quiz' | 'challenge';
 
 export default function LearningModeSelector() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user: currentUser, refreshUser } = useAuth();
 
@@ -78,7 +78,7 @@ export default function LearningModeSelector() {
         description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
       });
 
-      setLocation(`/app/quiz/${quiz.id}`);
+      navigate(`/app/quiz/${quiz.id}`);
     },
     onError: (error: any) => {
       toast({
@@ -153,7 +153,7 @@ export default function LearningModeSelector() {
 
     // Handle challenge mode differently
     if (selectedMode === 'challenge') {
-      setLocation('/challenges');
+      navigate('/challenges');
       return;
     }
 

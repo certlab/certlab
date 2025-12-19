@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,7 +51,7 @@ import type { StudyNote, Category } from '@shared/schema';
 
 export default function StudyNotesPage() {
   const { user: currentUser, tenantId } = useAuth();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedNote, setSelectedNote] = useState<StudyNote | null>(null);
@@ -236,7 +236,7 @@ export default function StudyNotesPage() {
                   ? 'No notes match your search criteria.'
                   : 'Complete a quiz and generate study notes to see them here.'}
               </p>
-              <Button onClick={() => setLocation('/app')}>
+              <Button onClick={() => navigate('/app')}>
                 <Target className="h-4 w-4 mr-2" />
                 Take a Quiz
               </Button>

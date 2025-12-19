@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-provider';
 import { queryClient, queryKeys } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
@@ -28,7 +28,7 @@ import type { UserStats, Quiz, Category } from '@shared/schema';
 export default function Dashboard() {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [showInsufficientTokensDialog, setShowInsufficientTokensDialog] = useState(false);
   const [showCertificationDialog, setShowCertificationDialog] = useState(false);
   const [isCreatingQuiz, setIsCreatingQuiz] = useState(false);
@@ -105,7 +105,7 @@ export default function Dashboard() {
         });
 
         setShowCertificationDialog(false);
-        setLocation(`/app/quiz/${quiz.id}`);
+        navigate(`/app/quiz/${quiz.id}`);
       } else {
         toast({
           title: 'Quiz Creation Failed',
@@ -171,14 +171,14 @@ export default function Dashboard() {
     // Find the most recent incomplete quiz or start a new one
     const incompleteQuiz = recentQuizzes.find((quiz) => !quiz.completedAt);
     if (incompleteQuiz) {
-      setLocation(`/app/quiz/${incompleteQuiz.id}`);
+      navigate(`/app/quiz/${incompleteQuiz.id}`);
     } else {
       handleStartPractice();
     }
   };
 
   const handleViewProgress = () => {
-    setLocation('/app/achievements');
+    navigate('/app/achievements');
   };
 
   const formatDate = (date: string | Date) => {
@@ -258,8 +258,8 @@ export default function Dashboard() {
                 className="cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() =>
                   quiz.completedAt
-                    ? setLocation(`/app/results/${quiz.id}`)
-                    : setLocation(`/app/quiz/${quiz.id}`)
+                    ? navigate(`/app/results/${quiz.id}`)
+                    : navigate(`/app/quiz/${quiz.id}`)
                 }
               >
                 <CardContent className="p-6">
@@ -424,11 +424,11 @@ export default function Dashboard() {
                       <div
                         key={quiz.id}
                         className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                        onClick={() => setLocation(`/app/results/${quiz.id}`)}
+                        onClick={() => navigate(`/app/results/${quiz.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
-                            setLocation(`/app/results/${quiz.id}`);
+                            navigate(`/app/results/${quiz.id}`);
                           }
                         }}
                         role="listitem"

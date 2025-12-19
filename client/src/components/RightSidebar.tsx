@@ -3,7 +3,7 @@ import { useRightSidebar } from '@/lib/right-sidebar-provider';
 import { useAuth } from '@/lib/auth-provider';
 import { useTheme } from '@/lib/theme-provider';
 import { themes } from '@/lib/theme-constants';
-import { useLocation } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getInitials, getUserDisplayName } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -73,7 +73,7 @@ function SettingsPanel() {
 }
 
 function UserPanel() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const { user: currentUser, logout } = useAuth();
   const { closePanel } = useRightSidebar();
   const { toast } = useToast();
@@ -85,7 +85,7 @@ function UserPanel() {
     // Note: auth-provider's logout() always clears user state (setUser(null))
     // regardless of storage operation success, so user is always logged out
     closePanel();
-    setLocation('/');
+    navigate('/');
 
     try {
       await logout();
@@ -104,7 +104,7 @@ function UserPanel() {
   };
 
   const handleNavigate = (path: string) => {
-    setLocation(path);
+    navigate(path);
     closePanel();
   };
 
