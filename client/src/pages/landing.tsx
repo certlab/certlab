@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/accordion';
 import { GraduationCap, ArrowRight, Brain, Shield, BookOpen, Menu, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 // Lazy load Login component to reduce initial bundle size

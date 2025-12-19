@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { clientAuth } from '@/lib/client-auth';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { User as UserIcon, AlertTriangle } from 'lucide-react';
 import { logError, getUserFriendlyMessage, getErrorTitle } from '@/lib/errors';

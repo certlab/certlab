@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-provider';
 import { queryClient, queryKeys } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
 import { useToast } from '@/hooks/use-toast';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Zap, RotateCcw, Shuffle, BarChart3 } from 'lucide-react';
 import type { MasteryScore, Category } from '@shared/schema';
 

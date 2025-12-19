@@ -21,7 +21,7 @@ import {
   Building,
   ShoppingCart,
 } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 interface NavigationItem {
   id: string;
@@ -43,7 +43,6 @@ export default function MobileNavigationEnhanced() {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin';

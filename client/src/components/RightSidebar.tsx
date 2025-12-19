@@ -3,7 +3,7 @@ import { useRightSidebar } from '@/lib/right-sidebar-provider';
 import { useAuth } from '@/lib/auth-provider';
 import { useTheme } from '@/lib/theme-provider';
 import { themes } from '@/lib/theme-constants';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getInitials, getUserDisplayName } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';

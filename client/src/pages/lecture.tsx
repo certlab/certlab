@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { queryKeys } from '@/lib/queryClient';
 
 export default function LecturePage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const {
     data: lecture,
@@ -48,9 +49,7 @@ export default function LecturePage() {
               <p className="text-gray-600 mb-4">
                 The study guide you're looking for could not be found or may have been removed.
               </p>
-              <Button onClick={() => (window.location.href = '/app/dashboard')}>
-                Back to Dashboard
-              </Button>
+              <Button onClick={() => navigate('/app/dashboard')}>Back to Dashboard</Button>
             </CardContent>
           </Card>
         </div>
