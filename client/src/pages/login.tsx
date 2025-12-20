@@ -84,6 +84,13 @@ export default function Login() {
     loadAccounts();
   }, []);
 
+  // Redirect authenticated users to their intended destination
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, from, navigate]);
+
   // Check if manually entered email matches a password-less account
   const getMatchingAccount = (email: string): StoredUser | undefined => {
     return availableAccounts.find((account) => account.email.toLowerCase() === email.toLowerCase());
@@ -206,9 +213,9 @@ export default function Login() {
     }
   };
 
-  // If already authenticated, redirect to app
+  // Don't render login form if already authenticated
+  // The useEffect above will handle the redirect
   if (isAuthenticated) {
-    navigate(from, { replace: true });
     return null;
   }
 
