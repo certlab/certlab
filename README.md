@@ -1,15 +1,13 @@
 # CertLab - Certification Learning Platform
 
-CertLab is a modern certification study platform with optional cloud sync. Study for certifications like CISSP, CISM, and more with adaptive quizzes, achievements, and progress tracking.
+CertLab is a modern, cloud-based certification study platform. Study for certifications like CISSP, CISM, and more with adaptive quizzes, achievements, and progress tracking.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🌟 Features
 
-- **Hybrid Storage**: Local IndexedDB cache with optional Firebase cloud sync
-- **Offline-First**: Works completely offline after initial load
-- **Cloud Backup**: Optional account creation for multi-device sync and backup
-- **Firebase Authentication**: Secure sign-in with email/password or Google
+- **Firebase Authentication**: Secure Google Sign-In
+- **Cloud Storage**: All data stored in Firestore for multi-device sync
 - **Adaptive Learning**: Quiz difficulty adapts to your performance
 - **Achievement System**: Earn badges and track your progress
 - **Multi-Tenancy**: Switch between different learning environments
@@ -23,7 +21,7 @@ CertLab is a modern certification study platform with optional cloud sync. Study
 
 - [Quick Start](#-quick-start)
 - [Installation](#-installation)
-- [Firebase Setup](#-firebase-setup-optional)
+- [Firebase Setup (Required)](#-firebase-setup-required)
 - [Architecture](#-architecture)
 - [Usage](#-usage)
 - [Deployment](#-deployment)
@@ -34,6 +32,8 @@ CertLab is a modern certification study platform with optional cloud sync. Study
 
 ## 🚀 Quick Start
 
+**Prerequisites**: Firebase project is required. See [Firebase Setup](#-firebase-setup-required) below.
+
 ```bash
 # Clone the repository
 git clone https://github.com/archubbuck/certlab.git
@@ -42,11 +42,15 @@ cd certlab
 # Install dependencies
 npm install
 
+# Configure Firebase (required)
+cp .env.example .env.local
+# Edit .env.local and add your Firebase credentials
+
 # Start development server
 npm run dev
 ```
 
-Open http://localhost:5000 and click "Get Started" to create your account!
+Open http://localhost:5000 and sign in with Google to get started!
 
 ## 📦 Installation
 
@@ -54,6 +58,7 @@ Open http://localhost:5000 and click "Get Started" to create your account!
 
 - **Node.js**: v20.x or higher
 - **npm**: v10.x or higher
+- **Firebase Project**: Required for authentication and storage (see [Firebase Setup](#-firebase-setup-required))
 
 ### Development Setup
 
@@ -91,23 +96,58 @@ npm test
 
 ### First Time Setup
 
-1. Open the app in your browser
-2. Choose your mode:
-   - **Local-Only**: Click "Get Started" (no account needed)
-   - **Cloud Sync**: Click "Sign Up" to create a Firebase account
-3. Initial sample data (categories, questions, badges) will be automatically seeded
-4. Select your certification goals and start learning!
+1. Complete Firebase setup (see [Firebase Setup](#-firebase-setup-required))
+2. Open the app in your browser
+3. Click "Sign in with Google"
+4. Initial sample data (categories, questions, badges) will be automatically seeded
+5. Select your certification goals and start learning!
 
-### Firebase Setup (Optional)
+### Firebase Setup (Required)
 
-For cloud sync and multi-device access, set up Firebase:
+Firebase is required for authentication (Google Sign-In) and cloud storage (Firestore):
 
-1. **Create Firebase Project**: Follow [docs/setup/firebase.md](docs/setup/firebase.md)
-2. **Configure Environment**: Copy `.env.example` to `.env.local` and add your Firebase credentials
-3. **Deploy Rules**: Run `npm run deploy:firestore` to deploy security rules
-4. **Start Using**: Sign up in the app to enable cloud sync
+1. **Create Firebase Project**:
+   - Go to [Firebase Console](https://console.firebase.google.com)
+   - Click "Add project" and follow the setup wizard
+   - Enable Google Analytics (optional)
 
-See [docs/setup/firebase.md](docs/setup/firebase.md) for detailed instructions.
+2. **Enable Authentication**:
+   - Go to Authentication > Sign-in method
+   - Enable "Google" provider
+   - Add authorized domains (localhost, your production domain)
+
+3. **Create Firestore Database**:
+   - Go to Firestore Database
+   - Click "Create database"
+   - Start in production mode
+   - Choose a location
+
+4. **Get Firebase Config**:
+   - Go to Project Settings > General
+   - Scroll to "Your apps" section
+   - Click the Web icon (</>)
+   - Register your app and copy the config
+
+5. **Configure Environment**:
+   ```bash
+   cp .env.example .env.local
+   ```
+   Edit `.env.local` and add your Firebase credentials:
+   ```
+   VITE_FIREBASE_API_KEY=your-api-key
+   VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your-project-id
+   VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+   VITE_FIREBASE_APP_ID=your-app-id
+   ```
+
+6. **Deploy Firestore Rules**:
+   ```bash
+   npm run deploy:firestore:rules
+   ```
+
+For detailed instructions, see [docs/setup/firebase.md](docs/setup/firebase.md).
 
 ### Dynatrace Observability (Optional)
 
@@ -129,38 +169,24 @@ See [docs/setup/dynatrace.md](docs/setup/dynatrace.md) for detailed instructions
 
 ## 🏗️ Architecture
 
-### Hybrid Storage Model
+### Cloud-First Architecture
 
-CertLab uses a hybrid architecture supporting both local-only and cloud-sync modes:
+CertLab uses Firebase for authentication and storage:
 
 | Technology | Purpose |
 |------------|---------|
 | **React 18** | UI framework |
 | **TypeScript** | Type safety |
-| **IndexedDB** | Local cache and offline storage |
-| **Firebase/Firestore** | Optional cloud sync and backup |
-| **Firebase Auth** | Optional authentication (email/Google) |
+| **Firebase Auth** | Google Sign-In authentication |
+| **Firestore** | Cloud database and storage |
 | **TanStack Query** | State management and caching |
 | **Vite** | Build tool |
 | **TailwindCSS** | Styling |
 
-### Storage Modes
-
-**Local-Only Mode** (default):
-- No account required
-- All data in browser's IndexedDB
-- Works completely offline
-- No cloud dependencies
-
-**Cloud Sync Mode** (in development):
-- Firebase infrastructure foundation complete (60%)
-- Storage layer integration in progress
-- See [docs/architecture/firebase-status.md](docs/architecture/firebase-status.md) for details
-
 ### Data Flow
 
 ```
-User Action → React Component → TanStack Query → Storage API → IndexedDB
+User Action → React Component → TanStack Query → Storage API → Firestore
 ```
 
 For detailed architecture information, see [docs/architecture/overview.md](docs/architecture/overview.md).
