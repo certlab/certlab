@@ -29,9 +29,9 @@ export function TokenBalance() {
     },
     onSuccess: async (newBalance) => {
       // Invalidate queries to update all components displaying token balance
-      // No need to refresh the entire user object - query invalidation is sufficient
-      queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(user?.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
+      // Await invalidation to ensure queries are refetched before showing toast
+      await queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(user?.id) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
 
       toast({
         title: 'Tokens Added',

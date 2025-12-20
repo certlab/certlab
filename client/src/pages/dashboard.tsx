@@ -94,10 +94,12 @@ export default function Dashboard() {
 
       if (quiz?.id) {
         // Invalidate cache to update all relevant queries
-        // No need to refresh the entire user object - query invalidation is sufficient
-        queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser.id) });
-        queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser.id) });
-        queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
+        // Await invalidation to ensure UI updates before navigation
+        await queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser.id) });
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.user.tokenBalance(currentUser.id),
+        });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
 
         toast({
           title: 'Quiz Created',
