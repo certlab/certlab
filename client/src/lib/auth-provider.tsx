@@ -46,11 +46,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Initialize storage factory
-        await initializeStorage();
-
         // Load user from local storage immediately to prevent redirect on refresh
-        // This is crucial for page refreshes on protected routes
+        // This is the critical path for page refreshes on protected routes
+        // We do this BEFORE storage initialization to minimize delay
         try {
           const currentUser = await clientAuth.getCurrentUser();
           setUser(currentUser);
@@ -62,9 +60,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
         } finally {
           // Set isLoading to false so protected routes can render
-          // Firebase sync will happen asynchronously if needed
+          // This must happen as soon as we have the user state, before Firebase init
           setIsLoading(false);
         }
+
+        // Initialize storage factory in the background
+        // This can happen after user is loaded since it's primarily for Firebase sync
+        await initializeStorage();
 
         // Initialize Firebase if configured
         if (isFirebaseConfigured()) {
