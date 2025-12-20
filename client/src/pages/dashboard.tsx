@@ -106,16 +106,10 @@ export default function Dashboard() {
       // Refresh user state in auth provider to keep it in sync
       await refreshUser();
 
-      // Optimistically update the token balance cache to prevent race condition
-      queryClient.setQueryData(queryKeys.user.tokenBalance(currentUser?.id), {
-        balance: tokenResult.newBalance,
+      // Invalidate tokenBalance query to refetch updated balance from storage
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.user.tokenBalance(currentUser?.id),
       });
-
-      // Invalidate user queries to sync the user object (which also contains tokenBalance)
-      // Note: We intentionally do NOT invalidate the tokenBalance query itself to avoid
-      // a race condition where the refetch might return stale data before update propagates
-      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
 
       toast({
         title: 'Quiz Created',

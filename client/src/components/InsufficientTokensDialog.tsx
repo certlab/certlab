@@ -43,13 +43,10 @@ export function InsufficientTokensDialog({
     try {
       const newBalance = await storage.addTokens(user.id, suggestedAmount);
 
-      // Immediately update the query cache with the new balance
-      queryClient.setQueryData(queryKeys.user.tokenBalance(user?.id), { balance: newBalance });
-
-      // Invalidate auth user query to sync the user object
-      // Note: We do NOT invalidate tokenBalance query here to avoid race condition
-      // where the refetch might return stale Firestore data before update propagates
-      await queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
+      // Invalidate tokenBalance query to refetch updated balance from storage
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.user.tokenBalance(user?.id),
+      });
 
       toast({
         title: 'Tokens Added',

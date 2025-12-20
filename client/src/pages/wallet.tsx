@@ -73,17 +73,12 @@ export default function WalletPage() {
       const newBalance = await clientStorage.addTokens(currentUser.id, pkg.tokens);
       return { pkg, newBalance };
     },
-    onSuccess: ({ pkg, newBalance }) => {
-      // Immediately update the query cache with the new balance
-      queryClient.setQueryData(queryKeys.user.tokenBalance(currentUser?.id), {
-        balance: newBalance,
+    onSuccess: async ({ pkg, newBalance }) => {
+      // Invalidate tokenBalance query to refetch updated balance from storage
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.user.tokenBalance(currentUser?.id),
       });
 
-      // Invalidate user queries to sync the user object (which also contains tokenBalance)
-      // Note: We intentionally do NOT invalidate the tokenBalance query itself to avoid
-      // a race condition where the refetch might return stale Firestore data before
-      // the update propagates, causing the balance to reset.
-      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
       toast({
         title: 'Tokens Added!',
         description: `Successfully added ${pkg.tokens} tokens to your wallet.`,

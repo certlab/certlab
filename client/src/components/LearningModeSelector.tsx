@@ -69,15 +69,10 @@ export default function LearningModeSelector() {
       // Refresh user state in auth provider to keep it in sync
       await refreshUser();
 
-      // Optimistically update the token balance cache to prevent race condition
-      queryClient.setQueryData(queryKeys.user.tokenBalance(currentUser?.id), {
-        balance: tokenResult.newBalance,
+      // Invalidate tokenBalance query to refetch updated balance from storage
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.user.tokenBalance(currentUser?.id),
       });
-
-      // Invalidate user queries to sync the user object
-      // Note: We do NOT invalidate tokenBalance query here to avoid race condition
-      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
 
       toast({
         title: 'Quiz Created',
