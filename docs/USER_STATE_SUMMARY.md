@@ -37,12 +37,12 @@ Duration: ~5 seconds
 
 | Category | Tests | Status |
 |----------|-------|--------|
-| Token Balance Operations | 18 | ✅ All passing |
+| Token Balance Operations | 16 | ✅ All passing |
 | Display Name Operations | 5 | ✅ All passing |
 | Experience & Level Calculations | 7 | ✅ All passing |
-| Game Statistics Operations | 15 | ✅ All passing |
+| Game Statistics Operations | 14 | ✅ All passing |
 | User Profile Updates | 10 | ✅ All passing |
-| Edge Cases & Error Handling | 6 | ✅ All passing |
+| Edge Cases & Error Handling | 9 | ✅ All passing |
 | Data Consistency | 3 | ✅ All passing |
 
 ## User State Properties Validated
