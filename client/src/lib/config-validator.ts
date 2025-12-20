@@ -1,8 +1,10 @@
 /**
  * Configuration Validator
  *
- * Validates that required configuration is present in production.
- * Both Firebase and Dynatrace are required for production deployments.
+ * Validates that required configuration is present.
+ * Firebase is now mandatory for all deployments (development and production).
+ * Google Sign-In via Firebase is the only authentication method.
+ * Dynatrace is optional but recommended for production monitoring.
  */
 
 /**
@@ -65,30 +67,22 @@ function validateDynatraceConfig(): string[] {
 /**
  * Validate all required configuration
  *
- * In production mode, Firebase must be configured for cloud sync.
+ * Firebase is now mandatory for all modes (development and production).
  * Dynatrace is optional but recommended for production monitoring.
- * In development mode, validation is skipped (warnings only).
  *
  * @returns Validation result with any errors found
  */
 export function validateRequiredConfiguration(): ConfigValidationResult {
-  // In development mode, skip validation (allow developers to work without full config)
-  const isDevelopment = import.meta.env.DEV;
-  if (isDevelopment) {
-    console.log('[Config Validator] Development mode - skipping required configuration validation');
-    return { isValid: true, errors: [] };
-  }
-
-  // In production mode, validate required configuration
   const errors: string[] = [];
+  const isDevelopment = import.meta.env.DEV;
 
-  // Validate Firebase (required for cloud sync in production)
+  // Validate Firebase (now mandatory in all modes)
   const firebaseErrors = validateFirebaseConfig();
   errors.push(...firebaseErrors);
 
   // Check Dynatrace but only warn (not required)
   const dynatraceErrors = validateDynatraceConfig();
-  if (dynatraceErrors.length > 0) {
+  if (dynatraceErrors.length > 0 && !isDevelopment) {
     console.warn(
       '[Config Validator] Dynatrace not configured (optional but recommended for production)'
     );

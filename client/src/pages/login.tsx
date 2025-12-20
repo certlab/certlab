@@ -1,18 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/auth-provider';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { clientAuth } from '@/lib/client-auth';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { User as UserIcon, AlertTriangle } from 'lucide-react';
 import { logError, getUserFriendlyMessage, getErrorTitle } from '@/lib/errors';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Separator } from '@/components/ui/separator';
+import { signInWithGoogle } from '@/lib/firebase';
 
 /**
  * Google "G" logo SVG icon component
@@ -41,27 +35,8 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-interface StoredUser {
-  id: string;
-  email: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  hasPassword: boolean;
-}
-
 export default function Login() {
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-  const [registerFirstName, setRegisterFirstName] = useState('');
-  const [registerLastName, setRegisterLastName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [availableAccounts, setAvailableAccounts] = useState<StoredUser[]>([]);
-  const [selectedAccount, setSelectedAccount] = useState<StoredUser | null>(null);
-  // Check Google auth availability once at initialization since it depends on build-time env vars
-  const [isGoogleAuthAvailable] = useState(() => clientAuth.isGoogleAuthAvailable());
   const { toast } = useToast();
   const { isAuthenticated, refreshUser } = useAuth();
   const navigate = useNavigate();
@@ -70,20 +45,6 @@ export default function Login() {
   // Get the location the user was trying to access before being redirected to login
   const from = (location.state as { from?: string })?.from || '/app';
 
-  // Load accounts on mount
-  useEffect(() => {
-    const loadAccounts = async () => {
-      try {
-        // getAllUsers now returns hasPassword in each user object
-        const users = await clientAuth.getAllUsers();
-        setAvailableAccounts(users);
-      } catch (error) {
-        logError('loadAccounts', error, { component: 'Login' });
-      }
-    };
-    loadAccounts();
-  }, []);
-
   // Redirect authenticated users to their intended destination
   useEffect(() => {
     if (isAuthenticated) {
@@ -91,120 +52,17 @@ export default function Login() {
     }
   }, [isAuthenticated, from, navigate]);
 
-  // Check if manually entered email matches a password-less account
-  const getMatchingAccount = (email: string): StoredUser | undefined => {
-    return availableAccounts.find((account) => account.email.toLowerCase() === email.toLowerCase());
-  };
-
-  const handleAccountSelect = (account: StoredUser) => {
-    setSelectedAccount(account);
-    setLoginEmail(account.email);
-    // Clear password field when selecting account
-    setLoginPassword('');
-  };
-
-  const handleEmailChange = (email: string) => {
-    setLoginEmail(email);
-    // Check if the entered email matches any account
-    const matchingAccount = getMatchingAccount(email);
-    if (matchingAccount) {
-      setSelectedAccount(matchingAccount);
-    } else {
-      setSelectedAccount(null);
-    }
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      // Determine if account requires password
-      const accountHasPassword = selectedAccount?.hasPassword ?? true;
-
-      // Use appropriate login method
-      const result = !accountHasPassword
-        ? await clientAuth.loginPasswordless(loginEmail)
-        : await clientAuth.login(loginEmail, loginPassword);
-
-      if (result.success) {
-        await refreshUser();
-        navigate(from, { replace: true });
-      } else {
-        toast({
-          title: getErrorTitle(result.errorCode, 'Login Failed'),
-          description: result.message || 'Unable to login',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      logError('handleLogin', error, { email: loginEmail, hasSelectedAccount: !!selectedAccount });
-      toast({
-        title: 'Login Failed',
-        description: getUserFriendlyMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const result = await clientAuth.register(
-        registerEmail,
-        registerPassword,
-        registerFirstName,
-        registerLastName
-      );
-
-      if (result.success) {
-        // Refresh the auth context to update isAuthenticated state
-        await refreshUser();
-        // Navigate to the page user was trying to access, or /app if registering from landing
-        navigate(from, { replace: true });
-      } else {
-        toast({
-          title: getErrorTitle(result.errorCode, 'Registration Failed'),
-          description: result.message || 'Unable to create account',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      logError('handleRegister', error, { email: registerEmail });
-      toast({
-        title: 'Registration Failed',
-        description: getUserFriendlyMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
 
     try {
-      const result = await clientAuth.signInWithGoogle();
-
-      if (result.success) {
-        await refreshUser();
-        navigate(from, { replace: true });
-      } else {
-        toast({
-          title: getErrorTitle(result.errorCode, 'Google Sign-In Failed'),
-          description: result.message || 'Unable to sign in with Google',
-          variant: 'destructive',
-        });
-      }
+      await signInWithGoogle();
+      await refreshUser();
+      navigate(from, { replace: true });
     } catch (error) {
       logError('handleGoogleSignIn', error);
       toast({
-        title: 'Google Sign-In Failed',
+        title: getErrorTitle(undefined, 'Google Sign-In Failed'),
         description: getUserFriendlyMessage(error),
         variant: 'destructive',
       });
@@ -237,295 +95,32 @@ export default function Login() {
         </CardHeader>
 
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-[#200d42]/50 border border-[#b48cde]/30">
-              <TabsTrigger
-                value="login"
-                className="data-[state=active]:bg-[#9560eb] data-[state=active]:text-white text-white/70"
-              >
-                Login
-              </TabsTrigger>
-              <TabsTrigger
-                value="register"
-                className="data-[state=active]:bg-[#9560eb] data-[state=active]:text-white text-white/70"
-              >
-                Register
-              </TabsTrigger>
-            </TabsList>
+          <div className="space-y-4">
+            <p className="text-center text-white/80 text-sm">
+              Sign in with your Google account to get started
+            </p>
 
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                {/* Available Accounts Section */}
-                {availableAccounts.length > 0 && (
-                  <div className="space-y-2">
-                    <Label id="accounts-label" className="text-white">
-                      Available Accounts
-                    </Label>
-                    <div
-                      className="space-y-2 max-h-60 overflow-y-auto border border-[#b48cde]/30 rounded-md p-2"
-                      role="radiogroup"
-                      aria-labelledby="accounts-label"
-                    >
-                      {availableAccounts.map((account) => (
-                        <button
-                          key={account.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={selectedAccount?.id === account.id}
-                          onClick={() => handleAccountSelect(account)}
-                          className={`w-full p-3 rounded-lg border text-left transition-all hover:border-[#9560eb] hover:bg-[#200d42]/50 ${
-                            selectedAccount?.id === account.id
-                              ? 'border-[#9560eb] bg-[#200d42]/70'
-                              : 'border-[#b48cde]/30'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <UserIcon className="h-5 w-5 text-[#b48cde]" />
-                            <div className="flex-1">
-                              <div className="font-medium text-sm text-white">
-                                {account.firstName && account.lastName
-                                  ? `${account.firstName} ${account.lastName}`
-                                  : account.email}
-                              </div>
-                              <div className="text-xs text-white/70">
-                                {account.firstName && account.lastName ? account.email : ''}
-                              </div>
-                            </div>
-                            {!account.hasPassword && (
-                              <span className="text-xs bg-amber-900 text-amber-100 px-2 py-1 rounded">
-                                No password
-                              </span>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="login-email" className="text-white">
-                    Email
-                  </Label>
-                  <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    value={loginEmail}
-                    onChange={(e) => handleEmailChange(e.target.value)}
-                    required
-                    disabled={isLoading}
-                    className="bg-[#200d42]/50 border-[#b48cde]/30 text-white placeholder:text-white/50 focus:border-[#9560eb]"
-                  />
+            <Button
+              type="button"
+              className="w-full border-[#b48cde]/30 bg-white text-gray-800 hover:bg-gray-100"
+              onClick={handleGoogleSignIn}
+              disabled={isGoogleLoading}
+            >
+              {isGoogleLoading ? (
+                <div className="flex items-center space-x-2">
+                  <LoadingSpinner size="sm" />
+                  <span>Signing in...</span>
                 </div>
-
-                {/* Only show password field if account requires password */}
-                {(!selectedAccount || selectedAccount.hasPassword) && (
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password" className="text-white">
-                      Password
-                    </Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      required={!selectedAccount || selectedAccount.hasPassword}
-                      disabled={isLoading}
-                      className="bg-[#200d42]/50 border-[#b48cde]/30 text-white placeholder:text-white/50 focus:border-[#9560eb]"
-                    />
-                  </div>
-                )}
-
-                {selectedAccount && !selectedAccount.hasPassword && (
-                  <Alert className="border-amber-700 bg-amber-950">
-                    <AlertTriangle className="h-4 w-4 text-amber-400" />
-                    <AlertDescription className="text-amber-200">
-                      <strong>Security Warning:</strong> This account has no password protection.
-                      Anyone with access to this browser can login. Your session will automatically
-                      expire after 24 hours for security.
-                      <span className="block mt-1 text-xs">
-                        Consider setting a password in your profile settings for added security.
-                      </span>
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                <Button
-                  type="submit"
-                  className="w-full bg-[#9560eb] text-white hover:bg-[#a46edb]"
-                  disabled={isLoading || isGoogleLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <LoadingSpinner size="sm" variant="white" />
-                      <span>Logging in...</span>
-                    </div>
-                  ) : (
-                    'Login'
-                  )}
-                </Button>
-
-                {/* Google Sign-In */}
-                {isGoogleAuthAvailable && (
-                  <>
-                    <div className="relative my-4">
-                      <Separator className="bg-[#b48cde]/30" />
-                      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/60 px-2 text-xs text-white/50">
-                        or
-                      </span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full border-[#b48cde]/30 bg-white text-gray-800 hover:bg-gray-100"
-                      onClick={handleGoogleSignIn}
-                      disabled={isLoading || isGoogleLoading}
-                    >
-                      {isGoogleLoading ? (
-                        <div className="flex items-center space-x-2">
-                          <LoadingSpinner size="sm" />
-                          <span>Signing in...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-2">
-                          <GoogleIcon className="h-5 w-5" />
-                          <span>Continue with Google</span>
-                        </div>
-                      )}
-                    </Button>
-                  </>
-                )}
-              </form>
-            </TabsContent>
-
-            <TabsContent value="register">
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="register-email" className="text-white">
-                    Email
-                  </Label>
-                  <Input
-                    id="register-email"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    value={registerEmail}
-                    onChange={(e) => setRegisterEmail(e.target.value)}
-                    required
-                    disabled={isLoading}
-                    className="bg-[#200d42]/50 border-[#b48cde]/30 text-white placeholder:text-white/50 focus:border-[#9560eb]"
-                  />
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <GoogleIcon className="h-5 w-5" />
+                  <span>Sign in with Google</span>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="register-password" className="text-white">
-                    Password (Optional)
-                  </Label>
-                  <Input
-                    id="register-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={registerPassword}
-                    onChange={(e) => setRegisterPassword(e.target.value)}
-                    disabled={isLoading}
-                    minLength={registerPassword ? 8 : undefined}
-                    className="bg-[#200d42]/50 border-[#b48cde]/30 text-white placeholder:text-white/50 focus:border-[#9560eb]"
-                  />
-                  <p className="text-xs text-white/70">
-                    You can set a password later in your profile settings for added security
-                  </p>
-                </div>
+              )}
+            </Button>
+          </div>
 
-                {/* Security warning for password-less accounts */}
-                {!registerPassword && (
-                  <Alert className="border-amber-800 bg-amber-950">
-                    <AlertTriangle className="h-4 w-4 text-amber-400" />
-                    <AlertDescription className="text-amber-200">
-                      <strong>Security Notice:</strong> Without a password, anyone with access to
-                      this device can login to your account. Consider setting a password for added
-                      security.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="register-firstname" className="text-white">
-                    First Name
-                  </Label>
-                  <Input
-                    id="register-firstname"
-                    type="text"
-                    placeholder="John"
-                    value={registerFirstName}
-                    onChange={(e) => setRegisterFirstName(e.target.value)}
-                    disabled={isLoading}
-                    className="bg-[#200d42]/50 border-[#b48cde]/30 text-white placeholder:text-white/50 focus:border-[#9560eb]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="register-lastname" className="text-white">
-                    Last Name
-                  </Label>
-                  <Input
-                    id="register-lastname"
-                    type="text"
-                    placeholder="Doe"
-                    value={registerLastName}
-                    onChange={(e) => setRegisterLastName(e.target.value)}
-                    disabled={isLoading}
-                    className="bg-[#200d42]/50 border-[#b48cde]/30 text-white placeholder:text-white/50 focus:border-[#9560eb]"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-[#9560eb] text-white hover:bg-[#a46edb]"
-                  disabled={isLoading || isGoogleLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <LoadingSpinner size="sm" variant="white" />
-                      <span>Creating account...</span>
-                    </div>
-                  ) : (
-                    'Create Account'
-                  )}
-                </Button>
-
-                {/* Google Sign-Up */}
-                {isGoogleAuthAvailable && (
-                  <>
-                    <div className="relative my-4">
-                      <Separator className="bg-[#b48cde]/30" />
-                      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/60 px-2 text-xs text-white/50">
-                        or
-                      </span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full border-[#b48cde]/30 bg-white text-gray-800 hover:bg-gray-100"
-                      onClick={handleGoogleSignIn}
-                      disabled={isLoading || isGoogleLoading}
-                    >
-                      {isGoogleLoading ? (
-                        <div className="flex items-center space-x-2">
-                          <LoadingSpinner size="sm" />
-                          <span>Signing up...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-2">
-                          <GoogleIcon className="h-5 w-5" />
-                          <span>Sign up with Google</span>
-                        </div>
-                      )}
-                    </Button>
-                  </>
-                )}
-              </form>
-            </TabsContent>
-          </Tabs>
-
-          <div className="text-center mt-4">
+          <div className="text-center mt-6">
             <p className="text-xs text-white/50">
               By signing in, you agree to our Terms of Service and Privacy Policy
             </p>

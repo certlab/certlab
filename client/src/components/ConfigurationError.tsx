@@ -1,8 +1,9 @@
 /**
  * Configuration Error Component
  *
- * Displays a blocking error page when required configuration is missing in production.
- * This ensures Firebase and Dynatrace are properly configured before the app runs.
+ * Displays a blocking error page when required configuration is missing.
+ * Firebase is now mandatory for authentication via Google Sign-In and Firestore storage.
+ * Dynatrace is optional but recommended for production monitoring.
  */
 
 import { AlertCircle } from 'lucide-react';
@@ -21,7 +22,8 @@ export function ConfigurationError({ errors }: ConfigurationErrorProps) {
           <AlertTitle className="text-xl font-bold">Configuration Error</AlertTitle>
           <AlertDescription className="mt-4">
             <p className="mb-4">
-              The application cannot start because required configuration is missing or incomplete.
+              The application requires Firebase for Google Sign-In authentication and Firestore
+              cloud storage. Please configure Firebase to continue.
             </p>
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-4">
               <p className="font-semibold mb-2">Missing Configuration:</p>
@@ -36,17 +38,21 @@ export function ConfigurationError({ errors }: ConfigurationErrorProps) {
             <div className="mt-6 text-sm">
               <p className="font-semibold mb-2">To fix this issue:</p>
               <ol className="list-decimal list-inside space-y-1">
-                <li>Set the required environment variables in your deployment configuration</li>
+                <li>Create a Firebase project at https://console.firebase.google.com</li>
                 <li>
-                  For Firebase: VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN,
-                  VITE_FIREBASE_PROJECT_ID
+                  Enable Authentication {'>'} Sign-in method {'>'} Google
                 </li>
+                <li>Enable Firestore Database</li>
                 <li>
-                  For Dynatrace: VITE_DYNATRACE_SCRIPT_URL (or VITE_DYNATRACE_ENVIRONMENT_ID,
-                  VITE_DYNATRACE_APPLICATION_ID, VITE_DYNATRACE_BEACON_URL)
+                  Set environment variables: VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN,
+                  VITE_FIREBASE_PROJECT_ID
                 </li>
                 <li>Rebuild and redeploy the application</li>
               </ol>
+              <p className="mt-4 text-xs">
+                Note: Dynatrace (VITE_DYNATRACE_SCRIPT_URL) is optional but recommended for
+                production monitoring.
+              </p>
             </div>
           </AlertDescription>
         </Alert>

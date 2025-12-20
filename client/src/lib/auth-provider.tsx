@@ -46,46 +46,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Load user from local storage immediately to prevent redirect on refresh
-        // This is the critical path for page refreshes on protected routes
-        // We do this BEFORE storage initialization to minimize delay
-        try {
-          const currentUser = await clientAuth.getCurrentUser();
-          setUser(currentUser);
-          if (currentUser) {
-            identifyUser(currentUser.id);
-          }
-        } catch (error) {
-          logError('initialLoadUser', error);
-          setUser(null);
-        } finally {
-          // Set isLoading to false so protected routes can render
-          // This must happen as soon as we have the user state, before Firebase init
-          setIsLoading(false);
+        // Initialize storage factory (now always uses Firestore)
+        await initializeStorage();
+
+        // Initialize Firebase (now mandatory)
+        if (!isFirebaseConfigured()) {
+          throw new Error('Firebase configuration is required but not found');
         }
 
-        // Initialize storage factory in the background
-        // This can happen after user is loaded since it's primarily for Firebase sync
-        // Wrap in try-catch to prevent errors from affecting user authentication state
-        try {
-          await initializeStorage();
-
-          // Initialize Firebase if configured
-          if (isFirebaseConfigured()) {
-            const initialized = initializeFirebase();
-            setFirebaseInitialized(initialized);
-
-            if (initialized) {
-              console.log('[AuthProvider] Firebase initialized successfully');
-            }
-          }
-        } catch (storageError) {
-          logError('initializeStorage', storageError);
-          // Continue with local-only mode if storage initialization fails
+        const initialized = initializeFirebase();
+        if (!initialized) {
+          throw new Error('Failed to initialize Firebase');
         }
+
+        setFirebaseInitialized(initialized);
+        console.log('[AuthProvider] Firebase initialized successfully');
+
+        // Set loading to false after Firebase init
+        setIsLoading(false);
       } catch (error) {
         logError('initializeAuth', error);
         setIsLoading(false);
+        // Don't continue - Firebase is mandatory
       }
     };
 
@@ -94,48 +76,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUser = useCallback(async () => {
     try {
-      // First, try to get user from local storage (for backward compatibility)
-      const currentUser = await clientAuth.getCurrentUser();
-      setUser(currentUser);
-
-      // Identify user in Dynatrace for session tracking
-      if (currentUser) {
-        identifyUser(currentUser.id);
+      // Firebase user is now the only source of authentication
+      if (!firebaseUser) {
+        setUser(null);
+        return;
       }
 
-      // If we have a Firebase user, sync with Firestore
-      if (firebaseUser && isCloudSyncAvailable()) {
-        try {
-          // Try to get user from Firestore
-          const firestoreUser = await storage.getUser(firebaseUser.uid);
+      // Get or create user from Firestore
+      let firestoreUser = await storage.getUser(firebaseUser.uid);
 
-          if (firestoreUser) {
-            setUser(firestoreUser);
-            identifyUser(firestoreUser.id);
-          } else {
-            // Create user in Firestore if they don't exist
-            // firebaseUser is guaranteed to be non-null here due to parent condition check
-            await storage.createUser({
-              id: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              firstName: firebaseUser.displayName?.split(' ')[0] || null,
-              lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || null,
-              profileImageUrl: firebaseUser.photoURL,
-              role: 'user',
-              tenantId: 1,
-            });
+      if (!firestoreUser) {
+        // Create user in Firestore if they don't exist
+        await storage.createUser({
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          firstName: firebaseUser.displayName?.split(' ')[0] || null,
+          lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || null,
+          profileImageUrl: firebaseUser.photoURL,
+          role: 'user',
+          tenantId: 1,
+        });
 
-            // Reload from Firestore
-            const newUser = await storage.getUser(firebaseUser.uid);
-            if (newUser) {
-              setUser(newUser);
-              identifyUser(newUser.id);
-            }
-          }
-        } catch (error) {
-          logError('loadUser.firestore', error);
-          // Continue with local user if Firestore fails
-        }
+        // Reload from Firestore
+        firestoreUser = await storage.getUser(firebaseUser.uid);
+      }
+
+      if (firestoreUser) {
+        setUser(firestoreUser);
+        identifyUser(firestoreUser.id);
+      } else {
+        setUser(null);
       }
     } catch (error) {
       logError('loadUser', error);
@@ -168,7 +138,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await storage.setCurrentUserId(fbUser.uid);
       } else {
         console.log('[AuthProvider] Firebase user signed out');
-        await setStorageMode('local');
+        // Clear storage when user signs out
+        await storage.clearCurrentUser();
       }
 
       // Trigger user load whenever Firebase auth state changes
@@ -188,16 +159,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // End Dynatrace session
       endSession();
 
-      // Sign out from Firebase if authenticated
-      if (firebaseUser) {
-        await signOutFromGoogle();
-      }
-
-      // Clear local auth
-      const result = await clientAuth.logout();
-      if (!result.success) {
-        logError('logout', new Error(result.message || 'Logout failed'));
-      }
+      // Sign out from Firebase (now the only auth method)
+      await signOutFromGoogle();
 
       // Clear storage
       await storage.clearCurrentUser();
@@ -207,7 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       logError('logout', error);
     }
-  }, [firebaseUser]);
+  }, []);
 
   const refreshUser = useCallback(async () => {
     await loadUser();

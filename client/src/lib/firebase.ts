@@ -1,7 +1,8 @@
 /**
  * Firebase Configuration for CertLab
  *
- * This module initializes Firebase for client-side Google authentication.
+ * This module initializes Firebase for client-side Google authentication and Firestore storage.
+ * Firebase configuration is REQUIRED - the app will not function without it.
  * Firebase config values are read from environment variables prefixed with VITE_FIREBASE_.
  *
  * Required environment variables:

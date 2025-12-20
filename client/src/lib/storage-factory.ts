@@ -1,29 +1,21 @@
 /**
  * Storage Factory
  *
- * Provides a unified storage interface that routes operations between
- * IndexedDB (local-only mode) and Firestore (cloud sync mode).
+ * Provides a unified storage interface using Firestore for cloud storage.
+ * Firebase and Firestore are now mandatory for the application.
  *
  * ## Architecture
  *
- * - **Local-only mode**: Uses IndexedDB via client-storage.ts
- * - **Cloud sync mode**: Uses Firestore via firestore-storage.ts
- * - **Hybrid caching**: IndexedDB acts as cache for Firestore data
- * - **Automatic fallback**: Falls back to IndexedDB when offline
+ * - **Primary storage**: Uses Firestore via firestore-storage.ts
+ * - **Offline fallback**: IndexedDB cache for offline access (read-only)
  *
  * ## Usage
  *
  * ```typescript
- * import { storage, setStorageMode } from './storage-factory';
+ * import { storage } from './storage-factory';
  *
- * // Use storage (automatically routes to correct backend)
+ * // Use storage (always uses Firestore)
  * const quizzes = await storage.getUserQuizzes(userId);
- *
- * // Switch to cloud sync mode
- * await setStorageMode('cloud');
- *
- * // Switch to local-only mode
- * await setStorageMode('local');
  * ```
  *
  * @module storage-factory
@@ -37,14 +29,14 @@ import { logError } from './errors';
 import type { IClientStorage } from '@shared/storage-interface';
 
 /**
- * Storage mode types
+ * Storage mode type - now always 'cloud' (Firestore)
  */
-export type StorageMode = 'local' | 'cloud' | 'hybrid';
+export type StorageMode = 'cloud';
 
 /**
- * Current storage mode
+ * Current storage mode - always cloud (Firestore)
  */
-let currentMode: StorageMode = 'local';
+const currentMode: StorageMode = 'cloud';
 
 /**
  * Whether Firestore is available
@@ -54,34 +46,33 @@ let firestoreAvailable = false;
 /**
  * Initialize the storage system
  * This should be called on app startup
+ * Firestore is now mandatory
  */
 export async function initializeStorage(): Promise<void> {
   try {
-    // Try to initialize Firestore
+    // Initialize Firestore (mandatory)
     firestoreAvailable = await initializeFirestoreService();
 
-    if (firestoreAvailable) {
-      console.log('[Storage Factory] Firestore initialized successfully');
+    if (!firestoreAvailable) {
+      throw new Error('Failed to initialize Firestore - this is required for the application');
+    }
 
-      // Check if user is logged in with Firebase
-      const firebaseUser = getCurrentFirebaseUser();
-      if (firebaseUser) {
-        console.log('[Storage Factory] Firebase user detected, enabling cloud mode');
-        currentMode = 'cloud';
-        await firestoreStorage.setCurrentUserId(firebaseUser.uid);
-      }
-    } else {
-      console.log('[Storage Factory] Firestore not available, using local mode');
-      currentMode = 'local';
+    console.log('[Storage Factory] Firestore initialized successfully');
+
+    // Check if user is logged in with Firebase
+    const firebaseUser = getCurrentFirebaseUser();
+    if (firebaseUser) {
+      console.log('[Storage Factory] Firebase user detected, cloud storage enabled');
+      await firestoreStorage.setCurrentUserId(firebaseUser.uid);
     }
   } catch (error) {
     logError('initializeStorage', error);
-    currentMode = 'local';
+    throw error; // Re-throw since Firestore is now mandatory
   }
 }
 
 /**
- * Get the current storage mode
+ * Get the current storage mode (always 'cloud')
  */
 export function getStorageMode(): StorageMode {
   return currentMode;
@@ -89,67 +80,60 @@ export function getStorageMode(): StorageMode {
 
 /**
  * Set the storage mode
- * @param mode The storage mode to use
+ * @param mode The storage mode to use (only 'cloud' is supported)
  */
 export async function setStorageMode(mode: StorageMode): Promise<void> {
   try {
-    if (mode === 'cloud' || mode === 'hybrid') {
-      if (!firestoreAvailable) {
-        console.warn('[Storage Factory] Cannot enable cloud mode: Firestore not available');
-        currentMode = 'local';
-        return;
-      }
-
-      const firebaseUser = getCurrentFirebaseUser();
-      if (!firebaseUser) {
-        console.warn('[Storage Factory] Cannot enable cloud mode: No Firebase user');
-        currentMode = 'local';
-        return;
-      }
-
-      await firestoreStorage.setCurrentUserId(firebaseUser.uid);
+    if (!firestoreAvailable) {
+      throw new Error('Firestore is not available - this is required for the application');
     }
 
-    currentMode = mode;
-    console.log(`[Storage Factory] Storage mode set to: ${mode}`);
+    const firebaseUser = getCurrentFirebaseUser();
+    if (!firebaseUser) {
+      console.warn('[Storage Factory] No Firebase user - user must sign in with Google');
+      return;
+    }
+
+    await firestoreStorage.setCurrentUserId(firebaseUser.uid);
+    console.log('[Storage Factory] Storage mode set to: cloud (Firestore)');
   } catch (error) {
     logError('setStorageMode', error, { mode });
-    currentMode = 'local';
+    throw error; // Re-throw since Firestore is mandatory
   }
 }
 
 /**
- * Check if cloud sync is available
+ * Check if cloud sync is available (always true when Firestore is initialized)
  */
 export function isCloudSyncAvailable(): boolean {
   return firestoreAvailable && isFirestoreInitialized();
 }
 
 /**
- * Check if currently using cloud sync
+ * Check if currently using cloud sync (always true)
  */
 export function isUsingCloudSync(): boolean {
-  return currentMode === 'cloud' && firestoreAvailable;
+  return firestoreAvailable;
 }
 
 /**
- * Storage adapter that routes to the appropriate backend
+ * Storage adapter that always uses Firestore
  */
 class StorageRouter implements IClientStorage {
   /**
-   * Get the active storage backend based on current mode
+   * Get the active storage backend (always Firestore)
    */
   private getActiveStorage(): IClientStorage {
-    if (currentMode === 'cloud' && firestoreAvailable) {
-      return firestoreStorage;
+    if (!firestoreAvailable) {
+      throw new Error('Firestore is not available - this is required for the application');
     }
-    return clientStorage;
+    return firestoreStorage;
   }
 
   /**
-   * Execute an operation with fallback to local storage
+   * Execute an operation with Firestore
    */
-  private async withFallback<T>(
+  private async executeOperation<T>(
     operation: (storage: IClientStorage) => Promise<T>,
     operationName: string
   ): Promise<T> {
@@ -157,14 +141,7 @@ class StorageRouter implements IClientStorage {
       const storage = this.getActiveStorage();
       return await operation(storage);
     } catch (error) {
-      // If we're in cloud mode and operation failed, try local storage as fallback
-      if (currentMode === 'cloud') {
-        console.warn(
-          `[Storage Router] ${operationName} failed in cloud mode, falling back to local`
-        );
-        logError(operationName, error);
-        return await operation(clientStorage);
-      }
+      logError(operationName, error);
       throw error;
     }
   }
@@ -174,39 +151,23 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getCurrentUserId(): Promise<string | null> {
-    return this.withFallback((s) => s.getCurrentUserId(), 'getCurrentUserId');
+    return this.executeOperation((s) => s.getCurrentUserId(), 'getCurrentUserId');
   }
 
   async setCurrentUserId(userId: string): Promise<void> {
-    // Set in both storages to keep them in sync
-    // Note: This is a best-effort sync. If one fails, the other still succeeds.
-    // The storage mode will determine which is authoritative.
-    try {
-      await clientStorage.setCurrentUserId(userId);
-    } catch (error) {
-      logError('setCurrentUserId.local', error);
-      // Continue to try Firestore even if local fails
-    }
-
-    if (firestoreAvailable) {
-      try {
-        await firestoreStorage.setCurrentUserId(userId);
-      } catch (error) {
-        logError('setCurrentUserId.firestore', error);
-        // Local storage has the user ID, so we can continue
-      }
-    }
+    // Only set in Firestore (now the single source of truth)
+    return this.executeOperation((s) => s.setCurrentUserId(userId), 'setCurrentUserId');
   }
 
   async clearCurrentUser(): Promise<void> {
-    await clientStorage.clearCurrentUser();
+    // Only clear from Firestore
     if (firestoreAvailable) {
       await firestoreStorage.clearCurrentUser();
     }
   }
 
   async getAllUsers(): Promise<any[]> {
-    return this.withFallback((s) => s.getAllUsers(), 'getAllUsers');
+    return this.executeOperation((s) => s.getAllUsers(), 'getAllUsers');
   }
 
   // ==========================================
@@ -214,23 +175,23 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getTenants(): Promise<any[]> {
-    return this.withFallback((s) => s.getTenants(), 'getTenants');
+    return this.executeOperation((s) => s.getTenants(), 'getTenants');
   }
 
   async getTenant(id: number): Promise<any> {
-    return this.withFallback((s) => s.getTenant(id), 'getTenant');
+    return this.executeOperation((s) => s.getTenant(id), 'getTenant');
   }
 
   async createTenant(tenant: any): Promise<any> {
-    return this.withFallback((s) => s.createTenant(tenant), 'createTenant');
+    return this.executeOperation((s) => s.createTenant(tenant), 'createTenant');
   }
 
   async updateTenant(id: number, updates: any): Promise<any> {
-    return this.withFallback((s) => s.updateTenant(id, updates), 'updateTenant');
+    return this.executeOperation((s) => s.updateTenant(id, updates), 'updateTenant');
   }
 
   async getUsersByTenant(tenantId: number): Promise<any[]> {
-    return this.withFallback((s) => s.getUsersByTenant(tenantId), 'getUsersByTenant');
+    return this.executeOperation((s) => s.getUsersByTenant(tenantId), 'getUsersByTenant');
   }
 
   // ==========================================
@@ -238,27 +199,27 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getUser(id: string): Promise<any> {
-    return this.withFallback((s) => s.getUser(id), 'getUser');
+    return this.executeOperation((s) => s.getUser(id), 'getUser');
   }
 
   async getUserById(id: string): Promise<any> {
-    return this.withFallback((s) => s.getUserById(id), 'getUserById');
+    return this.executeOperation((s) => s.getUserById(id), 'getUserById');
   }
 
   async getUserByEmail(email: string): Promise<any> {
-    return this.withFallback((s) => s.getUserByEmail(email), 'getUserByEmail');
+    return this.executeOperation((s) => s.getUserByEmail(email), 'getUserByEmail');
   }
 
   async createUser(user: any): Promise<any> {
-    return this.withFallback((s) => s.createUser(user), 'createUser');
+    return this.executeOperation((s) => s.createUser(user), 'createUser');
   }
 
   async updateUser(id: string, updates: any): Promise<any> {
-    return this.withFallback((s) => s.updateUser(id, updates), 'updateUser');
+    return this.executeOperation((s) => s.updateUser(id, updates), 'updateUser');
   }
 
   async updateUserGoals(id: string, goals: any): Promise<any> {
-    return this.withFallback((s) => s.updateUserGoals(id, goals), 'updateUserGoals');
+    return this.executeOperation((s) => s.updateUserGoals(id, goals), 'updateUserGoals');
   }
 
   // ==========================================
@@ -266,19 +227,19 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getCategories(tenantId?: number): Promise<any[]> {
-    return this.withFallback((s) => s.getCategories(tenantId), 'getCategories');
+    return this.executeOperation((s) => s.getCategories(tenantId), 'getCategories');
   }
 
   async createCategory(category: any): Promise<any> {
-    return this.withFallback((s) => s.createCategory(category), 'createCategory');
+    return this.executeOperation((s) => s.createCategory(category), 'createCategory');
   }
 
   async updateCategory(id: number, updates: any): Promise<any> {
-    return this.withFallback((s) => s.updateCategory(id, updates), 'updateCategory');
+    return this.executeOperation((s) => s.updateCategory(id, updates), 'updateCategory');
   }
 
   async deleteCategory(id: number): Promise<void> {
-    return this.withFallback((s) => s.deleteCategory(id), 'deleteCategory');
+    return this.executeOperation((s) => s.deleteCategory(id), 'deleteCategory');
   }
 
   // ==========================================
@@ -286,19 +247,22 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getSubcategories(categoryId?: number, tenantId?: number): Promise<any[]> {
-    return this.withFallback((s) => s.getSubcategories(categoryId, tenantId), 'getSubcategories');
+    return this.executeOperation(
+      (s) => s.getSubcategories(categoryId, tenantId),
+      'getSubcategories'
+    );
   }
 
   async createSubcategory(subcategory: any): Promise<any> {
-    return this.withFallback((s) => s.createSubcategory(subcategory), 'createSubcategory');
+    return this.executeOperation((s) => s.createSubcategory(subcategory), 'createSubcategory');
   }
 
   async updateSubcategory(id: number, updates: any): Promise<any> {
-    return this.withFallback((s) => s.updateSubcategory(id, updates), 'updateSubcategory');
+    return this.executeOperation((s) => s.updateSubcategory(id, updates), 'updateSubcategory');
   }
 
   async deleteSubcategory(id: number): Promise<void> {
-    return this.withFallback((s) => s.deleteSubcategory(id), 'deleteSubcategory');
+    return this.executeOperation((s) => s.deleteSubcategory(id), 'deleteSubcategory');
   }
 
   // ==========================================
@@ -311,30 +275,30 @@ class StorageRouter implements IClientStorage {
     difficultyLevels?: number[],
     tenantId?: number
   ): Promise<any[]> {
-    return this.withFallback(
+    return this.executeOperation(
       (s) => s.getQuestionsByCategories(categoryIds, subcategoryIds, difficultyLevels, tenantId),
       'getQuestionsByCategories'
     );
   }
 
   async getQuestion(id: number): Promise<any> {
-    return this.withFallback((s) => s.getQuestion(id), 'getQuestion');
+    return this.executeOperation((s) => s.getQuestion(id), 'getQuestion');
   }
 
   async createQuestion(question: any): Promise<any> {
-    return this.withFallback((s) => s.createQuestion(question), 'createQuestion');
+    return this.executeOperation((s) => s.createQuestion(question), 'createQuestion');
   }
 
   async updateQuestion(id: number, updates: any): Promise<any> {
-    return this.withFallback((s) => s.updateQuestion(id, updates), 'updateQuestion');
+    return this.executeOperation((s) => s.updateQuestion(id, updates), 'updateQuestion');
   }
 
   async deleteQuestion(id: number): Promise<void> {
-    return this.withFallback((s) => s.deleteQuestion(id), 'deleteQuestion');
+    return this.executeOperation((s) => s.deleteQuestion(id), 'deleteQuestion');
   }
 
   async getQuestionsByTenant(tenantId: number): Promise<any[]> {
-    return this.withFallback((s) => s.getQuestionsByTenant(tenantId), 'getQuestionsByTenant');
+    return this.executeOperation((s) => s.getQuestionsByTenant(tenantId), 'getQuestionsByTenant');
   }
 
   // ==========================================
@@ -342,27 +306,27 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async createQuiz(quiz: any): Promise<any> {
-    return this.withFallback((s) => s.createQuiz(quiz), 'createQuiz');
+    return this.executeOperation((s) => s.createQuiz(quiz), 'createQuiz');
   }
 
   async getQuiz(id: number): Promise<any> {
-    return this.withFallback((s) => s.getQuiz(id), 'getQuiz');
+    return this.executeOperation((s) => s.getQuiz(id), 'getQuiz');
   }
 
   async getUserQuizzes(userId: string, tenantId?: number): Promise<any[]> {
-    return this.withFallback((s) => s.getUserQuizzes(userId, tenantId), 'getUserQuizzes');
+    return this.executeOperation((s) => s.getUserQuizzes(userId, tenantId), 'getUserQuizzes');
   }
 
   async updateQuiz(id: number, updates: any): Promise<any> {
-    return this.withFallback((s) => s.updateQuiz(id, updates), 'updateQuiz');
+    return this.executeOperation((s) => s.updateQuiz(id, updates), 'updateQuiz');
   }
 
   async getQuizQuestions(quizId: number): Promise<any[]> {
-    return this.withFallback((s) => s.getQuizQuestions(quizId), 'getQuizQuestions');
+    return this.executeOperation((s) => s.getQuizQuestions(quizId), 'getQuizQuestions');
   }
 
   async submitQuiz(quizId: number, answers: any[]): Promise<any> {
-    return this.withFallback((s) => s.submitQuiz(quizId, answers), 'submitQuiz');
+    return this.executeOperation((s) => s.submitQuiz(quizId, answers), 'submitQuiz');
   }
 
   // ==========================================
@@ -370,7 +334,7 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getUserProgress(userId: string, tenantId?: number): Promise<any[]> {
-    return this.withFallback((s) => s.getUserProgress(userId, tenantId), 'getUserProgress');
+    return this.executeOperation((s) => s.getUserProgress(userId, tenantId), 'getUserProgress');
   }
 
   async updateUserProgress(
@@ -379,14 +343,14 @@ class StorageRouter implements IClientStorage {
     progress: any,
     tenantId?: number
   ): Promise<any> {
-    return this.withFallback(
+    return this.executeOperation(
       (s) => s.updateUserProgress(userId, categoryId, progress, tenantId),
       'updateUserProgress'
     );
   }
 
   async getUserStats(userId: string, tenantId?: number): Promise<any> {
-    return this.withFallback((s) => s.getUserStats(userId, tenantId), 'getUserStats');
+    return this.executeOperation((s) => s.getUserStats(userId, tenantId), 'getUserStats');
   }
 
   // ==========================================
@@ -402,18 +366,18 @@ class StorageRouter implements IClientStorage {
     categoryId: number,
     tenantId?: number
   ): Promise<any> {
-    return this.withFallback(
+    return this.executeOperation(
       (s) => s.createLecture(userId, quizId, title, content, topics, categoryId, tenantId),
       'createLecture'
     );
   }
 
   async getUserLectures(userId: string, tenantId?: number): Promise<any[]> {
-    return this.withFallback((s) => s.getUserLectures(userId, tenantId), 'getUserLectures');
+    return this.executeOperation((s) => s.getUserLectures(userId, tenantId), 'getUserLectures');
   }
 
   async getLecture(id: number): Promise<any> {
-    return this.withFallback((s) => s.getLecture(id), 'getLecture');
+    return this.executeOperation((s) => s.getLecture(id), 'getLecture');
   }
 
   // ==========================================
@@ -426,28 +390,28 @@ class StorageRouter implements IClientStorage {
     subcategoryId: number,
     isCorrect: boolean
   ): Promise<void> {
-    return this.withFallback(
+    return this.executeOperation(
       (s) => s.updateMasteryScore(userId, categoryId, subcategoryId, isCorrect),
       'updateMasteryScore'
     );
   }
 
   async getUserMasteryScores(userId: string, tenantId?: number): Promise<any[]> {
-    return this.withFallback(
+    return this.executeOperation(
       (s) => s.getUserMasteryScores(userId, tenantId),
       'getUserMasteryScores'
     );
   }
 
   async calculateOverallMasteryScore(userId: string, tenantId?: number): Promise<number> {
-    return this.withFallback(
+    return this.executeOperation(
       (s) => s.calculateOverallMasteryScore(userId, tenantId),
       'calculateOverallMasteryScore'
     );
   }
 
   async getCertificationMasteryScores(userId: string, tenantId?: number): Promise<any[]> {
-    return this.withFallback(
+    return this.executeOperation(
       (s) => s.getCertificationMasteryScores(userId, tenantId),
       'getCertificationMasteryScores'
     );
@@ -458,19 +422,19 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getBadges(): Promise<any[]> {
-    return this.withFallback((s) => s.getBadges(), 'getBadges');
+    return this.executeOperation((s) => s.getBadges(), 'getBadges');
   }
 
   async getUserBadges(userId: string, tenantId?: number): Promise<any[]> {
-    return this.withFallback((s) => s.getUserBadges(userId, tenantId), 'getUserBadges');
+    return this.executeOperation((s) => s.getUserBadges(userId, tenantId), 'getUserBadges');
   }
 
   async createUserBadge(userBadge: any): Promise<any> {
-    return this.withFallback((s) => s.createUserBadge(userBadge), 'createUserBadge');
+    return this.executeOperation((s) => s.createUserBadge(userBadge), 'createUserBadge');
   }
 
   async updateUserBadge(id: number, updates: any): Promise<any> {
-    return this.withFallback((s) => s.updateUserBadge(id, updates), 'updateUserBadge');
+    return this.executeOperation((s) => s.updateUserBadge(id, updates), 'updateUserBadge');
   }
 
   // ==========================================
@@ -478,11 +442,14 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getUserGameStats(userId: string): Promise<any> {
-    return this.withFallback((s) => s.getUserGameStats(userId), 'getUserGameStats');
+    return this.executeOperation((s) => s.getUserGameStats(userId), 'getUserGameStats');
   }
 
   async updateUserGameStats(userId: string, updates: any): Promise<any> {
-    return this.withFallback((s) => s.updateUserGameStats(userId, updates), 'updateUserGameStats');
+    return this.executeOperation(
+      (s) => s.updateUserGameStats(userId, updates),
+      'updateUserGameStats'
+    );
   }
 
   // ==========================================
@@ -490,23 +457,26 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getChallenges(userId?: string): Promise<any[]> {
-    return this.withFallback((s) => s.getChallenges(userId), 'getChallenges');
+    return this.executeOperation((s) => s.getChallenges(userId), 'getChallenges');
   }
 
   async getChallenge(id: number): Promise<any> {
-    return this.withFallback((s) => s.getChallenge(id), 'getChallenge');
+    return this.executeOperation((s) => s.getChallenge(id), 'getChallenge');
   }
 
   async createChallenge(challenge: any): Promise<any> {
-    return this.withFallback((s) => s.createChallenge(challenge), 'createChallenge');
+    return this.executeOperation((s) => s.createChallenge(challenge), 'createChallenge');
   }
 
   async getChallengeAttempts(userId: string): Promise<any[]> {
-    return this.withFallback((s) => s.getChallengeAttempts(userId), 'getChallengeAttempts');
+    return this.executeOperation((s) => s.getChallengeAttempts(userId), 'getChallengeAttempts');
   }
 
   async createChallengeAttempt(attempt: any): Promise<any> {
-    return this.withFallback((s) => s.createChallengeAttempt(attempt), 'createChallengeAttempt');
+    return this.executeOperation(
+      (s) => s.createChallengeAttempt(attempt),
+      'createChallengeAttempt'
+    );
   }
 
   // ==========================================
@@ -514,27 +484,27 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getStudyGroups(): Promise<any[]> {
-    return this.withFallback((s) => s.getStudyGroups(), 'getStudyGroups');
+    return this.executeOperation((s) => s.getStudyGroups(), 'getStudyGroups');
   }
 
   async getStudyGroup(id: number): Promise<any> {
-    return this.withFallback((s) => s.getStudyGroup(id), 'getStudyGroup');
+    return this.executeOperation((s) => s.getStudyGroup(id), 'getStudyGroup');
   }
 
   async createStudyGroup(group: any): Promise<any> {
-    return this.withFallback((s) => s.createStudyGroup(group), 'createStudyGroup');
+    return this.executeOperation((s) => s.createStudyGroup(group), 'createStudyGroup');
   }
 
   async getUserStudyGroups(userId: string): Promise<any[]> {
-    return this.withFallback((s) => s.getUserStudyGroups(userId), 'getUserStudyGroups');
+    return this.executeOperation((s) => s.getUserStudyGroups(userId), 'getUserStudyGroups');
   }
 
   async joinStudyGroup(userId: string, groupId: number): Promise<any> {
-    return this.withFallback((s) => s.joinStudyGroup(userId, groupId), 'joinStudyGroup');
+    return this.executeOperation((s) => s.joinStudyGroup(userId, groupId), 'joinStudyGroup');
   }
 
   async leaveStudyGroup(userId: string, groupId: number): Promise<void> {
-    return this.withFallback((s) => s.leaveStudyGroup(userId, groupId), 'leaveStudyGroup');
+    return this.executeOperation((s) => s.leaveStudyGroup(userId, groupId), 'leaveStudyGroup');
   }
 
   // ==========================================
@@ -542,33 +512,33 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getPracticeTests(): Promise<any[]> {
-    return this.withFallback((s) => s.getPracticeTests(), 'getPracticeTests');
+    return this.executeOperation((s) => s.getPracticeTests(), 'getPracticeTests');
   }
 
   async getPracticeTest(id: number): Promise<any> {
-    return this.withFallback((s) => s.getPracticeTest(id), 'getPracticeTest');
+    return this.executeOperation((s) => s.getPracticeTest(id), 'getPracticeTest');
   }
 
   async createPracticeTest(test: any): Promise<any> {
-    return this.withFallback((s) => s.createPracticeTest(test), 'createPracticeTest');
+    return this.executeOperation((s) => s.createPracticeTest(test), 'createPracticeTest');
   }
 
   async getPracticeTestAttempts(userId: string, testId?: number): Promise<any[]> {
-    return this.withFallback(
+    return this.executeOperation(
       (s) => s.getPracticeTestAttempts(userId, testId),
       'getPracticeTestAttempts'
     );
   }
 
   async createPracticeTestAttempt(attempt: any): Promise<any> {
-    return this.withFallback(
+    return this.executeOperation(
       (s) => s.createPracticeTestAttempt(attempt),
       'createPracticeTestAttempt'
     );
   }
 
   async updatePracticeTestAttempt(id: number, updates: any): Promise<any> {
-    return this.withFallback(
+    return this.executeOperation(
       (s) => s.updatePracticeTestAttempt(id, updates),
       'updatePracticeTestAttempt'
     );
@@ -579,15 +549,15 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getUserTokenBalance(userId: string): Promise<number> {
-    return this.withFallback((s) => s.getUserTokenBalance(userId), 'getUserTokenBalance');
+    return this.executeOperation((s) => s.getUserTokenBalance(userId), 'getUserTokenBalance');
   }
 
   async addTokens(userId: string, amount: number): Promise<number> {
-    return this.withFallback((s) => s.addTokens(userId, amount), 'addTokens');
+    return this.executeOperation((s) => s.addTokens(userId, amount), 'addTokens');
   }
 
   async consumeTokens(userId: string, amount: number): Promise<any> {
-    return this.withFallback((s) => s.consumeTokens(userId, amount), 'consumeTokens');
+    return this.executeOperation((s) => s.consumeTokens(userId, amount), 'consumeTokens');
   }
 
   calculateQuizTokenCost(questionCount: number): number {
@@ -599,15 +569,15 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async exportData(): Promise<string> {
-    return this.withFallback((s) => s.exportData(), 'exportData');
+    return this.executeOperation((s) => s.exportData(), 'exportData');
   }
 
   async importData(jsonData: string): Promise<void> {
-    return this.withFallback((s) => s.importData(jsonData), 'importData');
+    return this.executeOperation((s) => s.importData(jsonData), 'importData');
   }
 
   async clearAllData(): Promise<void> {
-    return this.withFallback((s) => s.clearAllData(), 'clearAllData');
+    return this.executeOperation((s) => s.clearAllData(), 'clearAllData');
   }
 }
 
