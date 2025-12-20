@@ -148,11 +148,13 @@ Firebase is required for authentication (Google Sign-In) and cloud storage (Fire
    firebase login
    ```
 
-7. **Deploy Firestore Rules** (optional for initial setup, required before production):
+7. **Deploy Firestore Rules and Indexes** (optional for initial setup, required before production):
    ```bash
    npm run deploy:firestore:rules
+   # If you have custom Firestore indexes, deploy them as well:
+   npm run deploy:firestore:indexes
    ```
-   Note: This step can be skipped during initial development. Deploy security rules before going to production.
+   Note: These steps can be skipped during initial development. Deploy security rules and indexes before going to production.
 
 For detailed instructions, see [docs/setup/firebase.md](docs/setup/firebase.md).
 

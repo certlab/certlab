@@ -79,36 +79,6 @@ export function getStorageMode(): StorageMode {
 }
 
 /**
- * Set the storage mode
- * Since only 'cloud' mode is supported, this validates the mode and sets up Firestore
- * @param mode The storage mode to use (must be 'cloud')
- */
-export async function setStorageMode(mode: StorageMode): Promise<void> {
-  try {
-    // Validate mode - only 'cloud' is accepted
-    if (mode !== 'cloud') {
-      throw new Error(`Invalid storage mode: ${mode}. Only 'cloud' is supported.`);
-    }
-
-    if (!firestoreAvailable) {
-      throw new Error('Firestore is not available - this is required for the application');
-    }
-
-    const firebaseUser = getCurrentFirebaseUser();
-    if (!firebaseUser) {
-      console.warn('[Storage Factory] No Firebase user - user must sign in with Google');
-      return;
-    }
-
-    await firestoreStorage.setCurrentUserId(firebaseUser.uid);
-    console.log('[Storage Factory] Storage mode set to: cloud (Firestore)');
-  } catch (error) {
-    logError('setStorageMode', error, { mode });
-    throw error; // Re-throw since Firestore is mandatory
-  }
-}
-
-/**
  * Check if cloud sync is available (always true when Firestore is initialized)
  */
 export function isCloudSyncAvailable(): boolean {
