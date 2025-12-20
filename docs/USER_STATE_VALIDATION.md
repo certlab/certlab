@@ -107,7 +107,7 @@ This document provides comprehensive documentation of all user state references 
 #### `getUserTokenBalance(userId: string): Promise<number>`
 - **Purpose:** Retrieve current token balance for a user
 - **Returns:** Token balance (default: 0 for non-existent users)
-- **Test Coverage:** ✅ Complete (5 tests)
+- **Test Coverage:** ✅ Complete (3 tests)
 
 #### `addTokens(userId: string, amount: number): Promise<number>`
 - **Purpose:** Add tokens to user's balance
@@ -168,11 +168,11 @@ This document provides comprehensive documentation of all user state references 
 
 ### Test Categories
 
-1. **Token Balance Operations** (18 tests)
+1. **Token Balance Operations** (16 tests)
    - getUserTokenBalance: 3 tests ✅
    - addTokens: 5 tests ✅
    - consumeTokens: 6 tests ✅
-   - Edge cases: 4 tests ✅
+   - Edge cases: 2 tests ✅
 
 2. **Display Name Operations** (5 tests)
    - All scenarios: 5 tests ✅
@@ -180,23 +180,21 @@ This document provides comprehensive documentation of all user state references 
 3. **Experience (XP) and Level Calculations** (7 tests)
    - calculateLevelAndXP: 7 tests ✅
 
-4. **Game Statistics Operations** (15 tests)
+4. **Game Statistics Operations** (14 tests)
    - getUserGameStats: 2 tests ✅
    - updateUserGameStats: 6 tests ✅
    - Points accumulation: 3 tests ✅
-   - Streak calculations: 4 tests ✅
+   - Streak calculations: 3 tests ✅
 
 5. **User Profile Updates** (10 tests)
    - updateUser: 10 tests ✅
 
-6. **Edge Cases and Error Handling** (6 tests)
-   - Min/max values: 3 tests ✅
+6. **Edge Cases and Error Handling** (9 tests)
+   - Min/max values: 4 tests ✅
    - Invalid input: 3 tests ✅
+   - Tenant isolation: 2 tests ✅
 
-7. **Tenant Isolation** (2 tests)
-   - Tenant tracking: 2 tests ✅
-
-8. **Data Consistency** (3 tests)
+7. **Data Consistency** (3 tests)
    - Cross-operation consistency: 3 tests ✅
 
 ## Edge Cases Validated
