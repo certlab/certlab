@@ -8,7 +8,7 @@ import {
   signOutFromGoogle,
   type FirebaseUser,
 } from './firebase';
-import { initializeStorage, setStorageMode, isCloudSyncAvailable } from './storage-factory';
+import { initializeStorage, isCloudSyncAvailable } from './storage-factory';
 import { storage } from './storage-factory';
 import { identifyUser, endSession } from './dynatrace';
 
@@ -142,7 +142,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (fbUser) {
         console.log('[AuthProvider] Firebase user signed in:', fbUser.email);
-        await setStorageMode('cloud');
         await storage.setCurrentUserId(fbUser.uid);
       } else {
         console.log('[AuthProvider] Firebase user signed out');
