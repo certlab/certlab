@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-provider';
 import { queryClient, queryKeys } from '@/lib/queryClient';
@@ -26,12 +26,11 @@ import {
 import type { UserStats, Quiz, Category } from '@shared/schema';
 
 export default function Dashboard() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshUser } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [showInsufficientTokensDialog, setShowInsufficientTokensDialog] = useState(false);
   const [showCertificationDialog, setShowCertificationDialog] = useState(false);
-  const [isCreatingQuiz, setIsCreatingQuiz] = useState(false);
   const [requiredTokens, setRequiredTokens] = useState(0);
   const [currentTokenBalance, setCurrentTokenBalance] = useState(0);
   const [pendingCategoryId, setPendingCategoryId] = useState<number | null>(null);
@@ -60,14 +59,20 @@ export default function Dashboard() {
     .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())
     .slice(0, 5);
 
-  const createQuickPractice = async (categoryId: number, categoryName: string) => {
-    if (!currentUser?.id) return;
+  // Mutation for creating quick practice quizzes
+  const createQuizMutation = useMutation({
+    mutationFn: async ({
+      categoryId,
+      categoryName,
+    }: {
+      categoryId: number;
+      categoryName: string;
+    }) => {
+      if (!currentUser?.id) throw new Error('Not authenticated');
 
-    setIsCreatingQuiz(true);
-    const questionCount = 10;
-    const tokenCost = clientStorage.calculateQuizTokenCost(questionCount);
+      const questionCount = 10;
+      const tokenCost = clientStorage.calculateQuizTokenCost(questionCount);
 
-    try {
       // Check and consume tokens
       const tokenResult = await clientStorage.consumeTokens(currentUser.id, tokenCost);
 
@@ -75,13 +80,12 @@ export default function Dashboard() {
         // Save the category info for retry after adding tokens
         setPendingCategoryId(categoryId);
         setPendingCategoryName(categoryName);
-        // Show dialog instead of toast
         const balance = await clientStorage.getUserTokenBalance(currentUser.id);
         setCurrentTokenBalance(balance);
         setRequiredTokens(tokenCost);
         setShowCertificationDialog(false);
         setShowInsufficientTokensDialog(true);
-        return;
+        throw new Error('Insufficient tokens');
       }
 
       // Create the quiz with selected category
@@ -92,36 +96,54 @@ export default function Dashboard() {
         title: `${categoryName} Practice - ${new Date().toLocaleDateString()}`,
       });
 
-      if (quiz?.id) {
-        // Optimistically update the token balance cache to prevent race condition
-        queryClient.setQueryData(queryKeys.user.tokenBalance(currentUser.id), {
-          balance: tokenResult.newBalance,
-        });
-
-        // Invalidate user queries to sync the user object (which also contains tokenBalance)
-        // Note: We intentionally do NOT invalidate the tokenBalance query itself to avoid
-        // a race condition where the refetch might return stale data before update propagates
-        await queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser.id) });
-        await queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
-
-        toast({
-          title: 'Quiz Created',
-          description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
-        });
-
-        setShowCertificationDialog(false);
-        navigate(`/app/quiz/${quiz.id}`);
-      } else {
-        toast({
-          title: 'Quiz Creation Failed',
-          description: 'An error occurred while creating your quiz. Please try again.',
-          variant: 'destructive',
-        });
-        setShowCertificationDialog(false);
+      if (!quiz?.id) {
+        throw new Error('Failed to create quiz');
       }
-    } finally {
-      setIsCreatingQuiz(false);
-    }
+
+      return { quiz, tokenResult, tokenCost };
+    },
+    onSuccess: async ({ quiz, tokenResult, tokenCost }) => {
+      // Refresh user state in auth provider to keep it in sync
+      await refreshUser();
+
+      // Optimistically update the token balance cache to prevent race condition
+      queryClient.setQueryData(queryKeys.user.tokenBalance(currentUser?.id), {
+        balance: tokenResult.newBalance,
+      });
+
+      // Invalidate user queries to sync the user object (which also contains tokenBalance)
+      // Note: We intentionally do NOT invalidate the tokenBalance query itself to avoid
+      // a race condition where the refetch might return stale data before update propagates
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
+
+      toast({
+        title: 'Quiz Created',
+        description: `Used ${tokenCost} tokens. New balance: ${tokenResult.newBalance}`,
+      });
+
+      setShowCertificationDialog(false);
+      navigate(`/app/quiz/${quiz.id}`);
+    },
+    onError: (error: any) => {
+      // Don't show error toast for insufficient tokens (dialog is shown instead)
+      if (error?.message === 'Insufficient tokens') {
+        return;
+      }
+
+      toast({
+        title: 'Quiz Creation Failed',
+        description:
+          error?.message || 'An error occurred while creating your quiz. Please try again.',
+        variant: 'destructive',
+      });
+      setShowCertificationDialog(false);
+    },
+  });
+
+  const createQuickPractice = (categoryId: number, categoryName: string) => {
+    if (!currentUser?.id) return;
+    createQuizMutation.mutate({ categoryId, categoryName });
   };
 
   const handleStartPractice = () => {
@@ -477,7 +499,7 @@ export default function Dashboard() {
         open={showCertificationDialog}
         onOpenChange={setShowCertificationDialog}
         onStartQuiz={handleCertificationSelected}
-        isLoading={isCreatingQuiz}
+        isLoading={createQuizMutation.isPending}
       />
 
       <InsufficientTokensDialog
