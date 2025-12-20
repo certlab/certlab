@@ -33,12 +33,10 @@ import {
   ChevronRight,
   Crown,
   Shield,
-  Lock,
   Cloud,
   CloudOff,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { clientAuth } from '@/lib/client-auth';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface UserProfile {
@@ -88,24 +86,6 @@ export default function ProfilePage() {
       motivations: [],
     },
   });
-
-  // Password management state
-  const [hasPassword, setHasPassword] = useState<boolean>(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
-
-  // Check if user has password on mount
-  useEffect(() => {
-    const checkPassword = async () => {
-      if (user?.id) {
-        const hasPass = await clientAuth.hasPassword(user.id);
-        setHasPassword(hasPass);
-      }
-    };
-    checkPassword();
-  }, [user?.id]);
 
   // Email validation helper
   const isValidEmail = (email: string): boolean => {
@@ -182,67 +162,6 @@ export default function ProfilePage() {
       return;
     }
     updateProfileMutation.mutate(profileData);
-  };
-
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsPasswordLoading(true);
-
-    try {
-      // Validate new password
-      if (newPassword.length < 8) {
-        toast({
-          title: 'Password Too Short',
-          description: 'Password must be at least 8 characters long.',
-          variant: 'destructive',
-        });
-        setIsPasswordLoading(false);
-        return;
-      }
-
-      // Check if passwords match
-      if (newPassword !== confirmPassword) {
-        toast({
-          title: "Passwords Don't Match",
-          description: 'New password and confirmation password must match.',
-          variant: 'destructive',
-        });
-        setIsPasswordLoading(false);
-        return;
-      }
-
-      // Call the change password function
-      const result = await clientAuth.changePassword(currentPassword, newPassword);
-
-      if (result.success) {
-        toast({
-          title: 'Password Updated',
-          description: result.message || 'Your password has been successfully updated.',
-        });
-
-        // Clear form
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-
-        // Update password status
-        setHasPassword(true);
-      } else {
-        toast({
-          title: 'Password Update Failed',
-          description: result.message || 'Unable to update password.',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsPasswordLoading(false);
-    }
   };
 
   const certificationOptions = ['CC', 'CISSP', 'Cloud+', 'CISM', 'CGRC', 'CISA'];
@@ -649,93 +568,17 @@ export default function ProfilePage() {
         <TabsContent value="security" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Password Security</CardTitle>
-              <CardDescription>
-                {hasPassword
-                  ? 'Change your account password'
-                  : 'Set a password to secure your account'}
-              </CardDescription>
+              <CardTitle>Account Security</CardTitle>
+              <CardDescription>Your account is secured with Google Sign-In</CardDescription>
             </CardHeader>
             <CardContent>
-              {!hasPassword && (
-                <Alert className="mb-6">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>No Password Set:</strong> Your account currently has no password. Anyone
-                    with access to this device can login. Set a password below for added security.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <form onSubmit={handlePasswordChange} className="space-y-4">
-                {hasPassword && (
-                  <div className="space-y-2">
-                    <Label htmlFor="current-password">Current Password</Label>
-                    <Input
-                      id="current-password"
-                      type="password"
-                      placeholder="Enter current password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      required={hasPassword}
-                      disabled={isPasswordLoading}
-                      data-testid="input-current-password"
-                    />
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">{hasPassword ? 'New Password' : 'Password'}</Label>
-                  <Input
-                    id="new-password"
-                    type="password"
-                    placeholder="Enter new password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    minLength={8}
-                    disabled={isPasswordLoading}
-                    data-testid="input-new-password"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Must be at least 8 characters long
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    minLength={8}
-                    disabled={isPasswordLoading}
-                    data-testid="input-confirm-password"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isPasswordLoading}
-                  className="w-full"
-                  data-testid="submit-password-button"
-                >
-                  {isPasswordLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <LoadingSpinner size="sm" variant="white" />
-                      <span>Updating...</span>
-                    </div>
-                  ) : (
-                    <>
-                      <Lock className="h-4 w-4 mr-2" />
-                      {hasPassword ? 'Change Password' : 'Set Password'}
-                    </>
-                  )}
-                </Button>
-              </form>
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Google Authentication:</strong> Your account uses Google Sign-In for
+                  secure authentication. Password management is handled by Google.
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
 
