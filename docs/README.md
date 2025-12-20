@@ -46,6 +46,14 @@ Feature-specific documentation:
 - **[favicon-options.md](favicon-options.md)** - Favicon design options
 - **[known-issues.md](known-issues.md)** - Known issues and planned improvements
 
+### App Store Submission
+
+- **[APP_STORE_METADATA.md](APP_STORE_METADATA.md)** - Complete App Store Connect metadata and guidelines
+- **[APP_STORE_QUICK_COPY.txt](APP_STORE_QUICK_COPY.txt)** - Copy/paste ready content for all fields
+- **[APP_STORE_FIELD_MAPPING.md](APP_STORE_FIELD_MAPPING.md)** - Field-by-field instructions with examples
+- **[APP_STORE_VALUES_SUMMARY.md](APP_STORE_VALUES_SUMMARY.md)** - Summary with completion checklist
+- **[APP_STORE_QUICK_REFERENCE.txt](APP_STORE_QUICK_REFERENCE.txt)** - One-page quick reference
+
 ## 📖 Root-Level Documentation
 
 Essential project documents in the repository root:

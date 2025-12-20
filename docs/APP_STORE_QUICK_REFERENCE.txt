@@ -1,0 +1,160 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    APP STORE CONNECT - QUICK REFERENCE                       ║
+║                           CertLab iOS Version 1.0                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════════════
+1. PROMOTIONAL TEXT (170 chars max)
+───────────────────────────────────────────────────────────────────────────────
+Master CISSP, CISM, and other certifications with adaptive quizzes, achievement 
+tracking, and offline study capabilities. Your pocket certification coach!
+
+[154/170 characters] ✓
+═══════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════
+2. DESCRIPTION (4,000 chars max)
+───────────────────────────────────────────────────────────────────────────────
+CertLab is your comprehensive certification study companion, designed to help 
+you master professional certifications like CISSP, CISM, and more. Whether 
+you're preparing for your first certification or adding to your credentials, 
+CertLab provides an engaging, adaptive learning experience that fits your 
+schedule.
+
+KEY FEATURES
+
+• Adaptive Learning System - Quiz difficulty automatically adjusts to your 
+  performance level, ensuring you're always challenged but never overwhelmed
+
+• Comprehensive Question Bank - Hundreds of carefully curated questions 
+  covering all certification domains and topics
+
+• Multiple Study Modes:
+  - Study Mode: See correct answers immediately to reinforce learning
+  - Quiz Mode: Full test experience with final scoring
+  - Adaptive Mode: Dynamic difficulty adjustment based on your performance
+
+• Achievement System - Earn badges and track your progress with a 
+  comprehensive gamification system that keeps you motivated
+
+• Practice Tests - Full-length certification practice exams that simulate 
+  the real testing experience
+
+• Progress Tracking - Detailed analytics showing your mastery scores, 
+  strengths, and areas for improvement across all topics
+
+• Daily Challenges - Quick challenges to maintain your study streak and 
+  reinforce key concepts
+
+• Study Groups - Join or create study groups focused on specific 
+  certifications to stay motivated
+
+• Offline Capability - Study anywhere, anytime without requiring an 
+  internet connection
+
+• Multiple Themes - Choose from seven beautiful themes including dark mode 
+  for comfortable studying in any lighting
+
+• Data Export/Import - Back up your progress and transfer it between devices
+
+CERTIFICATIONS SUPPORTED
+
+CertLab currently includes question banks for:
+- CISSP (Certified Information Systems Security Professional)
+- CISM (Certified Information Security Manager)
+- Additional certifications coming soon
+
+PERFECT FOR
+
+• Security professionals preparing for CISSP or CISM certification
+• Students studying information security and risk management
+• Career changers entering the cybersecurity field
+• Professionals maintaining their certification with continuing education
+
+WHY CERTLAB?
+
+Privacy First: Your study data stays on your device. No tracking, no data 
+sharing.
+
+Smart Learning: Our adaptive algorithm ensures efficient studying by focusing 
+on areas where you need the most practice.
+
+Proven Methods: Based on proven learning techniques including spaced 
+repetition and active recall.
+
+Completely Free: No subscriptions, no in-app purchases. Full access to all 
+features.
+
+STUDY ANYWHERE
+
+With offline support, you can study during your commute, on flights, or 
+anywhere without worrying about internet connectivity. Your progress syncs 
+seamlessly when you're back online.
+
+Start your certification journey today with CertLab - your path to 
+professional success!
+
+DISCLAIMER: CertLab is an independent study tool and is not affiliated with, 
+endorsed by, or sponsored by (ISC)², ISACA, or any other certification body. 
+CISSP is a registered trademark of (ISC)². CISM is a registered trademark of 
+ISACA.
+
+[2,809/4,000 characters] ✓
+═══════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════
+3. KEYWORDS (100 chars max)
+───────────────────────────────────────────────────────────────────────────────
+CISSP,CISM,certification,security,study,exam prep,quiz,cybersecurity,learning,practice test
+
+[91/100 characters] ✓
+═══════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════
+4. SUPPORT URL (Required)
+───────────────────────────────────────────────────────────────────────────────
+https://github.com/archubbuck/certlab/issues
+═══════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════
+5. MARKETING URL (Optional)
+───────────────────────────────────────────────────────────────────────────────
+https://github.com/archubbuck/certlab
+═══════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════
+6. VERSION (Pre-filled)
+───────────────────────────────────────────────────────────────────────────────
+1.0
+═══════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════
+7. COPYRIGHT (Required)
+───────────────────────────────────────────────────────────────────────────────
+© 2024 CertLab. All rights reserved.
+═══════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════
+8. ROUTING APP COVERAGE FILE (Optional)
+───────────────────────────────────────────────────────────────────────────────
+LEAVE EMPTY - Not applicable to CertLab (educational app, not a routing app)
+═══════════════════════════════════════════════════════════════════════════════
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              QUICK CHECKLIST                                 ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║ ☐ Promotional Text entered                                                  ║
+║ ☐ Description entered                                                        ║
+║ ☐ Keywords entered                                                           ║
+║ ☐ Support URL entered                                                        ║
+║ ☐ Marketing URL entered                                                      ║
+║ ☐ Version confirmed (1.0)                                                    ║
+║ ☐ Copyright entered                                                          ║
+║ ☐ Routing file left empty                                                    ║
+║ ☐ Clicked SAVE                                                               ║
+║ ☐ Ready for "Add for Review"                                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Document: APP_STORE_QUICK_REFERENCE.txt
+Version: 1.0
+Date: December 20, 2024

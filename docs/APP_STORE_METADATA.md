@@ -14,7 +14,7 @@ This document contains the metadata required for submitting CertLab to the Apple
 
 Master CISSP, CISM, and other certifications with adaptive quizzes, achievement tracking, and offline study capabilities. Your pocket certification coach!
 
-**Character Count:** 157/170
+**Character Count:** 154/170
 
 ---
 
@@ -87,7 +87,7 @@ Start your certification journey today with CertLab - your path to professional 
 
 CISSP,CISM,certification,security,study,exam prep,quiz,cybersecurity,learning,practice test
 
-**Character Count:** 98/100
+**Character Count:** 91/100
 
 **Separated Keywords:**
 1. CISSP

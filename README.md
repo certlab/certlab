@@ -341,6 +341,12 @@ Comprehensive documentation is available in the [docs/](docs/) directory:
 - **[Google Auth Setup](docs/setup/google-auth.md)** - Enable Google Sign-In
 - **[Dynatrace Setup](docs/setup/dynatrace.md)** - Configure observability
 
+### App Store Submission
+- **[App Store Metadata](docs/APP_STORE_METADATA.md)** - Complete App Store Connect metadata
+- **[App Store Quick Copy](docs/APP_STORE_QUICK_COPY.txt)** - Copy/paste ready content
+- **[App Store Field Mapping](docs/APP_STORE_FIELD_MAPPING.md)** - Field-by-field instructions
+- **[App Store Quick Reference](docs/APP_STORE_QUICK_REFERENCE.txt)** - One-page reference
+
 ### Additional Resources
 - **[Project Structure](docs/PROJECT_STRUCTURE.md)** - Repository organization
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute

@@ -11,7 +11,7 @@ PROMOTIONAL TEXT (170 chars max)
 
 Master CISSP, CISM, and other certifications with adaptive quizzes, achievement tracking, and offline study capabilities. Your pocket certification coach!
 
-(157 characters)
+(154 characters)
 
 ===================================================================
 DESCRIPTION (4,000 chars max)
@@ -86,7 +86,7 @@ KEYWORDS (100 chars max - comma separated)
 
 CISSP,CISM,certification,security,study,exam prep,quiz,cybersecurity,learning,practice test
 
-(98 characters)
+(91 characters)
 
 ===================================================================
 SUPPORT URL

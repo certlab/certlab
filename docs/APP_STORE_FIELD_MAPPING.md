@@ -17,7 +17,7 @@ Based on the App Store Connect screenshot for iOS App Version 1.0, here are the 
 Master CISSP, CISM, and other certifications with adaptive quizzes, achievement tracking, and offline study capabilities. Your pocket certification coach!
 ```
 
-**Character count:** 157/170 ✅
+**Character count:** 154/170 ✅
 
 **What it is:** This appears on your product page when users install your app. It's the first text they see.
 
@@ -102,7 +102,7 @@ DISCLAIMER: CertLab is an independent study tool and is not affiliated with, end
 CISSP,CISM,certification,security,study,exam prep,quiz,cybersecurity,learning,practice test
 ```
 
-**Character count:** 98/100 ✅
+**Character count:** 91/100 ✅
 
 **What it is:** Search keywords help users find your app. Not visible to users.
 
