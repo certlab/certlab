@@ -25,15 +25,15 @@ export function TokenBalance() {
       if (!user?.id) throw new Error('Not authenticated');
       return await storage.addTokens(user.id, amount);
     },
-    onSuccess: async () => {
-      // Invalidate the tokenBalance query to refetch the updated balance from IndexedDB
+    onSuccess: async (newBalance) => {
+      // Invalidate the tokenBalance query to refetch the updated balance from storage
       await queryClient.invalidateQueries({
         queryKey: queryKeys.user.tokenBalance(user?.id),
       });
 
       toast({
         title: 'Tokens Added',
-        description: 'Your token balance has been updated.',
+        description: `Your new balance is ${newBalance} tokens.`,
       });
       setTokensToAdd('50');
     },
