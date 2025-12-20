@@ -18,6 +18,7 @@ Technical design and system architecture documentation:
 
 - **[overview.md](architecture/overview.md)** - System design, data flow, and technical decisions
 - **[state-management.md](architecture/state-management.md)** - State management patterns and best practices
+- **[ADR-001-authentication-authorization.md](architecture/ADR-001-authentication-authorization.md)** - ⭐ Standard approach for auth, authorization, user state, and route protection
 - **[firebase-status.md](architecture/firebase-status.md)** - Firebase integration implementation status
 
 ### Features (`features/`)
@@ -28,6 +29,12 @@ Feature-specific documentation:
 ### Project Organization
 
 - **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Complete repository structure guide
+
+### Implementation Guides
+
+- **[AUTHENTICATION_CHECKLIST.md](AUTHENTICATION_CHECKLIST.md)** - ⭐ Developer checklist for implementing auth features
+- **[USER_STATE_VALIDATION.md](USER_STATE_VALIDATION.md)** - User state testing and validation guide
+- **[USER_STATE_SUMMARY.md](USER_STATE_SUMMARY.md)** - User state configuration summary
 
 ### Additional Documentation
 
@@ -57,6 +64,14 @@ New to CertLab? Start here:
 3. **[architecture/overview.md](architecture/overview.md)** - Understand the architecture
 4. **[user-manual.md](user-manual.md)** - Learn how to use CertLab
 
+### Implementing Features
+
+Developing new features? See:
+
+1. **[architecture/ADR-001-authentication-authorization.md](architecture/ADR-001-authentication-authorization.md)** - Auth standard approach (ADR)
+2. **[AUTHENTICATION_CHECKLIST.md](AUTHENTICATION_CHECKLIST.md)** - Step-by-step implementation guide
+3. **[architecture/state-management.md](architecture/state-management.md)** - State management patterns
+
 ## 🤝 Contributing
 
 Want to contribute? See:
@@ -73,6 +88,8 @@ Want to contribute? See:
 | **Setup** | [setup/firebase.md](setup/firebase.md) | Configure cloud sync |
 | **Setup** | [setup/deployment.md](setup/deployment.md) | Deploy to production |
 | **Architecture** | [architecture/overview.md](architecture/overview.md) | System design |
+| **Authentication** | [architecture/ADR-001-authentication-authorization.md](architecture/ADR-001-authentication-authorization.md) | ⭐ Auth standard (ADR) |
+| **Implementation** | [AUTHENTICATION_CHECKLIST.md](AUTHENTICATION_CHECKLIST.md) | ⭐ Dev checklist |
 | **Features** | [user-manual.md](user-manual.md) | User guide |
 | **Development** | [../CONTRIBUTING.md](../CONTRIBUTING.md) | How to contribute |
 
