@@ -31,8 +31,10 @@ export function TokenBalance() {
       // Immediately update the query cache with the new balance
       queryClient.setQueryData(queryKeys.user.tokenBalance(user?.id), { balance: newBalance });
 
-      // Also invalidate queries to ensure all components are in sync
-      await queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(user?.id) });
+      // Invalidate auth user query to sync the user object (which also contains tokenBalance)
+      // Note: We intentionally do NOT invalidate the tokenBalance query itself to avoid
+      // a race condition where the refetch might return stale Firestore data before
+      // the update propagates, causing the balance to reset.
       await queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
 
       toast({

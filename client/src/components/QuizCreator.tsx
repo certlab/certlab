@@ -80,10 +80,15 @@ export default function QuizCreator() {
       return { quiz, tokenResult, tokenCost };
     },
     onSuccess: async ({ quiz, tokenResult, tokenCost }) => {
-      // Invalidate queries to update all relevant caches
-      // No need to refresh the entire user object - query invalidation is sufficient
+      // Optimistically update the token balance cache to prevent race condition
+      queryClient.setQueryData(queryKeys.user.tokenBalance(currentUser?.id), {
+        balance: tokenResult.newBalance,
+      });
+
+      // Invalidate user queries to sync the user object
+      // Note: We do NOT invalidate tokenBalance query here to avoid race condition
+      // where the refetch might return stale Firestore data before update propagates
       queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
 
       toast({

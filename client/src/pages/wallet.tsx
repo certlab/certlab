@@ -79,8 +79,10 @@ export default function WalletPage() {
         balance: newBalance,
       });
 
-      // Also invalidate queries to ensure all components are in sync
-      queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser?.id) });
+      // Invalidate user queries to sync the user object (which also contains tokenBalance)
+      // Note: We intentionally do NOT invalidate the tokenBalance query itself to avoid
+      // a race condition where the refetch might return stale Firestore data before
+      // the update propagates, causing the balance to reset.
       queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
       toast({
         title: 'Tokens Added!',
