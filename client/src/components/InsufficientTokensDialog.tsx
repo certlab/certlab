@@ -12,6 +12,7 @@ import { Coins, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
+import { queryClient, queryKeys } from '@/lib/queryClient';
 
 interface InsufficientTokensDialogProps {
   open: boolean;
@@ -40,7 +41,14 @@ export function InsufficientTokensDialog({
 
     setIsAdding(true);
     try {
-      await storage.addTokens(user.id, suggestedAmount);
+      const newBalance = await storage.addTokens(user.id, suggestedAmount);
+
+      // Immediately update the query cache with the new balance
+      queryClient.setQueryData(queryKeys.user.tokenBalance(user?.id), { balance: newBalance });
+
+      // Also invalidate queries to ensure all components are in sync
+      await queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(user?.id) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
 
       toast({
         title: 'Tokens Added',
