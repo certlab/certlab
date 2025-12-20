@@ -70,10 +70,16 @@ export default function WalletPage() {
       if (!pkg || !currentUser?.id) throw new Error('Invalid package or user');
 
       // Add tokens to user balance
-      await clientStorage.addTokens(currentUser.id, pkg.tokens);
-      return pkg;
+      const newBalance = await clientStorage.addTokens(currentUser.id, pkg.tokens);
+      return { pkg, newBalance };
     },
-    onSuccess: (pkg) => {
+    onSuccess: ({ pkg, newBalance }) => {
+      // Immediately update the query cache with the new balance
+      queryClient.setQueryData(queryKeys.user.tokenBalance(currentUser?.id), {
+        balance: newBalance,
+      });
+
+      // Also invalidate queries to ensure all components are in sync
       queryClient.invalidateQueries({ queryKey: queryKeys.user.tokenBalance(currentUser?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser?.id) });
       toast({
