@@ -93,12 +93,15 @@ export default function Dashboard() {
       });
 
       if (quiz?.id) {
-        // Invalidate cache to update all relevant queries
-        // Await invalidation to ensure UI updates before navigation
-        await queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser.id) });
-        await queryClient.invalidateQueries({
-          queryKey: queryKeys.user.tokenBalance(currentUser.id),
+        // Optimistically update the token balance cache to prevent race condition
+        queryClient.setQueryData(queryKeys.user.tokenBalance(currentUser.id), {
+          balance: tokenResult.newBalance,
         });
+
+        // Invalidate user queries to sync the user object (which also contains tokenBalance)
+        // Note: We intentionally do NOT invalidate the tokenBalance query itself to avoid
+        // a race condition where the refetch might return stale data before update propagates
+        await queryClient.invalidateQueries({ queryKey: queryKeys.user.all(currentUser.id) });
         await queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
 
         toast({
