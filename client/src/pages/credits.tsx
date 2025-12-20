@@ -35,7 +35,6 @@ export default function Credits() {
   // Fetch credit products from Polar
   const { data: products = [], isLoading: productsLoading } = useQuery<CreditProduct[]>({
     queryKey: queryKeys.credits.products(),
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   // Fetch credit balance
@@ -45,7 +44,6 @@ export default function Credits() {
     totalConsumed: number;
   }>({
     queryKey: queryKeys.credits.balance(),
-    staleTime: 10 * 1000,
   });
 
   // Purchase credits mutation

@@ -18,8 +18,6 @@ export default function Results() {
   const { data: quiz, isLoading } = useQuery<Quiz>({
     queryKey: queryKeys.quiz.detail(quizId),
     enabled: !!quizId,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
