@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-provider';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest, queryKeys } from '@/lib/queryClient';
+import { queryClient, queryKeys } from '@/lib/queryClient';
+import { storage } from '@/lib/storage-factory';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,12 +103,12 @@ export default function ProfilePage() {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<UserProfile>) => {
-      const response = await apiRequest({
-        method: 'PATCH',
-        endpoint: `/api/user/${user?.id}/profile`,
-        data: data,
-      });
-      return response.json();
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+      // Use storage.updateUser directly instead of deprecated apiRequest
+      const updatedUser = await storage.updateUser(user.id, data);
+      return updatedUser;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.detail(user?.id) });
@@ -116,7 +117,8 @@ export default function ProfilePage() {
         description: 'Your profile has been successfully updated.',
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Profile update error:', error);
       toast({
         title: 'Update Failed',
         description: 'Failed to update your profile. Please try again.',
