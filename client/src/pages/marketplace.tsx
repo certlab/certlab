@@ -3,64 +3,22 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { FileText, PlayCircle, Star, ShoppingCart, Search } from 'lucide-react';
-
-// Study materials with CLAY OS style data
-interface StudyMaterial {
-  id: string;
-  title: string;
-  type: 'PDF' | 'VIDEO';
-  rating: number;
-  price: number;
-  format?: string;
-  size?: string;
-}
-
-const studyMaterials: StudyMaterial[] = [
-  {
-    id: '1',
-    title: 'Advanced Algorithms Notes',
-    type: 'PDF',
-    rating: 4.9,
-    price: 12,
-  },
-  {
-    id: '2',
-    title: 'Organic Chemistry Video Lectures',
-    type: 'VIDEO',
-    rating: 4.8,
-    price: 45,
-  },
-  {
-    id: '3',
-    title: 'Economics 101 Guide',
-    type: 'PDF',
-    rating: 4.6,
-    price: 8.5,
-  },
-  {
-    id: '4',
-    title: 'Physics Lab Manual',
-    type: 'PDF',
-    rating: 4.7,
-    price: 15,
-  },
-  {
-    id: '5',
-    title: 'Calculus Lecture Series',
-    type: 'VIDEO',
-    rating: 4.9,
-    price: 39,
-  },
-  {
-    id: '6',
-    title: 'Chemistry Study Pack',
-    type: 'PDF',
-    rating: 4.5,
-    price: 10,
-  },
-];
+import { useNavigate } from 'react-router-dom';
+import { studyMaterials } from '@/data/study-materials';
 
 export default function MarketplacePage() {
+  const navigate = useNavigate();
+
+  const handleCardClick = (materialId: string) => {
+    navigate(`/app/marketplace/${materialId}`);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, materialId: string) => {
+    e.stopPropagation();
+    // Cart button click would add to cart
+    // TODO: Implement cart functionality
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -81,7 +39,16 @@ export default function MarketplacePage() {
           {studyMaterials.map((material) => (
             <Card
               key={material.id}
-              className="overflow-hidden hover:shadow-xl transition-all duration-300"
+              className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer h-full"
+              onClick={() => handleCardClick(material.id)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleCardClick(material.id);
+                }
+              }}
             >
               <CardContent className="p-0">
                 {/* Icon/Thumbnail Section */}
@@ -117,6 +84,8 @@ export default function MarketplacePage() {
                     <Button
                       size="icon"
                       className="rounded-full w-12 h-12 bg-primary hover:bg-primary/90"
+                      onClick={(e) => handleAddToCart(e, material.id)}
+                      aria-label={`Add ${material.title} to cart`}
                     >
                       <ShoppingCart className="w-5 h-5" />
                     </Button>
