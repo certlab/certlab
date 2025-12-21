@@ -168,7 +168,11 @@ export default function Header() {
                     <Button
                       variant="ghost"
                       onClick={() => navigate('/app')}
-                      className="text-muted-foreground hover:text-primary h-10 px-4 py-2"
+                      className={`h-10 px-4 py-2 ${
+                        location.pathname === '/app' || location.pathname === '/app/dashboard'
+                          ? 'text-primary bg-accent border-b-2 border-primary'
+                          : 'text-muted-foreground hover:text-primary'
+                      }`}
                     >
                       <Home className="w-4 h-4 mr-2" />
                       Dashboard
@@ -177,7 +181,22 @@ export default function Header() {
 
                   {/* Tools & Features */}
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger className="text-muted-foreground hover:text-primary h-10 px-4 py-2">
+                    <NavigationMenuTrigger
+                      className={`h-10 px-4 py-2 ${
+                        [
+                          '/app/achievements',
+                          '/app/practice-tests',
+                          '/app/study-notes',
+                          '/app/marketplace',
+                          '/accessibility',
+                          '/ui-structure',
+                          '/admin',
+                          '/app/data-import',
+                        ].some((path) => location.pathname.startsWith(path))
+                          ? 'text-primary bg-accent border-b-2 border-primary'
+                          : 'text-muted-foreground hover:text-primary'
+                      }`}
+                    >
                       <Settings className="w-4 h-4 mr-2" />
                       Tools & Features
                     </NavigationMenuTrigger>
