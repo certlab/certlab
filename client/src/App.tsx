@@ -35,6 +35,7 @@ const ProfilePage = lazy(() => import('@/pages/profile'));
 const PracticeTests = lazy(() => import('@/pages/practice-tests'));
 const DataImportPage = lazy(() => import('@/pages/data-import'));
 const MarketplacePage = lazy(() => import('@/pages/marketplace'));
+const ProductDetailPage = lazy(() => import('@/pages/product-detail'));
 const QuestionBankPage = lazy(() => import('@/pages/question-bank'));
 const WalletPage = lazy(() => import('@/pages/wallet'));
 
@@ -94,6 +95,7 @@ function Router() {
                   <Route path="/app/practice-tests" element={<PracticeTests />} />
 
                   <Route path="/app/marketplace" element={<MarketplacePage />} />
+                  <Route path="/app/marketplace/:id" element={<ProductDetailPage />} />
                   {isAdmin && <Route path="/app/ui-structure" element={<UIStructurePage />} />}
                   <Route path="/app/credits" element={<CreditsPage />} />
                   <Route path="/app/data-import" element={<DataImportPage />} />

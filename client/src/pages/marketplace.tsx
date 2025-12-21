@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { FileText, PlayCircle, Star, ShoppingCart, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // Study materials with CLAY OS style data
 interface StudyMaterial {
@@ -79,51 +80,56 @@ export default function MarketplacePage() {
         {/* Materials Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {studyMaterials.map((material) => (
-            <Card
-              key={material.id}
-              className="overflow-hidden hover:shadow-xl transition-all duration-300"
-            >
-              <CardContent className="p-0">
-                {/* Icon/Thumbnail Section */}
-                <div className="bg-muted/30 flex items-center justify-center py-16">
-                  {material.type === 'PDF' ? (
-                    <FileText className="w-16 h-16 text-muted-foreground" />
-                  ) : (
-                    <PlayCircle className="w-16 h-16 text-muted-foreground" />
-                  )}
-                </div>
-
-                {/* Content Section */}
-                <div className="p-6">
-                  {/* Type Badge */}
-                  <div className="mb-3">
-                    <Badge variant="secondary" className="text-xs font-medium">
-                      {material.type}
-                    </Badge>
+            <Link key={material.id} to={`/app/marketplace/${material.id}`}>
+              <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer h-full">
+                <CardContent className="p-0">
+                  {/* Icon/Thumbnail Section */}
+                  <div className="bg-muted/30 flex items-center justify-center py-16">
+                    {material.type === 'PDF' ? (
+                      <FileText className="w-16 h-16 text-muted-foreground" />
+                    ) : (
+                      <PlayCircle className="w-16 h-16 text-muted-foreground" />
+                    )}
                   </div>
 
-                  {/* Rating */}
-                  <div className="flex items-center gap-1 mb-3">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-semibold text-yellow-600">{material.rating}</span>
-                  </div>
+                  {/* Content Section */}
+                  <div className="p-6">
+                    {/* Type Badge */}
+                    <div className="mb-3">
+                      <Badge variant="secondary" className="text-xs font-medium">
+                        {material.type}
+                      </Badge>
+                    </div>
 
-                  {/* Title */}
-                  <h3 className="font-semibold text-lg mb-4 text-foreground">{material.title}</h3>
+                    {/* Rating */}
+                    <div className="flex items-center gap-1 mb-3">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-semibold text-yellow-600">
+                        {material.rating}
+                      </span>
+                    </div>
 
-                  {/* Price and Cart Button */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-foreground">${material.price}</span>
-                    <Button
-                      size="icon"
-                      className="rounded-full w-12 h-12 bg-primary hover:bg-primary/90"
-                    >
-                      <ShoppingCart className="w-5 h-5" />
-                    </Button>
+                    {/* Title */}
+                    <h3 className="font-semibold text-lg mb-4 text-foreground">{material.title}</h3>
+
+                    {/* Price and Cart Button */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold text-foreground">${material.price}</span>
+                      <Button
+                        size="icon"
+                        className="rounded-full w-12 h-12 bg-primary hover:bg-primary/90"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Cart button click would add to cart
+                        }}
+                      >
+                        <ShoppingCart className="w-5 h-5" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </main>
