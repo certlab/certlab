@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import MarketplacePage from './marketplace';
@@ -17,19 +17,23 @@ describe('MarketplacePage', () => {
     expect(screen.getByText('Economics 101 Guide')).toBeInTheDocument();
   });
 
-  it('renders clickable links to product details', () => {
+  it('renders clickable cards to navigate to product details', () => {
     render(
       <MemoryRouter>
         <MarketplacePage />
       </MemoryRouter>
     );
 
-    // Find all links with marketplace URL pattern
-    const links = screen.getAllByRole('link');
+    // Find all clickable cards with role="button"
+    const cards = screen.getAllByRole('button');
 
-    // Verify that links exist and have correct href pattern
-    expect(links.length).toBeGreaterThan(0);
-    expect(links[0]).toHaveAttribute('href', '/app/marketplace/1');
+    // Should have 6 product cards (each card has role="button")
+    // Filter out the cart buttons by checking if they have aria-label
+    const productCards = cards.filter((card) => !card.getAttribute('aria-label'));
+    expect(productCards.length).toBe(6);
+
+    // Cards should have tabIndex for keyboard navigation
+    expect(productCards[0]).toHaveAttribute('tabindex', '0');
   });
 
   it('displays search bar', () => {

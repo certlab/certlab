@@ -1,13 +1,13 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileText, PlayCircle, Star, ShoppingCart, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { studyMaterials } from '@/data/study-materials';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   // Find the product by ID
   const product = studyMaterials.find((material) => material.id === id);
@@ -17,21 +17,17 @@ export default function ProductDetailPage() {
     return (
       <div className="min-h-screen bg-background">
         <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Link to="/app/marketplace">
-            <Button variant="ghost" className="mb-6">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Marketplace
-            </Button>
-          </Link>
+          <Button variant="ghost" className="mb-6" onClick={() => navigate('/app/marketplace')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Marketplace
+          </Button>
           <Card className="p-8">
             <div className="text-center">
               <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
               <p className="text-muted-foreground mb-6">
                 The product you're looking for doesn't exist or has been removed.
               </p>
-              <Link to="/app/marketplace">
-                <Button>Return to Marketplace</Button>
-              </Link>
+              <Button onClick={() => navigate('/app/marketplace')}>Return to Marketplace</Button>
             </div>
           </Card>
         </main>
@@ -43,12 +39,10 @@ export default function ProductDetailPage() {
     <div className="min-h-screen bg-background">
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
-        <Link to="/app/marketplace">
-          <Button variant="ghost" className="mb-6">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Marketplace
-          </Button>
-        </Link>
+        <Button variant="ghost" className="mb-6" onClick={() => navigate('/app/marketplace')}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Marketplace
+        </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Product Image/Icon Section */}
