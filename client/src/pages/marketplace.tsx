@@ -4,62 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { FileText, PlayCircle, Star, ShoppingCart, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-// Study materials with CLAY OS style data
-interface StudyMaterial {
-  id: string;
-  title: string;
-  type: 'PDF' | 'VIDEO';
-  rating: number;
-  price: number;
-  format?: string;
-  size?: string;
-}
-
-const studyMaterials: StudyMaterial[] = [
-  {
-    id: '1',
-    title: 'Advanced Algorithms Notes',
-    type: 'PDF',
-    rating: 4.9,
-    price: 12,
-  },
-  {
-    id: '2',
-    title: 'Organic Chem Video Course',
-    type: 'VIDEO',
-    rating: 4.8,
-    price: 45,
-  },
-  {
-    id: '3',
-    title: 'Economics 101 Guide',
-    type: 'PDF',
-    rating: 4.6,
-    price: 8.5,
-  },
-  {
-    id: '4',
-    title: 'Physics Lab Manual',
-    type: 'PDF',
-    rating: 4.7,
-    price: 15,
-  },
-  {
-    id: '5',
-    title: 'Calculus Lecture Series',
-    type: 'VIDEO',
-    rating: 4.9,
-    price: 39,
-  },
-  {
-    id: '6',
-    title: 'Chemistry Study Pack',
-    type: 'PDF',
-    rating: 4.5,
-    price: 10,
-  },
-];
+import { studyMaterials } from '@/data/study-materials';
 
 export default function MarketplacePage() {
   return (
