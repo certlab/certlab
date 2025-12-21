@@ -7,7 +7,6 @@ import { clientStorage } from '@/lib/client-storage';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TokenBalance } from '@/components/TokenBalance';
 import { InsufficientTokensDialog } from '@/components/InsufficientTokensDialog';
 import { CertificationSelectionDialog } from '@/components/CertificationSelectionDialog';
 import {
@@ -22,6 +21,8 @@ import {
   Crown,
   Sparkles,
   ArrowRight,
+  Coins,
+  Plus,
 } from 'lucide-react';
 import type { UserStats, Quiz, Category } from '@shared/schema';
 
@@ -51,6 +52,12 @@ export default function Dashboard() {
   // Get categories to avoid hardcoding category IDs
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: queryKeys.categories.all(),
+  });
+
+  // Get token balance for compact display
+  const { data: tokenData } = useQuery({
+    queryKey: queryKeys.user.tokenBalance(currentUser?.id),
+    enabled: !!currentUser?.id,
   });
 
   // Get completed quizzes for recent activity
@@ -238,255 +245,282 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Card - CLAY OS Style */}
-        <Card className="mb-8 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
-          <CardContent className="p-8">
-            <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {currentUser?.firstName || currentUser?.lastName || 'Student'}
-            </h1>
-            <p className="text-primary-foreground/90 mb-6">
-              You're on a {stats?.studyStreak || 0} day streak! Keep it up.
-            </p>
-            <div className="flex gap-8 flex-wrap">
+        {/* Condensed Welcome Hero */}
+        <Card className="mb-6 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 shadow-lg">
+          <CardContent className="p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <p className="text-sm text-primary-foreground/80 mb-1">DAILY GOAL</p>
-                <p className="text-4xl font-bold">
-                  {stats?.totalQuizzes && stats.totalQuizzes > 0
-                    ? Math.min(Math.round((stats.totalQuizzes / 10) * 100), 100)
-                    : 0}
-                  %
+                <h1 className="text-2xl sm:text-3xl font-bold mb-1">
+                  Welcome back, {currentUser?.firstName || currentUser?.lastName || 'Student'}
+                </h1>
+                <p className="text-primary-foreground/90 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  You're on a {stats?.studyStreak || 0} day streak! Keep it up.
                 </p>
               </div>
-              <div>
-                <p className="text-sm text-primary-foreground/80 mb-1">STUDY TIME</p>
-                <p className="text-4xl font-bold">
-                  {stats?.totalQuizzes ? (stats.totalQuizzes * 0.45).toFixed(1) : '0.0'}h
-                </p>
+              <div className="flex gap-4 sm:gap-6">
+                <div>
+                  <p className="text-xs text-primary-foreground/80 mb-1">DAILY GOAL</p>
+                  <p className="text-2xl sm:text-3xl font-bold">
+                    {stats?.totalQuizzes && stats.totalQuizzes > 0
+                      ? Math.min(Math.round((stats.totalQuizzes / 10) * 100), 100)
+                      : 0}
+                    %
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Jump Back In Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-foreground">Jump Back In</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recentQuizzes.slice(0, 3).map((quiz) => (
-              <Card
-                key={quiz.id}
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() =>
-                  quiz.completedAt
-                    ? navigate(`/app/results/${quiz.id}`)
-                    : navigate(`/app/quiz/${quiz.id}`)
-                }
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-primary/10 mb-4 mx-auto">
-                    <PlayCircle className="h-8 w-8 text-primary" />
-                  </div>
-                  <h3 className="font-semibold text-center mb-2 line-clamp-2">
-                    {quiz.title || 'Practice Quiz'}
-                  </h3>
-                  {quiz.completedAt ? (
-                    <div className="w-full bg-secondary rounded-full h-2 mb-1">
-                      <div
-                        className="bg-primary h-2 rounded-full"
-                        style={{ width: `${quiz.score || 0}%` }}
-                      ></div>
-                    </div>
-                  ) : (
-                    <div className="w-full bg-secondary rounded-full h-2 mb-1">
-                      <div className="bg-primary h-2 rounded-full" style={{ width: '50%' }}></div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-            {recentQuizzes.length === 0 && (
-              <Card
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={handleStartPractice}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-primary/10 mb-4 mx-auto">
-                    <PlayCircle className="h-8 w-8 text-primary" />
-                  </div>
-                  <h3 className="font-semibold text-center mb-2">Start Your First Quiz</h3>
-                  <div className="w-full bg-secondary rounded-full h-2 mb-1">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: '0%' }}></div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
+        {/* Primary Actions Section - Most Important */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+            <Target className="h-5 w-5 text-primary" />
+            Start Learning
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Button
+              onClick={handleStartPractice}
+              className="h-24 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
+              size="lg"
+              data-testid="start-quick-practice"
+            >
+              <div className="flex flex-col items-center gap-2">
+                <PlayCircle className="h-8 w-8" />
+                <div>
+                  <div>Start Quick Practice</div>
+                  <div className="text-xs font-normal opacity-90">10 questions</div>
+                </div>
+              </div>
+            </Button>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="space-y-6">
-            {/* Primary Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button
-                  onClick={handleStartPractice}
-                  className="w-full justify-start text-xs sm:text-sm"
-                  size="lg"
-                  data-testid="start-quick-practice"
-                >
-                  <PlayCircle className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                  <span className="hidden sm:inline">Start Quick Practice</span>
-                  <span className="sm:hidden">Quick Practice</span>
-                  <span className="ml-auto text-xs opacity-80 shrink-0">10 questions</span>
-                </Button>
-
-                <Button
-                  onClick={handleContinueLearning}
-                  variant="outline"
-                  className="w-full justify-start text-xs sm:text-sm"
-                  size="lg"
-                  data-testid="continue-learning"
-                >
-                  <BookOpen className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                  <span className="hidden sm:inline">Continue Learning</span>
-                  <span className="sm:hidden">Continue</span>
+            <Button
+              onClick={handleContinueLearning}
+              variant="outline"
+              className="h-24 text-base font-semibold border-2 hover:border-primary hover:bg-primary/5 transition-all"
+              size="lg"
+              data-testid="continue-learning"
+            >
+              <div className="flex flex-col items-center gap-2">
+                <BookOpen className="h-8 w-8" />
+                <div>
+                  <div>Continue Learning</div>
                   {recentQuizzes.find((q) => !q.completedAt) && (
-                    <span className="ml-auto text-xs opacity-80 shrink-0">Resume</span>
+                    <div className="text-xs font-normal text-muted-foreground">Resume quiz</div>
                   )}
-                </Button>
+                </div>
+              </div>
+            </Button>
 
-                <Button
-                  onClick={handleViewProgress}
-                  variant="outline"
-                  className="w-full justify-start text-xs sm:text-sm"
-                  size="lg"
-                  data-testid="view-progress"
-                >
-                  <ChartBar className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                  <span>View Progress</span>
-                  <span className="ml-auto text-xs opacity-80 shrink-0 hidden sm:inline">
-                    Achievements
-                  </span>
-                </Button>
+            <Button
+              onClick={handleViewProgress}
+              variant="outline"
+              className="h-24 text-base font-semibold border-2 hover:border-primary hover:bg-primary/5 transition-all"
+              size="lg"
+              data-testid="view-progress"
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Trophy className="h-8 w-8" />
+                <div>
+                  <div>View Progress</div>
+                  <div className="text-xs font-normal text-muted-foreground">Achievements</div>
+                </div>
+              </div>
+            </Button>
+          </div>
+        </div>
+
+        {/* At-A-Glance Stats Grid */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+            <ChartBar className="h-5 w-5 text-primary" />
+            Your Stats
+          </h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  <span className="text-3xl font-bold">{stats?.totalQuizzes || 0}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Total Quizzes</p>
               </CardContent>
             </Card>
 
-            {/* Token Balance */}
-            <TokenBalance />
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <TrendingUp className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  <span className="text-3xl font-bold">{stats?.studyStreak || 0}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Day Streak</p>
+              </CardContent>
+            </Card>
 
-            {/* Key Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <Target className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-2xl font-bold">{stats?.totalQuizzes || 0}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Total Quizzes</p>
-                </CardContent>
-              </Card>
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <Trophy className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <span className="text-3xl font-bold">{getOverallMastery()}%</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Overall Mastery</p>
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <TrendingUp className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-2xl font-bold">{stats?.studyStreak || 0}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Day Streak</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <Trophy className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-2xl font-bold">{getOverallMastery()}%</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Overall Mastery</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <Clock className="h-5 w-5 text-muted-foreground" />
-                    <span
-                      className={`text-2xl font-bold ${getLastQuizScore() ? getScoreColor(getLastQuizScore()!) : ''}`}
-                    >
-                      {getLastQuizScore() ? `${getLastQuizScore()}%` : 'N/A'}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Last Quiz Score</p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Recent Activity */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <History className="h-5 w-5" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {completedQuizzes.length > 0 ? (
-                  <div className="space-y-3" role="list" aria-label="Recent completed quizzes">
-                    {completedQuizzes.map((quiz) => (
-                      <div
-                        key={quiz.id}
-                        className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                        onClick={() => navigate(`/app/results/${quiz.id}`)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            navigate(`/app/results/${quiz.id}`);
-                          }
-                        }}
-                        role="listitem"
-                        tabIndex={0}
-                        aria-label={`${quiz.title}, ${formatDate(quiz.completedAt!)}, Score: ${quiz.score ? `${Math.round(quiz.score)}%` : 'Not available'}, ${quiz.questionCount} questions`}
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{quiz.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDate(quiz.completedAt!)}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p
-                            className={`font-bold text-lg ${quiz.score ? getScoreColor(quiz.score) : ''}`}
-                          >
-                            {quiz.score ? `${Math.round(quiz.score)}%` : 'N/A'}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {quiz.questionCount} questions
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p className="mb-4">No completed quizzes yet</p>
-                    <Button onClick={handleStartPractice} variant="outline" size="sm">
-                      Start your first quiz
-                    </Button>
-                  </div>
-                )}
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <Clock className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  <span
+                    className={`text-3xl font-bold ${getLastQuizScore() ? getScoreColor(getLastQuizScore()!) : 'text-muted-foreground'}`}
+                  >
+                    {getLastQuizScore() ? `${getLastQuizScore()}%` : 'N/A'}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">Last Quiz Score</p>
               </CardContent>
             </Card>
           </div>
         </div>
+
+        {/* Two-Column Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Recent Activity */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" />
+                Recent Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {completedQuizzes.length > 0 ? (
+                <div className="space-y-3" role="list" aria-label="Recent completed quizzes">
+                  {completedQuizzes.slice(0, 5).map((quiz) => (
+                    <div
+                      key={quiz.id}
+                      className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/app/results/${quiz.id}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          navigate(`/app/results/${quiz.id}`);
+                        }
+                      }}
+                      role="listitem"
+                      tabIndex={0}
+                      aria-label={`${quiz.title}, ${formatDate(quiz.completedAt!)}, Score: ${quiz.score ? `${Math.round(quiz.score)}%` : 'Not available'}, ${quiz.questionCount} questions`}
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{quiz.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(quiz.completedAt!)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p
+                          className={`font-bold text-lg ${quiz.score ? getScoreColor(quiz.score) : ''}`}
+                        >
+                          {quiz.score ? `${Math.round(quiz.score)}%` : 'N/A'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {quiz.questionCount} questions
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <PlayCircle className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                  <p className="mb-2 font-medium">No completed quizzes yet</p>
+                  <p className="text-sm mb-4">Start your learning journey today!</p>
+                  <Button onClick={handleStartPractice} variant="outline" size="sm">
+                    Start your first quiz
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Quick Links & Progress */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ArrowRight className="h-5 w-5" />
+                Quick Links
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button
+                onClick={() => navigate('/app/achievements')}
+                variant="ghost"
+                className="w-full justify-start h-auto p-4 hover:bg-accent"
+              >
+                <Trophy className="h-5 w-5 mr-3 text-yellow-600 dark:text-yellow-400" />
+                <div className="text-left">
+                  <div className="font-medium">Achievements</div>
+                  <div className="text-xs text-muted-foreground">View your badges and progress</div>
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => navigate('/app/practice-tests')}
+                variant="ghost"
+                className="w-full justify-start h-auto p-4 hover:bg-accent"
+              >
+                <Target className="h-5 w-5 mr-3 text-blue-600 dark:text-blue-400" />
+                <div className="text-left">
+                  <div className="font-medium">Practice Tests</div>
+                  <div className="text-xs text-muted-foreground">
+                    Full-length certification exams
+                  </div>
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => navigate('/app/question-bank')}
+                variant="ghost"
+                className="w-full justify-start h-auto p-4 hover:bg-accent"
+              >
+                <BookOpen className="h-5 w-5 mr-3 text-green-600 dark:text-green-400" />
+                <div className="text-left">
+                  <div className="font-medium">Question Bank</div>
+                  <div className="text-xs text-muted-foreground">Browse all study questions</div>
+                </div>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Compact Token Balance Footer */}
+        <Card className="bg-muted/30 border-dashed">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Coins className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Token Balance</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(tokenData as { balance: number } | undefined)?.balance ?? 0} tokens available
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => navigate('/app/wallet')}
+                variant="outline"
+                size="sm"
+                className="whitespace-nowrap"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Manage Tokens
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </main>
 
       <CertificationSelectionDialog
