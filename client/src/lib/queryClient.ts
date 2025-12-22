@@ -163,6 +163,19 @@ export const queryKeys = {
     tokenBalance: (userId: string | undefined) =>
       ['/api', 'user', userId, 'token-balance'] as const,
     studyPlan: (userId: string | undefined) => ['/api', 'user', userId, 'study-plan'] as const,
+    // Performance analytics queries
+    performanceOverTime: (userId: string | undefined, days?: number) =>
+      ['/api', 'user', userId, 'performance-over-time', days] as const,
+    categoryBreakdown: (userId: string | undefined) =>
+      ['/api', 'user', userId, 'category-breakdown'] as const,
+    studyTimeDistribution: (userId: string | undefined) =>
+      ['/api', 'user', userId, 'study-time-distribution'] as const,
+    strengthWeaknessAnalysis: (userId: string | undefined) =>
+      ['/api', 'user', userId, 'strength-weakness-analysis'] as const,
+    studyConsistency: (userId: string | undefined, days?: number) =>
+      ['/api', 'user', userId, 'study-consistency', days] as const,
+    performanceSummary: (userId: string | undefined) =>
+      ['/api', 'user', userId, 'performance-summary'] as const,
   },
 
   // Category queries
@@ -484,6 +497,27 @@ export function getQueryFn<T>(options: { on401: UnauthorizedBehavior }): QueryFu
         }
         if (path.includes('/token-balance') || path.includes('/tokens')) {
           return { balance: await storage.getUserTokenBalance(userId) } as T;
+        }
+        // Performance analytics queries
+        if (path.includes('/performance-over-time')) {
+          const days = typeof key[4] === 'number' ? key[4] : undefined;
+          return (await storage.getPerformanceOverTime(userId, tenantId, days)) as T;
+        }
+        if (path.includes('/category-breakdown')) {
+          return (await storage.getCategoryBreakdown(userId, tenantId)) as T;
+        }
+        if (path.includes('/study-time-distribution')) {
+          return (await storage.getStudyTimeDistribution(userId, tenantId)) as T;
+        }
+        if (path.includes('/strength-weakness-analysis')) {
+          return (await storage.getStrengthWeaknessAnalysis(userId, tenantId)) as T;
+        }
+        if (path.includes('/study-consistency')) {
+          const days = typeof key[4] === 'number' ? key[4] : undefined;
+          return (await storage.getStudyConsistency(userId, tenantId, days)) as T;
+        }
+        if (path.includes('/performance-summary')) {
+          return (await storage.getPerformanceSummary(userId, tenantId)) as T;
         }
         // Default to getting user
         const match = path.match(/\/api\/user\/([^\/]+)$/);

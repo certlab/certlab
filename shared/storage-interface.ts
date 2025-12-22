@@ -681,4 +681,94 @@ export interface IClientStorage extends IStorageAdapter {
 
   /** Clear all stored data */
   clearAllData(): Promise<void>;
+
+  // ==========================================
+  // Performance Analytics
+  // ==========================================
+
+  /** Get performance trends over time */
+  getPerformanceOverTime(
+    userId: string,
+    tenantId?: number,
+    days?: number
+  ): Promise<Array<{ date: string; score: number; quizCount: number }>>;
+
+  /** Get performance breakdown by category and subcategory */
+  getCategoryBreakdown(
+    userId: string,
+    tenantId?: number
+  ): Promise<
+    Array<{
+      categoryId: number;
+      categoryName: string;
+      score: number;
+      questionsAnswered: number;
+      correctAnswers: number;
+      subcategories: Array<{
+        subcategoryId: number;
+        subcategoryName: string;
+        score: number;
+        questionsAnswered: number;
+        correctAnswers: number;
+      }>;
+    }>
+  >;
+
+  /** Get study time distribution and patterns */
+  getStudyTimeDistribution(
+    userId: string,
+    tenantId?: number
+  ): Promise<{
+    totalMinutes: number;
+    averageSessionMinutes: number;
+    byDayOfWeek: Array<{ day: string; minutes: number; sessions: number }>;
+    byTimeOfDay: Array<{ hour: number; minutes: number; sessions: number }>;
+  }>;
+
+  /** Get strength and weakness analysis for heatmap visualization */
+  getStrengthWeaknessAnalysis(
+    userId: string,
+    tenantId?: number
+  ): Promise<
+    Array<{
+      categoryId: number;
+      categoryName: string;
+      subcategoryId: number;
+      subcategoryName: string;
+      masteryLevel: 'weak' | 'developing' | 'strong' | 'mastered';
+      score: number;
+      questionsAnswered: number;
+    }>
+  >;
+
+  /** Get study consistency data for calendar visualization */
+  getStudyConsistency(
+    userId: string,
+    tenantId?: number,
+    days?: number
+  ): Promise<{
+    currentStreak: number;
+    longestStreak: number;
+    activeDays: number;
+    totalDays: number;
+    calendar: Array<{ date: string; quizCount: number; totalScore: number }>;
+  }>;
+
+  /** Get comprehensive performance summary */
+  getPerformanceSummary(
+    userId: string,
+    tenantId?: number
+  ): Promise<{
+    overview: {
+      totalQuizzes: number;
+      totalQuestions: number;
+      averageScore: number;
+      passingRate: number;
+      studyStreak: number;
+      totalStudyTime: number;
+    };
+    recentTrend: 'improving' | 'stable' | 'declining';
+    topCategories: Array<{ categoryId: number; categoryName: string; score: number }>;
+    weakCategories: Array<{ categoryId: number; categoryName: string; score: number }>;
+  }>;
 }
