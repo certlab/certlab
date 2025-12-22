@@ -29,50 +29,50 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 // Lazy load Login component to reduce initial bundle size
 const Login = lazy(() => import('./login'));
 
-// Clay style color schemes with proper claymorphism shadows
+// Modern professional color schemes with sophisticated palettes
 const COLOR_SCHEMES = {
-  peachy: {
-    name: 'Peachy Clay',
-    bg: 'bg-[#FFE5D9]',
-    cardBg: 'bg-[#FFD7C4]',
-    primary: 'bg-gradient-to-br from-[#FF6B6B] to-[#FFA07A]',
-    secondary: 'bg-gradient-to-br from-[#FFB6B6] to-[#FFC7AB]',
-    text: 'text-[#8B4513]',
-    textLight: 'text-[#A0522D]',
-    // Claymorphism shadows: outer shadow (bottom-right) + inner shadow (top-left for depth)
-    shadow: 'shadow-[10px_10px_20px_rgba(139,69,19,0.15),-10px_-10px_20px_rgba(255,255,255,0.7)]',
+  slate: {
+    name: 'Slate Professional',
+    bg: 'bg-[#F8FAFC]',
+    cardBg: 'bg-[#F1F5F9]',
+    primary: 'bg-gradient-to-br from-[#0891B2] to-[#06B6D4]',
+    secondary: 'bg-gradient-to-br from-[#F59E0B] to-[#FBBF24]',
+    text: 'text-[#0F172A]',
+    textLight: 'text-[#475569]',
+    // Modern soft shadows for depth
+    shadow: 'shadow-[10px_10px_20px_rgba(15,23,42,0.08),-10px_-10px_20px_rgba(255,255,255,0.9)]',
     hoverShadow:
-      'hover:shadow-[15px_15px_30px_rgba(139,69,19,0.2),-15px_-15px_30px_rgba(255,255,255,0.9)]',
+      'hover:shadow-[15px_15px_30px_rgba(15,23,42,0.12),-15px_-15px_30px_rgba(255,255,255,1)]',
     innerShadow:
-      'shadow-[inset_8px_8px_16px_rgba(139,69,19,0.1),inset_-8px_-8px_16px_rgba(255,255,255,0.8)]',
+      'shadow-[inset_8px_8px_16px_rgba(15,23,42,0.06),inset_-8px_-8px_16px_rgba(255,255,255,0.95)]',
   },
-  minty: {
-    name: 'Minty Clay',
-    bg: 'bg-[#D4F1F4]',
-    cardBg: 'bg-[#B8E6E9]',
-    primary: 'bg-gradient-to-br from-[#05C896] to-[#4ECDC4]',
-    secondary: 'bg-gradient-to-br from-[#81D8D0] to-[#9FEDD7]',
-    text: 'text-[#1A535C]',
-    textLight: 'text-[#2B6777]',
-    shadow: 'shadow-[10px_10px_20px_rgba(26,83,92,0.15),-10px_-10px_20px_rgba(255,255,255,0.7)]',
+  olive: {
+    name: 'Dark Olive',
+    bg: 'bg-[#F5F3EF]',
+    cardBg: 'bg-[#EBE7E0]',
+    primary: 'bg-gradient-to-br from-[#6B8E23] to-[#8BA83F]',
+    secondary: 'bg-gradient-to-br from-[#D2691E] to-[#E07B39]',
+    text: 'text-[#3A3428]',
+    textLight: 'text-[#5A5248]',
+    shadow: 'shadow-[10px_10px_20px_rgba(58,52,40,0.1),-10px_-10px_20px_rgba(255,255,255,0.85)]',
     hoverShadow:
-      'hover:shadow-[15px_15px_30px_rgba(26,83,92,0.2),-15px_-15px_30px_rgba(255,255,255,0.9)]',
+      'hover:shadow-[15px_15px_30px_rgba(58,52,40,0.15),-15px_-15px_30px_rgba(255,255,255,0.95)]',
     innerShadow:
-      'shadow-[inset_8px_8px_16px_rgba(26,83,92,0.1),inset_-8px_-8px_16px_rgba(255,255,255,0.8)]',
+      'shadow-[inset_8px_8px_16px_rgba(58,52,40,0.08),inset_-8px_-8px_16px_rgba(255,255,255,0.9)]',
   },
-  lavender: {
-    name: 'Lavender Clay',
-    bg: 'bg-[#E8D5F2]',
-    cardBg: 'bg-[#D4BEE4]',
-    primary: 'bg-gradient-to-br from-[#A78BFA] to-[#C084FC]',
-    secondary: 'bg-gradient-to-br from-[#C4B5FD] to-[#DDD6FE]',
-    text: 'text-[#4A1A6B]',
-    textLight: 'text-[#6B2E8F]',
-    shadow: 'shadow-[10px_10px_20px_rgba(74,26,107,0.15),-10px_-10px_20px_rgba(255,255,255,0.7)]',
+  midnight: {
+    name: 'Midnight Blue',
+    bg: 'bg-[#F0F4F8]',
+    cardBg: 'bg-[#E2EAF1]',
+    primary: 'bg-gradient-to-br from-[#1E40AF] to-[#3B82F6]',
+    secondary: 'bg-gradient-to-br from-[#7C3AED] to-[#A78BFA]',
+    text: 'text-[#1E293B]',
+    textLight: 'text-[#475569]',
+    shadow: 'shadow-[10px_10px_20px_rgba(30,41,59,0.09),-10px_-10px_20px_rgba(255,255,255,0.88)]',
     hoverShadow:
-      'hover:shadow-[15px_15px_30px_rgba(74,26,107,0.2),-15px_-15px_30px_rgba(255,255,255,0.9)]',
+      'hover:shadow-[15px_15px_30px_rgba(30,41,59,0.13),-15px_-15px_30px_rgba(255,255,255,0.98)]',
     innerShadow:
-      'shadow-[inset_8px_8px_16px_rgba(74,26,107,0.1),inset_-8px_-8px_16px_rgba(255,255,255,0.8)]',
+      'shadow-[inset_8px_8px_16px_rgba(30,41,59,0.07),inset_-8px_-8px_16px_rgba(255,255,255,0.93)]',
   },
 } as const;
 
@@ -183,7 +183,7 @@ export default function Landing() {
   const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [colorScheme, setColorScheme] = useState<ColorScheme>('peachy');
+  const [colorScheme, setColorScheme] = useState<ColorScheme>('slate');
 
   const theme = COLOR_SCHEMES[colorScheme];
 
@@ -252,37 +252,37 @@ export default function Landing() {
       >
         <div className={`${theme.cardBg} ${theme.shadow} rounded-3xl p-2 flex flex-col gap-2`}>
           <button
-            onClick={() => setColorScheme('peachy')}
-            className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF6B6B] to-[#FFA07A] ${
-              colorScheme === 'peachy'
-                ? 'ring-4 ring-[#FF6B6B] ring-offset-2 ring-offset-[#FFE5D9]'
+            onClick={() => setColorScheme('slate')}
+            className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0891B2] to-[#06B6D4] ${
+              colorScheme === 'slate'
+                ? 'ring-4 ring-[#0891B2] ring-offset-2 ring-offset-[#F8FAFC]'
                 : ''
-            } shadow-[6px_6px_12px_rgba(139,69,19,0.2),-6px_-6px_12px_rgba(255,255,255,0.8)] hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
-            aria-label="Peachy clay theme"
-            aria-pressed={colorScheme === 'peachy'}
-            title="Peachy Clay"
+            } shadow-[6px_6px_12px_rgba(15,23,42,0.15),-6px_-6px_12px_rgba(255,255,255,0.9)] hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
+            aria-label="Slate professional theme"
+            aria-pressed={colorScheme === 'slate'}
+            title="Slate Professional"
           />
           <button
-            onClick={() => setColorScheme('minty')}
-            className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-[#05C896] to-[#4ECDC4] ${
-              colorScheme === 'minty'
-                ? 'ring-4 ring-[#05C896] ring-offset-2 ring-offset-[#D4F1F4]'
+            onClick={() => setColorScheme('olive')}
+            className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-[#6B8E23] to-[#8BA83F] ${
+              colorScheme === 'olive'
+                ? 'ring-4 ring-[#6B8E23] ring-offset-2 ring-offset-[#F5F3EF]'
                 : ''
-            } shadow-[6px_6px_12px_rgba(26,83,92,0.2),-6px_-6px_12px_rgba(255,255,255,0.8)] hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
-            aria-label="Minty clay theme"
-            aria-pressed={colorScheme === 'minty'}
-            title="Minty Clay"
+            } shadow-[6px_6px_12px_rgba(58,52,40,0.15),-6px_-6px_12px_rgba(255,255,255,0.85)] hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
+            aria-label="Dark olive theme"
+            aria-pressed={colorScheme === 'olive'}
+            title="Dark Olive"
           />
           <button
-            onClick={() => setColorScheme('lavender')}
-            className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-[#A78BFA] to-[#C084FC] ${
-              colorScheme === 'lavender'
-                ? 'ring-4 ring-[#A78BFA] ring-offset-2 ring-offset-[#E8D5F2]'
+            onClick={() => setColorScheme('midnight')}
+            className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1E40AF] to-[#3B82F6] ${
+              colorScheme === 'midnight'
+                ? 'ring-4 ring-[#1E40AF] ring-offset-2 ring-offset-[#F0F4F8]'
                 : ''
-            } shadow-[6px_6px_12px_rgba(74,26,107,0.2),-6px_-6px_12px_rgba(255,255,255,0.8)] hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
-            aria-label="Lavender clay theme"
-            aria-pressed={colorScheme === 'lavender'}
-            title="Lavender Clay"
+            } shadow-[6px_6px_12px_rgba(30,41,59,0.15),-6px_-6px_12px_rgba(255,255,255,0.88)] hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
+            aria-label="Midnight blue theme"
+            aria-pressed={colorScheme === 'midnight'}
+            title="Midnight Blue"
           />
         </div>
       </div>
