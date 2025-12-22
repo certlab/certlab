@@ -34,7 +34,6 @@ import {
   Accessibility,
   User,
   FileText,
-  Crown,
   Sparkles,
   Coins,
   ShoppingCart,
@@ -79,7 +78,7 @@ export default function Header() {
         title: 'Signed out successfully',
         description: 'You have been logged out of your account.',
       });
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Signed out',
         description: 'You have been logged out of your account.',
@@ -227,6 +226,9 @@ export default function Header() {
                       <Badge variant="secondary" className="ml-2 text-xs">
                         NEW
                       </Badge>
+                    </Button>
+                  </NavigationMenuItem>
+
                   {/* Performance */}
                   <NavigationMenuItem>
                     <Button

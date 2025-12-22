@@ -65,7 +65,7 @@ export function AchievementNotification({ userId, onClose }: AchievementNotifica
           audio.src = ACHIEVEMENT_SOUND_DATA;
           audio.volume = 0.3;
           audio.play().catch(() => {}); // Ignore autoplay policy errors
-        } catch (error) {
+        } catch (_error) {
           // Ignore sound errors
         }
       }

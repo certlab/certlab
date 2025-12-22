@@ -1201,7 +1201,7 @@ class ClientStorage implements IClientStorage {
     try {
       const id = await indexedDBService.add(STORES.marketplacePurchases, purchase);
       purchaseId = Number(id);
-    } catch (error) {
+    } catch (_error) {
       // Purchase recording failed, no tokens deducted
       return {
         success: false,
@@ -1213,7 +1213,7 @@ class ClientStorage implements IClientStorage {
     // Now deduct tokens - if this fails, we need to rollback the purchase
     try {
       await this.updateUser(userId, { tokenBalance: newBalance });
-    } catch (error) {
+    } catch (_error) {
       // Token deduction failed, rollback the purchase
       let rollbackSucceeded = true;
       try {
