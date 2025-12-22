@@ -1,6 +1,6 @@
 # Roadmap Issues Preview
 
-Total issues to create: 18
+Total issues to create: 12
 
 ---
 
@@ -25,7 +25,7 @@ Total issues to create: 18
 
 **Evidence Found**:
 - Found "mobile experience" in 1 file(s)
-- Found "mobile" in 11 file(s)
+- Found "mobile" in 12 file(s)
 
 ---
 
@@ -134,7 +134,10 @@ _This issue was automatically generated from the project roadmap._
 ## Implementation Status
 
 **Validation**: ❌ Not Implemented
-**Confidence**: 0%
+**Confidence**: 5%
+
+**Evidence Found**:
+- Found "srs" in 1 file(s)
 
 ---
 
@@ -476,10 +479,10 @@ _This issue was automatically generated from the project roadmap._
 ## Implementation Status
 
 **Validation**: ❌ Not Implemented
-**Confidence**: 25%
+**Confidence**: 30%
 
 **Evidence Found**:
-- Found "gamification" in 5 file(s)
+- Found "gamification" in 6 file(s)
 
 ---
 
@@ -586,168 +589,6 @@ _This issue was automatically generated from the project roadmap._
 
 📍 **Reference**: [ROADMAP.md#L1332](https://github.com/archubbuck/certlab/blob/main/ROADMAP.md#L1332)
 🏷️ **Feature ID**: `features-under-consi-study-timer-pomodoro`
-
-_This issue was automatically generated from the project roadmap._
-
-
----
-
-## 13. From Users
-
-**Labels**: roadmap, enhancement
-
-## Feature Description
-
-1. **Question Bookmarking** (High demand)
-
-**Section**: Community Requests > Requested Features
-
-## Implementation Status
-
-**Validation**: ❌ Not Implemented
-**Confidence**: 30%
-
-**Evidence Found**:
-- Found "users" in 32 file(s)
-
----
-
-📍 **Reference**: [ROADMAP.md#L1554](https://github.com/archubbuck/certlab/blob/main/ROADMAP.md#L1554)
-🏷️ **Feature ID**: `community-requests-from-users`
-
-_This issue was automatically generated from the project roadmap._
-
-
----
-
-## 14. From Contributors
-
-**Labels**: roadmap, enhancement
-
-## Feature Description
-
-1. **Better Developer Onboarding**
-
-**Section**: Technical Roadmap > Code Quality & Maintainability
-
-## Implementation Status
-
-**Validation**: ❌ Not Implemented
-**Confidence**: 0%
-
----
-
-📍 **Reference**: [ROADMAP.md#L1626](https://github.com/archubbuck/certlab/blob/main/ROADMAP.md#L1626)
-🏷️ **Feature ID**: `technical-roadmap-from-contributors`
-
-_This issue was automatically generated from the project roadmap._
-
-
----
-
-## 15. Q1-Q2 2025
-
-**Labels**: roadmap, enhancement
-
-## Feature Description
-
-- [ ] Reduce TypeScript errors to zero
-
-**Section**: Technical Roadmap > Code Quality & Maintainability
-
-## Implementation Status
-
-**Validation**: ❌ Not Implemented
-**Confidence**: 5%
-
-**Evidence Found**:
-- Found "2025" in 1 file(s)
-
----
-
-📍 **Reference**: [ROADMAP.md#L1689](https://github.com/archubbuck/certlab/blob/main/ROADMAP.md#L1689)
-🏷️ **Feature ID**: `technical-roadmap-q1-q2-2025`
-
-_This issue was automatically generated from the project roadmap._
-
-
----
-
-## 16. Q3-Q4 2025
-
-**Labels**: roadmap, enhancement
-
-## Feature Description
-
-- [ ] Migrate to React Server Components (if beneficial)
-
-**Section**: Technical Roadmap > Infrastructure
-
-## Implementation Status
-
-**Validation**: ❌ Not Implemented
-**Confidence**: 5%
-
-**Evidence Found**:
-- Found "2025" in 1 file(s)
-
----
-
-📍 **Reference**: [ROADMAP.md#L1699](https://github.com/archubbuck/certlab/blob/main/ROADMAP.md#L1699)
-🏷️ **Feature ID**: `technical-roadmap-q3-q4-2025`
-
-_This issue was automatically generated from the project roadmap._
-
-
----
-
-## 17. 2025
-
-**Labels**: roadmap, enhancement
-
-## Feature Description
-
-- [ ] CDN optimization
-
-**Section**: Technical Roadmap > Infrastructure
-
-## Implementation Status
-
-**Validation**: ❌ Not Implemented
-**Confidence**: 5%
-
-**Evidence Found**:
-- Found "2025" in 1 file(s)
-
----
-
-📍 **Reference**: [ROADMAP.md#L1709](https://github.com/archubbuck/certlab/blob/main/ROADMAP.md#L1709)
-🏷️ **Feature ID**: `technical-roadmap-2025`
-
-_This issue was automatically generated from the project roadmap._
-
-
----
-
-## 18. 2026+
-
-**Labels**: roadmap, enhancement
-
-## Feature Description
-
-- [ ] Global edge deployment
-
-**Section**: Deprecations & Removals > Planned Deprecations
-
-## Implementation Status
-
-**Validation**: ❌ Not Implemented
-**Confidence**: 0%
-
----
-
-📍 **Reference**: [ROADMAP.md#L1719](https://github.com/archubbuck/certlab/blob/main/ROADMAP.md#L1719)
-🏷️ **Feature ID**: `deprecations-removal-2026`
 
 _This issue was automatically generated from the project roadmap._
 
