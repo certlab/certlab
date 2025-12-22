@@ -265,7 +265,7 @@ function CommunityExplanations({ question }: { question: Question }) {
     );
   }
 
-  // Sort by votes (highest first), then by verified status
+  // Sort by verified status first, then by votes (highest first)
   const sortedExplanations = [...communityExplanations].sort((a, b) => {
     if (a.isVerified !== b.isVerified) return a.isVerified ? -1 : 1;
     return b.votes - a.votes;
@@ -337,15 +337,30 @@ function CommunityExplanations({ question }: { question: Question }) {
 function getEmbedUrl(url: string): string {
   // YouTube
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
-    const videoId = url.includes('youtu.be')
-      ? url.split('youtu.be/')[1]?.split('?')[0]
-      : new URL(url).searchParams.get('v');
-    return `https://www.youtube.com/embed/${videoId}`;
+    try {
+      const videoId = url.includes('youtu.be')
+        ? url.split('youtu.be/')[1]?.split('?')[0]
+        : new URL(url).searchParams.get('v');
+
+      // If we couldn't extract a video ID, fall back to the original URL
+      if (!videoId) {
+        return url;
+      }
+
+      return `https://www.youtube.com/embed/${videoId}`;
+    } catch {
+      // Malformed URL: return the original URL instead of throwing
+      return url;
+    }
   }
 
   // Vimeo
   if (url.includes('vimeo.com')) {
     const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+    // Validate video ID exists before constructing embed URL
+    if (!videoId) {
+      return url;
+    }
     return `https://player.vimeo.com/video/${videoId}`;
   }
 

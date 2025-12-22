@@ -90,6 +90,20 @@ describe('EnhancedExplanation', () => {
     expect(iframe).toHaveAttribute('src', 'https://www.youtube.com/embed/dQw4w9WgXcQ');
   });
 
+  it('handles malformed video URLs gracefully', () => {
+    const questionWithMalformedVideo: Question = {
+      ...baseQuestion,
+      videoUrl: 'not-a-valid-url',
+    };
+
+    render(<EnhancedExplanation question={questionWithMalformedVideo} isCorrect={true} />);
+
+    expect(screen.getByText(/Video Explanation/i)).toBeInTheDocument();
+    const iframe = screen.getByTitle('Video explanation');
+    // Should fall back to original URL when parsing fails
+    expect(iframe).toHaveAttribute('src', 'not-a-valid-url');
+  });
+
   it('renders community explanations with tabs (V2)', () => {
     const questionWithCommunity: Question = {
       ...baseQuestion,
