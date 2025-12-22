@@ -25,6 +25,14 @@ function validateFirebaseConfig(): string[] {
   const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
   const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
 
+  // Temporarily disabled for development testing - allowing the app to work without Firebase
+  // This allows testing with IndexedDB as the primary storage
+  const isDevelopment = import.meta.env.DEV;
+  if (isDevelopment) {
+    // In development, Firebase is optional to enable local testing
+    return errors;
+  }
+
   if (!apiKey) {
     errors.push('Firebase API Key (VITE_FIREBASE_API_KEY) is missing');
   }

@@ -5,7 +5,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from '@/lib/theme-provider';
 import { AuthProvider, useAuth } from '@/lib/auth-provider';
-import { AchievementNotification } from '@/components/AchievementNotification';
 import { UnhandledRejectionHandler } from '@/components/UnhandledRejectionHandler';
 import { AuthenticatedLayout } from '@/components/AuthenticatedLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -142,12 +141,7 @@ function AppContent() {
   // Enable mobile keyboard handling improvements
   useMobileKeyboard();
 
-  return (
-    <>
-      <Router />
-      {isAuthenticated && user && <AchievementNotification userId={user.id} />}
-    </>
-  );
+  return <Router />;
 }
 
 function App() {

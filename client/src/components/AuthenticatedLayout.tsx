@@ -50,6 +50,16 @@ function AuthenticatedHeader() {
     enabled: !!currentUser?.id,
   });
 
+  // Get achievements to check for unread notifications
+  const { data: achievements } = useQuery({
+    queryKey: queryKeys.user.achievements(currentUser?.id),
+    enabled: !!currentUser?.id,
+    refetchInterval: 5000, // Check for new achievements every 5 seconds
+  });
+
+  // Count unread notifications
+  const unreadCount = achievements?.badges?.filter((b: any) => !b.isNotified)?.length || 0;
+
   // Calculate level and XP based on total quizzes and average score
   const level = stats ? Math.floor((stats.totalQuizzes || 0) / 10) + 1 : 1;
   const currentXP = stats
@@ -148,10 +158,16 @@ function AuthenticatedHeader() {
                 aria-label="Open notifications panel"
               >
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-background"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-background"></span>
+                )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Notifications</TooltipContent>
+            <TooltipContent>
+              {unreadCount > 0
+                ? `${unreadCount} new notification${unreadCount > 1 ? 's' : ''}`
+                : 'Notifications'}
+            </TooltipContent>
           </Tooltip>
 
           {/* User Avatar */}
