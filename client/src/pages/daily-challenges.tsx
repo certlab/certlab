@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, Target, Calendar, Clock, Star, Flame, Gift, CheckCircle2 } from 'lucide-react';
-import type { Quest, UserQuestProgress, DailyReward } from '@shared/schema';
+import type { Quest, UserQuestProgress, DailyReward, UserGameStats } from '@shared/schema';
 
 interface QuestWithProgress extends Quest {
   progress?: UserQuestProgress;
@@ -37,7 +37,7 @@ export default function DailyChallengesPage() {
   });
 
   // Get user game stats for consecutive login days
-  const { data: gameStats } = useQuery({
+  const { data: gameStats } = useQuery<UserGameStats>({
     queryKey: queryKeys.user.stats(currentUser?.id),
     enabled: !!currentUser,
   });
@@ -123,7 +123,7 @@ export default function DailyChallengesPage() {
   const monthlyQuests = quests?.filter((q) => q.type === 'monthly') || [];
 
   // Calculate daily reward streak using consecutive login days from game stats
-  const consecutiveDays = (gameStats as any)?.consecutiveLoginDays ?? 0;
+  const consecutiveDays = gameStats?.consecutiveLoginDays ?? 0;
   const currentRewardDay = (consecutiveDays % 7) + 1;
 
   return (
