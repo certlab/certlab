@@ -37,6 +37,40 @@ export const questionOptionsSchema = z.array(questionOptionSchema).min(2).max(10
 export type QuestionOption = z.infer<typeof questionOptionSchema>;
 
 /**
+ * Zod schema for a reference link in question explanations.
+ * Reference links help users find additional study materials.
+ */
+export const referenceLinkSchema = z.object({
+  title: z.string().min(1), // Title of the reference material
+  url: z.string().url(), // URL to the reference material
+  type: z.enum(['documentation', 'article', 'book', 'course', 'other']).optional(), // Type of reference
+});
+
+/**
+ * Zod schema for a community-contributed explanation.
+ * Allows users to contribute alternative explanations.
+ */
+export const communityExplanationSchema = z.object({
+  id: z.string(), // Unique identifier for the explanation
+  userId: z.string(), // User who contributed the explanation
+  userName: z.string().optional(), // Display name of the contributor
+  content: z.string().min(1), // The explanation text
+  votes: z.number().default(0), // Vote count (can be positive or negative)
+  createdAt: z.date(), // When the explanation was created
+  isVerified: z.boolean().default(false), // Whether the explanation has been verified by a moderator
+});
+
+/**
+ * TypeScript type for a reference link, derived from the Zod schema.
+ */
+export type ReferenceLink = z.infer<typeof referenceLinkSchema>;
+
+/**
+ * TypeScript type for a community explanation, derived from the Zod schema.
+ */
+export type CommunityExplanation = z.infer<typeof communityExplanationSchema>;
+
+/**
  * Validates that a question's correctAnswer matches one of the option IDs.
  * @param options Array of question options
  * @param correctAnswer The ID of the correct answer
@@ -188,9 +222,16 @@ export const questions = pgTable('questions', {
   text: text('text').notNull(),
   options: jsonb('options').$type<QuestionOption[]>().notNull(), // Array of option objects with id and text
   correctAnswer: integer('correct_answer').notNull(),
-  explanation: text('explanation'),
+  explanation: text('explanation'), // Legacy: Simple text explanation (V1)
   difficultyLevel: integer('difficulty_level').default(1), // 1-5 scale (1=Easy, 5=Expert)
   tags: jsonb('tags'), // Array of topic tags for lecture generation
+  // V2 Explanation fields
+  explanationSteps: jsonb('explanation_steps').$type<string[]>(), // Step-by-step breakdown of the explanation
+  referenceLinks: jsonb('reference_links').$type<ReferenceLink[]>(), // Links to study materials
+  videoUrl: text('video_url'), // Optional video explanation URL (YouTube, Vimeo, etc.)
+  communityExplanations: jsonb('community_explanations').$type<CommunityExplanation[]>(), // Community-contributed explanations
+  explanationVotes: integer('explanation_votes').default(0), // Total votes for the primary explanation
+  hasAlternativeViews: boolean('has_alternative_views').default(false), // Flag indicating alternative explanations exist
 });
 
 // User quizzes - isolated per tenant (user data does not transfer between tenants)
@@ -351,6 +392,11 @@ export const insertQuestionSchema = createInsertSchema(questions)
   .extend({
     // Override the options field with proper Zod validation
     options: questionOptionsSchema,
+    // Add validation for V2 explanation fields
+    explanationSteps: z.array(z.string()).optional(),
+    referenceLinks: z.array(referenceLinkSchema).optional(),
+    videoUrl: z.string().url().optional().or(z.literal('')),
+    communityExplanations: z.array(communityExplanationSchema).optional(),
   });
 
 export const insertQuizSchema = createInsertSchema(quizzes).omit({

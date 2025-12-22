@@ -303,6 +303,13 @@ class ClientStorage implements IClientStorage {
       explanation: question.explanation || null,
       difficultyLevel: question.difficultyLevel || 1,
       tags: question.tags || null,
+      // V2 Explanation fields
+      explanationSteps: question.explanationSteps || null,
+      referenceLinks: question.referenceLinks || null,
+      videoUrl: question.videoUrl || null,
+      communityExplanations: question.communityExplanations || null,
+      explanationVotes: question.explanationVotes || 0,
+      hasAlternativeViews: question.hasAlternativeViews || false,
     };
     const id = await indexedDBService.add(STORES.questions, newQuestion);
     return { ...newQuestion, id: Number(id) };
