@@ -545,7 +545,7 @@ export function getQueryFn<T>(options: { on401: UnauthorizedBehavior }): QueryFu
           return (await storage.getPerformanceSummary(userId, tenantId)) as T;
         }
         // Default to getting user
-        const match = path.match(/\/api\/user\/([^\/]+)$/);
+        const match = path.match(/\/api\/user\/([^/]+)$/);
         if (match) {
           const uid = match[1];
           return (await storage.getUser(uid)) as T;
@@ -676,7 +676,7 @@ export function getQueryFn<T>(options: { on401: UnauthorizedBehavior }): QueryFu
       }
 
       if (path.includes('/quests/type/')) {
-        const match = path.match(/\/quests\/type\/([^\/]+)/);
+        const match = path.match(/\/quests\/type\/([^/]+)/);
         if (match) {
           const type = match[1];
           return (await storage.getQuestsByType(type)) as T;

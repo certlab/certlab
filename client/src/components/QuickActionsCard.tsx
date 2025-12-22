@@ -91,7 +91,7 @@ export default function QuickActionsCard() {
 
     try {
       switch (action) {
-        case 'weakest':
+        case 'weakest': {
           // Find weakest areas for focused practice
           const weakestArea = masteryScores
             .filter((score) => score.rollingAverage < 80)
@@ -114,8 +114,9 @@ export default function QuickActionsCard() {
             mode: 'study',
           });
           break;
+        }
 
-        case 'random':
+        case 'random': {
           // Create a mixed quiz from random categories
           const randomCategories = categories
             .sort(() => 0.5 - Math.random())
@@ -130,8 +131,9 @@ export default function QuickActionsCard() {
             mode: 'quiz',
           });
           break;
+        }
 
-        case 'review':
+        case 'review': {
           // Quick review session for recent mistakes
           const allCategories = categories.map((cat) => cat.id);
           createQuizMutation.mutate({
@@ -142,8 +144,9 @@ export default function QuickActionsCard() {
             mode: 'study',
           });
           break;
+        }
 
-        case 'practice-exam':
+        case 'practice-exam': {
           // Full-length practice exam
           const examCategories = categories.map((cat) => cat.id);
           createQuizMutation.mutate({
@@ -154,6 +157,7 @@ export default function QuickActionsCard() {
             mode: 'quiz',
           });
           break;
+        }
 
         default:
           toast({
