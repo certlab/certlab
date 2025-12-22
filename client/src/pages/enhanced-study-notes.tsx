@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +52,75 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import type { StudyNote, Category } from '@shared/schema';
 
+/**
+ * Utility Functions
+ */
+
+/**
+ * Format a date or return a fallback string
+ */
+function formatDate(date: Date | string | null | undefined, fallback = 'Unknown'): string {
+  if (!date) return fallback;
+  try {
+    return new Date(date).toLocaleDateString();
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Sanitize a filename by replacing non-alphanumeric characters
+ */
+function getSanitizedFilename(title: string, extension: string): string {
+  return `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${extension}`;
+}
+
+/**
+ * Strip HTML tags from content to get plain text
+ */
+function stripHtmlTags(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Calculate word count from content, stripping HTML tags if present
+ */
+function calculateWordCount(content: string): number {
+  const plainText = stripHtmlTags(content);
+  return plainText.split(/\s+/).filter((word) => word.length > 0).length;
+}
+
+/**
+ * Detect if content contains code blocks
+ * Checks for markdown code blocks (```) or HTML code tags
+ */
+function hasCodeContent(content: string): boolean {
+  return content.includes('```') || content.includes('<code>') || content.includes('<pre>');
+}
+
+/**
+ * Detect if content contains LaTeX formulas
+ * Uses more robust patterns to avoid false positives with dollar signs in text
+ */
+function hasFormulaContent(content: string): boolean {
+  // Check for LaTeX delimiters: $...$ or $$...$$, but not standalone $ signs
+  const inlineLatex = /\$[^$\s][^$]*[^$\s]\$/g;
+  const blockLatex = /\$\$[\s\S]+?\$\$/g;
+  const latexCommands = /\\[()[\]]/g;
+
+  return inlineLatex.test(content) || blockLatex.test(content) || latexCommands.test(content);
+}
+
+/**
+ * Detect if content contains Mermaid diagrams
+ */
+function hasDiagramContent(content: string): boolean {
+  return content.includes('```mermaid');
+}
+
 export default function EnhancedStudyNotesPage() {
   const { user: currentUser, tenantId } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,10 +166,10 @@ export default function EnhancedStudyNotesPage() {
     }) => {
       if (!currentUser) throw new Error('User not authenticated');
 
-      const hasCode = noteData.content.includes('```') || noteData.content.includes('<code>');
-      const hasFormulas = noteData.content.includes('$') || noteData.content.includes('\\(');
-      const hasDiagrams = noteData.content.includes('```mermaid');
-      const wordCount = noteData.content.split(/\s+/).length;
+      const hasCode = hasCodeContent(noteData.content);
+      const hasFormulas = hasFormulaContent(noteData.content);
+      const hasDiagrams = hasDiagramContent(noteData.content);
+      const wordCount = calculateWordCount(noteData.content);
 
       const newNote: Partial<StudyNote> = {
         userId: currentUser.id,
@@ -151,10 +219,10 @@ export default function EnhancedStudyNotesPage() {
       tags?: string[];
       categoryIds?: number[];
     }) => {
-      const hasCode = noteData.content.includes('```') || noteData.content.includes('<code>');
-      const hasFormulas = noteData.content.includes('$') || noteData.content.includes('\\(');
-      const hasDiagrams = noteData.content.includes('```mermaid');
-      const wordCount = noteData.content.split(/\s+/).length;
+      const hasCode = hasCodeContent(noteData.content);
+      const hasFormulas = hasFormulaContent(noteData.content);
+      const hasDiagrams = hasDiagramContent(noteData.content);
+      const wordCount = calculateWordCount(noteData.content);
 
       const updatedNote = {
         ...editingNote,
@@ -245,7 +313,7 @@ export default function EnhancedStudyNotesPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${note.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
+    a.download = getSanitizedFilename(note.title, 'md');
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -272,7 +340,7 @@ export default function EnhancedStudyNotesPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${note.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.html`;
+    a.download = getSanitizedFilename(note.title, 'html');
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -445,9 +513,7 @@ export default function EnhancedStudyNotesPage() {
                   </div>
                   <CardDescription className="flex items-center gap-2 text-xs">
                     <Calendar className="h-3 w-3" />
-                    {note.createdAt
-                      ? new Date(note.createdAt).toLocaleDateString()
-                      : 'Unknown date'}
+                    {formatDate(note.createdAt, 'Unknown date')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -697,9 +763,7 @@ export default function EnhancedStudyNotesPage() {
                   )}
                   <Badge variant="secondary">
                     <Calendar className="h-3 w-3 mr-1" />
-                    {selectedNote.createdAt
-                      ? new Date(selectedNote.createdAt).toLocaleDateString()
-                      : 'Unknown'}
+                    {formatDate(selectedNote.createdAt)}
                   </Badge>
                   {selectedNote.wordCount && (
                     <Badge variant="secondary">{selectedNote.wordCount} words</Badge>

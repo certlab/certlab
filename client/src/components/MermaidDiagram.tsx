@@ -24,7 +24,7 @@ interface MermaidDiagramProps {
 export function MermaidDiagram({ chart, className = '' }: MermaidDiagramProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [diagramId] = useState(() => `mermaid-${Math.random().toString(36).substr(2, 9)}`);
+  const [diagramId] = useState(() => `mermaid-${Math.random().toString(36).slice(2, 11)}`);
 
   useEffect(() => {
     const renderDiagram = async () => {

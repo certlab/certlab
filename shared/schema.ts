@@ -307,7 +307,7 @@ export const studyNotes = pgTable('study_notes', {
   tenantId: integer('tenant_id').notNull().default(1),
   quizId: integer('quiz_id'),
   title: text('title').notNull(),
-  content: text('content').notNull(), // Study notes content (plain text or markdown for simple notes)
+  content: text('content').notNull(), // Study notes content (HTML, markdown, or plain text; format indicated by contentType)
   richContent: jsonb('rich_content'), // Rich content in TipTap JSON format (optional)
   contentType: text('content_type').default('markdown'), // 'markdown' or 'rich' to distinguish content format
   categoryIds: jsonb('category_ids').$type<number[]>(), // Categories this note covers
