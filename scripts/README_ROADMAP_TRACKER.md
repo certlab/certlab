@@ -16,6 +16,7 @@ The `roadmap-tracker.ts` script:
 - **Smart Parsing**: Extracts features from heading blocks and checklist items
 - **Code Validation**: Searches codebase for evidence of implementation
 - **Issue Templates**: Creates well-formatted GitHub issues with proper labels
+- **Automatic Label Creation**: Creates missing GitHub labels with semantic colors before creating issues
 - **Dry Run Mode**: Preview issues before creating them
 - **Tracking Checklist**: Generates a master checklist for progress tracking
 - **Intelligent Filtering**: 
@@ -114,6 +115,11 @@ Issues are automatically labeled with:
 - Priority labels: `priority: high`, `priority: medium`, `priority: low`
 - Category labels: `infrastructure`, `mobile`, `pwa`, `ai`, `gamification`, `analytics`, `accessibility`, `security`
 - Timeline labels: `timeline: Q1 2025`, etc.
+
+**Automatic Label Creation**: The script automatically creates any missing labels in the repository before creating issues. Each label is assigned a semantic color and description:
+- Priority labels use red (high), yellow (medium), and light blue (low)
+- Category labels use distinct colors for easy identification
+- Timeline labels are dynamically created based on roadmap quarters
 
 ## Validation Logic
 

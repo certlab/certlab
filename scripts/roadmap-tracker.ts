@@ -682,10 +682,109 @@ class RoadmapTracker {
   }
 
   /**
+   * Ensure all required labels exist in the repository
+   */
+  private async ensureLabelsExist(issues: IssueTemplate[]): Promise<void> {
+    // Collect all unique labels from all issues
+    const allLabels = new Set<string>();
+    issues.forEach((issue) => {
+      issue.labels.forEach((label) => allLabels.add(label));
+    });
+
+    console.log(`\n   Ensuring ${allLabels.size} labels exist...\n`);
+
+    // Get existing labels
+    let existingLabels = new Set<string>();
+    try {
+      const output = execSync('gh label list --json name --jq ".[].name"', {
+        cwd: this.repoRoot,
+        encoding: 'utf-8',
+      });
+      existingLabels = new Set(output.trim().split('\n').filter((l) => l));
+    } catch (error) {
+      console.error('   ⚠️ Could not fetch existing labels, will attempt to create all labels');
+    }
+
+    // Create missing labels
+    const labelColors = this.getLabelColors();
+    for (const label of allLabels) {
+      if (!existingLabels.has(label)) {
+        try {
+          const color = labelColors.get(label) || 'ededed';
+          const description = this.getLabelDescription(label);
+          const cmd = `gh label create "${label}" --color "${color}" --description "${description}"`;
+          execSync(cmd, { cwd: this.repoRoot, encoding: 'utf-8' });
+          console.log(`   ✅ Created label: ${label}`);
+        } catch (error) {
+          // Label might already exist or there might be permission issues
+          console.log(`   ℹ️ Label already exists or couldn't be created: ${label}`);
+        }
+      }
+    }
+  }
+
+  /**
+   * Get color mappings for labels
+   */
+  private getLabelColors(): Map<string, string> {
+    const colors = new Map<string, string>();
+    
+    // Priority labels - shades of red/orange/yellow
+    colors.set('priority: high', 'd73a4a');       // Red
+    colors.set('priority: medium', 'fbca04');     // Yellow
+    colors.set('priority: low', 'c5def5');        // Light blue
+    
+    // Category labels - various colors
+    colors.set('roadmap', '0075ca');              // Blue
+    colors.set('enhancement', 'a2eeef');          // Light cyan
+    colors.set('infrastructure', '5319e7');       // Purple
+    colors.set('mobile', 'f9d0c4');               // Light orange
+    colors.set('pwa', 'd4c5f9');                  // Light purple
+    colors.set('ai', 'c2e0c6');                   // Light green
+    colors.set('gamification', 'fef2c0');         // Light yellow
+    colors.set('analytics', 'bfdadc');            // Light teal
+    colors.set('accessibility', '006b75');        // Dark teal
+    colors.set('security', 'b60205');             // Dark red
+    
+    return colors;
+  }
+
+  /**
+   * Get description for labels
+   */
+  private getLabelDescription(label: string): string {
+    const descriptions = new Map<string, string>();
+    
+    descriptions.set('roadmap', 'Feature from the project roadmap');
+    descriptions.set('enhancement', 'New feature or request');
+    descriptions.set('priority: high', 'High priority item');
+    descriptions.set('priority: medium', 'Medium priority item');
+    descriptions.set('priority: low', 'Low priority item');
+    descriptions.set('infrastructure', 'Infrastructure and backend work');
+    descriptions.set('mobile', 'Mobile-specific features');
+    descriptions.set('pwa', 'Progressive Web App features');
+    descriptions.set('ai', 'AI and machine learning features');
+    descriptions.set('gamification', 'Gamification features');
+    descriptions.set('analytics', 'Analytics and tracking');
+    descriptions.set('accessibility', 'Accessibility improvements');
+    descriptions.set('security', 'Security and privacy');
+    
+    // Timeline labels
+    if (label.startsWith('timeline: ')) {
+      return `Planned for ${label.replace('timeline: ', '')}`;
+    }
+    
+    return '';
+  }
+
+  /**
    * Create GitHub issues (live mode)
    */
   private async createGitHubIssues(issues: IssueTemplate[]): Promise<void> {
     console.log(`\n   Creating ${issues.length} issues...\n`);
+
+    // Ensure all required labels exist before creating issues
+    await this.ensureLabelsExist(issues);
 
     for (let i = 0; i < issues.length; i++) {
       const issue = issues[i];
