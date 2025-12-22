@@ -61,8 +61,11 @@ export function LevelProgress({
   };
 
   // Calculate current level's starting points using cumulative sum
-  // Each level requires (level * 100) points, so cumulative points for level N is:
-  // Level 1 starts at 0, Level 2 at 100, Level 3 at 300, Level 4 at 600, etc.
+  // Level progression: Level N requires (N * 100) points to complete
+  // Level 1: 0-99 points (needs 100 to complete)
+  // Level 2: 100-299 points (needs 200 to complete)
+  // Level 3: 300-599 points (needs 300 to complete)
+  // Cumulative formula: sum of (i * 100) for i=1 to level-1
   const calculatePointsForLevel = (targetLevel: number): number => {
     let points = 0;
     for (let i = 1; i < targetLevel; i++) {
