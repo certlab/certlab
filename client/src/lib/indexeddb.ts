@@ -68,7 +68,7 @@
  */
 
 const DB_NAME = 'certlab';
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 
 // Define all stores (tables)
 const STORES = {
@@ -93,6 +93,8 @@ const STORES = {
   practiceTestAttempts: 'practiceTestAttempts',
   settings: 'settings', // For storing app settings and current user
   marketplacePurchases: 'marketplacePurchases', // For tracking purchased study materials
+  studyTimerSessions: 'studyTimerSessions', // For Pomodoro timer sessions
+  studyTimerSettings: 'studyTimerSettings', // For user timer preferences
 } as const;
 
 class IndexedDBService {
@@ -322,6 +324,30 @@ class IndexedDBService {
           purchasesStore.createIndex('userId', 'userId');
           purchasesStore.createIndex('materialId', 'materialId');
           purchasesStore.createIndex('userMaterial', ['userId', 'materialId'], { unique: true });
+        }
+
+        // Study Timer Sessions store (added in version 6)
+        if (!db.objectStoreNames.contains(STORES.studyTimerSessions)) {
+          const timerSessionStore = db.createObjectStore(STORES.studyTimerSessions, {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          timerSessionStore.createIndex('userId', 'userId');
+          timerSessionStore.createIndex('tenantId', 'tenantId');
+          timerSessionStore.createIndex('userTenant', ['userId', 'tenantId']);
+          timerSessionStore.createIndex('startedAt', 'startedAt');
+          timerSessionStore.createIndex('categoryId', 'categoryId');
+        }
+
+        // Study Timer Settings store (added in version 6)
+        if (!db.objectStoreNames.contains(STORES.studyTimerSettings)) {
+          const timerSettingsStore = db.createObjectStore(STORES.studyTimerSettings, {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          timerSettingsStore.createIndex('userId', 'userId', { unique: true });
+          timerSettingsStore.createIndex('tenantId', 'tenantId');
+          timerSettingsStore.createIndex('userTenant', ['userId', 'tenantId'], { unique: true });
         }
       };
     });

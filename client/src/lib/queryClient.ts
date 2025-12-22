@@ -204,6 +204,16 @@ export const queryKeys = {
       ['/api', 'study-notes', 'detail', noteId] as const,
   },
 
+  // Study Timer queries
+  studyTimer: {
+    settings: (userId: string | undefined) => ['/api', 'study-timer', userId, 'settings'] as const,
+    todaySessions: (userId: string | undefined) =>
+      ['/api', 'study-timer', userId, 'today-sessions'] as const,
+    stats: (userId: string | undefined) => ['/api', 'study-timer', userId, 'stats'] as const,
+    allSessions: (userId: string | undefined) =>
+      ['/api', 'study-timer', userId, 'sessions'] as const,
+  },
+
   // Practice test queries
   practiceTests: {
     all: () => ['/api', 'practice-tests'] as const,
@@ -484,6 +494,22 @@ export function getQueryFn<T>(options: { on401: UnauthorizedBehavior }): QueryFu
         }
         if (path.includes('/token-balance') || path.includes('/tokens')) {
           return { balance: await storage.getUserTokenBalance(userId) } as T;
+        }
+        if (path.includes('/study-timer')) {
+          if (path.includes('/settings')) {
+            return (await storage.getStudyTimerSettings(userId)) as T;
+          }
+          if (path.includes('/today-sessions')) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return (await storage.getStudyTimerSessionsByDateRange(userId, today, new Date())) as T;
+          }
+          if (path.includes('/stats')) {
+            return (await storage.getStudyTimerStats(userId)) as T;
+          }
+          if (path.includes('/sessions')) {
+            return (await storage.getStudyTimerSessions(userId)) as T;
+          }
         }
         // Default to getting user
         const match = path.match(/\/api\/user\/([^\/]+)$/);

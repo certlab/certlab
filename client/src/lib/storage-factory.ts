@@ -576,6 +576,77 @@ class StorageRouter implements IClientStorage {
   }
 
   // ==========================================
+  // Study Timer Methods
+  // ==========================================
+
+  async getStudyTimerSettings(userId: string): Promise<any> {
+    try {
+      return await clientStorage.getStudyTimerSettings(userId);
+    } catch (error) {
+      logError('getStudyTimerSettings', error);
+      throw error;
+    }
+  }
+
+  async saveStudyTimerSettings(settings: any): Promise<any> {
+    try {
+      return await clientStorage.saveStudyTimerSettings(settings);
+    } catch (error) {
+      logError('saveStudyTimerSettings', error);
+      throw error;
+    }
+  }
+
+  async createStudyTimerSession(session: any): Promise<any> {
+    try {
+      return await clientStorage.createStudyTimerSession(session);
+    } catch (error) {
+      logError('createStudyTimerSession', error);
+      throw error;
+    }
+  }
+
+  async updateStudyTimerSession(sessionId: number, updates: any): Promise<any> {
+    try {
+      return await clientStorage.updateStudyTimerSession(sessionId, updates);
+    } catch (error) {
+      logError('updateStudyTimerSession', error);
+      throw error;
+    }
+  }
+
+  async getStudyTimerSessionsByDateRange(
+    userId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<any[]> {
+    try {
+      return await clientStorage.getStudyTimerSessionsByDateRange(userId, startDate, endDate);
+    } catch (error) {
+      logError('getStudyTimerSessionsByDateRange', error);
+      throw error;
+    }
+  }
+
+  async getStudyTimerSessions(userId: string): Promise<any[]> {
+    try {
+      return await clientStorage.getStudyTimerSessions(userId);
+    } catch (error) {
+      logError('getStudyTimerSessions', error);
+      throw error;
+    }
+  }
+
+  async getStudyTimerStats(userId: string): Promise<any> {
+    try {
+      return await clientStorage.getStudyTimerStats(userId);
+    } catch (error) {
+      logError('getStudyTimerStats', error);
+      throw error;
+    }
+  }
+
+  // ==========================================
   // Data Management
   // ==========================================
 
