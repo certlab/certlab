@@ -10,7 +10,6 @@ import {
   GraduationCap,
   ArrowRight,
   Brain,
-  Shield,
   BookOpen,
   Menu,
   X,
@@ -45,6 +44,10 @@ const COLOR_SCHEMES = {
       'hover:shadow-[15px_15px_30px_rgba(15,23,42,0.12),-15px_-15px_30px_rgba(255,255,255,1)]',
     innerShadow:
       'shadow-[inset_8px_8px_16px_rgba(15,23,42,0.06),inset_-8px_-8px_16px_rgba(255,255,255,0.95)]',
+    // Button styling for color switcher
+    buttonGradient: 'from-[#0891B2] to-[#06B6D4]',
+    buttonShadow: 'shadow-[6px_6px_12px_rgba(15,23,42,0.15),-6px_-6px_12px_rgba(255,255,255,0.9)]',
+    buttonRing: 'ring-[#0891B2]',
   },
   olive: {
     name: 'Dark Olive',
@@ -59,6 +62,10 @@ const COLOR_SCHEMES = {
       'hover:shadow-[15px_15px_30px_rgba(58,52,40,0.15),-15px_-15px_30px_rgba(255,255,255,0.95)]',
     innerShadow:
       'shadow-[inset_8px_8px_16px_rgba(58,52,40,0.08),inset_-8px_-8px_16px_rgba(255,255,255,0.9)]',
+    // Button styling for color switcher
+    buttonGradient: 'from-[#6B8E23] to-[#8BA83F]',
+    buttonShadow: 'shadow-[6px_6px_12px_rgba(58,52,40,0.15),-6px_-6px_12px_rgba(255,255,255,0.85)]',
+    buttonRing: 'ring-[#6B8E23]',
   },
   midnight: {
     name: 'Midnight Blue',
@@ -73,6 +80,10 @@ const COLOR_SCHEMES = {
       'hover:shadow-[15px_15px_30px_rgba(30,41,59,0.13),-15px_-15px_30px_rgba(255,255,255,0.98)]',
     innerShadow:
       'shadow-[inset_8px_8px_16px_rgba(30,41,59,0.07),inset_-8px_-8px_16px_rgba(255,255,255,0.93)]',
+    // Button styling for color switcher
+    buttonGradient: 'from-[#1E40AF] to-[#3B82F6]',
+    buttonShadow: 'shadow-[6px_6px_12px_rgba(30,41,59,0.15),-6px_-6px_12px_rgba(255,255,255,0.88)]',
+    buttonRing: 'ring-[#1E40AF]',
   },
 } as const;
 
@@ -246,44 +257,35 @@ export default function Landing() {
     >
       {/* Color Scheme Switcher - Floating on the right */}
       <div
-        className="fixed top-24 right-6 z-50 flex flex-col gap-3"
+        className="hidden md:fixed md:top-24 md:right-6 z-50 md:flex flex-col gap-3"
         role="group"
         aria-label="Color theme selector"
       >
         <div className={`${theme.cardBg} ${theme.shadow} rounded-3xl p-2 flex flex-col gap-2`}>
-          <button
-            onClick={() => setColorScheme('slate')}
-            className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0891B2] to-[#06B6D4] ${
-              colorScheme === 'slate'
-                ? 'ring-4 ring-[#0891B2] ring-offset-2 ring-offset-[#F8FAFC]'
-                : ''
-            } shadow-[6px_6px_12px_rgba(15,23,42,0.15),-6px_-6px_12px_rgba(255,255,255,0.9)] hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
-            aria-label="Slate professional theme"
-            aria-pressed={colorScheme === 'slate'}
-            title="Slate Professional"
-          />
-          <button
-            onClick={() => setColorScheme('olive')}
-            className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-[#6B8E23] to-[#8BA83F] ${
-              colorScheme === 'olive'
-                ? 'ring-4 ring-[#6B8E23] ring-offset-2 ring-offset-[#F5F3EF]'
-                : ''
-            } shadow-[6px_6px_12px_rgba(58,52,40,0.15),-6px_-6px_12px_rgba(255,255,255,0.85)] hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
-            aria-label="Dark olive theme"
-            aria-pressed={colorScheme === 'olive'}
-            title="Dark Olive"
-          />
-          <button
-            onClick={() => setColorScheme('midnight')}
-            className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1E40AF] to-[#3B82F6] ${
-              colorScheme === 'midnight'
-                ? 'ring-4 ring-[#1E40AF] ring-offset-2 ring-offset-[#F0F4F8]'
-                : ''
-            } shadow-[6px_6px_12px_rgba(30,41,59,0.15),-6px_-6px_12px_rgba(255,255,255,0.88)] hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
-            aria-label="Midnight blue theme"
-            aria-pressed={colorScheme === 'midnight'}
-            title="Midnight Blue"
-          />
+          {(Object.keys(COLOR_SCHEMES) as ColorScheme[]).map((schemeKey) => {
+            const scheme = COLOR_SCHEMES[schemeKey];
+            const isActive = colorScheme === schemeKey;
+            // Extract bg color from the bg class for ring-offset
+            const bgColor = scheme.bg.match(/bg-\[(#[A-F0-9]+)\]/)?.[1] || '#FFFFFF';
+
+            return (
+              <button
+                key={schemeKey}
+                onClick={() => setColorScheme(schemeKey)}
+                className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${scheme.buttonGradient} ${
+                  isActive ? `ring-4 ${scheme.buttonRing} ring-offset-2` : ''
+                } ${scheme.buttonShadow} hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
+                style={
+                  isActive
+                    ? ({ '--tw-ring-offset-color': bgColor } as React.CSSProperties)
+                    : undefined
+                }
+                aria-label={`${scheme.name} theme`}
+                aria-pressed={isActive}
+                title={scheme.name}
+              />
+            );
+          })}
         </div>
       </div>
 
@@ -459,8 +461,8 @@ export default function Landing() {
         <div className="container mx-auto px-4">
           <div className={`${theme.cardBg} rounded-[3rem] p-12 ${theme.shadow}`}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {stats.map((stat, index) => (
-                <div key={index} className="text-center">
+              {stats.map((stat) => (
+                <div key={stat.label} className="text-center">
                   <div className={`text-5xl md:text-6xl font-black ${theme.text} mb-3`}>
                     {stat.value}
                   </div>
@@ -496,7 +498,7 @@ export default function Landing() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map(({ title, description, icon: Icon }, index) => (
+            {features.map(({ title, description, icon: Icon }) => (
               <div
                 key={title}
                 className={`${theme.cardBg} rounded-[2.5rem] p-10 ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none duration-300`}
@@ -537,14 +539,14 @@ export default function Landing() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
+            {testimonials.map((testimonial) => (
               <div
-                key={index}
+                key={testimonial.name}
                 className={`${theme.cardBg} rounded-[2.5rem] p-10 ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none`}
               >
                 <div className="flex gap-1 mb-6">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-6 h-6 fill-yellow-500 text-yellow-500" />
+                    <Star key={i} className={`w-6 h-6 fill-current ${theme.text}`} />
                   ))}
                 </div>
                 <p className={`${theme.textLight} mb-8 leading-relaxed font-semibold text-lg`}>
@@ -611,11 +613,11 @@ export default function Landing() {
               className={`flex items-center justify-center gap-8 text-base ${theme.textLight} font-bold`}
             >
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-6 h-6 text-green-600" />
+                <CheckCircle2 className={`w-6 h-6 ${theme.text}`} />
                 <span>No credit card required</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-6 h-6 text-green-600" />
+                <CheckCircle2 className={`w-6 h-6 ${theme.text}`} />
                 <span>Free forever plan</span>
               </div>
             </div>
@@ -645,10 +647,10 @@ export default function Landing() {
 
           <div className="max-w-4xl mx-auto">
             <Accordion type="single" collapsible className="w-full space-y-6">
-              {faqs.map((faq, index) => (
+              {faqs.map((faq) => (
                 <AccordionItem
-                  key={index}
-                  value={`item-${index}`}
+                  key={faq.question}
+                  value={faq.question}
                   className={`${theme.cardBg} rounded-[2rem] px-8 ${theme.shadow} ${theme.hoverShadow} hover:scale-[1.02] transition-all border-none`}
                 >
                   <AccordionTrigger
