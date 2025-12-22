@@ -307,9 +307,16 @@ export const studyNotes = pgTable('study_notes', {
   tenantId: integer('tenant_id').notNull().default(1),
   quizId: integer('quiz_id'),
   title: text('title').notNull(),
-  content: text('content').notNull(), // Generated study notes content (markdown)
+  content: text('content').notNull(), // Study notes content (plain text or markdown for simple notes)
+  richContent: jsonb('rich_content'), // Rich content in TipTap JSON format (optional)
+  contentType: text('content_type').default('markdown'), // 'markdown' or 'rich' to distinguish content format
   categoryIds: jsonb('category_ids').$type<number[]>(), // Categories this note covers
+  tags: jsonb('tags').$type<string[]>(), // User-defined tags for organization
   score: integer('score'), // Quiz score at time of generation
+  wordCount: integer('word_count'), // Tracked for success metrics
+  hasCode: boolean('has_code').default(false), // Whether note contains code blocks
+  hasFormulas: boolean('has_formulas').default(false), // Whether note contains LaTeX formulas
+  hasDiagrams: boolean('has_diagrams').default(false), // Whether note contains Mermaid diagrams
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

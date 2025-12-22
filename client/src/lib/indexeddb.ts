@@ -68,7 +68,7 @@
  */
 
 const DB_NAME = 'certlab';
-const DB_VERSION = 5;
+const DB_VERSION = 6; // Updated for enhanced study notes with rich content support
 
 // Define all stores (tables)
 const STORES = {
