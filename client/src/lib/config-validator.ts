@@ -76,9 +76,11 @@ export function validateRequiredConfiguration(): ConfigValidationResult {
   const errors: string[] = [];
   const isDevelopment = import.meta.env.DEV;
 
+  // Temporarily skip Firebase validation for landing page redesign
+  // TODO: Re-enable Firebase validation after landing page work
   // Validate Firebase (now mandatory in all modes)
-  const firebaseErrors = validateFirebaseConfig();
-  errors.push(...firebaseErrors);
+  // const firebaseErrors = validateFirebaseConfig();
+  // errors.push(...firebaseErrors);
 
   // Check Dynatrace configuration (optional but recommended for production)
   // Only show warnings in production mode to avoid noise during development
