@@ -199,6 +199,104 @@ class StorageRouter implements IClientStorage {
   }
 
   // ==========================================
+  // Quest Management
+  // ==========================================
+
+  async getQuests(): Promise<any[]> {
+    return this.executeFirestoreOperation((s) => s.getQuests(), 'getQuests');
+  }
+
+  async getActiveQuests(): Promise<any[]> {
+    return this.executeFirestoreOperation((s) => s.getActiveQuests(), 'getActiveQuests');
+  }
+
+  async getUserQuestProgressByQuest(
+    userId: string,
+    questId: number,
+    tenantId: number
+  ): Promise<any> {
+    return this.executeFirestoreOperation(
+      (s) => s.getUserQuestProgressByQuest(userId, questId, tenantId),
+      'getUserQuestProgressByQuest'
+    );
+  }
+
+  async updateUserQuestProgress(
+    userId: string,
+    questId: number,
+    progress: number,
+    tenantId: number
+  ): Promise<void> {
+    return this.executeFirestoreOperation(
+      (s) => s.updateUserQuestProgress(userId, questId, progress, tenantId),
+      'updateUserQuestProgress'
+    );
+  }
+
+  async completeQuest(userId: string, questId: number, tenantId: number): Promise<void> {
+    return this.executeFirestoreOperation(
+      (s) => s.completeQuest(userId, questId, tenantId),
+      'completeQuest'
+    );
+  }
+
+  async claimQuestReward(userId: string, questId: number, tenantId: number): Promise<void> {
+    return this.executeFirestoreOperation(
+      (s) => s.claimQuestReward(userId, questId, tenantId),
+      'claimQuestReward'
+    );
+  }
+
+  // ==========================================
+  // Title Management
+  // ==========================================
+
+  async unlockTitle(
+    userId: string,
+    title: string,
+    description: string,
+    source: string,
+    tenantId: number
+  ): Promise<void> {
+    return this.executeFirestoreOperation(
+      (s) => s.unlockTitle(userId, title, description, source, tenantId),
+      'unlockTitle'
+    );
+  }
+
+  async getUserTitles(userId: string, tenantId: number): Promise<any[]> {
+    return this.executeFirestoreOperation(
+      (s) => s.getUserTitles(userId, tenantId),
+      'getUserTitles'
+    );
+  }
+
+  async setSelectedTitle(userId: string, title: string | null): Promise<void> {
+    return this.executeFirestoreOperation(
+      (s) => s.setSelectedTitle(userId, title),
+      'setSelectedTitle'
+    );
+  }
+
+  // ==========================================
+  // Daily Rewards
+  // ==========================================
+
+  async hasClaimedDailyReward(userId: string, day: number): Promise<boolean> {
+    return this.executeFirestoreOperation(
+      (s) => s.hasClaimedDailyReward(userId, day),
+      'hasClaimedDailyReward'
+    );
+  }
+
+  async claimDailyReward(userId: string, day: number, tenantId: number): Promise<any> {
+    return this.executeFirestoreOperation(
+      (s) => s.claimDailyReward(userId, day, tenantId),
+      'claimDailyReward'
+    );
+  }
+
+  // ==========================================
   // Categories
   // ==========================================
 
@@ -663,7 +761,9 @@ class StorageRouter implements IClientStorage {
     );
   }
 
-  async getReadinessScore(userId: string): Promise<import('./smart-recommendations').ReadinessScore> {
+  async getReadinessScore(
+    userId: string
+  ): Promise<import('./smart-recommendations').ReadinessScore> {
     return this.executeFirestoreOperation((s) => s.getReadinessScore(userId), 'getReadinessScore');
   }
 

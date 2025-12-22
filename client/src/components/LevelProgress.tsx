@@ -36,9 +36,9 @@ const getLevelColor = (level: number) => {
 export function LevelProgress({
   level = 1,
   totalPoints = 0,
-  _nextLevelPoints = 100,
+  nextLevelPoints = 100,
   currentStreak = 0,
-  _longestStreak = 0,
+  longestStreak = 0,
   totalBadgesEarned = 0,
 }: LevelProgressProps) {
   // Calculate current level's starting points
