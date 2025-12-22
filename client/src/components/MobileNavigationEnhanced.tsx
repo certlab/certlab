@@ -80,6 +80,14 @@ export default function MobileNavigationEnhanced() {
       title: 'Learning Features',
       items: [
         {
+          id: 'daily-challenges',
+          label: 'Daily Challenges',
+          icon: <Target className="w-4 h-4" />,
+          href: '/app/daily-challenges',
+          description: 'Complete quests and earn rewards',
+          badge: 'NEW',
+        },
+        {
           id: 'study-notes',
           label: 'Study Notes',
           icon: <BookOpen className="w-4 h-4" />,

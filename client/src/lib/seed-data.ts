@@ -52,7 +52,7 @@
 import { clientStorage } from './client-storage';
 import { indexedDBService } from './indexeddb';
 
-const SEED_VERSION = 5;
+const SEED_VERSION = 6; // Gamification V2 features (matches DB_VERSION 6)
 
 export async function seedInitialData(): Promise<void> {
   // Check seed version - this is the primary mechanism for determining whether to reseed
@@ -510,7 +510,7 @@ export async function seedInitialData(): Promise<void> {
     createdAt: new Date(),
   });
 
-  // Additional progress badges
+  // Additional progress badges with tiers
   await indexedDBService.put('badges', {
     id: 6,
     name: 'Getting Started',
@@ -520,6 +520,7 @@ export async function seedInitialData(): Promise<void> {
     requirement: { type: 'quizzes_completed', value: 5 },
     color: 'blue',
     rarity: 'common',
+    tier: 'bronze',
     points: 25,
     createdAt: new Date(),
   });
@@ -533,6 +534,7 @@ export async function seedInitialData(): Promise<void> {
     requirement: { type: 'quizzes_completed', value: 25 },
     color: 'gold',
     rarity: 'rare',
+    tier: 'silver',
     points: 100,
     createdAt: new Date(),
   });
@@ -546,6 +548,7 @@ export async function seedInitialData(): Promise<void> {
     requirement: { type: 'quizzes_completed', value: 50 },
     color: 'rainbow',
     rarity: 'legendary',
+    tier: 'platinum',
     points: 250,
     createdAt: new Date(),
   });
@@ -696,6 +699,145 @@ export async function seedInitialData(): Promise<void> {
     points: 250,
     createdAt: new Date(),
   });
+
+  // === Gamification V2: Quests ===
+  console.log('Seeding quests...');
+
+  // Daily quests
+  await indexedDBService.put('quests', {
+    id: 1,
+    title: 'Daily Warm-up',
+    description: 'Complete 1 quiz today',
+    type: 'daily',
+    requirement: { type: 'quizzes_completed', target: 1 },
+    reward: { points: 10 },
+    isActive: true,
+    validFrom: new Date(),
+    validUntil: null, // Daily quests renew each day
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('quests', {
+    id: 2,
+    title: 'Answer Sprint',
+    description: 'Answer 20 questions correctly today',
+    type: 'daily',
+    requirement: { type: 'questions_answered', target: 20 },
+    reward: { points: 15 },
+    isActive: true,
+    validFrom: new Date(),
+    validUntil: null,
+    createdAt: new Date(),
+  });
+
+  // Weekly quests
+  await indexedDBService.put('quests', {
+    id: 3,
+    title: 'Weekly Warrior',
+    description: 'Complete 5 quizzes this week',
+    type: 'weekly',
+    requirement: { type: 'quizzes_completed', target: 5 },
+    reward: { points: 50, title: 'Weekly Warrior' },
+    isActive: true,
+    validFrom: new Date(),
+    validUntil: null, // Weekly quests renew each week
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('quests', {
+    id: 4,
+    title: 'Perfect Practice',
+    description: 'Get 3 perfect scores (100%) this week',
+    type: 'weekly',
+    requirement: { type: 'perfect_scores', target: 3 },
+    reward: { points: 75, title: 'Perfectionist' },
+    isActive: true,
+    validFrom: new Date(),
+    validUntil: null,
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('quests', {
+    id: 5,
+    title: 'Study Streak',
+    description: 'Study 5 days in a row this week',
+    type: 'weekly',
+    requirement: { type: 'study_streak', target: 5 },
+    reward: { points: 100 },
+    isActive: true,
+    validFrom: new Date(),
+    validUntil: null,
+    createdAt: new Date(),
+  });
+
+  // Monthly quests
+  await indexedDBService.put('quests', {
+    id: 6,
+    title: 'Monthly Master',
+    description: 'Complete 20 quizzes this month',
+    type: 'monthly',
+    requirement: { type: 'quizzes_completed', target: 20 },
+    reward: { points: 200, title: 'Monthly Master' },
+    isActive: true,
+    validFrom: new Date(),
+    validUntil: null,
+    createdAt: new Date(),
+  });
+
+  // === Gamification V2: Daily Rewards ===
+  console.log('Seeding daily rewards...');
+
+  // 7-day reward cycle
+  await indexedDBService.put('dailyRewards', {
+    id: 1,
+    day: 1,
+    reward: { points: 5 },
+    description: 'Login Day 1: 5 points',
+  });
+
+  await indexedDBService.put('dailyRewards', {
+    id: 2,
+    day: 2,
+    reward: { points: 10 },
+    description: 'Login Day 2: 10 points',
+  });
+
+  await indexedDBService.put('dailyRewards', {
+    id: 3,
+    day: 3,
+    reward: { points: 15 },
+    description: 'Login Day 3: 15 points',
+  });
+
+  await indexedDBService.put('dailyRewards', {
+    id: 4,
+    day: 4,
+    reward: { points: 20 },
+    description: 'Login Day 4: 20 points',
+  });
+
+  await indexedDBService.put('dailyRewards', {
+    id: 5,
+    day: 5,
+    reward: { points: 25 },
+    description: 'Login Day 5: 25 points',
+  });
+
+  await indexedDBService.put('dailyRewards', {
+    id: 6,
+    day: 6,
+    reward: { points: 30 },
+    description: 'Login Day 6: 30 points',
+  });
+
+  await indexedDBService.put('dailyRewards', {
+    id: 7,
+    day: 7,
+    reward: { points: 50, streakFreeze: true },
+    description: 'Login Day 7: 50 points + Bonus Streak Freeze!',
+  });
+
+  console.log('Gamification V2 data seeded successfully');
 
   // Save seed version
   await indexedDBService.put('settings', { key: 'seedVersion', value: SEED_VERSION });

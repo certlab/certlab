@@ -1738,6 +1738,241 @@ class ClientStorage implements IClientStorage {
   }
 
   // ============================================================================
+  // Gamification V2: Quest System
+  // ============================================================================
+
+  /**
+   * Get all quests
+   */
+  async getQuests(): Promise<any[]> {
+    return await indexedDBService.getAll('quests');
+  }
+
+  /**
+   * Get active quests
+   */
+  async getActiveQuests(): Promise<any[]> {
+    const allQuests = await this.getQuests();
+    return allQuests.filter((q) => q.isActive);
+  }
+
+  /**
+   * Get quests by type
+   */
+  async getQuestsByType(type: string): Promise<any[]> {
+    return await indexedDBService.getByIndex('quests', 'type', type);
+  }
+
+  /**
+   * Create a new quest
+   */
+  async createQuest(quest: any): Promise<any> {
+    const id = await indexedDBService.add('quests', quest);
+    return { ...quest, id };
+  }
+
+  /**
+   * Get user's quest progress
+   */
+  async getUserQuestProgress(userId: string, tenantId: number = 1): Promise<any[]> {
+    // Fetch all progress for the user and filter by tenant
+    const allUserProgress = await indexedDBService.getByIndex(
+      'userQuestProgress',
+      'userId',
+      userId
+    );
+    return allUserProgress.filter((progress: any) => progress.tenantId === tenantId);
+  }
+
+  /**
+   * Get user's progress for a specific quest
+   */
+  async getUserQuestProgressByQuest(
+    userId: string,
+    questId: number,
+    tenantId: number = 1
+  ): Promise<any | undefined> {
+    const allProgress = await indexedDBService.getByIndex('userQuestProgress', 'userTenantQuest', [
+      userId,
+      tenantId,
+      questId,
+    ]);
+    return allProgress[0];
+  }
+
+  /**
+   * Update user quest progress
+   */
+  async updateUserQuestProgress(
+    userId: string,
+    questId: number,
+    progress: number,
+    tenantId: number = 1
+  ): Promise<any> {
+    const existing = await this.getUserQuestProgressByQuest(userId, questId, tenantId);
+
+    if (existing) {
+      const updated = { ...existing, progress, updatedAt: new Date() };
+      await indexedDBService.put('userQuestProgress', updated);
+      return updated;
+    } else {
+      const newProgress = {
+        userId,
+        tenantId,
+        questId,
+        progress,
+        isCompleted: false,
+        rewardClaimed: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const id = await indexedDBService.add('userQuestProgress', newProgress);
+      return { ...newProgress, id };
+    }
+  }
+
+  /**
+   * Complete a quest and mark it for reward claiming
+   */
+  async completeQuest(userId: string, questId: number, tenantId: number = 1): Promise<any> {
+    const existing = await this.getUserQuestProgressByQuest(userId, questId, tenantId);
+
+    if (existing) {
+      const updated = {
+        ...existing,
+        isCompleted: true,
+        completedAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await indexedDBService.put('userQuestProgress', updated);
+      return updated;
+    } else {
+      throw new Error('Quest progress not found');
+    }
+  }
+
+  /**
+   * Claim quest reward
+   */
+  async claimQuestReward(userId: string, questId: number, tenantId: number = 1): Promise<any> {
+    const existing = await this.getUserQuestProgressByQuest(userId, questId, tenantId);
+
+    if (existing && existing.isCompleted && !existing.rewardClaimed) {
+      const updated = { ...existing, rewardClaimed: true, updatedAt: new Date() };
+      await indexedDBService.put('userQuestProgress', updated);
+      return updated;
+    } else {
+      throw new Error('Quest not completed or reward already claimed');
+    }
+  }
+
+  // ============================================================================
+  // Gamification V2: Daily Rewards
+  // ============================================================================
+
+  /**
+   * Get all daily rewards
+   */
+  async getDailyRewards(): Promise<any[]> {
+    return await indexedDBService.getAll('dailyRewards');
+  }
+
+  /**
+   * Get daily reward by day number
+   */
+  async getDailyRewardByDay(day: number): Promise<any | undefined> {
+    const rewards = await indexedDBService.getByIndex('dailyRewards', 'day', day);
+    return rewards[0];
+  }
+
+  /**
+   * Get user's daily reward claims
+   */
+  async getUserDailyRewards(userId: string, tenantId: number = 1): Promise<any[]> {
+    return await indexedDBService.getByIndex('userDailyRewards', 'userId', userId);
+  }
+
+  /**
+   * Check if user has claimed a specific day's reward
+   */
+  async hasClaimedDailyReward(userId: string, day: number): Promise<boolean> {
+    const claims = await indexedDBService.getByIndex('userDailyRewards', 'userDay', [userId, day]);
+    return claims.length > 0;
+  }
+
+  /**
+   * Claim a daily reward
+   */
+  async claimDailyReward(userId: string, day: number, tenantId: number = 1): Promise<any> {
+    const reward = await this.getDailyRewardByDay(day);
+    if (!reward) {
+      throw new Error('Reward not found for this day');
+    }
+
+    const alreadyClaimed = await this.hasClaimedDailyReward(userId, day);
+    if (alreadyClaimed) {
+      throw new Error('Reward already claimed for this day');
+    }
+
+    const claim = {
+      userId,
+      tenantId,
+      day,
+      claimedAt: new Date(),
+      rewardData: reward.reward,
+    };
+
+    const id = await indexedDBService.add('userDailyRewards', claim);
+    return { ...claim, id };
+  }
+
+  // ============================================================================
+  // Gamification V2: User Titles
+  // ============================================================================
+
+  /**
+   * Get user's unlocked titles
+   */
+  async getUserTitles(userId: string, tenantId: number = 1): Promise<any[]> {
+    return await indexedDBService.getByIndex('userTitles', 'userId', userId);
+  }
+
+  /**
+   * Unlock a new title for a user
+   */
+  async unlockTitle(
+    userId: string,
+    title: string,
+    description: string,
+    source: string,
+    tenantId: number = 1
+  ): Promise<any> {
+    // Check if title already unlocked
+    const existing = await indexedDBService.getByIndex('userTitles', 'userTitle', [userId, title]);
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    const newTitle = {
+      userId,
+      tenantId,
+      title,
+      description,
+      source,
+      unlockedAt: new Date(),
+    };
+
+    const id = await indexedDBService.add('userTitles', newTitle);
+    return { ...newTitle, id };
+  }
+
+  /**
+   * Set user's selected title
+   */
+  async setSelectedTitle(userId: string, title: string | null): Promise<any> {
+    return await this.updateUserGameStats(userId, { selectedTitle: title });
+  }
+
   // Smart Study Recommendations
   // ============================================================================
 

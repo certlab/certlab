@@ -27,6 +27,7 @@ const Review = lazy(() => import('@/pages/review'));
 const Lecture = lazy(() => import('@/pages/lecture'));
 const StudyNotesPage = lazy(() => import('@/pages/study-notes'));
 const Achievements = lazy(() => import('@/pages/achievements'));
+const DailyChallenges = lazy(() => import('@/pages/daily-challenges'));
 const Accessibility = lazy(() => import('@/pages/accessibility'));
 const AdminDashboard = lazy(() => import('@/pages/admin'));
 const UIStructurePage = lazy(() => import('@/pages/ui-structure'));
@@ -94,6 +95,7 @@ function Router() {
                   <Route path="/app/lecture/:id" element={<Lecture />} />
                   <Route path="/app/study-notes" element={<StudyNotesPage />} />
                   <Route path="/app/achievements" element={<Achievements />} />
+                  <Route path="/app/daily-challenges" element={<DailyChallenges />} />
                   <Route path="/app/accessibility" element={<Accessibility />} />
                   <Route path="/app/practice-tests" element={<PracticeTests />} />
 

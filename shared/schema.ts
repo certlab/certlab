@@ -423,6 +423,7 @@ export const badges = pgTable('badges', {
   requirement: jsonb('requirement').notNull(), // Flexible requirement definition
   color: text('color').notNull(), // Badge color theme
   rarity: text('rarity').notNull(), // "common", "uncommon", "rare", "legendary"
+  tier: text('tier'), // "bronze", "silver", "gold", "platinum" - for tiered achievements
   points: integer('points').default(0), // Gamification points awarded
   createdAt: timestamp('created_at').defaultNow(),
 });
@@ -447,9 +448,20 @@ export const userGameStats = pgTable('user_game_stats', {
   currentStreak: integer('current_streak').default(0),
   longestStreak: integer('longest_streak').default(0),
   lastActivityDate: timestamp('last_activity_date'),
+  lastLoginDate: timestamp('last_login_date'), // Track last login for daily rewards
+  consecutiveLoginDays: integer('consecutive_login_days').default(0), // Daily login tracking
   totalBadgesEarned: integer('total_badges_earned').default(0),
   level: integer('level').default(1), // User level based on points
   nextLevelPoints: integer('next_level_points').default(100),
+  streakFreezes: integer('streak_freezes').default(1), // Weekly streak freeze allowance
+  lastStreakFreezeReset: timestamp('last_streak_freeze_reset'), // Track when freeze resets
+  selectedTitle: text('selected_title'), // User's selected profile title
+  profileCustomization: jsonb('profile_customization').$type<{
+    theme?: string;
+    avatar?: string;
+    border?: string;
+  }>(), // Profile customization options
+  gamificationEnabled: boolean('gamification_enabled').default(true), // Opt-out of gamification
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -702,6 +714,75 @@ export type PracticeTest = typeof practiceTests.$inferSelect;
 export type InsertPracticeTestAttempt = z.infer<typeof insertPracticeTestAttemptSchema>;
 export type PracticeTestAttempt = typeof practiceTestAttempts.$inferSelect;
 
+// Quests table for gamification V2 quest system
+export const quests = pgTable('quests', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  type: text('type').notNull(), // "daily", "weekly", "monthly", "special"
+  requirement: jsonb('requirement').notNull().$type<{
+    type: string; // e.g., "quizzes_completed", "questions_answered", "perfect_scores"
+    target: number; // e.g., 5 for "complete 5 quizzes"
+    categoryId?: number; // Optional category restriction
+  }>(),
+  reward: jsonb('reward').notNull().$type<{
+    points: number;
+    title?: string; // Optional title unlock
+    badgeId?: number; // Optional badge unlock
+  }>(),
+  isActive: boolean('is_active').default(true),
+  validFrom: timestamp('valid_from').defaultNow(),
+  validUntil: timestamp('valid_until'), // Expiration for time-limited quests
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// User quest progress table
+export const userQuestProgress = pgTable('user_quest_progress', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  questId: integer('quest_id').notNull(),
+  progress: integer('progress').default(0), // Current progress towards target
+  isCompleted: boolean('is_completed').default(false),
+  completedAt: timestamp('completed_at'),
+  rewardClaimed: boolean('reward_claimed').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Daily rewards table
+export const dailyRewards = pgTable('daily_rewards', {
+  id: serial('id').primaryKey(),
+  day: integer('day').notNull(), // Day number (1-7 for weekly cycle, or higher for monthly)
+  reward: jsonb('reward').notNull().$type<{
+    points: number;
+    title?: string;
+    streakFreeze?: boolean; // Special reward: extra streak freeze
+  }>(),
+  description: text('description').notNull(),
+});
+
+// User daily reward claims
+export const userDailyRewards = pgTable('user_daily_rewards', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  day: integer('day').notNull(),
+  claimedAt: timestamp('claimed_at').defaultNow(),
+  rewardData: jsonb('reward_data'), // Copy of reward data at time of claim
+});
+
+// User titles (unlockable profile titles)
+export const userTitles = pgTable('user_titles', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  title: text('title').notNull(), // e.g., "Quiz Master", "Streak Champion", "Study Warrior"
+  description: text('description'),
+  unlockedAt: timestamp('unlocked_at').defaultNow(),
+  source: text('source'), // Where it came from: "quest", "badge", "achievement", "special"
+});
+
 // Marketplace purchase type (client-side only, no DB table)
 export type MarketplacePurchase = {
   id: number;
@@ -723,3 +804,41 @@ export type UserStats = {
   passingRate: number;
   masteryScore: number;
 };
+
+// Insert schemas for gamification V2 features
+export const insertQuestSchema = createInsertSchema(quests).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserQuestProgressSchema = createInsertSchema(userQuestProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDailyRewardSchema = createInsertSchema(dailyRewards).omit({
+  id: true,
+});
+
+export const insertUserDailyRewardSchema = createInsertSchema(userDailyRewards).omit({
+  id: true,
+  claimedAt: true,
+});
+
+export const insertUserTitleSchema = createInsertSchema(userTitles).omit({
+  id: true,
+  unlockedAt: true,
+});
+
+// Types for gamification V2 features
+export type InsertQuest = z.infer<typeof insertQuestSchema>;
+export type Quest = typeof quests.$inferSelect;
+export type InsertUserQuestProgress = z.infer<typeof insertUserQuestProgressSchema>;
+export type UserQuestProgress = typeof userQuestProgress.$inferSelect;
+export type InsertDailyReward = z.infer<typeof insertDailyRewardSchema>;
+export type DailyReward = typeof dailyRewards.$inferSelect;
+export type InsertUserDailyReward = z.infer<typeof insertUserDailyRewardSchema>;
+export type UserDailyReward = typeof userDailyRewards.$inferSelect;
+export type InsertUserTitle = z.infer<typeof insertUserTitleSchema>;
+export type UserTitle = typeof userTitles.$inferSelect;
