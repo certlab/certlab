@@ -1,0 +1,124 @@
+name: Roadmap Tracker
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Run mode'
+        required: true
+        default: 'dry-run'
+        type: choice
+        options:
+          - 'dry-run'
+          - 'live'
+      update_tracking:
+        description: 'Update ROADMAP_TRACKING.md in repository'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+  schedule:
+    # Run weekly on Monday at 9:00 AM UTC
+    - cron: '0 9 * * 1'
+
+permissions:
+  issues: write
+  contents: write
+
+jobs:
+  roadmap-tracker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run roadmap tracker (dry-run)
+        if: ${{ inputs.mode == 'dry-run' || github.event_name == 'schedule' }}
+        run: npx tsx scripts/roadmap-tracker.ts
+
+      - name: Run roadmap tracker (live)
+        if: ${{ inputs.mode == 'live' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx tsx scripts/roadmap-tracker.ts --live
+
+      - name: Upload tracking files as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: roadmap-tracking-files
+          path: |
+            ROADMAP_TRACKING.md
+            ROADMAP_ISSUES_PREVIEW.md
+            ROADMAP_ISSUE_SUMMARY.md
+          retention-days: 30
+
+      - name: Commit and push tracking file
+        if: ${{ inputs.update_tracking == 'true' && (inputs.mode == 'dry-run' || github.event_name == 'schedule') }}
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          if [ -f "ROADMAP_TRACKING.md" ]; then
+            git add ROADMAP_TRACKING.md
+            
+            if ! git diff --staged --quiet; then
+              git commit -m "chore: update roadmap tracking status [skip ci]"
+              git push
+              echo "✅ Tracking file updated and pushed"
+            else
+              echo "ℹ️ No changes to tracking file"
+            fi
+          else
+            echo "⚠️ ROADMAP_TRACKING.md not found"
+          fi
+
+      - name: Create job summary
+        if: always()
+        run: |
+          if [ -f "ROADMAP_TRACKING.md" ]; then
+            echo "## Roadmap Tracker Results" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Extract summary stats
+            total=$(grep -c "^- \[" ROADMAP_TRACKING.md || echo "0")
+            completed=$(grep -c "^- \[x\]" ROADMAP_TRACKING.md || echo "0")
+            pending=$(grep -c "^- \[ \]" ROADMAP_TRACKING.md || echo "0")
+            
+            echo "### Statistics" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Total Features**: $total" >> $GITHUB_STEP_SUMMARY
+            echo "- **Implemented**: $completed" >> $GITHUB_STEP_SUMMARY
+            echo "- **Pending**: $pending" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "${{ inputs.mode }}" = "live" ]; then
+              echo "### Mode" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "✅ **Live mode**: GitHub issues were created" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "### Mode" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "📋 **Dry-run mode**: Preview files generated" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The following files were uploaded as artifacts:" >> $GITHUB_STEP_SUMMARY
+            echo "- \`ROADMAP_TRACKING.md\` - Master tracking checklist" >> $GITHUB_STEP_SUMMARY
+            echo "- \`ROADMAP_ISSUES_PREVIEW.md\` - Issue templates" >> $GITHUB_STEP_SUMMARY
+            echo "- \`ROADMAP_ISSUE_SUMMARY.md\` - Human-readable summary" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Could not generate summary - tracking file not found" >> $GITHUB_STEP_SUMMARY
+          fi

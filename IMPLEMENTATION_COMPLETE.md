@@ -42,11 +42,36 @@ Human-readable summary:
 - Three methods for issue creation
 - Maintenance instructions
 
-### 3. Documentation
+### 3. Automation
+
+#### .github/workflows/roadmap-tracker.yml
+GitHub Actions workflow for automated execution:
+- **Manual trigger**: Run on-demand via GitHub UI
+- **Scheduled runs**: Weekly on Monday 9 AM UTC
+- **Modes**: Dry-run (preview) or live (create issues)
+- **Features**:
+  - Automatic dependency installation
+  - Artifact upload for tracking files
+  - Optional commit of updated tracking file
+  - Job summary with statistics
+  - No local setup required
+
+### 4. Helper Scripts
+
+#### scripts/create-roadmap-issues.sh (1.4 KB)
+Automated issue creation script:
+- Checks for GitHub CLI installation
+- Validates authentication
+- User confirmation before creating issues
+- Runs tracker in live mode
+- User-friendly output
+
+### 5. Documentation
 
 #### scripts/README_ROADMAP_TRACKER.md (6.4 KB)
 Complete usage guide:
-- How to run the script
+- GitHub Actions method (recommended)
+- How to run the script locally
 - Dry run vs live mode
 - Output file descriptions
 - Customization options
@@ -103,7 +128,24 @@ Automated issue creation script:
 
 ## 🚀 How to Use
 
-### Method 1: Automated (Recommended)
+### Method 1: GitHub Actions (Easiest)
+
+Use the automated workflow without any local setup:
+
+1. Navigate to **Actions** tab in GitHub
+2. Select **Roadmap Tracker** workflow
+3. Click **Run workflow**
+4. Choose **live** mode to create issues
+5. Review results in job summary
+
+**Features**:
+- ✅ No local setup required
+- ✅ Runs on GitHub infrastructure
+- ✅ Automatic authentication
+- ✅ Weekly scheduled runs for monitoring
+- ✅ Uploads tracking files as artifacts
+
+### Method 2: Local Automated
 
 If you have GitHub CLI access:
 
@@ -118,7 +160,7 @@ gh auth login
 npx tsx scripts/roadmap-tracker.ts --live
 ```
 
-### Method 2: Manual Creation
+### Method 3: Manual Creation
 
 1. Open `ROADMAP_ISSUES_PREVIEW.md`
 2. For each issue (1-12), copy the content
@@ -127,7 +169,7 @@ npx tsx scripts/roadmap-tracker.ts --live
 5. Add suggested labels
 6. Submit
 
-### Method 3: Use Summary as Guide
+### Method 4: Use Summary as Guide
 
 1. Open `ROADMAP_ISSUE_SUMMARY.md`
 2. Review the 12 feature summaries

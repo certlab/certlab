@@ -156,9 +156,29 @@ Below are 12 major features from the roadmap that should have dedicated GitHub i
 
 ## How to Create These Issues
 
-### Option 1: Use the Automated Script (Recommended)
+### Option 1: GitHub Actions (Easiest)
 
-If you have GitHub CLI authentication set up:
+Use the automated GitHub Actions workflow:
+
+1. Go to the **Actions** tab in the GitHub repository
+2. Select **Roadmap Tracker** from the workflows list
+3. Click **Run workflow**
+4. Select:
+   - **Run mode**: `live` (to create issues)
+   - **Update tracking**: Choose based on preference
+5. Click **Run workflow** button
+
+The workflow will:
+- ✅ Create all 12 GitHub issues automatically
+- ✅ Apply proper labels and formatting
+- ✅ Upload tracking files as artifacts
+- ✅ Provide a job summary with results
+
+**Benefits**: No local setup required, runs in GitHub's infrastructure, authenticated automatically.
+
+### Option 2: Local Automated Script
+
+If you have GitHub CLI authentication set up locally:
 
 ```bash
 # Ensure you're authenticated
@@ -170,7 +190,7 @@ npx tsx scripts/roadmap-tracker.ts --live
 
 This will automatically create all 12 issues with proper formatting and labels.
 
-### Option 2: Manual Creation
+### Option 3: Manual Creation
 
 1. Review the detailed issue templates in `ROADMAP_ISSUES_PREVIEW.md`
 2. For each feature above, create a GitHub issue with:
@@ -179,13 +199,24 @@ This will automatically create all 12 issues with proper formatting and labels.
    - Labels as suggested
    - Link back to this tracking issue
 
-### Option 3: Batch Creation via GitHub Web UI
+### Option 4: Use Summary as Guide
 
-1. Open GitHub Issues page
-2. Click "New Issue" for each feature
-3. Copy/paste title and content from ROADMAP_ISSUES_PREVIEW.md
-4. Add suggested labels
-5. Submit
+1. Open `ROADMAP_ISSUE_SUMMARY.md`
+2. Review the 12 feature summaries
+3. Create issues using the provided information
+4. Reference ROADMAP.md for full details
+
+---
+
+## Scheduled Automation
+
+The roadmap tracker runs automatically:
+
+- **Schedule**: Weekly on Monday at 9:00 AM UTC
+- **Mode**: Dry-run (preview only, doesn't create issues)
+- **Output**: Tracking files uploaded as GitHub Actions artifacts
+
+This helps maintain up-to-date visibility on roadmap progress without manual intervention.
 
 ## Master Tracking Checklist
 

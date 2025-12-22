@@ -26,7 +26,24 @@ The `roadmap-tracker.ts` script:
 
 ## Usage
 
-### Dry Run (Preview Mode)
+### Method 1: GitHub Actions (Recommended)
+
+The easiest way to run the roadmap tracker is via GitHub Actions:
+
+1. Go to the **Actions** tab in GitHub
+2. Select **Roadmap Tracker** workflow
+3. Click **Run workflow**
+4. Choose your options:
+   - **Run mode**: `dry-run` (preview) or `live` (create issues)
+   - **Update tracking**: `true` to commit updated tracking file
+
+The workflow:
+- ✅ Runs automatically on a schedule (weekly Monday 9 AM UTC)
+- ✅ Uploads tracking files as artifacts
+- ✅ Optionally commits tracking file updates
+- ✅ Creates a job summary with statistics
+
+### Method 2: Local Dry Run (Preview Mode)
 
 To preview what issues would be created without actually creating them:
 
@@ -41,7 +58,7 @@ This will:
 - Create `ROADMAP_ISSUES_PREVIEW.md` with all issue details
 - Create `ROADMAP_TRACKING.md` with tracking checklist
 
-### Live Mode (Create Issues)
+### Method 3: Local Live Mode (Create Issues)
 
 ⚠️ **Warning**: This will create real GitHub issues. Use with caution!
 
