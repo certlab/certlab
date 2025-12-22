@@ -17,6 +17,8 @@ CertLab is a modern, cloud-based certification study platform. Study for certifi
 - **Theme Options**: Seven themes including dark mode
 - **Accessibility**: Keyboard navigation, skip links, ARIA support
 
+📋 **[View Complete Feature List](FEATURES.md)** | 🗺️ **[View Roadmap](ROADMAP.md)**
+
 ## 📋 Table of Contents
 
 - [Quick Start](#-quick-start)
@@ -364,6 +366,11 @@ Comprehensive documentation is available in the [docs/](docs/) directory:
 - **[User Manual](docs/user-manual.md)** - End-user guide
 - **[Deployment Guide](docs/setup/deployment.md)** - Deploy your own instance
 
+### Project Planning
+- **[Features](FEATURES.md)** - 📋 Complete list of all implemented features
+- **[Roadmap](ROADMAP.md)** - 🗺️ Planned features and future direction
+- **[Changelog](CHANGELOG.md)** - Version history
+
 ### Architecture & Development
 - **[Architecture Overview](docs/architecture/overview.md)** - System design and data flow
 - **[ADR-001: Authentication & Authorization](docs/architecture/ADR-001-authentication-authorization.md)** - ⭐ Standard approach for auth
@@ -380,7 +387,6 @@ Comprehensive documentation is available in the [docs/](docs/) directory:
 - **[Project Structure](docs/PROJECT_STRUCTURE.md)** - Repository organization
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
 - **[Known Issues](docs/known-issues.md)** - Current limitations and planned improvements
-- **[Changelog](CHANGELOG.md)** - Version history
 
 ## ⚠️ Limitations
 
