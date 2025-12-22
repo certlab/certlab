@@ -303,6 +303,13 @@ class ClientStorage implements IClientStorage {
       explanation: question.explanation || null,
       difficultyLevel: question.difficultyLevel || 1,
       tags: question.tags || null,
+      // V2 Explanation fields
+      explanationSteps: question.explanationSteps || null,
+      referenceLinks: question.referenceLinks || null,
+      videoUrl: question.videoUrl || null,
+      communityExplanations: question.communityExplanations || null,
+      explanationVotes: question.explanationVotes || 0,
+      hasAlternativeViews: question.hasAlternativeViews || false,
     };
     const id = await indexedDBService.add(STORES.questions, newQuestion);
     return { ...newQuestion, id: Number(id) };
@@ -1716,6 +1723,108 @@ class ClientStorage implements IClientStorage {
       topCategories,
       weakCategories,
     };
+  // ============================================================================
+  // Smart Study Recommendations
+  // ============================================================================
+
+  /**
+   * Generate personalized study recommendations for a user
+   * @param userId - The user ID
+   * @returns Array of study recommendations sorted by priority
+   */
+  async getStudyRecommendations(
+    userId: string
+  ): Promise<import('./smart-recommendations').StudyRecommendation[]> {
+    const { generateStudyRecommendations } = await import('./smart-recommendations');
+
+    const quizzes = await this.getUserQuizzes(userId);
+    const masteryScores = await this.getMasteryScores(userId);
+    const categories = await this.getCategories();
+    const subcategories = await this.getSubcategories();
+    const userProgress = await indexedDBService.getByIndex<UserProgress>(
+      STORES.userProgress,
+      'userId',
+      userId
+    );
+
+    return generateStudyRecommendations(
+      quizzes,
+      masteryScores,
+      categories,
+      subcategories,
+      userProgress
+    );
+  }
+
+  /**
+   * Calculate readiness score for certification
+   * @param userId - The user ID
+   * @returns Readiness assessment with scores, weak areas, and recommendations
+   */
+  async getReadinessScore(
+    userId: string
+  ): Promise<import('./smart-recommendations').ReadinessScore> {
+    const { calculateReadinessScore } = await import('./smart-recommendations');
+
+    const quizzes = await this.getUserQuizzes(userId);
+    const masteryScores = await this.getMasteryScores(userId);
+    const categories = await this.getCategories();
+    const subcategories = await this.getSubcategories();
+    const userProgress = await indexedDBService.getByIndex<UserProgress>(
+      STORES.userProgress,
+      'userId',
+      userId
+    );
+
+    return calculateReadinessScore(quizzes, masteryScores, categories, subcategories, userProgress);
+  }
+
+  /**
+   * Analyze time-of-day performance patterns
+   * @param userId - The user ID
+   * @returns Performance analysis by hour of day
+   */
+  async getTimeOfDayPerformance(
+    userId: string
+  ): Promise<import('./smart-recommendations').TimeOfDayPerformance[]> {
+    const { analyzeTimeOfDayPerformance } = await import('./smart-recommendations');
+
+    const quizzes = await this.getUserQuizzes(userId);
+    return analyzeTimeOfDayPerformance(quizzes);
+  }
+
+  /**
+   * Calculate learning velocity metrics
+   * @param userId - The user ID
+   * @returns Learning velocity metrics including questions per day and improvement rate
+   */
+  async getLearningVelocity(
+    userId: string
+  ): Promise<import('./smart-recommendations').LearningVelocity> {
+    const { calculateLearningVelocity } = await import('./smart-recommendations');
+
+    const quizzes = await this.getUserQuizzes(userId);
+    return calculateLearningVelocity(quizzes);
+  }
+
+  /**
+   * Analyze performance for a specific category or subcategory
+   * @param userId - The user ID
+   * @param categoryId - Optional category ID to filter by
+   * @param subcategoryId - Optional subcategory ID to filter by
+   * @returns Performance metrics
+   */
+  async analyzePerformance(
+    userId: string,
+    categoryId?: number,
+    subcategoryId?: number
+  ): Promise<import('./smart-recommendations').PerformanceMetrics> {
+    const { analyzePerformance } = await import('./smart-recommendations');
+
+    const quizzes = await this.getUserQuizzes(userId);
+    const questions = await this.getQuestions();
+
+    return analyzePerformance(quizzes, questions, categoryId, subcategoryId);
   }
 }
 

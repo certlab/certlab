@@ -13,6 +13,7 @@ import PageLoader from '@/components/PageLoader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ConfigurationError } from '@/components/ConfigurationError';
 import { validateRequiredConfiguration } from '@/lib/config-validator';
+import { useMobileKeyboard } from '@/hooks/use-mobile-keyboard';
 // Landing page is eagerly loaded for fast first paint (initial route)
 import Landing from '@/pages/landing';
 import { lazy, Suspense, useEffect } from 'react';
@@ -129,6 +130,9 @@ function Router() {
 
 function AppContent() {
   const { user, isAuthenticated } = useAuth();
+
+  // Enable mobile keyboard handling improvements
+  useMobileKeyboard();
 
   return (
     <>

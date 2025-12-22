@@ -576,6 +576,52 @@ class StorageRouter implements IClientStorage {
   }
 
   // ==========================================
+  // Smart Study Recommendations
+  // ==========================================
+
+  async getStudyRecommendations(
+    userId: string
+  ): Promise<import('./smart-recommendations').StudyRecommendation[]> {
+    return this.executeFirestoreOperation(
+      (s) => s.getStudyRecommendations(userId),
+      'getStudyRecommendations'
+    );
+  }
+
+  async getReadinessScore(userId: string): Promise<import('./smart-recommendations').ReadinessScore> {
+    return this.executeFirestoreOperation((s) => s.getReadinessScore(userId), 'getReadinessScore');
+  }
+
+  async getTimeOfDayPerformance(
+    userId: string
+  ): Promise<import('./smart-recommendations').TimeOfDayPerformance[]> {
+    return this.executeFirestoreOperation(
+      (s) => s.getTimeOfDayPerformance(userId),
+      'getTimeOfDayPerformance'
+    );
+  }
+
+  async getLearningVelocity(
+    userId: string
+  ): Promise<import('./smart-recommendations').LearningVelocity> {
+    return this.executeFirestoreOperation(
+      (s) => s.getLearningVelocity(userId),
+      'getLearningVelocity'
+    );
+  }
+
+  async analyzePerformance(
+    userId: string,
+    categoryId?: number,
+    subcategoryId?: number
+  ): Promise<import('./smart-recommendations').PerformanceMetrics> {
+    return this.executeFirestoreOperation(
+      (s) => s.analyzePerformance(userId, categoryId, subcategoryId),
+      'analyzePerformance'
+    );
+  }
+
+  // ==========================================
   // Data Management
   // ==========================================
 

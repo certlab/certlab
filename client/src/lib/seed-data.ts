@@ -52,7 +52,7 @@
 import { clientStorage } from './client-storage';
 import { indexedDBService } from './indexeddb';
 
-const SEED_VERSION = 4;
+const SEED_VERSION = 5;
 
 export async function seedInitialData(): Promise<void> {
   // Check seed version - this is the primary mechanism for determining whether to reseed
@@ -275,6 +275,27 @@ export async function seedInitialData(): Promise<void> {
           'Information security aims to maintain the CIA triad: Confidentiality, Integrity, and Availability of information.',
         difficultyLevel: 1,
         tags: ['fundamentals', 'CIA triad'],
+        // V2 Explanation features demonstration
+        explanationSteps: [
+          'Confidentiality ensures that information is accessible only to authorized individuals',
+          'Integrity guarantees that data remains accurate and unmodified',
+          'Availability ensures that information and systems are accessible when needed',
+          'All three components work together to form the foundation of information security',
+        ],
+        referenceLinks: [
+          {
+            title: 'NIST SP 800-12: Introduction to Information Security',
+            url: 'https://csrc.nist.gov/publications/detail/sp/800-12/rev-1/final',
+            type: 'documentation',
+          },
+          {
+            title: 'Understanding the CIA Triad',
+            url: 'https://www.itgovernance.co.uk/blog/the-cia-triad',
+            type: 'article',
+          },
+        ],
+        explanationVotes: 12,
+        hasAlternativeViews: false,
       });
 
       await clientStorage.createQuestion({
@@ -333,6 +354,51 @@ export async function seedInitialData(): Promise<void> {
           'Defense in depth is a security strategy that uses multiple layers of security controls throughout an IT system to provide redundancy in case one control fails.',
         difficultyLevel: 2,
         tags: ['defense in depth', 'architecture'],
+        // V2 Explanation features with video and community explanations
+        explanationSteps: [
+          'Start with perimeter security (firewalls, IDS/IPS)',
+          'Add network segmentation to limit lateral movement',
+          'Implement endpoint protection and access controls',
+          'Include monitoring and logging at every layer',
+          'Ensure each layer provides independent protection',
+        ],
+        referenceLinks: [
+          {
+            title: 'NIST Defense in Depth Guide',
+            url: 'https://csrc.nist.gov/glossary/term/defense_in_depth',
+            type: 'documentation',
+          },
+          {
+            title: 'Defense in Depth: Best Practices',
+            url: 'https://www.sans.org/white-papers/defense-in-depth/',
+            type: 'article',
+          },
+        ],
+        videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        communityExplanations: [
+          {
+            id: 'comm-1',
+            userId: 'demo-user-1',
+            userName: 'Security Expert',
+            content:
+              'Think of defense in depth like protecting your home: you have a fence, locks on doors, an alarm system, and cameras. If one fails, the others still protect you. Same concept applies to IT security - use firewalls, antivirus, encryption, access controls, etc.',
+            votes: 15,
+            createdAt: new Date('2024-01-15'),
+            isVerified: true,
+          },
+          {
+            id: 'comm-2',
+            userId: 'demo-user-2',
+            userName: 'CISSP Certified',
+            content:
+              'A good analogy is a castle: moat, walls, guards, and inner keep. Each layer provides protection even if the outer layers are breached. No single point of failure.',
+            votes: 8,
+            createdAt: new Date('2024-01-20'),
+            isVerified: false,
+          },
+        ],
+        explanationVotes: 23,
+        hasAlternativeViews: true,
       });
     }
 
