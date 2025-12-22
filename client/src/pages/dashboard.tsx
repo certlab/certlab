@@ -57,7 +57,7 @@ export default function Dashboard() {
   });
 
   // Get categories to avoid hardcoding category IDs
-  const { data: categories = [] } = useQuery<Category[]>({
+  const { data: _categories = [] } = useQuery<Category[]>({
     queryKey: queryKeys.categories.all(),
   });
 

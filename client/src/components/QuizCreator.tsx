@@ -18,7 +18,6 @@ import { clientStorage } from '@/lib/client-storage';
 import { useToast } from '@/hooks/use-toast';
 import { InsufficientTokensDialog } from '@/components/InsufficientTokensDialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Sparkles } from 'lucide-react';
 import type { Category, Subcategory } from '@shared/schema';
 
 export default function QuizCreator() {

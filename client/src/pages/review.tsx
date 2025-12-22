@@ -23,14 +23,6 @@ interface QuizResult {
   explanation: string;
 }
 
-interface QuizSubmissionResponse {
-  quiz: Quiz;
-  results: QuizResult[];
-  score: number;
-  correctAnswers: number;
-  totalQuestions: number;
-}
-
 interface Question {
   id: number;
   categoryId: number;
