@@ -72,7 +72,11 @@ export function Celebration({ show, type = 'achievement', onComplete }: Celebrat
   const confetti = generateConfetti();
 
   return (
-    <div className="fixed inset-0 z-[100] pointer-events-none overflow-hidden">
+    <div
+      className="fixed inset-0 z-[100] pointer-events-none overflow-hidden"
+      aria-hidden="true"
+      role="presentation"
+    >
       <AnimatePresence>
         {confetti.map((particle) => (
           <motion.div

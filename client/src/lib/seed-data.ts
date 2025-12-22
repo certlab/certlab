@@ -52,7 +52,7 @@
 import { clientStorage } from './client-storage';
 import { indexedDBService } from './indexeddb';
 
-const SEED_VERSION = 5; // Gamification V2 features
+const SEED_VERSION = 6; // Gamification V2 features (matches DB_VERSION 6)
 
 export async function seedInitialData(): Promise<void> {
   // Check seed version - this is the primary mechanism for determining whether to reseed

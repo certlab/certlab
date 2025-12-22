@@ -36,6 +36,12 @@ export default function DailyChallengesPage() {
     enabled: !!currentUser,
   });
 
+  // Get user game stats for consecutive login days
+  const { data: gameStats } = useQuery<any>({
+    queryKey: queryKeys.user.stats(currentUser?.id),
+    enabled: !!currentUser,
+  });
+
   // Mutation for claiming daily rewards
   const claimDailyRewardMutation = useMutation({
     mutationFn: async (day: number) => {
@@ -43,6 +49,7 @@ export default function DailyChallengesPage() {
       return await gamificationService.claimDailyReward(currentUser.id, day, currentUser.tenantId);
     },
     onSuccess: (result) => {
+      triggerCelebration('reward');
       toast({
         title: '🎁 Reward Claimed!',
         description: `You earned ${result.pointsEarned} points${result.streakFreezeGranted ? ' and a Streak Freeze!' : '!'}`,
@@ -75,6 +82,7 @@ export default function DailyChallengesPage() {
       );
     },
     onSuccess: (result) => {
+      triggerCelebration('quest');
       toast({
         title: '✨ Quest Reward Claimed!',
         description: `You earned ${result.pointsAwarded} points for completing "${result.quest.title}"!`,
@@ -114,8 +122,8 @@ export default function DailyChallengesPage() {
   const weeklyQuests = quests?.filter((q) => q.type === 'weekly') || [];
   const monthlyQuests = quests?.filter((q) => q.type === 'monthly') || [];
 
-  // Calculate daily reward streak
-  const consecutiveDays = userDailyRewards?.length || 0;
+  // Calculate daily reward streak using consecutive login days from game stats
+  const consecutiveDays = gameStats?.consecutiveLoginDays ?? 0;
   const currentRewardDay = (consecutiveDays % 7) + 1;
 
   return (

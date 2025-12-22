@@ -1775,10 +1775,13 @@ class ClientStorage implements IClientStorage {
    * Get user's quest progress
    */
   async getUserQuestProgress(userId: string, tenantId: number = 1): Promise<any[]> {
-    return await indexedDBService.getByIndex('userQuestProgress', 'userTenantQuest', [
-      userId,
-      tenantId,
-    ]);
+    // Fetch all progress for the user and filter by tenant
+    const allUserProgress = await indexedDBService.getByIndex(
+      'userQuestProgress',
+      'userId',
+      userId
+    );
+    return allUserProgress.filter((progress: any) => progress.tenantId === tenantId);
   }
 
   /**
@@ -1968,6 +1971,8 @@ class ClientStorage implements IClientStorage {
    */
   async setSelectedTitle(userId: string, title: string | null): Promise<any> {
     return await this.updateUserGameStats(userId, { selectedTitle: title });
+  }
+
   // Smart Study Recommendations
   // ============================================================================
 

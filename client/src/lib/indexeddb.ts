@@ -334,7 +334,7 @@ class IndexedDBService {
           purchasesStore.createIndex('userMaterial', ['userId', 'materialId'], { unique: true });
         }
 
-        // Gamification V2 stores (added in version 5)
+        // Gamification V2 stores (added in version 6)
         if (!db.objectStoreNames.contains(STORES.quests)) {
           const questStore = db.createObjectStore(STORES.quests, {
             keyPath: 'id',

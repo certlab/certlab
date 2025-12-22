@@ -76,7 +76,7 @@ class GamificationService {
         }
 
         // Calculate new progress based on quest requirement type
-        let newProgress = questProgress?.progress || 0;
+        let newProgress = 0;
         const requirement = quest.requirement as { type: QuestRequirementType; target: number };
 
         switch (requirement.type) {
