@@ -18,10 +18,10 @@ import {
   Zap,
   Trophy,
   TrendingUp,
-  Users,
   Star,
   CheckCircle2,
   Sparkles,
+  Palette,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { useNavigate } from 'react-router-dom';
@@ -30,64 +30,90 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 // Lazy load Login component to reduce initial bundle size
 const Login = lazy(() => import('./login'));
 
-// Predefined gradient classes for features (prevents style injection)
-const GRADIENT_CLASSES = {
-  purplePink: 'from-purple-500 to-pink-500',
-  blueCyan: 'from-blue-500 to-cyan-500',
-  greenEmerald: 'from-green-500 to-emerald-500',
-  orangeRed: 'from-orange-500 to-red-500',
-  yellowOrange: 'from-yellow-500 to-orange-500',
-  indigoPurple: 'from-indigo-500 to-purple-500',
+// Clay style color schemes with proper claymorphism shadows
+const COLOR_SCHEMES = {
+  peachy: {
+    name: 'Peachy Clay',
+    bg: 'bg-[#FFE5D9]',
+    cardBg: 'bg-[#FFD7C4]',
+    primary: 'bg-gradient-to-br from-[#FF6B6B] to-[#FFA07A]',
+    secondary: 'bg-gradient-to-br from-[#FFB6B6] to-[#FFC7AB]',
+    text: 'text-[#8B4513]',
+    textLight: 'text-[#A0522D]',
+    // Claymorphism shadows: outer shadow (bottom-right) + inner shadow (top-left for depth)
+    shadow: 'shadow-[10px_10px_20px_rgba(139,69,19,0.15),-10px_-10px_20px_rgba(255,255,255,0.7)]',
+    hoverShadow:
+      'hover:shadow-[15px_15px_30px_rgba(139,69,19,0.2),-15px_-15px_30px_rgba(255,255,255,0.9)]',
+    innerShadow:
+      'shadow-[inset_8px_8px_16px_rgba(139,69,19,0.1),inset_-8px_-8px_16px_rgba(255,255,255,0.8)]',
+  },
+  minty: {
+    name: 'Minty Clay',
+    bg: 'bg-[#D4F1F4]',
+    cardBg: 'bg-[#B8E6E9]',
+    primary: 'bg-gradient-to-br from-[#05C896] to-[#4ECDC4]',
+    secondary: 'bg-gradient-to-br from-[#81D8D0] to-[#9FEDD7]',
+    text: 'text-[#1A535C]',
+    textLight: 'text-[#2B6777]',
+    shadow: 'shadow-[10px_10px_20px_rgba(26,83,92,0.15),-10px_-10px_20px_rgba(255,255,255,0.7)]',
+    hoverShadow:
+      'hover:shadow-[15px_15px_30px_rgba(26,83,92,0.2),-15px_-15px_30px_rgba(255,255,255,0.9)]',
+    innerShadow:
+      'shadow-[inset_8px_8px_16px_rgba(26,83,92,0.1),inset_-8px_-8px_16px_rgba(255,255,255,0.8)]',
+  },
+  lavender: {
+    name: 'Lavender Clay',
+    bg: 'bg-[#E8D5F2]',
+    cardBg: 'bg-[#D4BEE4]',
+    primary: 'bg-gradient-to-br from-[#A78BFA] to-[#C084FC]',
+    secondary: 'bg-gradient-to-br from-[#C4B5FD] to-[#DDD6FE]',
+    text: 'text-[#4A1A6B]',
+    textLight: 'text-[#6B2E8F]',
+    shadow: 'shadow-[10px_10px_20px_rgba(74,26,107,0.15),-10px_-10px_20px_rgba(255,255,255,0.7)]',
+    hoverShadow:
+      'hover:shadow-[15px_15px_30px_rgba(74,26,107,0.2),-15px_-15px_30px_rgba(255,255,255,0.9)]',
+    innerShadow:
+      'shadow-[inset_8px_8px_16px_rgba(74,26,107,0.1),inset_-8px_-8px_16px_rgba(255,255,255,0.8)]',
+  },
 } as const;
 
-type GradientKey = keyof typeof GRADIENT_CLASSES;
+type ColorScheme = keyof typeof COLOR_SCHEMES;
 
-// Features data - Enhanced with more details
-const features: Array<{
-  title: string;
-  description: string;
-  icon: typeof Brain;
-  gradientKey: GradientKey;
-}> = [
+// Features data with more details
+const features = [
   {
     title: 'Adaptive Learning',
     description:
       'AI-powered system adapts to your learning pace and identifies knowledge gaps automatically.',
     icon: Brain,
-    gradientKey: 'purplePink',
   },
   {
     title: 'Smart Progress Tracking',
     description:
       'Visualize your journey with detailed analytics and insights into your performance.',
     icon: TrendingUp,
-    gradientKey: 'blueCyan',
   },
   {
     title: 'Personalized Lectures',
     description: 'AI generates custom lectures based on your weak topics and learning style.',
     icon: BookOpen,
-    gradientKey: 'greenEmerald',
   },
   {
     title: 'Practice Tests',
     description:
       'Realistic exam simulations to build confidence and identify areas for improvement.',
     icon: Target,
-    gradientKey: 'orangeRed',
   },
   {
     title: 'Fast & Efficient',
     description:
       'Study smarter, not harder. Our platform optimizes your study time for maximum retention.',
     icon: Zap,
-    gradientKey: 'yellowOrange',
   },
   {
     title: 'Achievement System',
     description: 'Earn badges and track milestones to stay motivated throughout your journey.',
     icon: Trophy,
-    gradientKey: 'indigoPurple',
   },
 ];
 
@@ -158,6 +184,9 @@ export default function Landing() {
   const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [colorScheme, setColorScheme] = useState<ColorScheme>('peachy');
+
+  const theme = COLOR_SCHEMES[colorScheme];
 
   // Auto-redirect authenticated users to the app
   useEffect(() => {
@@ -202,7 +231,7 @@ export default function Landing() {
     return (
       <Suspense
         fallback={
-          <div className="min-h-screen bg-black flex items-center justify-center">
+          <div className={`min-h-screen ${theme.bg} flex items-center justify-center`}>
             <LoadingSpinner size="lg" label="Loading login..." />
           </div>
         }
@@ -213,52 +242,85 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white overflow-x-hidden">
+    <div
+      className={`min-h-screen ${theme.bg} ${theme.text} overflow-x-hidden transition-colors duration-500`}
+    >
+      {/* Color Scheme Switcher - Floating on the right */}
+      <div className="fixed top-24 right-6 z-50 flex flex-col gap-3">
+        <div className={`${theme.cardBg} ${theme.shadow} rounded-3xl p-2 flex flex-col gap-2`}>
+          <button
+            onClick={() => setColorScheme('peachy')}
+            className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF6B6B] to-[#FFA07A] ${
+              colorScheme === 'peachy'
+                ? 'ring-4 ring-[#FF6B6B] ring-offset-2 ring-offset-[#FFE5D9]'
+                : ''
+            } shadow-[6px_6px_12px_rgba(139,69,19,0.2),-6px_-6px_12px_rgba(255,255,255,0.8)] hover:scale-110 transition-all duration-300`}
+            aria-label="Peachy clay theme"
+            title="Peachy Clay"
+          />
+          <button
+            onClick={() => setColorScheme('minty')}
+            className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-[#05C896] to-[#4ECDC4] ${
+              colorScheme === 'minty'
+                ? 'ring-4 ring-[#05C896] ring-offset-2 ring-offset-[#D4F1F4]'
+                : ''
+            } shadow-[6px_6px_12px_rgba(26,83,92,0.2),-6px_-6px_12px_rgba(255,255,255,0.8)] hover:scale-110 transition-all duration-300`}
+            aria-label="Minty clay theme"
+            title="Minty Clay"
+          />
+          <button
+            onClick={() => setColorScheme('lavender')}
+            className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-[#A78BFA] to-[#C084FC] ${
+              colorScheme === 'lavender'
+                ? 'ring-4 ring-[#A78BFA] ring-offset-2 ring-offset-[#E8D5F2]'
+                : ''
+            } shadow-[6px_6px_12px_rgba(74,26,107,0.2),-6px_-6px_12px_rgba(255,255,255,0.8)] hover:scale-110 transition-all duration-300`}
+            aria-label="Lavender clay theme"
+            title="Lavender Clay"
+          />
+        </div>
+      </div>
+
       {/* Navigation */}
-      <nav className="py-4 px-4 bg-slate-950/50 backdrop-blur-xl sticky top-0 z-50 border-b border-white/5">
+      <nav className={`py-5 px-4 ${theme.cardBg} ${theme.shadow} sticky top-0 z-40`}>
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3 group cursor-pointer">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 rounded-lg blur-lg opacity-75 group-hover:opacity-100 transition-opacity" />
-                <div className="relative bg-slate-900 p-2 rounded-lg">
-                  <GraduationCap className="h-6 w-6 text-white" />
-                </div>
+            <div className="flex items-center gap-3">
+              <div className={`${theme.primary} p-4 rounded-3xl ${theme.shadow}`}>
+                <GraduationCap className="h-7 w-7 text-white" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent">
-                CertLab
-              </span>
+              <span className={`text-3xl font-bold ${theme.text}`}>CertLab</span>
             </div>
             <button
-              className="border border-white/20 size-10 inline-flex justify-center items-center rounded-lg md:hidden hover:bg-white/5 transition-colors"
+              className={`${theme.cardBg} size-12 inline-flex justify-center items-center rounded-2xl md:hidden ${theme.shadow} hover:scale-105 transition-transform`}
               aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
               onClick={handleToggleMobileMenu}
             >
               {mobileMenuOpen ? (
-                <X className="text-white w-5 h-5" />
+                <X className={`${theme.text} w-6 h-6`} />
               ) : (
-                <Menu className="text-white w-5 h-5" />
+                <Menu className={`${theme.text} w-6 h-6`} />
               )}
             </button>
-            <nav className="text-white/70 items-center gap-6 hidden md:flex">
+            <nav className={`${theme.textLight} items-center gap-8 hidden md:flex`}>
               <button
                 onClick={handleScrollToFeatures}
-                className="hover:text-white transition duration-300 font-medium"
+                className={`${theme.text} hover:scale-105 transition-transform font-bold text-lg`}
               >
                 Features
               </button>
               <button
                 onClick={handleScrollToFaq}
-                className="hover:text-white transition duration-300 font-medium"
+                className={`${theme.text} hover:scale-105 transition-transform font-bold text-lg`}
               >
                 FAQ
               </button>
               {isAuthenticated ? (
                 <button
                   onClick={handleGoToDashboard}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 py-2.5 px-6 rounded-lg text-white font-semibold shadow-lg shadow-purple-500/25 transition-all hover:shadow-xl hover:shadow-purple-500/40"
+                  className={`${theme.primary} text-white py-3 px-8 rounded-3xl font-bold text-lg ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all`}
                   data-testid="dashboard-button"
                 >
                   Dashboard
@@ -266,7 +328,7 @@ export default function Landing() {
               ) : (
                 <button
                   onClick={handleLogin}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 py-2.5 px-6 rounded-lg text-white font-semibold shadow-lg shadow-purple-500/25 transition-all hover:shadow-xl hover:shadow-purple-500/40"
+                  className={`${theme.primary} text-white py-3 px-8 rounded-3xl font-bold text-lg ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all`}
                   data-testid="get-started-button"
                 >
                   Get Started
@@ -276,17 +338,17 @@ export default function Landing() {
           </div>
           {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
-            <div id="mobile-menu" className="md:hidden mt-4 py-4 border-t border-white/10">
+            <div id="mobile-menu" className="md:hidden mt-6 py-4">
               <div className="flex flex-col gap-4">
                 <button
                   onClick={handleScrollToFeatures}
-                  className="text-white/70 hover:text-white transition duration-300 text-left font-medium"
+                  className={`${theme.text} hover:scale-105 transition-transform text-left font-bold text-lg`}
                 >
                   Features
                 </button>
                 <button
                   onClick={handleScrollToFaq}
-                  className="text-white/70 hover:text-white transition duration-300 text-left font-medium"
+                  className={`${theme.text} hover:scale-105 transition-transform text-left font-bold text-lg`}
                 >
                   FAQ
                 </button>
@@ -296,7 +358,7 @@ export default function Landing() {
                       handleGoToDashboard();
                       setMobileMenuOpen(false);
                     }}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 py-2.5 px-6 rounded-lg text-white font-semibold text-center"
+                    className={`${theme.primary} text-white py-3 px-8 rounded-3xl font-bold text-center ${theme.shadow}`}
                   >
                     Dashboard
                   </button>
@@ -306,7 +368,7 @@ export default function Landing() {
                       handleLogin();
                       setMobileMenuOpen(false);
                     }}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 py-2.5 px-6 rounded-lg text-white font-semibold text-center"
+                    className={`${theme.primary} text-white py-3 px-8 rounded-3xl font-bold text-center ${theme.shadow}`}
                   >
                     Get Started
                   </button>
@@ -318,72 +380,64 @@ export default function Landing() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative py-20 md:py-32 overflow-hidden">
-        {/* Animated gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-pink-600/20 to-cyan-600/20" />
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/30 rounded-full blur-3xl animate-pulse delay-1000" />
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse delay-2000" />
-        </div>
-
+      <section className="relative py-24 md:py-32">
         <div className="container mx-auto px-4 relative">
-          <div className="flex items-center justify-center mb-8">
+          <div className="flex items-center justify-center mb-10">
             <div
-              className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 py-2 px-4 rounded-full hover:bg-white/10 transition-all cursor-pointer group"
+              className={`inline-flex items-center gap-3 ${theme.cardBg} py-3 px-6 rounded-full ${theme.shadow} hover:scale-105 transition-all cursor-pointer`}
               onClick={handleScrollToFeatures}
             >
-              <Sparkles className="w-4 h-4 text-yellow-400" />
-              <span className="bg-gradient-to-r from-purple-300 via-pink-300 to-cyan-300 bg-clip-text text-transparent font-medium">
+              <Sparkles className={`w-5 h-5 ${theme.text}`} />
+              <span className={`${theme.text} font-bold text-lg`}>
                 AI-Powered Adaptive Learning
               </span>
-              <ArrowRight className="w-4 h-4 text-white/70 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className={`w-5 h-5 ${theme.textLight}`} />
             </div>
           </div>
 
           <div className="flex justify-center">
             <div className="max-w-5xl text-center">
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6">
-                <span className="bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent">
-                  Master Your
-                </span>
+              <h1
+                className={`text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight mb-8 ${theme.text}`}
+              >
+                Master Your
                 <br />
-                <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                  Certifications
-                </span>
+                Certifications
               </h1>
-              <p className="text-xl md:text-2xl text-white/70 max-w-3xl mx-auto mb-10 leading-relaxed">
-                The intelligent learning platform that adapts to you. Pass{' '}
-                <span className="text-purple-400 font-semibold">CISSP</span>,{' '}
-                <span className="text-pink-400 font-semibold">CISM</span>, and other professional
-                certifications with confidence.
+              <p
+                className={`text-2xl md:text-3xl ${theme.textLight} max-w-3xl mx-auto mb-12 leading-relaxed font-semibold`}
+              >
+                The intelligent learning platform that adapts to you. Pass CISSP, CISM, and other
+                professional certifications with confidence.
               </p>
 
               {isAuthenticated ? (
-                <div className="flex flex-col items-center gap-4">
-                  <p className="text-white/80 text-lg">Welcome back, {getUserDisplayName(user)}!</p>
+                <div className="flex flex-col items-center gap-6">
+                  <p className={`${theme.textLight} text-xl font-bold`}>
+                    Welcome back, {getUserDisplayName(user)}!
+                  </p>
                   <button
                     onClick={handleGoToDashboard}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-4 px-10 rounded-xl font-bold text-lg shadow-2xl shadow-purple-500/50 hover:shadow-purple-500/70 transform hover:scale-105 transition-all inline-flex items-center gap-2"
+                    className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all inline-flex items-center gap-3`}
                     data-testid="hero-dashboard-button"
                   >
                     Continue Learning
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-6 h-6" />
                   </button>
                 </div>
               ) : (
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                   <button
                     onClick={handleLogin}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-4 px-10 rounded-xl font-bold text-lg shadow-2xl shadow-purple-500/50 hover:shadow-purple-500/70 transform hover:scale-105 transition-all inline-flex items-center gap-2"
+                    className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all inline-flex items-center gap-3`}
                     data-testid="hero-get-started-button"
                   >
                     Get Started Free
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-6 h-6" />
                   </button>
                   <button
                     onClick={handleScrollToFeatures}
-                    className="bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/20 text-white py-4 px-10 rounded-xl font-bold text-lg transition-all inline-flex items-center gap-2"
+                    className={`${theme.cardBg} ${theme.text} py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} hover:scale-105 transition-all inline-flex items-center gap-3`}
                   >
                     Learn More
                   </button>
@@ -395,111 +449,112 @@ export default function Landing() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-sm border-y border-white/5">
+      <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                  {stat.value}
+          <div className={`${theme.cardBg} rounded-[3rem] p-12 ${theme.shadow}`}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {stats.map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div className={`text-5xl md:text-6xl font-black ${theme.text} mb-3`}>
+                    {stat.value}
+                  </div>
+                  <div className={`${theme.textLight} font-bold text-lg`}>{stat.label}</div>
                 </div>
-                <div className="text-white/60 font-medium">{stat.label}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-24 md:py-32">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-20">
+            <div className="inline-block mb-6">
+              <span
+                className={`${theme.cardBg} ${theme.text} px-6 py-2 rounded-full text-sm font-black uppercase tracking-wider ${theme.shadow}`}
+              >
+                Features
+              </span>
+            </div>
+            <h2
+              className={`text-5xl sm:text-6xl md:text-7xl font-black tracking-tight mb-6 ${theme.text}`}
+            >
+              Everything you need
+              <br />
+              to succeed
+            </h2>
+            <p className={`text-2xl ${theme.textLight} max-w-3xl mx-auto font-semibold`}>
+              Powerful features designed to accelerate your certification journey
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map(({ title, description, icon: Icon }, index) => (
+              <div
+                key={title}
+                className={`${theme.cardBg} rounded-[2.5rem] p-10 ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all duration-300`}
+              >
+                <div
+                  className={`${theme.primary} inline-flex p-5 rounded-3xl mb-6 ${theme.innerShadow}`}
+                >
+                  <Icon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className={`text-2xl font-black mb-4 ${theme.text}`}>{title}</h3>
+                <p className={`${theme.textLight} leading-relaxed text-lg font-semibold`}>
+                  {description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-20 md:py-32 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-950/10 to-transparent" />
-        <div className="container mx-auto px-4 relative">
-          <div className="text-center mb-16">
-            <div className="inline-block mb-4">
-              <span className="bg-purple-500/10 border border-purple-500/20 text-purple-300 px-4 py-1.5 rounded-full text-sm font-semibold">
-                Features
-              </span>
-            </div>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
-              <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-                Everything you need
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                to succeed
-              </span>
-            </h2>
-            <p className="text-xl text-white/60 max-w-2xl mx-auto">
-              Powerful features designed to accelerate your certification journey
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map(({ title, description, icon: Icon, gradientKey }) => {
-              const gradientClass = GRADIENT_CLASSES[gradientKey];
-              return (
-                <div
-                  key={title}
-                  className="group relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative">
-                    <div
-                      className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${gradientClass} mb-5 shadow-lg`}
-                    >
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold mb-3 text-white">{title}</h3>
-                    <p className="text-white/60 leading-relaxed">{description}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
       {/* Testimonials Section */}
-      <section className="py-20 md:py-32 bg-gradient-to-br from-purple-950/20 to-pink-950/20">
+      <section className="py-24 md:py-32">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <div className="inline-block mb-4">
-              <span className="bg-pink-500/10 border border-pink-500/20 text-pink-300 px-4 py-1.5 rounded-full text-sm font-semibold">
+          <div className="text-center mb-20">
+            <div className="inline-block mb-6">
+              <span
+                className={`${theme.secondary} text-white px-6 py-2 rounded-full text-sm font-black uppercase tracking-wider ${theme.shadow}`}
+              >
                 Testimonials
               </span>
             </div>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
-              <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-                Loved by learners
-              </span>
+            <h2
+              className={`text-5xl sm:text-6xl md:text-7xl font-black tracking-tight ${theme.text}`}
+            >
+              Loved by learners
               <br />
-              <span className="bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-                worldwide
-              </span>
+              worldwide
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <div
                 key={index}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/10 hover:border-white/20 transition-all"
+                className={`${theme.cardBg} rounded-[2.5rem] p-10 ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all`}
               >
-                <div className="flex gap-1 mb-4">
+                <div className="flex gap-1 mb-6">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                    <Star key={i} className="w-6 h-6 fill-yellow-500 text-yellow-500" />
                   ))}
                 </div>
-                <p className="text-white/80 mb-6 leading-relaxed">
+                <p className={`${theme.textLight} mb-8 leading-relaxed font-semibold text-lg`}>
                   &quot;{testimonial.content}&quot;
                 </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`w-16 h-16 rounded-3xl ${theme.primary} flex items-center justify-center text-white font-black text-2xl ${theme.shadow}`}
+                  >
                     {testimonial.name.charAt(0)}
                   </div>
                   <div>
-                    <div className="font-semibold text-white">{testimonial.name}</div>
-                    <div className="text-sm text-white/60">{testimonial.role}</div>
+                    <div className={`font-black text-lg ${theme.text}`}>{testimonial.name}</div>
+                    <div className={`text-base ${theme.textLight} font-semibold`}>
+                      {testimonial.role}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -509,56 +564,52 @@ export default function Landing() {
       </section>
 
       {/* Call to Action Section */}
-      <section className="py-20 md:py-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20" />
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-500/30 rounded-full blur-3xl" />
-        </div>
-
-        <div className="container mx-auto px-4 relative">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
-              <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-                Ready to ace your
-              </span>
+      <section className="py-24 md:py-32">
+        <div className="container mx-auto px-4">
+          <div
+            className={`${theme.cardBg} rounded-[3rem] p-16 md:p-20 ${theme.shadow} text-center`}
+          >
+            <h2
+              className={`text-5xl sm:text-6xl md:text-7xl font-black tracking-tight mb-8 ${theme.text}`}
+            >
+              Ready to ace your
               <br />
-              <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                certification exam?
-              </span>
+              certification exam?
             </h2>
-            <p className="text-xl text-white/70 mb-10 max-w-2xl mx-auto">
+            <p className={`text-2xl ${theme.textLight} mb-12 max-w-3xl mx-auto font-semibold`}>
               Join thousands of successful learners who have mastered their certifications with
               CertLab&apos;s AI-powered platform.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-10">
               {isAuthenticated ? (
                 <button
                   onClick={handleGoToDashboard}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-4 px-10 rounded-xl font-bold text-lg shadow-2xl shadow-purple-500/50 hover:shadow-purple-500/70 transform hover:scale-105 transition-all inline-flex items-center justify-center gap-2"
+                  className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all inline-flex items-center justify-center gap-3`}
                 >
                   Go to Dashboard
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-6 h-6" />
                 </button>
               ) : (
                 <button
                   onClick={handleLogin}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-4 px-10 rounded-xl font-bold text-lg shadow-2xl shadow-purple-500/50 hover:shadow-purple-500/70 transform hover:scale-105 transition-all inline-flex items-center justify-center gap-2"
+                  className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all inline-flex items-center justify-center gap-3`}
                 >
                   Start Free Trial
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-6 h-6" />
                 </button>
               )}
             </div>
 
-            <div className="flex items-center justify-center gap-6 text-sm text-white/60">
+            <div
+              className={`flex items-center justify-center gap-8 text-base ${theme.textLight} font-bold`}
+            >
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-400" />
+                <CheckCircle2 className="w-6 h-6 text-green-600" />
                 <span>No credit card required</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-400" />
+                <CheckCircle2 className="w-6 h-6 text-green-600" />
                 <span>Free forever plan</span>
               </div>
             </div>
@@ -567,37 +618,41 @@ export default function Landing() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-20 md:py-32 bg-gradient-to-b from-slate-950 to-slate-900">
+      <section id="faq" className="py-24 md:py-32">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <div className="inline-block mb-4">
-              <span className="bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 px-4 py-1.5 rounded-full text-sm font-semibold">
+          <div className="text-center mb-20">
+            <div className="inline-block mb-6">
+              <span
+                className={`${theme.secondary} text-white px-6 py-2 rounded-full text-sm font-black uppercase tracking-wider ${theme.shadow}`}
+              >
                 FAQ
               </span>
             </div>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight">
-              <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-                Frequently asked
-              </span>
+            <h2
+              className={`text-5xl sm:text-6xl md:text-7xl font-black tracking-tight ${theme.text}`}
+            >
+              Frequently asked
               <br />
-              <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                questions
-              </span>
+              questions
             </h2>
           </div>
 
-          <div className="max-w-3xl mx-auto">
-            <Accordion type="single" collapsible className="w-full space-y-4">
+          <div className="max-w-4xl mx-auto">
+            <Accordion type="single" collapsible className="w-full space-y-6">
               {faqs.map((faq, index) => (
                 <AccordionItem
                   key={index}
                   value={`item-${index}`}
-                  className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-6 hover:bg-white/10 transition-colors"
+                  className={`${theme.cardBg} rounded-[2rem] px-8 ${theme.shadow} ${theme.hoverShadow} hover:scale-[1.02] transition-all border-none`}
                 >
-                  <AccordionTrigger className="text-left py-6 text-white hover:no-underline font-semibold">
+                  <AccordionTrigger
+                    className={`text-left py-8 ${theme.text} hover:no-underline font-black text-xl`}
+                  >
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-white/70 pb-6 leading-relaxed">
+                  <AccordionContent
+                    className={`${theme.textLight} pb-8 leading-relaxed text-lg font-semibold`}
+                  >
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -608,37 +663,34 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-950 text-white/60 py-12 border-t border-white/5">
+      <footer className={`${theme.cardBg} py-16 ${theme.shadow}`}>
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:justify-between gap-8 mb-8">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 rounded-lg blur-lg opacity-75" />
-                <div className="relative bg-slate-900 p-2 rounded-lg">
-                  <GraduationCap className="h-6 w-6 text-white" />
-                </div>
+          <div className="flex flex-col md:flex-row md:justify-between gap-10 mb-10">
+            <div className="flex items-center gap-4">
+              <div className={`${theme.primary} p-4 rounded-3xl ${theme.shadow}`}>
+                <GraduationCap className="h-7 w-7 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent">
-                CertLab
-              </span>
+              <span className={`text-3xl font-black ${theme.text}`}>CertLab</span>
             </div>
-            <div className="flex flex-wrap gap-6">
+            <div className="flex flex-wrap gap-8">
               <button
                 onClick={handleScrollToFeatures}
-                className="hover:text-white transition duration-200 font-medium"
+                className={`${theme.text} hover:scale-105 transition-transform font-bold text-lg`}
               >
                 Features
               </button>
               <button
                 onClick={handleScrollToFaq}
-                className="hover:text-white transition duration-200 font-medium"
+                className={`${theme.text} hover:scale-105 transition-transform font-bold text-lg`}
               >
                 FAQ
               </button>
             </div>
           </div>
-          <div className="pt-8 border-t border-white/5 text-center md:text-left">
-            <p className="select-none">
+          <div
+            className={`pt-8 border-t-2 ${theme.text} border-opacity-20 text-center md:text-left`}
+          >
+            <p className={`select-none ${theme.textLight} font-bold text-lg`}>
               © {new Date().getFullYear()} CertLab. All rights reserved. Built with AI-powered
               learning technology.
             </p>
