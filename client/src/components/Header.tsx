@@ -218,6 +218,20 @@ export default function Header() {
                             </NavigationMenuLink>
                             <NavigationMenuLink
                               className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
+                              onClick={() => navigate('/app/analytics')}
+                            >
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <BarChart3 className="w-3 h-3 text-primary" />
+                                </div>
+                                Analytics
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                Deep insights into learning patterns
+                              </p>
+                            </NavigationMenuLink>
+                            <NavigationMenuLink
+                              className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
                               onClick={() => navigate('/app/practice-tests')}
                             >
                               <div className="flex items-center text-sm font-medium leading-none text-foreground">
