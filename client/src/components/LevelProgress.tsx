@@ -34,15 +34,48 @@ const getLevelColor = (level: number) => {
 };
 
 export function LevelProgress({
-  level = 1,
+  level: propLevel = 1,
   totalPoints = 0,
   _nextLevelPoints = 100,
   currentStreak = 0,
   _longestStreak = 0,
   totalBadgesEarned = 0,
 }: LevelProgressProps) {
-  // Calculate current level's starting points
-  const currentLevelStartPoints = level > 1 ? ((level - 1) * level * 100) / 2 : 0;
+  // Calculate the correct level from totalPoints
+  // This ensures the display is always correct even if gameStats.level is outdated
+  const calculateLevel = (points: number): number => {
+    const POINTS_PER_LEVEL = 100;
+    let calcLevel = 1;
+    let pointsNeeded = 0;
+
+    while (true) {
+      const pointsForNextLevel = calcLevel * POINTS_PER_LEVEL;
+      if (pointsNeeded + pointsForNextLevel > points) {
+        break;
+      }
+      pointsNeeded += pointsForNextLevel;
+      calcLevel++;
+    }
+
+    return calcLevel;
+  };
+
+  // Calculate current level's starting points using cumulative sum
+  // Each level requires (level * 100) points, so cumulative points for level N is:
+  // Level 1 starts at 0, Level 2 at 100, Level 3 at 300, Level 4 at 600, etc.
+  const calculatePointsForLevel = (targetLevel: number): number => {
+    let points = 0;
+    for (let i = 1; i < targetLevel; i++) {
+      points += i * 100;
+    }
+    return points;
+  };
+
+  // Always recalculate level from totalPoints to ensure accuracy
+  // This prevents display bugs if gameStats.level is out of sync with totalPoints
+  const level = calculateLevel(totalPoints);
+
+  const currentLevelStartPoints = calculatePointsForLevel(level);
   const pointsInCurrentLevel = totalPoints - currentLevelStartPoints;
   const pointsNeededForLevel = level * 100;
   const progressToNextLevel = (pointsInCurrentLevel / pointsNeededForLevel) * 100;
