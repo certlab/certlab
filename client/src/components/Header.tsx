@@ -25,6 +25,7 @@ import {
   Settings,
   BookOpen,
   Trophy,
+  Target,
   BarChart3,
   Database,
   Shield,
