@@ -51,6 +51,8 @@ Feature-specific documentation:
 Essential project documents in the repository root:
 
 - **[../README.md](../README.md)** - Project overview and quick start guide
+- **[../FEATURES.md](../FEATURES.md)** - 📋 Complete list of all implemented features
+- **[../ROADMAP.md](../ROADMAP.md)** - 🗺️ Planned features and future direction
 - **[../CONTRIBUTING.md](../CONTRIBUTING.md)** - Contribution guidelines and development workflow
 - **[../CHANGELOG.md](../CHANGELOG.md)** - Version history and release notes
 - **[../SECURITY.md](../SECURITY.md)** - Security policy and vulnerability reporting
@@ -61,9 +63,18 @@ Essential project documents in the repository root:
 New to CertLab? Start here:
 
 1. **[../README.md](../README.md)** - Project overview and quick start
-2. **[setup/deployment.md](setup/deployment.md)** - Deploy your own instance
-3. **[architecture/overview.md](architecture/overview.md)** - Understand the architecture
-4. **[user-manual.md](user-manual.md)** - Learn how to use CertLab
+2. **[../FEATURES.md](../FEATURES.md)** - Explore all available features
+3. **[setup/deployment.md](setup/deployment.md)** - Deploy your own instance
+4. **[architecture/overview.md](architecture/overview.md)** - Understand the architecture
+5. **[user-manual.md](user-manual.md)** - Learn how to use CertLab
+
+### Planning & Roadmap
+
+Want to know what's coming next?
+
+1. **[../ROADMAP.md](../ROADMAP.md)** - 🗺️ Short, mid, and long-term plans
+2. **[../CHANGELOG.md](../CHANGELOG.md)** - Version history and past releases
+3. **[known-issues.md](known-issues.md)** - Current issues and planned improvements
 
 ### Implementing Features
 
@@ -85,13 +96,15 @@ Want to contribute? See:
 
 | Topic | Document | Description |
 |-------|----------|-------------|
+| **Features** | [../FEATURES.md](../FEATURES.md) | 📋 All implemented features |
+| **Roadmap** | [../ROADMAP.md](../ROADMAP.md) | 🗺️ Planned features & timeline |
 | **Organization** | [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | Repository structure guide |
 | **Setup** | [setup/firebase.md](setup/firebase.md) | Configure cloud sync |
 | **Setup** | [setup/deployment.md](setup/deployment.md) | Deploy to production |
 | **Architecture** | [architecture/overview.md](architecture/overview.md) | System design |
 | **Authentication** | [architecture/ADR-001-authentication-authorization.md](architecture/ADR-001-authentication-authorization.md) | ⭐ Auth standard (ADR) |
 | **Implementation** | [AUTHENTICATION_CHECKLIST.md](AUTHENTICATION_CHECKLIST.md) | ⭐ Dev checklist |
-| **Features** | [user-manual.md](user-manual.md) | User guide |
+| **User Guide** | [user-manual.md](user-manual.md) | End-user documentation |
 | **Development** | [../CONTRIBUTING.md](../CONTRIBUTING.md) | How to contribute |
 
 ---
