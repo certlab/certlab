@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Home, ShoppingBag, BookOpen, Wallet, User, Download, Shield } from 'lucide-react';
+import { Bell, Home, ShoppingBag, Wallet, User, Download, Shield, Timer } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-provider';
 import { RightSidebarProvider, useRightSidebar } from '@/lib/right-sidebar-provider';
@@ -24,6 +24,7 @@ interface AuthenticatedLayoutProps {
 const getNavigationItems = (isAdmin: boolean) => {
   const items = [
     { title: 'Dashboard', icon: Home, url: '/app' },
+    { title: 'Study Timer', icon: Timer, url: '/app/study-timer' },
     { title: 'Marketplace', icon: ShoppingBag, url: '/app/marketplace' },
     { title: 'Wallet', icon: Wallet, url: '/app/wallet' },
     { title: 'Profile', icon: User, url: '/app/profile' },

@@ -27,6 +27,7 @@ import { initializeFirestoreService, isFirestoreInitialized } from './firestore-
 import { getCurrentFirebaseUser } from './firebase';
 import { logError } from './errors';
 import type { IClientStorage } from '@shared/storage-interface';
+import type { StudyTimerSettings, StudyTimerSession, StudyTimerStats } from '@shared/schema';
 
 /**
  * Storage mode type - now always 'cloud' (Firestore)
@@ -573,6 +574,80 @@ class StorageRouter implements IClientStorage {
 
   calculateQuizTokenCost(questionCount: number): number {
     return this.getActiveStorage().calculateQuizTokenCost(questionCount);
+  }
+
+  // ==========================================
+  // Study Timer Methods
+  // ==========================================
+
+  async getStudyTimerSettings(userId: string): Promise<StudyTimerSettings | null> {
+    try {
+      return await clientStorage.getStudyTimerSettings(userId);
+    } catch (error) {
+      logError('getStudyTimerSettings', error);
+      throw error;
+    }
+  }
+
+  async saveStudyTimerSettings(settings: Partial<StudyTimerSettings>): Promise<StudyTimerSettings> {
+    try {
+      return await clientStorage.saveStudyTimerSettings(settings);
+    } catch (error) {
+      logError('saveStudyTimerSettings', error);
+      throw error;
+    }
+  }
+
+  async createStudyTimerSession(session: Partial<StudyTimerSession>): Promise<StudyTimerSession> {
+    try {
+      return await clientStorage.createStudyTimerSession(session);
+    } catch (error) {
+      logError('createStudyTimerSession', error);
+      throw error;
+    }
+  }
+
+  async updateStudyTimerSession(
+    sessionId: number,
+    updates: Partial<StudyTimerSession>
+  ): Promise<StudyTimerSession> {
+    try {
+      return await clientStorage.updateStudyTimerSession(sessionId, updates);
+    } catch (error) {
+      logError('updateStudyTimerSession', error);
+      throw error;
+    }
+  }
+
+  async getStudyTimerSessionsByDateRange(
+    userId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<StudyTimerSession[]> {
+    try {
+      return await clientStorage.getStudyTimerSessionsByDateRange(userId, startDate, endDate);
+    } catch (error) {
+      logError('getStudyTimerSessionsByDateRange', error);
+      throw error;
+    }
+  }
+
+  async getStudyTimerSessions(userId: string): Promise<StudyTimerSession[]> {
+    try {
+      return await clientStorage.getStudyTimerSessions(userId);
+    } catch (error) {
+      logError('getStudyTimerSessions', error);
+      throw error;
+    }
+  }
+
+  async getStudyTimerStats(userId: string): Promise<StudyTimerStats> {
+    try {
+      return await clientStorage.getStudyTimerStats(userId);
+    } catch (error) {
+      logError('getStudyTimerStats', error);
+      throw error;
+    }
   }
 
   // ==========================================

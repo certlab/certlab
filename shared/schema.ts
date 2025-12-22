@@ -794,6 +794,69 @@ export type MarketplacePurchase = {
   purchasedAt: Date;
 };
 
+// Study Timer Sessions table for Pomodoro technique
+export const studyTimerSessions = pgTable('study_timer_sessions', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  sessionType: text('session_type').notNull(), // "work", "break", "long_break"
+  duration: integer('duration').notNull(), // in minutes
+  startedAt: timestamp('started_at').defaultNow(),
+  completedAt: timestamp('completed_at'),
+  isCompleted: boolean('is_completed').default(false),
+  isPaused: boolean('is_paused').default(false),
+  pausedAt: timestamp('paused_at'),
+  totalPausedTime: integer('total_paused_time').default(0), // in seconds
+  categoryId: integer('category_id'), // Optional: link to study category
+  notes: text('notes'), // Optional: user notes for the session
+});
+
+// Study Timer Settings table for user preferences
+export const studyTimerSettings = pgTable('study_timer_settings', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull().unique(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  workDuration: integer('work_duration').default(25), // in minutes
+  breakDuration: integer('break_duration').default(5), // in minutes
+  longBreakDuration: integer('long_break_duration').default(15), // in minutes
+  sessionsUntilLongBreak: integer('sessions_until_long_break').default(4),
+  autoStartBreaks: boolean('auto_start_breaks').default(false),
+  autoStartWork: boolean('auto_start_work').default(false),
+  enableNotifications: boolean('enable_notifications').default(true),
+  enableSound: boolean('enable_sound').default(true),
+  dailyGoalMinutes: integer('daily_goal_minutes').default(120), // 2 hours default
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Insert schemas for study timer
+export const insertStudyTimerSessionSchema = createInsertSchema(studyTimerSessions).omit({
+  id: true,
+  startedAt: true,
+});
+
+export const insertStudyTimerSettingsSchema = createInsertSchema(studyTimerSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+// Types for study timer
+export type InsertStudyTimerSession = z.infer<typeof insertStudyTimerSessionSchema>;
+export type StudyTimerSession = typeof studyTimerSessions.$inferSelect;
+export type InsertStudyTimerSettings = z.infer<typeof insertStudyTimerSettingsSchema>;
+export type StudyTimerSettings = typeof studyTimerSettings.$inferSelect;
+
+// Study Timer Statistics type
+export type StudyTimerStats = {
+  todayMinutes: number;
+  weekMinutes: number;
+  monthMinutes: number;
+  totalSessions: number;
+  completedSessions: number;
+  averageSessionLength: number;
+  longestStreak: number;
+  currentStreak: number;
+};
+
 // User statistics type for dashboard
 export type UserStats = {
   totalQuizzes: number;

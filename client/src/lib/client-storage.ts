@@ -68,6 +68,9 @@ import type {
   InsertLecture,
   StudyNote,
   MarketplacePurchase,
+  StudyTimerSession,
+  StudyTimerSettings,
+  StudyTimerStats,
 } from '@shared/schema';
 import type {
   IClientStorage,
@@ -303,13 +306,6 @@ class ClientStorage implements IClientStorage {
       explanation: question.explanation || null,
       difficultyLevel: question.difficultyLevel || 1,
       tags: question.tags || null,
-      // V2 Explanation fields
-      explanationSteps: question.explanationSteps || null,
-      referenceLinks: question.referenceLinks || null,
-      videoUrl: question.videoUrl || null,
-      communityExplanations: question.communityExplanations || null,
-      explanationVotes: question.explanationVotes || 0,
-      hasAlternativeViews: question.hasAlternativeViews || false,
     };
     const id = await indexedDBService.add(STORES.questions, newQuestion);
     return { ...newQuestion, id: Number(id) };
@@ -1296,784 +1292,256 @@ class ClientStorage implements IClientStorage {
   }
 
   // ==========================================
-  // Performance Analytics
+  // Study Timer Methods
   // ==========================================
 
   /**
-   * Get performance trends over time
-   * Returns historical quiz scores grouped by date
+   * Get user's study timer settings
+   * @param userId - The user ID
+   * @returns The user's timer settings or null if not found
    */
-  async getPerformanceOverTime(
+  async getStudyTimerSettings(userId: string): Promise<StudyTimerSettings | null> {
+    const settings = await indexedDBService.getByIndex<StudyTimerSettings>(
+      STORES.studyTimerSettings,
+      'userId',
+      userId
+    );
+    return settings[0] || null;
+  }
+
+  /**
+   * Create or update study timer settings
+   * @param settings - The timer settings to save
+   * @returns The saved settings
+   */
+  async saveStudyTimerSettings(settings: Partial<StudyTimerSettings>): Promise<StudyTimerSettings> {
+    if (!settings.userId) {
+      throw new Error('userId is required for study timer settings');
+    }
+
+    const existingSettings = await this.getStudyTimerSettings(settings.userId);
+
+    if (existingSettings) {
+      const updated = {
+        ...existingSettings,
+        ...settings,
+        updatedAt: new Date(),
+      };
+      await indexedDBService.put(STORES.studyTimerSettings, updated);
+      return updated;
+    } else {
+      const newSettings = {
+        userId: settings.userId,
+        tenantId: settings.tenantId || 1,
+        workDuration: settings.workDuration || 25,
+        breakDuration: settings.breakDuration || 5,
+        longBreakDuration: settings.longBreakDuration || 15,
+        sessionsUntilLongBreak: settings.sessionsUntilLongBreak || 4,
+        autoStartBreaks: settings.autoStartBreaks !== undefined ? settings.autoStartBreaks : false,
+        autoStartWork: settings.autoStartWork !== undefined ? settings.autoStartWork : false,
+        enableNotifications:
+          settings.enableNotifications !== undefined ? settings.enableNotifications : true,
+        enableSound: settings.enableSound !== undefined ? settings.enableSound : true,
+        dailyGoalMinutes: settings.dailyGoalMinutes || 120,
+        updatedAt: new Date(),
+      };
+      const id = await indexedDBService.add(STORES.studyTimerSettings, newSettings);
+      return { ...newSettings, id: Number(id) } as StudyTimerSettings;
+    }
+  }
+
+  /**
+   * Create a new study timer session
+   * @param session - The session data
+   * @returns The created session with ID
+   */
+  async createStudyTimerSession(session: Partial<StudyTimerSession>): Promise<StudyTimerSession> {
+    const newSession = {
+      userId: session.userId!,
+      tenantId: session.tenantId || 1,
+      sessionType: session.sessionType!,
+      duration: session.duration!,
+      startedAt: session.startedAt || new Date(),
+      completedAt: session.completedAt,
+      isCompleted: session.isCompleted || false,
+      isPaused: session.isPaused || false,
+      pausedAt: session.pausedAt,
+      totalPausedTime: session.totalPausedTime || 0,
+      categoryId: session.categoryId,
+      notes: session.notes,
+    };
+
+    const id = await indexedDBService.add(STORES.studyTimerSessions, newSession);
+    return { ...newSession, id: Number(id) } as StudyTimerSession;
+  }
+
+  /**
+   * Update a study timer session
+   * @param sessionId - The session ID
+   * @param updates - The fields to update
+   * @returns The updated session
+   */
+  async updateStudyTimerSession(
+    sessionId: number,
+    updates: Partial<StudyTimerSession>
+  ): Promise<StudyTimerSession> {
+    const session = await indexedDBService.get<StudyTimerSession>(
+      STORES.studyTimerSessions,
+      sessionId
+    );
+    if (!session) {
+      throw new Error('Study timer session not found');
+    }
+
+    const updated = {
+      ...session,
+      ...updates,
+    };
+
+    await indexedDBService.put(STORES.studyTimerSessions, updated);
+    return updated;
+  }
+
+  /**
+   * Get study timer sessions for a user within a date range
+   * @param userId - The user ID
+   * @param startDate - Start date (inclusive)
+   * @param endDate - End date (inclusive)
+   * @returns Array of sessions within the date range
+   */
+  async getStudyTimerSessionsByDateRange(
     userId: string,
-    tenantId: number = 1,
-    days: number = 30
-  ): Promise<Array<{ date: string; score: number; quizCount: number }>> {
-    const quizzes = await this.getUserQuizzes(userId, tenantId);
-    const completedQuizzes = quizzes
-      .filter((q) => q.completedAt && q.score !== null)
-      .sort((a, b) => new Date(a.completedAt!).getTime() - new Date(b.completedAt!).getTime());
-
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-
-    const recentQuizzes = completedQuizzes.filter(
-      (q) => new Date(q.completedAt!).getTime() >= cutoffDate.getTime()
+    startDate: Date,
+    endDate: Date
+  ): Promise<StudyTimerSession[]> {
+    const allSessions = await indexedDBService.getByIndex<StudyTimerSession>(
+      STORES.studyTimerSessions,
+      'userId',
+      userId
     );
 
-    // Group by date
-    const grouped = new Map<string, { scores: number[]; count: number }>();
-    for (const quiz of recentQuizzes) {
-      const date = new Date(quiz.completedAt!).toISOString().split('T')[0];
-      if (!grouped.has(date)) {
-        grouped.set(date, { scores: [], count: 0 });
+    return allSessions.filter((session) => {
+      // Filter out sessions without startedAt timestamp
+      if (!session.startedAt) {
+        return false;
       }
-      const entry = grouped.get(date)!;
-      entry.scores.push(quiz.score!);
-      entry.count++;
-    }
-
-    // Calculate averages
-    const result = Array.from(grouped.entries()).map(([date, data]) => ({
-      date,
-      score: Math.round(data.scores.reduce((sum, s) => sum + s, 0) / data.scores.length),
-      quizCount: data.count,
-    }));
-
-    return result.sort((a, b) => a.date.localeCompare(b.date));
+      const sessionDate = new Date(session.startedAt);
+      return sessionDate >= startDate && sessionDate <= endDate;
+    });
   }
 
   /**
-   * Get performance breakdown by category and subcategory
+   * Get all study timer sessions for a user
+   * @param userId - The user ID
+   * @returns Array of all sessions
    */
-  async getCategoryBreakdown(
-    userId: string,
-    tenantId: number = 1
-  ): Promise<
-    Array<{
-      categoryId: number;
-      categoryName: string;
-      score: number;
-      questionsAnswered: number;
-      correctAnswers: number;
-      subcategories: Array<{
-        subcategoryId: number;
-        subcategoryName: string;
-        score: number;
-        questionsAnswered: number;
-        correctAnswers: number;
-      }>;
-    }>
-  > {
-    const masteryScores = await this.getUserMasteryScores(userId, tenantId);
-    const categories = await this.getCategories(tenantId);
-    const subcategories = await this.getSubcategories(undefined, tenantId);
-
-    // Group by category
-    const categoryMap = new Map<
-      number,
-      {
-        categoryId: number;
-        categoryName: string;
-        totalCorrect: number;
-        totalAnswers: number;
-        subcategories: Map<
-          number,
-          {
-            subcategoryId: number;
-            subcategoryName: string;
-            correctAnswers: number;
-            totalAnswers: number;
-          }
-        >;
-      }
-    >();
-
-    for (const score of masteryScores) {
-      if (!categoryMap.has(score.categoryId)) {
-        const category = categories.find((c) => c.id === score.categoryId);
-        categoryMap.set(score.categoryId, {
-          categoryId: score.categoryId,
-          categoryName: category?.name || 'Unknown',
-          totalCorrect: 0,
-          totalAnswers: 0,
-          subcategories: new Map(),
-        });
-      }
-
-      const catEntry = categoryMap.get(score.categoryId)!;
-      catEntry.totalCorrect += score.correctAnswers;
-      catEntry.totalAnswers += score.totalAnswers;
-
-      if (!catEntry.subcategories.has(score.subcategoryId)) {
-        const subcategory = subcategories.find((s) => s.id === score.subcategoryId);
-        catEntry.subcategories.set(score.subcategoryId, {
-          subcategoryId: score.subcategoryId,
-          subcategoryName: subcategory?.name || 'Unknown',
-          correctAnswers: 0,
-          totalAnswers: 0,
-        });
-      }
-
-      const subEntry = catEntry.subcategories.get(score.subcategoryId)!;
-      subEntry.correctAnswers += score.correctAnswers;
-      subEntry.totalAnswers += score.totalAnswers;
-    }
-
-    // Convert to array and calculate percentages
-    return Array.from(categoryMap.values()).map((cat) => ({
-      categoryId: cat.categoryId,
-      categoryName: cat.categoryName,
-      score: cat.totalAnswers > 0 ? Math.round((cat.totalCorrect / cat.totalAnswers) * 100) : 0,
-      questionsAnswered: cat.totalAnswers,
-      correctAnswers: cat.totalCorrect,
-      subcategories: Array.from(cat.subcategories.values()).map((sub) => ({
-        subcategoryId: sub.subcategoryId,
-        subcategoryName: sub.subcategoryName,
-        score: sub.totalAnswers > 0 ? Math.round((sub.correctAnswers / sub.totalAnswers) * 100) : 0,
-        questionsAnswered: sub.totalAnswers,
-        correctAnswers: sub.correctAnswers,
-      })),
-    }));
+  async getStudyTimerSessions(userId: string): Promise<StudyTimerSession[]> {
+    return await indexedDBService.getByIndex<StudyTimerSession>(
+      STORES.studyTimerSessions,
+      'userId',
+      userId
+    );
   }
 
   /**
-   * Get study time distribution and patterns
+   * Calculate study timer statistics for a user
+   * @param userId - The user ID
+   * @returns Statistics about study sessions
    */
-  async getStudyTimeDistribution(
-    userId: string,
-    tenantId: number = 1
-  ): Promise<{
-    totalMinutes: number;
-    averageSessionMinutes: number;
-    byDayOfWeek: Array<{ day: string; minutes: number; sessions: number }>;
-    byTimeOfDay: Array<{ hour: number; minutes: number; sessions: number }>;
-  }> {
-    const quizzes = await this.getUserQuizzes(userId, tenantId);
-    const completedQuizzes = quizzes.filter((q) => q.completedAt);
+  async getStudyTimerStats(userId: string): Promise<StudyTimerStats> {
+    const now = new Date();
 
-    let totalSeconds = 0;
-    const dayOfWeekMap = new Map<string, { minutes: number; sessions: number }>();
-    const hourMap = new Map<number, { minutes: number; sessions: number }>();
+    // Get today's sessions
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todaySessions = await this.getStudyTimerSessionsByDateRange(userId, todayStart, now);
 
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    // Get this week's sessions
+    const weekStart = new Date(now);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of week
+    weekStart.setHours(0, 0, 0, 0);
+    const weekSessions = await this.getStudyTimerSessionsByDateRange(userId, weekStart, now);
 
-    for (const quiz of completedQuizzes) {
-      if (!quiz.startedAt) continue; // Skip if no start time
-      const start = new Date(quiz.startedAt);
-      const end = new Date(quiz.completedAt!);
-      const duration = (end.getTime() - start.getTime()) / 1000; // seconds
-      totalSeconds += duration;
+    // Get this month's sessions
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthSessions = await this.getStudyTimerSessionsByDateRange(userId, monthStart, now);
 
-      // By day of week
-      const dayName = dayNames[start.getDay()];
-      if (!dayOfWeekMap.has(dayName)) {
-        dayOfWeekMap.set(dayName, { minutes: 0, sessions: 0 });
-      }
-      const dayEntry = dayOfWeekMap.get(dayName)!;
-      dayEntry.minutes += duration / 60;
-      dayEntry.sessions++;
+    // Get all sessions for totals
+    const allSessions = await this.getStudyTimerSessions(userId);
+    const completedSessions = allSessions.filter((s) => s.isCompleted);
 
-      // By hour of day
-      const hour = start.getHours();
-      if (!hourMap.has(hour)) {
-        hourMap.set(hour, { minutes: 0, sessions: 0 });
-      }
-      const hourEntry = hourMap.get(hour)!;
-      hourEntry.minutes += duration / 60;
-      hourEntry.sessions++;
-    }
+    // Calculate minutes
+    const todayMinutes = todaySessions
+      .filter((s) => s.isCompleted && s.sessionType === 'work')
+      .reduce((sum, s) => sum + s.duration, 0);
 
-    const totalMinutes = totalSeconds / 60;
-    const averageSessionMinutes =
-      completedQuizzes.length > 0 ? totalMinutes / completedQuizzes.length : 0;
+    const weekMinutes = weekSessions
+      .filter((s) => s.isCompleted && s.sessionType === 'work')
+      .reduce((sum, s) => sum + s.duration, 0);
 
-    return {
-      totalMinutes: Math.round(totalMinutes),
-      averageSessionMinutes: Math.round(averageSessionMinutes),
-      byDayOfWeek: dayNames.map((day) => {
-        const entry = dayOfWeekMap.get(day) || { minutes: 0, sessions: 0 };
-        return {
-          day,
-          minutes: Math.round(entry.minutes),
-          sessions: entry.sessions,
-        };
-      }),
-      byTimeOfDay: Array.from({ length: 24 }, (_, hour) => {
-        const entry = hourMap.get(hour) || { minutes: 0, sessions: 0 };
-        return {
-          hour,
-          minutes: Math.round(entry.minutes),
-          sessions: entry.sessions,
-        };
-      }),
-    };
-  }
+    const monthMinutes = monthSessions
+      .filter((s) => s.isCompleted && s.sessionType === 'work')
+      .reduce((sum, s) => sum + s.duration, 0);
 
-  /**
-   * Get strength and weakness analysis for heatmap visualization
-   */
-  async getStrengthWeaknessAnalysis(
-    userId: string,
-    tenantId: number = 1
-  ): Promise<
-    Array<{
-      categoryId: number;
-      categoryName: string;
-      subcategoryId: number;
-      subcategoryName: string;
-      masteryLevel: 'weak' | 'developing' | 'strong' | 'mastered';
-      score: number;
-      questionsAnswered: number;
-    }>
-  > {
-    const masteryScores = await this.getUserMasteryScores(userId, tenantId);
-    const categories = await this.getCategories(tenantId);
-    const subcategories = await this.getSubcategories(undefined, tenantId);
+    // Calculate average session length
+    const avgSessionLength =
+      completedSessions.length > 0
+        ? completedSessions.reduce((sum, s) => sum + s.duration, 0) / completedSessions.length
+        : 0;
 
-    const getMasteryLevel = (
-      score: number,
-      questionsAnswered: number
-    ): 'weak' | 'developing' | 'strong' | 'mastered' => {
-      if (questionsAnswered < 5) return 'developing'; // Not enough data
-      if (score >= 85) return 'mastered';
-      if (score >= 70) return 'strong';
-      if (score >= 50) return 'developing';
-      return 'weak';
-    };
+    // Calculate streaks (days with at least one completed work session)
+    const sessionsByDate = new Map<string, boolean>();
+    completedSessions
+      .filter((s) => s.sessionType === 'work' && s.startedAt) // Filter out sessions without startedAt
+      .forEach((s) => {
+        const dateKey = new Date(s.startedAt!).toDateString();
+        sessionsByDate.set(dateKey, true);
+      });
 
-    return masteryScores
-      .filter((m) => m.totalAnswers > 0)
-      .map((m) => {
-        const category = categories.find((c) => c.id === m.categoryId);
-        const subcategory = subcategories.find((s) => s.id === m.subcategoryId);
-        const score = Math.round((m.correctAnswers / m.totalAnswers) * 100);
-
-        return {
-          categoryId: m.categoryId,
-          categoryName: category?.name || 'Unknown',
-          subcategoryId: m.subcategoryId,
-          subcategoryName: subcategory?.name || 'Unknown',
-          masteryLevel: getMasteryLevel(score, m.totalAnswers),
-          score,
-          questionsAnswered: m.totalAnswers,
-        };
-      })
-      .sort((a, b) => a.score - b.score); // Weakest first
-  }
-
-  /**
-   * Get study consistency data for calendar visualization
-   */
-  async getStudyConsistency(
-    userId: string,
-    tenantId: number = 1,
-    days: number = 90
-  ): Promise<{
-    currentStreak: number;
-    longestStreak: number;
-    activeDays: number;
-    totalDays: number;
-    calendar: Array<{ date: string; quizCount: number; totalScore: number }>;
-  }> {
-    const quizzes = await this.getUserQuizzes(userId, tenantId);
-    const completedQuizzes = quizzes
-      .filter((q) => q.completedAt)
-      .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime());
-
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-
-    // Group by date
-    const dateMap = new Map<string, { quizCount: number; totalScore: number }>();
-    for (const quiz of completedQuizzes) {
-      const quizDate = new Date(quiz.completedAt!);
-      if (quizDate.getTime() < cutoffDate.getTime()) continue;
-
-      const dateStr = quizDate.toISOString().split('T')[0];
-      if (!dateMap.has(dateStr)) {
-        dateMap.set(dateStr, { quizCount: 0, totalScore: 0 });
-      }
-      const entry = dateMap.get(dateStr)!;
-      entry.quizCount++;
-      entry.totalScore += quiz.score || 0;
-    }
-
-    // Calculate streaks
+    // Calculate current streak
     let currentStreak = 0;
+    const checkDate = new Date();
+    checkDate.setHours(0, 0, 0, 0);
+
+    while (sessionsByDate.has(checkDate.toDateString())) {
+      currentStreak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
+
+    // Calculate longest streak
     let longestStreak = 0;
     let tempStreak = 0;
+    const sortedDates = Array.from(sessionsByDate.keys()).sort();
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Current streak: consecutive active days ending today (or most recent day)
-    for (let i = 0; i < days; i++) {
-      const checkDate = new Date(today);
-      checkDate.setDate(checkDate.getDate() - i);
-      const dateStr = checkDate.toISOString().split('T')[0];
-
-      if (dateMap.has(dateStr)) {
-        currentStreak++;
+    for (let i = 0; i < sortedDates.length; i++) {
+      if (i === 0) {
+        tempStreak = 1;
       } else {
-        // If first day (today) has no activity, current streak is 0
-        // If any day breaks the streak, stop counting
-        break;
+        const prevDate = new Date(sortedDates[i - 1]);
+        const currDate = new Date(sortedDates[i]);
+        const dayDiff = Math.floor(
+          (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        if (dayDiff === 1) {
+          tempStreak++;
+        } else {
+          longestStreak = Math.max(longestStreak, tempStreak);
+          tempStreak = 1;
+        }
       }
     }
-
-    // Longest streak: find maximum consecutive active days within the window
-    for (let i = 0; i < days; i++) {
-      const checkDate = new Date(today);
-      checkDate.setDate(checkDate.getDate() - i);
-      const dateStr = checkDate.toISOString().split('T')[0];
-
-      if (dateMap.has(dateStr)) {
-        tempStreak++;
-        longestStreak = Math.max(longestStreak, tempStreak);
-      } else {
-        tempStreak = 0;
-      }
-    }
-
-    const calendar = Array.from(dateMap.entries())
-      .map(([date, data]) => ({
-        date,
-        quizCount: data.quizCount,
-        totalScore: data.quizCount > 0 ? Math.round(data.totalScore / data.quizCount) : 0,
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
+    longestStreak = Math.max(longestStreak, tempStreak);
 
     return {
-      currentStreak,
+      todayMinutes,
+      weekMinutes,
+      monthMinutes,
+      totalSessions: allSessions.length,
+      completedSessions: completedSessions.length,
+      averageSessionLength: Math.round(avgSessionLength),
       longestStreak,
-      activeDays: dateMap.size,
-      totalDays: days,
-      calendar,
+      currentStreak,
     };
-  }
-
-  /**
-   * Get comprehensive performance summary
-   */
-  async getPerformanceSummary(
-    userId: string,
-    tenantId: number = 1
-  ): Promise<{
-    overview: {
-      totalQuizzes: number;
-      totalQuestions: number;
-      averageScore: number;
-      passingRate: number;
-      studyStreak: number;
-      totalStudyTime: number;
-    };
-    recentTrend: 'improving' | 'stable' | 'declining';
-    topCategories: Array<{ categoryId: number; categoryName: string; score: number }>;
-    weakCategories: Array<{ categoryId: number; categoryName: string; score: number }>;
-  }> {
-    const stats = await this.getUserStats(userId, tenantId);
-    const quizzes = await this.getUserQuizzes(userId, tenantId);
-    const completedQuizzes = quizzes
-      .filter((q) => q.completedAt)
-      .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime());
-    const categoryBreakdown = await this.getCategoryBreakdown(userId, tenantId);
-    const timeDistribution = await this.getStudyTimeDistribution(userId, tenantId);
-
-    // Calculate total questions
-    const totalQuestions = completedQuizzes.reduce((sum, q) => sum + (q.totalQuestions || 0), 0);
-
-    // Determine recent trend (last 10 quizzes vs previous 10)
-    // Note: completedQuizzes is sorted descending by completedAt, so slice(0,10) gets most recent
-    let recentTrend: 'improving' | 'stable' | 'declining' = 'stable';
-    if (completedQuizzes.length >= 10) {
-      const mostRecent10 = completedQuizzes.slice(0, 10);
-      const next10 = completedQuizzes.slice(10, 20);
-      const recentAvg =
-        mostRecent10.reduce((sum, q) => sum + (q.score || 0), 0) / mostRecent10.length;
-      const previousAvg =
-        next10.length > 0
-          ? next10.reduce((sum, q) => sum + (q.score || 0), 0) / next10.length
-          : recentAvg;
-
-      if (recentAvg > previousAvg + 5) recentTrend = 'improving';
-      else if (recentAvg < previousAvg - 5) recentTrend = 'declining';
-    }
-
-    // Get top and weak categories
-    const sortedCategories = [...categoryBreakdown].sort((a, b) => b.score - a.score);
-    const topCount = Math.min(3, sortedCategories.length);
-    const topCategories = sortedCategories.slice(0, topCount).map((c) => ({
-      categoryId: c.categoryId,
-      categoryName: c.categoryName,
-      score: c.score,
-    }));
-    const topCategoryIds = new Set(topCategories.map((c) => c.categoryId));
-    const weakCategories =
-      sortedCategories.length <= topCount
-        ? []
-        : sortedCategories
-            .slice()
-            .reverse()
-            .filter((c) => !topCategoryIds.has(c.categoryId))
-            .slice(0, 3)
-            .map((c) => ({
-              categoryId: c.categoryId,
-              categoryName: c.categoryName,
-              score: c.score,
-            }));
-
-    return {
-      overview: {
-        totalQuizzes: stats.totalQuizzes,
-        totalQuestions,
-        averageScore: stats.averageScore,
-        passingRate: stats.passingRate,
-        studyStreak: stats.studyStreak,
-        totalStudyTime: timeDistribution.totalMinutes,
-      },
-      recentTrend,
-      topCategories,
-      weakCategories,
-    };
-  }
-
-  // ============================================================================
-  // Gamification V2: Quest System
-  // ============================================================================
-
-  /**
-   * Get all quests
-   */
-  async getQuests(): Promise<any[]> {
-    return await indexedDBService.getAll('quests');
-  }
-
-  /**
-   * Get active quests
-   */
-  async getActiveQuests(): Promise<any[]> {
-    const allQuests = await this.getQuests();
-    return allQuests.filter((q) => q.isActive);
-  }
-
-  /**
-   * Get quests by type
-   */
-  async getQuestsByType(type: string): Promise<any[]> {
-    return await indexedDBService.getByIndex('quests', 'type', type);
-  }
-
-  /**
-   * Create a new quest
-   */
-  async createQuest(quest: any): Promise<any> {
-    const id = await indexedDBService.add('quests', quest);
-    return { ...quest, id };
-  }
-
-  /**
-   * Get user's quest progress
-   */
-  async getUserQuestProgress(userId: string, tenantId: number = 1): Promise<any[]> {
-    // Fetch all progress for the user and filter by tenant
-    const allUserProgress = await indexedDBService.getByIndex(
-      'userQuestProgress',
-      'userId',
-      userId
-    );
-    return allUserProgress.filter((progress: any) => progress.tenantId === tenantId);
-  }
-
-  /**
-   * Get user's progress for a specific quest
-   */
-  async getUserQuestProgressByQuest(
-    userId: string,
-    questId: number,
-    tenantId: number = 1
-  ): Promise<any | undefined> {
-    const allProgress = await indexedDBService.getByIndex('userQuestProgress', 'userTenantQuest', [
-      userId,
-      tenantId,
-      questId,
-    ]);
-    return allProgress[0];
-  }
-
-  /**
-   * Update user quest progress
-   */
-  async updateUserQuestProgress(
-    userId: string,
-    questId: number,
-    progress: number,
-    tenantId: number = 1
-  ): Promise<any> {
-    const existing = await this.getUserQuestProgressByQuest(userId, questId, tenantId);
-
-    if (existing) {
-      const updated = { ...existing, progress, updatedAt: new Date() };
-      await indexedDBService.put('userQuestProgress', updated);
-      return updated;
-    } else {
-      const newProgress = {
-        userId,
-        tenantId,
-        questId,
-        progress,
-        isCompleted: false,
-        rewardClaimed: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      const id = await indexedDBService.add('userQuestProgress', newProgress);
-      return { ...newProgress, id };
-    }
-  }
-
-  /**
-   * Complete a quest and mark it for reward claiming
-   */
-  async completeQuest(userId: string, questId: number, tenantId: number = 1): Promise<any> {
-    const existing = await this.getUserQuestProgressByQuest(userId, questId, tenantId);
-
-    if (existing) {
-      const updated = {
-        ...existing,
-        isCompleted: true,
-        completedAt: new Date(),
-        updatedAt: new Date(),
-      };
-      await indexedDBService.put('userQuestProgress', updated);
-      return updated;
-    } else {
-      throw new Error('Quest progress not found');
-    }
-  }
-
-  /**
-   * Claim quest reward
-   */
-  async claimQuestReward(userId: string, questId: number, tenantId: number = 1): Promise<any> {
-    const existing = await this.getUserQuestProgressByQuest(userId, questId, tenantId);
-
-    if (existing && existing.isCompleted && !existing.rewardClaimed) {
-      const updated = { ...existing, rewardClaimed: true, updatedAt: new Date() };
-      await indexedDBService.put('userQuestProgress', updated);
-      return updated;
-    } else {
-      throw new Error('Quest not completed or reward already claimed');
-    }
-  }
-
-  // ============================================================================
-  // Gamification V2: Daily Rewards
-  // ============================================================================
-
-  /**
-   * Get all daily rewards
-   */
-  async getDailyRewards(): Promise<any[]> {
-    return await indexedDBService.getAll('dailyRewards');
-  }
-
-  /**
-   * Get daily reward by day number
-   */
-  async getDailyRewardByDay(day: number): Promise<any | undefined> {
-    const rewards = await indexedDBService.getByIndex('dailyRewards', 'day', day);
-    return rewards[0];
-  }
-
-  /**
-   * Get user's daily reward claims
-   */
-  async getUserDailyRewards(userId: string, tenantId: number = 1): Promise<any[]> {
-    return await indexedDBService.getByIndex('userDailyRewards', 'userId', userId);
-  }
-
-  /**
-   * Check if user has claimed a specific day's reward
-   */
-  async hasClaimedDailyReward(userId: string, day: number): Promise<boolean> {
-    const claims = await indexedDBService.getByIndex('userDailyRewards', 'userDay', [userId, day]);
-    return claims.length > 0;
-  }
-
-  /**
-   * Claim a daily reward
-   */
-  async claimDailyReward(userId: string, day: number, tenantId: number = 1): Promise<any> {
-    const reward = await this.getDailyRewardByDay(day);
-    if (!reward) {
-      throw new Error('Reward not found for this day');
-    }
-
-    const alreadyClaimed = await this.hasClaimedDailyReward(userId, day);
-    if (alreadyClaimed) {
-      throw new Error('Reward already claimed for this day');
-    }
-
-    const claim = {
-      userId,
-      tenantId,
-      day,
-      claimedAt: new Date(),
-      rewardData: reward.reward,
-    };
-
-    const id = await indexedDBService.add('userDailyRewards', claim);
-    return { ...claim, id };
-  }
-
-  // ============================================================================
-  // Gamification V2: User Titles
-  // ============================================================================
-
-  /**
-   * Get user's unlocked titles
-   */
-  async getUserTitles(userId: string, tenantId: number = 1): Promise<any[]> {
-    return await indexedDBService.getByIndex('userTitles', 'userId', userId);
-  }
-
-  /**
-   * Unlock a new title for a user
-   */
-  async unlockTitle(
-    userId: string,
-    title: string,
-    description: string,
-    source: string,
-    tenantId: number = 1
-  ): Promise<any> {
-    // Check if title already unlocked
-    const existing = await indexedDBService.getByIndex('userTitles', 'userTitle', [userId, title]);
-    if (existing.length > 0) {
-      return existing[0];
-    }
-
-    const newTitle = {
-      userId,
-      tenantId,
-      title,
-      description,
-      source,
-      unlockedAt: new Date(),
-    };
-
-    const id = await indexedDBService.add('userTitles', newTitle);
-    return { ...newTitle, id };
-  }
-
-  /**
-   * Set user's selected title
-   */
-  async setSelectedTitle(userId: string, title: string | null): Promise<any> {
-    return await this.updateUserGameStats(userId, { selectedTitle: title });
-  }
-
-  // Smart Study Recommendations
-  // ============================================================================
-
-  /**
-   * Generate personalized study recommendations for a user
-   * @param userId - The user ID
-   * @returns Array of study recommendations sorted by priority
-   */
-  async getStudyRecommendations(
-    userId: string
-  ): Promise<import('./smart-recommendations').StudyRecommendation[]> {
-    const { generateStudyRecommendations } = await import('./smart-recommendations');
-
-    const quizzes = await this.getUserQuizzes(userId);
-    const masteryScores = await this.getMasteryScores(userId);
-    const categories = await this.getCategories();
-    const subcategories = await this.getSubcategories();
-    const userProgress = await indexedDBService.getByIndex<UserProgress>(
-      STORES.userProgress,
-      'userId',
-      userId
-    );
-
-    return generateStudyRecommendations(
-      quizzes,
-      masteryScores,
-      categories,
-      subcategories,
-      userProgress
-    );
-  }
-
-  /**
-   * Calculate readiness score for certification
-   * @param userId - The user ID
-   * @returns Readiness assessment with scores, weak areas, and recommendations
-   */
-  async getReadinessScore(
-    userId: string
-  ): Promise<import('./smart-recommendations').ReadinessScore> {
-    const { calculateReadinessScore } = await import('./smart-recommendations');
-
-    const quizzes = await this.getUserQuizzes(userId);
-    const masteryScores = await this.getMasteryScores(userId);
-    const categories = await this.getCategories();
-    const subcategories = await this.getSubcategories();
-    const userProgress = await indexedDBService.getByIndex<UserProgress>(
-      STORES.userProgress,
-      'userId',
-      userId
-    );
-
-    return calculateReadinessScore(quizzes, masteryScores, categories, subcategories, userProgress);
-  }
-
-  /**
-   * Analyze time-of-day performance patterns
-   * @param userId - The user ID
-   * @returns Performance analysis by hour of day
-   */
-  async getTimeOfDayPerformance(
-    userId: string
-  ): Promise<import('./smart-recommendations').TimeOfDayPerformance[]> {
-    const { analyzeTimeOfDayPerformance } = await import('./smart-recommendations');
-
-    const quizzes = await this.getUserQuizzes(userId);
-    return analyzeTimeOfDayPerformance(quizzes);
-  }
-
-  /**
-   * Calculate learning velocity metrics
-   * @param userId - The user ID
-   * @returns Learning velocity metrics including questions per day and improvement rate
-   */
-  async getLearningVelocity(
-    userId: string
-  ): Promise<import('./smart-recommendations').LearningVelocity> {
-    const { calculateLearningVelocity } = await import('./smart-recommendations');
-
-    const quizzes = await this.getUserQuizzes(userId);
-    return calculateLearningVelocity(quizzes);
-  }
-
-  /**
-   * Analyze performance for a specific category or subcategory
-   * @param userId - The user ID
-   * @param categoryId - Optional category ID to filter by
-   * @param subcategoryId - Optional subcategory ID to filter by
-   * @returns Performance metrics
-   */
-  async analyzePerformance(
-    userId: string,
-    categoryId?: number,
-    subcategoryId?: number
-  ): Promise<import('./smart-recommendations').PerformanceMetrics> {
-    const { analyzePerformance } = await import('./smart-recommendations');
-
-    const quizzes = await this.getUserQuizzes(userId);
-    const questions = await this.getQuestions();
-
-    return analyzePerformance(quizzes, questions, categoryId, subcategoryId);
   }
 }
 
