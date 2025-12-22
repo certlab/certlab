@@ -20,6 +20,7 @@ import {
   BarChart3,
   Building,
   ShoppingCart,
+  Timer,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -72,6 +73,13 @@ export default function MobileNavigationEnhanced() {
       id: 'learning',
       title: 'Learning Features',
       items: [
+        {
+          id: 'study-timer',
+          label: 'Study Timer',
+          icon: <Timer className="w-4 h-4" />,
+          href: '/app/study-timer',
+          description: 'Pomodoro timer for focused study sessions',
+        },
         {
           id: 'study-notes',
           label: 'Study Notes',
