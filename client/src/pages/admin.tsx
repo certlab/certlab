@@ -1008,11 +1008,7 @@ export default function AdminDashboard() {
                               deleteTenantMutation.mutate(selectedTenant);
                             }
                           }}
-                          disabled={
-                            !selectedTenant ||
-                            !currentTenant?.isActive ||
-                            deleteTenantMutation.isPending
-                          }
+                          disabled={!selectedTenant || deleteTenantMutation.isPending}
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Deactivate Tenant
