@@ -72,6 +72,11 @@ export default function MobileNavigationEnhanced() {
           icon: <BarChart3 className="w-4 h-4" />,
           href: '/app/analytics',
           description: 'Deep insights into learning patterns',
+          id: 'performance',
+          label: 'Performance',
+          icon: <BarChart3 className="w-4 h-4" />,
+          href: '/app/performance',
+          description: 'View detailed analytics and insights',
         },
       ],
     },
@@ -79,6 +84,14 @@ export default function MobileNavigationEnhanced() {
       id: 'learning',
       title: 'Learning Features',
       items: [
+        {
+          id: 'daily-challenges',
+          label: 'Daily Challenges',
+          icon: <Target className="w-4 h-4" />,
+          href: '/app/daily-challenges',
+          description: 'Complete quests and earn rewards',
+          badge: 'NEW',
+        },
         {
           id: 'study-notes',
           label: 'Study Notes',

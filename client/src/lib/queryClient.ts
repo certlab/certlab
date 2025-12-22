@@ -163,6 +163,19 @@ export const queryKeys = {
     tokenBalance: (userId: string | undefined) =>
       ['/api', 'user', userId, 'token-balance'] as const,
     studyPlan: (userId: string | undefined) => ['/api', 'user', userId, 'study-plan'] as const,
+    // Performance analytics queries
+    performanceOverTime: (userId: string | undefined, days?: number) =>
+      ['/api', 'user', userId, 'performance-over-time', days] as const,
+    categoryBreakdown: (userId: string | undefined) =>
+      ['/api', 'user', userId, 'category-breakdown'] as const,
+    studyTimeDistribution: (userId: string | undefined) =>
+      ['/api', 'user', userId, 'study-time-distribution'] as const,
+    strengthWeaknessAnalysis: (userId: string | undefined) =>
+      ['/api', 'user', userId, 'strength-weakness-analysis'] as const,
+    studyConsistency: (userId: string | undefined, days?: number) =>
+      ['/api', 'user', userId, 'study-consistency', days] as const,
+    performanceSummary: (userId: string | undefined) =>
+      ['/api', 'user', userId, 'performance-summary'] as const,
   },
 
   // Category queries
@@ -239,6 +252,31 @@ export const queryKeys = {
   // Subscription queries
   subscription: {
     status: () => ['/api', 'subscription', 'status'] as const,
+  },
+
+  // Gamification V2: Quest queries
+  quests: {
+    all: () => ['/api', 'quests'] as const,
+    active: () => ['/api', 'quests', 'active'] as const,
+    byType: (type: string) => ['/api', 'quests', 'type', type] as const,
+  },
+
+  // Gamification V2: User quest progress queries
+  userQuestProgress: {
+    all: (userId: string | undefined) => ['/api', 'user', userId, 'quest-progress'] as const,
+    byQuest: (userId: string | undefined, questId: number) =>
+      ['/api', 'user', userId, 'quest-progress', questId] as const,
+  },
+
+  // Gamification V2: Daily rewards queries
+  dailyRewards: {
+    all: () => ['/api', 'daily-rewards'] as const,
+    userClaims: (userId: string | undefined) => ['/api', 'user', userId, 'daily-rewards'] as const,
+  },
+
+  // Gamification V2: User titles queries
+  userTitles: {
+    all: (userId: string | undefined) => ['/api', 'user', userId, 'titles'] as const,
   },
 } as const;
 
@@ -485,6 +523,27 @@ export function getQueryFn<T>(options: { on401: UnauthorizedBehavior }): QueryFu
         if (path.includes('/token-balance') || path.includes('/tokens')) {
           return { balance: await storage.getUserTokenBalance(userId) } as T;
         }
+        // Performance analytics queries
+        if (path.includes('/performance-over-time')) {
+          const days = typeof key[4] === 'number' ? key[4] : undefined;
+          return (await storage.getPerformanceOverTime(userId, tenantId, days)) as T;
+        }
+        if (path.includes('/category-breakdown')) {
+          return (await storage.getCategoryBreakdown(userId, tenantId)) as T;
+        }
+        if (path.includes('/study-time-distribution')) {
+          return (await storage.getStudyTimeDistribution(userId, tenantId)) as T;
+        }
+        if (path.includes('/strength-weakness-analysis')) {
+          return (await storage.getStrengthWeaknessAnalysis(userId, tenantId)) as T;
+        }
+        if (path.includes('/study-consistency')) {
+          const days = typeof key[4] === 'number' ? key[4] : undefined;
+          return (await storage.getStudyConsistency(userId, tenantId, days)) as T;
+        }
+        if (path.includes('/performance-summary')) {
+          return (await storage.getPerformanceSummary(userId, tenantId)) as T;
+        }
         // Default to getting user
         const match = path.match(/\/api\/user\/([^\/]+)$/);
         if (match) {
@@ -605,6 +664,60 @@ export function getQueryFn<T>(options: { on401: UnauthorizedBehavior }): QueryFu
       if (tenantUsersMatch) {
         const tenantId = parseInt(tenantUsersMatch[1]);
         return (await storage.getUsersByTenant(tenantId)) as T;
+      }
+
+      // Handle Gamification V2: Quests
+      if (path === '/api/quests') {
+        return (await storage.getQuests()) as T;
+      }
+
+      if (path === '/api/quests/active') {
+        return (await storage.getActiveQuests()) as T;
+      }
+
+      if (path.includes('/quests/type/')) {
+        const match = path.match(/\/quests\/type\/([^\/]+)/);
+        if (match) {
+          const type = match[1];
+          return (await storage.getQuestsByType(type)) as T;
+        }
+      }
+
+      // Handle user quest progress
+      if (path.includes('/quest-progress')) {
+        const userId = key[2] as string;
+        const user = await storage.getUser(userId);
+        const tenantId = user?.tenantId || 1;
+
+        // Check if it's a specific quest
+        const questIdMatch = path.match(/\/quest-progress\/(\d+)/);
+        if (questIdMatch) {
+          const questId = parseInt(questIdMatch[1]);
+          return (await storage.getUserQuestProgressByQuest(userId, questId, tenantId)) as T;
+        }
+
+        // Return all quest progress
+        return (await storage.getUserQuestProgress(userId, tenantId)) as T;
+      }
+
+      // Handle Gamification V2: Daily Rewards
+      if (path === '/api/daily-rewards') {
+        return (await storage.getDailyRewards()) as T;
+      }
+
+      if (path.includes('/daily-rewards') && key[2]) {
+        const userId = key[2] as string;
+        const user = await storage.getUser(userId);
+        const tenantId = user?.tenantId || 1;
+        return (await storage.getUserDailyRewards(userId, tenantId)) as T;
+      }
+
+      // Handle Gamification V2: User Titles
+      if (path.includes('/titles') && key[2]) {
+        const userId = key[2] as string;
+        const user = await storage.getUser(userId);
+        const tenantId = user?.tenantId || 1;
+        return (await storage.getUserTitles(userId, tenantId)) as T;
       }
 
       // Default: return null for unsupported queries

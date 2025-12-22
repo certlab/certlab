@@ -19,7 +19,7 @@
  *
  * ## Database Schema
  *
- * Current version: 3
+ * Current version: 6
  *
  * Stores:
  * - tenants: Multi-tenant organization data
@@ -40,6 +40,11 @@
  * - studyGroupMembers: Group membership records
  * - practiceTests: Practice test configurations
  * - practiceTestAttempts: Practice test results
+ * - quests: Gamification V2 quest definitions
+ * - userQuestProgress: User quest tracking and completion
+ * - dailyRewards: Daily reward definitions
+ * - userDailyRewards: User daily reward claims
+ * - userTitles: Unlockable profile titles
  * - settings: App settings (including currentUserId)
  *
  * ## Usage
@@ -68,7 +73,7 @@
  */
 
 const DB_NAME = 'certlab';
-const DB_VERSION = 5;
+const DB_VERSION = 6; // Increment for Gamification V2 features
 
 // Define all stores (tables)
 const STORES = {
@@ -91,6 +96,11 @@ const STORES = {
   studyGroupMembers: 'studyGroupMembers',
   practiceTests: 'practiceTests',
   practiceTestAttempts: 'practiceTestAttempts',
+  quests: 'quests', // Gamification V2: Quest system
+  userQuestProgress: 'userQuestProgress', // Gamification V2: User quest tracking
+  dailyRewards: 'dailyRewards', // Gamification V2: Daily reward definitions
+  userDailyRewards: 'userDailyRewards', // Gamification V2: User reward claims
+  userTitles: 'userTitles', // Gamification V2: Unlockable profile titles
   settings: 'settings', // For storing app settings and current user
   marketplacePurchases: 'marketplacePurchases', // For tracking purchased study materials
 } as const;
@@ -322,6 +332,57 @@ class IndexedDBService {
           purchasesStore.createIndex('userId', 'userId');
           purchasesStore.createIndex('materialId', 'materialId');
           purchasesStore.createIndex('userMaterial', ['userId', 'materialId'], { unique: true });
+        }
+
+        // Gamification V2 stores (added in version 6)
+        if (!db.objectStoreNames.contains(STORES.quests)) {
+          const questStore = db.createObjectStore(STORES.quests, {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          questStore.createIndex('type', 'type');
+          questStore.createIndex('isActive', 'isActive');
+        }
+
+        if (!db.objectStoreNames.contains(STORES.userQuestProgress)) {
+          const questProgressStore = db.createObjectStore(STORES.userQuestProgress, {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          questProgressStore.createIndex('userId', 'userId');
+          questProgressStore.createIndex('tenantId', 'tenantId');
+          questProgressStore.createIndex('questId', 'questId');
+          questProgressStore.createIndex('userQuest', ['userId', 'questId']);
+          questProgressStore.createIndex('userTenantQuest', ['userId', 'tenantId', 'questId']);
+        }
+
+        if (!db.objectStoreNames.contains(STORES.dailyRewards)) {
+          const dailyRewardStore = db.createObjectStore(STORES.dailyRewards, {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          dailyRewardStore.createIndex('day', 'day', { unique: true });
+        }
+
+        if (!db.objectStoreNames.contains(STORES.userDailyRewards)) {
+          const userDailyRewardStore = db.createObjectStore(STORES.userDailyRewards, {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          userDailyRewardStore.createIndex('userId', 'userId');
+          userDailyRewardStore.createIndex('tenantId', 'tenantId');
+          userDailyRewardStore.createIndex('day', 'day');
+          userDailyRewardStore.createIndex('userDay', ['userId', 'day']);
+        }
+
+        if (!db.objectStoreNames.contains(STORES.userTitles)) {
+          const userTitleStore = db.createObjectStore(STORES.userTitles, {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          userTitleStore.createIndex('userId', 'userId');
+          userTitleStore.createIndex('tenantId', 'tenantId');
+          userTitleStore.createIndex('userTitle', ['userId', 'title'], { unique: true });
         }
       };
     });

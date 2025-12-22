@@ -143,6 +143,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (fbUser) {
         console.log('[AuthProvider] Firebase user signed in:', fbUser.email);
         await storage.setCurrentUserId(fbUser.uid);
+
+        // Process daily login for gamification
+        try {
+          const { gamificationService } = await import('./gamification-service');
+          const user = await storage.getUser(fbUser.uid);
+          if (user) {
+            await gamificationService.processDailyLogin(fbUser.uid, user.tenantId);
+          }
+        } catch (error) {
+          console.error('Failed to process daily login:', error);
+        }
       } else {
         console.log('[AuthProvider] Firebase user signed out');
         // Clear storage when user signs out

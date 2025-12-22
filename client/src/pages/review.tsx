@@ -12,6 +12,7 @@ import { queryKeys } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
 import { useAuth } from '@/lib/auth-provider';
 import { safeMarkdownToHtml, generateStudyNotesPdfHtml } from '@/lib/sanitize';
+import { EnhancedExplanation } from '@/components/EnhancedExplanation';
 import type { Quiz, Category, Question as SchemaQuestion } from '@shared/schema';
 
 interface QuizResult {
@@ -422,16 +423,12 @@ export default function Review() {
                     })}
                   </div>
 
-                  {/* Explanation */}
+                  {/* Enhanced Explanation V2 */}
                   {question.explanation && (
-                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 sm:p-4">
-                      <h4 className="font-medium text-primary mb-2 text-sm sm:text-base">
-                        Explanation
-                      </h4>
-                      <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                        {question.explanation}
-                      </p>
-                    </div>
+                    <EnhancedExplanation
+                      question={question as SchemaQuestion}
+                      isCorrect={isCorrect}
+                    />
                   )}
                 </CardContent>
               </Card>

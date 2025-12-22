@@ -14,6 +14,7 @@ import type { UserStats } from '@shared/schema';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import MobileNavigationEnhanced from '@/components/MobileNavigationEnhanced';
+import MobileBottomNav from '@/components/MobileBottomNav';
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -194,6 +195,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
           <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto p-4 md:p-6">
             {children}
           </main>
+          <MobileBottomNav />
         </div>
         <RightSidebar />
       </RightSidebarProvider>
