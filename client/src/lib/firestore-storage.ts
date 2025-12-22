@@ -1438,6 +1438,429 @@ class FirestoreStorage implements IClientStorage {
       throw error;
     }
   }
+
+  // ==========================================
+  // Performance Analytics
+  // ==========================================
+  // Note: These delegate to clientStorage for now since they're read-only analytics
+  // that work with existing quiz/mastery data structures
+
+  async getPerformanceOverTime(
+    userId: string,
+    tenantId: number = 1,
+    days: number = 30
+  ): Promise<Array<{ date: string; score: number; quizCount: number }>> {
+    const quizzes = await this.getUserQuizzes(userId, tenantId);
+    const completedQuizzes = quizzes
+      .filter((q) => q.completedAt && q.score !== null)
+      .sort((a, b) => new Date(a.completedAt!).getTime() - new Date(b.completedAt!).getTime());
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    const recentQuizzes = completedQuizzes.filter(
+      (q) => q.completedAt && new Date(q.completedAt).getTime() >= cutoffDate.getTime()
+    );
+
+    // Group by date
+    const grouped = new Map<string, { scores: number[]; count: number }>();
+    for (const quiz of recentQuizzes) {
+      const date = new Date(quiz.completedAt!).toISOString().split('T')[0];
+      if (!grouped.has(date)) {
+        grouped.set(date, { scores: [], count: 0 });
+      }
+      const entry = grouped.get(date)!;
+      entry.scores.push(quiz.score!);
+      entry.count++;
+    }
+
+    // Calculate averages
+    const result = Array.from(grouped.entries()).map(([date, data]) => ({
+      date,
+      score: Math.round(data.scores.reduce((sum, s) => sum + s, 0) / data.scores.length),
+      quizCount: data.count,
+    }));
+
+    return result.sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  async getCategoryBreakdown(
+    userId: string,
+    tenantId: number = 1
+  ): Promise<
+    Array<{
+      categoryId: number;
+      categoryName: string;
+      score: number;
+      questionsAnswered: number;
+      correctAnswers: number;
+      subcategories: Array<{
+        subcategoryId: number;
+        subcategoryName: string;
+        score: number;
+        questionsAnswered: number;
+        correctAnswers: number;
+      }>;
+    }>
+  > {
+    const masteryScores = await this.getUserMasteryScores(userId, tenantId);
+    const categories = await this.getCategories(tenantId);
+    const subcategories = await this.getSubcategories(undefined, tenantId);
+
+    // Group by category
+    const categoryMap = new Map<
+      number,
+      {
+        categoryId: number;
+        categoryName: string;
+        totalCorrect: number;
+        totalAnswers: number;
+        subcategories: Map<
+          number,
+          {
+            subcategoryId: number;
+            subcategoryName: string;
+            correctAnswers: number;
+            totalAnswers: number;
+          }
+        >;
+      }
+    >();
+
+    for (const score of masteryScores) {
+      if (!categoryMap.has(score.categoryId)) {
+        const category = categories.find((c) => c.id === score.categoryId);
+        categoryMap.set(score.categoryId, {
+          categoryId: score.categoryId,
+          categoryName: category?.name || 'Unknown',
+          totalCorrect: 0,
+          totalAnswers: 0,
+          subcategories: new Map(),
+        });
+      }
+
+      const catEntry = categoryMap.get(score.categoryId)!;
+      catEntry.totalCorrect += score.correctAnswers;
+      catEntry.totalAnswers += score.totalAnswers;
+
+      if (!catEntry.subcategories.has(score.subcategoryId)) {
+        const subcategory = subcategories.find((s) => s.id === score.subcategoryId);
+        catEntry.subcategories.set(score.subcategoryId, {
+          subcategoryId: score.subcategoryId,
+          subcategoryName: subcategory?.name || 'Unknown',
+          correctAnswers: 0,
+          totalAnswers: 0,
+        });
+      }
+
+      const subEntry = catEntry.subcategories.get(score.subcategoryId)!;
+      subEntry.correctAnswers += score.correctAnswers;
+      subEntry.totalAnswers += score.totalAnswers;
+    }
+
+    // Convert to array and calculate percentages
+    return Array.from(categoryMap.values()).map((cat) => ({
+      categoryId: cat.categoryId,
+      categoryName: cat.categoryName,
+      score: cat.totalAnswers > 0 ? Math.round((cat.totalCorrect / cat.totalAnswers) * 100) : 0,
+      questionsAnswered: cat.totalAnswers,
+      correctAnswers: cat.totalCorrect,
+      subcategories: Array.from(cat.subcategories.values()).map((sub) => ({
+        subcategoryId: sub.subcategoryId,
+        subcategoryName: sub.subcategoryName,
+        score: sub.totalAnswers > 0 ? Math.round((sub.correctAnswers / sub.totalAnswers) * 100) : 0,
+        questionsAnswered: sub.totalAnswers,
+        correctAnswers: sub.correctAnswers,
+      })),
+    }));
+  }
+
+  async getStudyTimeDistribution(
+    userId: string,
+    tenantId: number = 1
+  ): Promise<{
+    totalMinutes: number;
+    averageSessionMinutes: number;
+    byDayOfWeek: Array<{ day: string; minutes: number; sessions: number }>;
+    byTimeOfDay: Array<{ hour: number; minutes: number; sessions: number }>;
+  }> {
+    const quizzes = await this.getUserQuizzes(userId, tenantId);
+    const completedQuizzes = quizzes.filter((q) => q.completedAt);
+
+    let totalSeconds = 0;
+    const dayOfWeekMap = new Map<string, { minutes: number; sessions: number }>();
+    const hourMap = new Map<number, { minutes: number; sessions: number }>();
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    for (const quiz of completedQuizzes) {
+      if (!quiz.startedAt) continue; // Skip if no start time
+      const start = new Date(quiz.startedAt);
+      const end = new Date(quiz.completedAt!);
+      const duration = (end.getTime() - start.getTime()) / 1000; // seconds
+      totalSeconds += duration;
+
+      // By day of week
+      const dayName = dayNames[start.getDay()];
+      if (!dayOfWeekMap.has(dayName)) {
+        dayOfWeekMap.set(dayName, { minutes: 0, sessions: 0 });
+      }
+      const dayEntry = dayOfWeekMap.get(dayName)!;
+      dayEntry.minutes += duration / 60;
+      dayEntry.sessions++;
+
+      // By hour of day
+      const hour = start.getHours();
+      if (!hourMap.has(hour)) {
+        hourMap.set(hour, { minutes: 0, sessions: 0 });
+      }
+      const hourEntry = hourMap.get(hour)!;
+      hourEntry.minutes += duration / 60;
+      hourEntry.sessions++;
+    }
+
+    const totalMinutes = totalSeconds / 60;
+    const averageSessionMinutes =
+      completedQuizzes.length > 0 ? totalMinutes / completedQuizzes.length : 0;
+
+    return {
+      totalMinutes: Math.round(totalMinutes),
+      averageSessionMinutes: Math.round(averageSessionMinutes),
+      byDayOfWeek: dayNames.map((day) => {
+        const entry = dayOfWeekMap.get(day) || { minutes: 0, sessions: 0 };
+        return {
+          day,
+          minutes: Math.round(entry.minutes),
+          sessions: entry.sessions,
+        };
+      }),
+      byTimeOfDay: Array.from({ length: 24 }, (_, hour) => {
+        const entry = hourMap.get(hour) || { minutes: 0, sessions: 0 };
+        return {
+          hour,
+          minutes: Math.round(entry.minutes),
+          sessions: entry.sessions,
+        };
+      }),
+    };
+  }
+
+  async getStrengthWeaknessAnalysis(
+    userId: string,
+    tenantId: number = 1
+  ): Promise<
+    Array<{
+      categoryId: number;
+      categoryName: string;
+      subcategoryId: number;
+      subcategoryName: string;
+      masteryLevel: 'weak' | 'developing' | 'strong' | 'mastered';
+      score: number;
+      questionsAnswered: number;
+    }>
+  > {
+    const masteryScores = await this.getUserMasteryScores(userId, tenantId);
+    const categories = await this.getCategories(tenantId);
+    const subcategories = await this.getSubcategories(undefined, tenantId);
+
+    const getMasteryLevel = (
+      score: number,
+      questionsAnswered: number
+    ): 'weak' | 'developing' | 'strong' | 'mastered' => {
+      if (questionsAnswered < 5) return 'developing'; // Not enough data
+      if (score >= 85) return 'mastered';
+      if (score >= 70) return 'strong';
+      if (score >= 50) return 'developing';
+      return 'weak';
+    };
+
+    return masteryScores
+      .filter((m) => m.totalAnswers > 0)
+      .map((m) => {
+        const category = categories.find((c) => c.id === m.categoryId);
+        const subcategory = subcategories.find((s) => s.id === m.subcategoryId);
+        const score = Math.round((m.correctAnswers / m.totalAnswers) * 100);
+
+        return {
+          categoryId: m.categoryId,
+          categoryName: category?.name || 'Unknown',
+          subcategoryId: m.subcategoryId,
+          subcategoryName: subcategory?.name || 'Unknown',
+          masteryLevel: getMasteryLevel(score, m.totalAnswers),
+          score,
+          questionsAnswered: m.totalAnswers,
+        };
+      })
+      .sort((a, b) => a.score - b.score); // Weakest first
+  }
+
+  async getStudyConsistency(
+    userId: string,
+    tenantId: number = 1,
+    days: number = 90
+  ): Promise<{
+    currentStreak: number;
+    longestStreak: number;
+    activeDays: number;
+    totalDays: number;
+    calendar: Array<{ date: string; quizCount: number; totalScore: number }>;
+  }> {
+    const quizzes = await this.getUserQuizzes(userId, tenantId);
+    const completedQuizzes = quizzes
+      .filter((q) => q.completedAt)
+      .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime());
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    // Group by date
+    const dateMap = new Map<string, { quizCount: number; totalScore: number }>();
+    for (const quiz of completedQuizzes) {
+      const quizDate = new Date(quiz.completedAt!);
+      if (quizDate.getTime() < cutoffDate.getTime()) continue;
+
+      const dateStr = quizDate.toISOString().split('T')[0];
+      if (!dateMap.has(dateStr)) {
+        dateMap.set(dateStr, { quizCount: 0, totalScore: 0 });
+      }
+      const entry = dateMap.get(dateStr)!;
+      entry.quizCount++;
+      entry.totalScore += quiz.score || 0;
+    }
+
+    // Calculate streaks
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let tempStreak = 0;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Current streak: consecutive active days ending today (or most recent day)
+    for (let i = 0; i < days; i++) {
+      const checkDate = new Date(today);
+      checkDate.setDate(checkDate.getDate() - i);
+      const dateStr = checkDate.toISOString().split('T')[0];
+
+      if (dateMap.has(dateStr)) {
+        currentStreak++;
+      } else {
+        // If first day (today) has no activity, current streak is 0
+        // If any day breaks the streak, stop counting
+        break;
+      }
+    }
+
+    // Longest streak: find maximum consecutive active days within the window
+    for (let i = 0; i < days; i++) {
+      const checkDate = new Date(today);
+      checkDate.setDate(checkDate.getDate() - i);
+      const dateStr = checkDate.toISOString().split('T')[0];
+
+      if (dateMap.has(dateStr)) {
+        tempStreak++;
+        longestStreak = Math.max(longestStreak, tempStreak);
+      } else {
+        tempStreak = 0;
+      }
+    }
+
+    const calendar = Array.from(dateMap.entries())
+      .map(([date, data]) => ({
+        date,
+        quizCount: data.quizCount,
+        totalScore: data.quizCount > 0 ? Math.round(data.totalScore / data.quizCount) : 0,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    return {
+      currentStreak,
+      longestStreak,
+      activeDays: dateMap.size,
+      totalDays: days,
+      calendar,
+    };
+  }
+
+  async getPerformanceSummary(
+    userId: string,
+    tenantId: number = 1
+  ): Promise<{
+    overview: {
+      totalQuizzes: number;
+      totalQuestions: number;
+      averageScore: number;
+      passingRate: number;
+      studyStreak: number;
+      totalStudyTime: number;
+    };
+    recentTrend: 'improving' | 'stable' | 'declining';
+    topCategories: Array<{ categoryId: number; categoryName: string; score: number }>;
+    weakCategories: Array<{ categoryId: number; categoryName: string; score: number }>;
+  }> {
+    const stats = await this.getUserStats(userId, tenantId);
+    const quizzes = await this.getUserQuizzes(userId, tenantId);
+    const completedQuizzes = quizzes.filter((q) => q.completedAt);
+    const categoryBreakdown = await this.getCategoryBreakdown(userId, tenantId);
+    const timeDistribution = await this.getStudyTimeDistribution(userId, tenantId);
+
+    // Calculate total questions
+    const totalQuestions = completedQuizzes.reduce((sum, q) => sum + (q.totalQuestions || 0), 0);
+
+    // Determine recent trend (last 10 quizzes vs previous 10)
+    // Note: completedQuizzes is sorted descending by completedAt, so slice(0,10) gets most recent
+    let recentTrend: 'improving' | 'stable' | 'declining' = 'stable';
+    if (completedQuizzes.length >= 10) {
+      const mostRecent10 = completedQuizzes.slice(0, 10);
+      const next10 = completedQuizzes.slice(10, 20);
+      const recentAvg =
+        mostRecent10.reduce((sum, q) => sum + (q.score || 0), 0) / mostRecent10.length;
+      const previousAvg =
+        next10.length > 0
+          ? next10.reduce((sum, q) => sum + (q.score || 0), 0) / next10.length
+          : recentAvg;
+
+      if (recentAvg > previousAvg + 5) recentTrend = 'improving';
+      else if (recentAvg < previousAvg - 5) recentTrend = 'declining';
+    }
+
+    // Get top and weak categories
+    const sortedCategories = [...categoryBreakdown].sort((a, b) => b.score - a.score);
+    const topCount = Math.min(3, sortedCategories.length);
+    const topCategories = sortedCategories.slice(0, topCount).map((c) => ({
+      categoryId: c.categoryId,
+      categoryName: c.categoryName,
+      score: c.score,
+    }));
+    const topCategoryIds = new Set(topCategories.map((c) => c.categoryId));
+    const weakCategories =
+      sortedCategories.length <= topCount
+        ? []
+        : sortedCategories
+            .slice()
+            .reverse()
+            .filter((c) => !topCategoryIds.has(c.categoryId))
+            .slice(0, 3)
+            .map((c) => ({
+              categoryId: c.categoryId,
+              categoryName: c.categoryName,
+              score: c.score,
+            }));
+
+    return {
+      overview: {
+        totalQuizzes: stats.totalQuizzes,
+        totalQuestions,
+        averageScore: stats.averageScore,
+        passingRate: stats.passingRate,
+        studyStreak: stats.studyStreak,
+        totalStudyTime: timeDistribution.totalMinutes,
+      },
+      recentTrend,
+      topCategories,
+      weakCategories,
+    };
+  }
 }
 
 // Export singleton instance

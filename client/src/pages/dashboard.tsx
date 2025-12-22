@@ -3,12 +3,15 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-provider';
 import { queryClient, queryKeys } from '@/lib/queryClient';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { InsufficientTokensDialog } from '@/components/InsufficientTokensDialog';
 import { CertificationSelectionDialog } from '@/components/CertificationSelectionDialog';
+import SmartRecommendations from '@/components/SmartRecommendations';
+import ReadinessScoreCard from '@/components/ReadinessScoreCard';
+import LearningVelocityCard from '@/components/LearningVelocityCard';
 import {
   BookOpen,
   PlayCircle,
@@ -24,6 +27,11 @@ import {
   Plus,
 } from 'lucide-react';
 import type { UserStats, Quiz, Category } from '@shared/schema';
+import type {
+  StudyRecommendation,
+  ReadinessScore,
+  LearningVelocity,
+} from '@/lib/smart-recommendations';
 
 export default function Dashboard() {
   const { user: currentUser, refreshUser } = useAuth();
@@ -59,6 +67,27 @@ export default function Dashboard() {
     enabled: !!currentUser?.id,
   });
 
+  // Get smart recommendations
+  const { data: recommendations = [] } = useQuery<StudyRecommendation[]>({
+    queryKey: ['recommendations', currentUser?.id],
+    queryFn: () => storage.getStudyRecommendations(currentUser!.id),
+    enabled: !!currentUser?.id,
+  });
+
+  // Get readiness score
+  const { data: readinessScore } = useQuery<ReadinessScore>({
+    queryKey: ['readinessScore', currentUser?.id],
+    queryFn: () => storage.getReadinessScore(currentUser!.id),
+    enabled: !!currentUser?.id,
+  });
+
+  // Get learning velocity
+  const { data: learningVelocity } = useQuery<LearningVelocity>({
+    queryKey: ['learningVelocity', currentUser?.id],
+    queryFn: () => storage.getLearningVelocity(currentUser!.id),
+    enabled: !!currentUser?.id,
+  });
+
   // Get completed quizzes for recent activity
   const completedQuizzes = recentQuizzes
     .filter((quiz) => quiz.completedAt)
@@ -77,16 +106,16 @@ export default function Dashboard() {
       if (!currentUser?.id) throw new Error('Not authenticated');
 
       const questionCount = 10;
-      const tokenCost = clientStorage.calculateQuizTokenCost(questionCount);
+      const tokenCost = storage.calculateQuizTokenCost(questionCount);
 
       // Check and consume tokens
-      const tokenResult = await clientStorage.consumeTokens(currentUser.id, tokenCost);
+      const tokenResult = await storage.consumeTokens(currentUser.id, tokenCost);
 
       if (!tokenResult.success) {
         // Save the category info for retry after adding tokens
         setPendingCategoryId(categoryId);
         setPendingCategoryName(categoryName);
-        const balance = await clientStorage.getUserTokenBalance(currentUser.id);
+        const balance = await storage.getUserTokenBalance(currentUser.id);
         setCurrentTokenBalance(balance);
         setRequiredTokens(tokenCost);
         setShowCertificationDialog(false);
@@ -95,7 +124,7 @@ export default function Dashboard() {
       }
 
       // Create the quiz with selected category
-      const quiz = await clientStorage.createQuiz({
+      const quiz = await storage.createQuiz({
         userId: currentUser.id,
         categoryIds: [categoryId],
         questionCount,
@@ -382,6 +411,30 @@ export default function Dashboard() {
             </Card>
           </div>
         </div>
+
+        {/* Smart Recommendations Section */}
+        {(recommendations.length > 0 || readinessScore || learningVelocity) && (
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Smart Insights
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Smart Recommendations */}
+              {recommendations.length > 0 && (
+                <div className="lg:col-span-2">
+                  <SmartRecommendations recommendations={recommendations} maxRecommendations={3} />
+                </div>
+              )}
+
+              {/* Readiness Score and Learning Velocity in sidebar */}
+              <div className="space-y-4">
+                {readinessScore && <ReadinessScoreCard readinessScore={readinessScore} />}
+                {learningVelocity && <LearningVelocityCard learningVelocity={learningVelocity} />}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Two-Column Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

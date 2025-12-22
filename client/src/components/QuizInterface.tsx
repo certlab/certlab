@@ -17,6 +17,9 @@ import { QuizHeader, QuestionDisplay, QuestionNavigator } from '@/components/qui
 import { useQuizState } from '@/hooks/useQuizState';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { queryKeys } from '@/lib/queryClient';
+import { useSwipe } from '@/hooks/use-swipe';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { SwipeIndicator, useSwipeIndicator } from '@/components/SwipeIndicator';
 import type { Question, Quiz } from '@shared/schema';
 
 interface QuizInterfaceProps {
@@ -25,6 +28,8 @@ interface QuizInterfaceProps {
 
 export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const { swipeDirection, showSwipeLeft, showSwipeRight } = useSwipeIndicator();
 
   const { data: quiz } = useQuery<Quiz>({
     queryKey: queryKeys.quiz.detail(quizId),
@@ -51,6 +56,32 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
     handleSubmitWithoutReview,
     navigateToQuestion,
   } = useQuizState({ quizId, quiz, questions });
+
+  // Swipe gesture support for mobile navigation
+  const swipeRef = useSwipe(
+    {
+      onSwipeLeft: () => {
+        // Swipe left = next question
+        if (!showFlaggedQuestionsDialog && !submitQuizMutation.isPending) {
+          showSwipeLeft();
+          handleNextQuestion();
+        }
+      },
+      onSwipeRight: () => {
+        // Swipe right = previous question
+        if (!showFlaggedQuestionsDialog && !submitQuizMutation.isPending) {
+          const canGoBack = state.isReviewingFlagged
+            ? state.currentFlaggedIndex > 0
+            : state.currentQuestionIndex > 0;
+          if (canGoBack) {
+            showSwipeRight();
+            handlePreviousQuestion();
+          }
+        }
+      },
+    },
+    { threshold: 50, preventDefaultTouchmoveEvent: true }
+  );
 
   // Keyboard navigation for quiz interface
   const handleKeyDown = useCallback(
@@ -161,7 +192,9 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={isMobile ? swipeRef : null}>
+      {isMobile && <SwipeIndicator direction={swipeDirection} />}
+
       <Card className="shadow-lg border-0 overflow-hidden bg-card">
         {/* Quiz Header */}
         <QuizHeader
@@ -174,6 +207,12 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
 
         {/* Question Content */}
         <CardContent className="p-4 sm:p-6">
+          {isMobile && (
+            <div className="text-xs text-muted-foreground text-center mb-4 py-2 bg-muted/30 rounded-md">
+              💡 Swipe left/right to navigate questions
+            </div>
+          )}
+
           <QuestionDisplay
             question={currentQuestion}
             state={state}

@@ -13,6 +13,7 @@ import PageLoader from '@/components/PageLoader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ConfigurationError } from '@/components/ConfigurationError';
 import { validateRequiredConfiguration } from '@/lib/config-validator';
+import { useMobileKeyboard } from '@/hooks/use-mobile-keyboard';
 // Landing page is eagerly loaded for fast first paint (initial route)
 import Landing from '@/pages/landing';
 import { lazy, Suspense, useEffect } from 'react';
@@ -27,6 +28,8 @@ const Lecture = lazy(() => import('@/pages/lecture'));
 const StudyNotesPage = lazy(() => import('@/pages/study-notes'));
 const StudyTimerPage = lazy(() => import('@/pages/study-timer'));
 const Achievements = lazy(() => import('@/pages/achievements'));
+const Analytics = lazy(() => import('@/pages/analytics'));
+const DailyChallenges = lazy(() => import('@/pages/daily-challenges'));
 const Accessibility = lazy(() => import('@/pages/accessibility'));
 const AdminDashboard = lazy(() => import('@/pages/admin'));
 const UIStructurePage = lazy(() => import('@/pages/ui-structure'));
@@ -39,6 +42,7 @@ const MarketplacePage = lazy(() => import('@/pages/marketplace'));
 const ProductDetailPage = lazy(() => import('@/pages/product-detail'));
 const QuestionBankPage = lazy(() => import('@/pages/question-bank'));
 const WalletPage = lazy(() => import('@/pages/wallet'));
+const PerformancePage = lazy(() => import('@/pages/performance'));
 
 // Get the base path from Vite's configuration
 // For GitHub Pages deployment at /certlab/, BASE_URL is '/certlab/'
@@ -86,6 +90,7 @@ function Router() {
                   <Route path="/app/dashboard" element={<Dashboard />} />
                   <Route path="/app/profile" element={<ProfilePage />} />
                   <Route path="/app/wallet" element={<WalletPage />} />
+                  <Route path="/app/performance" element={<PerformancePage />} />
                   <Route path="/app/quiz/:id" element={<Quiz />} />
                   <Route path="/app/results/:id" element={<Results />} />
                   <Route path="/app/review/:id" element={<Review />} />
@@ -93,6 +98,8 @@ function Router() {
                   <Route path="/app/study-notes" element={<StudyNotesPage />} />
                   <Route path="/app/study-timer" element={<StudyTimerPage />} />
                   <Route path="/app/achievements" element={<Achievements />} />
+                  <Route path="/app/analytics" element={<Analytics />} />
+                  <Route path="/app/daily-challenges" element={<DailyChallenges />} />
                   <Route path="/app/accessibility" element={<Accessibility />} />
                   <Route path="/app/practice-tests" element={<PracticeTests />} />
 
@@ -129,6 +136,9 @@ function Router() {
 
 function AppContent() {
   const { user, isAuthenticated } = useAuth();
+
+  // Enable mobile keyboard handling improvements
+  useMobileKeyboard();
 
   return (
     <>

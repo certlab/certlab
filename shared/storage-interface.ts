@@ -670,6 +670,99 @@ export interface IClientStorage extends IStorageAdapter {
   calculateQuizTokenCost(questionCount: number): number;
 
   // ==========================================
+  // Smart Study Recommendations
+  // ==========================================
+
+  /** Generate personalized study recommendations for a user */
+  getStudyRecommendations(
+    userId: string
+  ): Promise<
+    Array<{
+      id: string;
+      type: string;
+      title: string;
+      description: string;
+      priority: 'high' | 'medium' | 'low';
+      categoryId?: number;
+      subcategoryId?: number;
+      suggestedQuestionCount?: number;
+      suggestedDifficulty?: number;
+      estimatedTimeMinutes?: number;
+      reasoning: string;
+      actionUrl?: string;
+      confidence: number;
+    }>
+  >;
+
+  /** Calculate readiness score for certification */
+  getReadinessScore(userId: string): Promise<{
+    overall: number;
+    categoryScores: Array<{
+      categoryId: number;
+      categoryName: string;
+      score: number;
+      questionsAnswered: number;
+      averageScore: number;
+      recommendedStudyTime: number;
+    }>;
+    estimatedDaysToReady: number;
+    confidenceLevel: 'high' | 'medium' | 'low';
+    weakAreas: Array<{
+      categoryId: number;
+      categoryName: string;
+      subcategoryId?: number;
+      subcategoryName?: string;
+      currentScore: number;
+      targetScore: number;
+      questionsNeeded: number;
+      priorityLevel: 'critical' | 'high' | 'medium' | 'low';
+      improvementTrend: 'improving' | 'stable' | 'declining';
+    }>;
+    strengths: string[];
+    nextSteps: string[];
+  }>;
+
+  /** Analyze time-of-day performance patterns */
+  getTimeOfDayPerformance(
+    userId: string
+  ): Promise<
+    Array<{
+      hour: number;
+      averageScore: number;
+      quizCount: number;
+      optimalForStudy: boolean;
+    }>
+  >;
+
+  /** Calculate learning velocity metrics */
+  getLearningVelocity(userId: string): Promise<{
+    questionsPerDay: number;
+    averageScoreImprovement: number;
+    streakConsistency: number;
+    masteryGrowthRate: number;
+    predictedCertificationDate: Date | null;
+  }>;
+
+  /** Analyze performance for a specific category or subcategory */
+  analyzePerformance(
+    userId: string,
+    categoryId?: number,
+    subcategoryId?: number
+  ): Promise<{
+    totalAttempts: number;
+    correctAnswers: number;
+    accuracy: number;
+    averageTime: number;
+    difficultyDistribution: Array<{
+      level: number;
+      count: number;
+      accuracy: number;
+    }>;
+    recentTrend: 'improving' | 'stable' | 'declining';
+    lastAttemptDate: Date | null;
+  }>;
+
+  // ==========================================
   // Data Management
   // ==========================================
 
@@ -681,4 +774,94 @@ export interface IClientStorage extends IStorageAdapter {
 
   /** Clear all stored data */
   clearAllData(): Promise<void>;
+
+  // ==========================================
+  // Performance Analytics
+  // ==========================================
+
+  /** Get performance trends over time */
+  getPerformanceOverTime(
+    userId: string,
+    tenantId?: number,
+    days?: number
+  ): Promise<Array<{ date: string; score: number; quizCount: number }>>;
+
+  /** Get performance breakdown by category and subcategory */
+  getCategoryBreakdown(
+    userId: string,
+    tenantId?: number
+  ): Promise<
+    Array<{
+      categoryId: number;
+      categoryName: string;
+      score: number;
+      questionsAnswered: number;
+      correctAnswers: number;
+      subcategories: Array<{
+        subcategoryId: number;
+        subcategoryName: string;
+        score: number;
+        questionsAnswered: number;
+        correctAnswers: number;
+      }>;
+    }>
+  >;
+
+  /** Get study time distribution and patterns */
+  getStudyTimeDistribution(
+    userId: string,
+    tenantId?: number
+  ): Promise<{
+    totalMinutes: number;
+    averageSessionMinutes: number;
+    byDayOfWeek: Array<{ day: string; minutes: number; sessions: number }>;
+    byTimeOfDay: Array<{ hour: number; minutes: number; sessions: number }>;
+  }>;
+
+  /** Get strength and weakness analysis for heatmap visualization */
+  getStrengthWeaknessAnalysis(
+    userId: string,
+    tenantId?: number
+  ): Promise<
+    Array<{
+      categoryId: number;
+      categoryName: string;
+      subcategoryId: number;
+      subcategoryName: string;
+      masteryLevel: 'weak' | 'developing' | 'strong' | 'mastered';
+      score: number;
+      questionsAnswered: number;
+    }>
+  >;
+
+  /** Get study consistency data for calendar visualization */
+  getStudyConsistency(
+    userId: string,
+    tenantId?: number,
+    days?: number
+  ): Promise<{
+    currentStreak: number;
+    longestStreak: number;
+    activeDays: number;
+    totalDays: number;
+    calendar: Array<{ date: string; quizCount: number; totalScore: number }>;
+  }>;
+
+  /** Get comprehensive performance summary */
+  getPerformanceSummary(
+    userId: string,
+    tenantId?: number
+  ): Promise<{
+    overview: {
+      totalQuizzes: number;
+      totalQuestions: number;
+      averageScore: number;
+      passingRate: number;
+      studyStreak: number;
+      totalStudyTime: number;
+    };
+    recentTrend: 'improving' | 'stable' | 'declining';
+    topCategories: Array<{ categoryId: number; categoryName: string; score: number }>;
+    weakCategories: Array<{ categoryId: number; categoryName: string; score: number }>;
+  }>;
 }

@@ -25,6 +25,7 @@ import {
   Settings,
   BookOpen,
   Trophy,
+  Target,
   BarChart3,
   Database,
   Shield,
@@ -37,11 +38,13 @@ import {
   Sparkles,
   Coins,
   ShoppingCart,
+  Snowflake,
 } from 'lucide-react';
 import MobileNavigationEnhanced from '@/components/MobileNavigationEnhanced';
 import TenantSwitcher from '@/components/TenantSwitcher';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
+import type { UserGameStats } from '@shared/schema';
 
 export default function Header() {
   const location = useLocation();
@@ -54,6 +57,12 @@ export default function Header() {
   // Get token balance
   const { data: tokenData } = useQuery<{ balance: number }>({
     queryKey: queryKeys.user.tokenBalance(currentUser?.id),
+    enabled: !!currentUser?.id,
+  });
+
+  // Get user game stats for streak freeze indicator
+  const { data: gameStats } = useQuery<UserGameStats>({
+    queryKey: queryKeys.user.stats(currentUser?.id),
     enabled: !!currentUser?.id,
   });
 
@@ -129,6 +138,25 @@ export default function Header() {
                   <span className="ml-1 text-xs text-muted-foreground">tokens</span>
                 </Badge>
               )}
+              {/* Streak Freeze Indicator */}
+              {gameStats &&
+                currentUser &&
+                gameStats.streakFreezes &&
+                gameStats.streakFreezes > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="hidden lg:flex ml-2 px-3 py-1 border-blue-400 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 cursor-help"
+                    title={`You have ${gameStats.streakFreezes} streak freeze${gameStats.streakFreezes > 1 ? 's' : ''} available. Use them to protect your study streak!`}
+                    data-testid="streak-freeze-badge"
+                    aria-label={`${gameStats.streakFreezes} streak freeze${gameStats.streakFreezes > 1 ? 's' : ''} available`}
+                  >
+                    <Snowflake className="w-4 h-4 mr-1.5" aria-hidden="true" />
+                    <span className="font-medium">{gameStats.streakFreezes}</span>
+                    <span className="ml-1 text-xs">
+                      freeze{gameStats.streakFreezes > 1 ? 's' : ''}
+                    </span>
+                  </Badge>
+                )}
             </div>
             {/* Tenant Switcher - Large screens only */}
             {!isAdminArea && (
@@ -187,6 +215,30 @@ export default function Header() {
                     </Button>
                   </NavigationMenuItem>
 
+                  {/* Daily Challenges - NEW */}
+                  <NavigationMenuItem>
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate('/app/daily-challenges')}
+                      className="text-muted-foreground hover:text-primary h-10 px-4 py-2"
+                    >
+                      <Target className="w-4 h-4 mr-2" />
+                      Daily Challenges
+                      <Badge variant="secondary" className="ml-2 text-xs">
+                        NEW
+                      </Badge>
+                  {/* Performance */}
+                  <NavigationMenuItem>
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate('/app/performance')}
+                      className="text-muted-foreground hover:text-primary h-10 px-4 py-2"
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Performance
+                    </Button>
+                  </NavigationMenuItem>
+
                   {/* Tools & Features */}
                   <NavigationMenuItem>
                     <NavigationMenuTrigger className="text-muted-foreground hover:text-primary h-10 px-4 py-2">
@@ -214,6 +266,20 @@ export default function Header() {
                               </div>
                               <p className="text-xs leading-relaxed text-muted-foreground pl-8">
                                 View earned badges and certifications
+                              </p>
+                            </NavigationMenuLink>
+                            <NavigationMenuLink
+                              className="block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all hover:bg-accent/10 cursor-pointer"
+                              onClick={() => navigate('/app/analytics')}
+                            >
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <BarChart3 className="w-3 h-3 text-primary" />
+                                </div>
+                                Analytics
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                Deep insights into learning patterns
                               </p>
                             </NavigationMenuLink>
                             <NavigationMenuLink

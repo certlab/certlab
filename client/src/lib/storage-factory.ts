@@ -648,6 +648,49 @@ class StorageRouter implements IClientStorage {
       logError('getStudyTimerStats', error);
       throw error;
     }
+  // Smart Study Recommendations
+  // ==========================================
+
+  async getStudyRecommendations(
+    userId: string
+  ): Promise<import('./smart-recommendations').StudyRecommendation[]> {
+    return this.executeFirestoreOperation(
+      (s) => s.getStudyRecommendations(userId),
+      'getStudyRecommendations'
+    );
+  }
+
+  async getReadinessScore(userId: string): Promise<import('./smart-recommendations').ReadinessScore> {
+    return this.executeFirestoreOperation((s) => s.getReadinessScore(userId), 'getReadinessScore');
+  }
+
+  async getTimeOfDayPerformance(
+    userId: string
+  ): Promise<import('./smart-recommendations').TimeOfDayPerformance[]> {
+    return this.executeFirestoreOperation(
+      (s) => s.getTimeOfDayPerformance(userId),
+      'getTimeOfDayPerformance'
+    );
+  }
+
+  async getLearningVelocity(
+    userId: string
+  ): Promise<import('./smart-recommendations').LearningVelocity> {
+    return this.executeFirestoreOperation(
+      (s) => s.getLearningVelocity(userId),
+      'getLearningVelocity'
+    );
+  }
+
+  async analyzePerformance(
+    userId: string,
+    categoryId?: number,
+    subcategoryId?: number
+  ): Promise<import('./smart-recommendations').PerformanceMetrics> {
+    return this.executeFirestoreOperation(
+      (s) => s.analyzePerformance(userId, categoryId, subcategoryId),
+      'analyzePerformance'
+    );
   }
 
   // ==========================================
@@ -664,6 +707,120 @@ class StorageRouter implements IClientStorage {
 
   async clearAllData(): Promise<void> {
     return this.executeFirestoreOperation((s) => s.clearAllData(), 'clearAllData');
+  }
+
+  // ==========================================
+  // Performance Analytics
+  // ==========================================
+
+  async getPerformanceOverTime(
+    userId: string,
+    tenantId: number = 1,
+    days: number = 30
+  ): Promise<Array<{ date: string; score: number; quizCount: number }>> {
+    return this.executeFirestoreOperation(
+      (s) => s.getPerformanceOverTime(userId, tenantId, days),
+      'getPerformanceOverTime'
+    );
+  }
+
+  async getCategoryBreakdown(
+    userId: string,
+    tenantId: number = 1
+  ): Promise<
+    Array<{
+      categoryId: number;
+      categoryName: string;
+      score: number;
+      questionsAnswered: number;
+      correctAnswers: number;
+      subcategories: Array<{
+        subcategoryId: number;
+        subcategoryName: string;
+        score: number;
+        questionsAnswered: number;
+        correctAnswers: number;
+      }>;
+    }>
+  > {
+    return this.executeFirestoreOperation(
+      (s) => s.getCategoryBreakdown(userId, tenantId),
+      'getCategoryBreakdown'
+    );
+  }
+
+  async getStudyTimeDistribution(
+    userId: string,
+    tenantId: number = 1
+  ): Promise<{
+    totalMinutes: number;
+    averageSessionMinutes: number;
+    byDayOfWeek: Array<{ day: string; minutes: number; sessions: number }>;
+    byTimeOfDay: Array<{ hour: number; minutes: number; sessions: number }>;
+  }> {
+    return this.executeFirestoreOperation(
+      (s) => s.getStudyTimeDistribution(userId, tenantId),
+      'getStudyTimeDistribution'
+    );
+  }
+
+  async getStrengthWeaknessAnalysis(
+    userId: string,
+    tenantId: number = 1
+  ): Promise<
+    Array<{
+      categoryId: number;
+      categoryName: string;
+      subcategoryId: number;
+      subcategoryName: string;
+      masteryLevel: 'weak' | 'developing' | 'strong' | 'mastered';
+      score: number;
+      questionsAnswered: number;
+    }>
+  > {
+    return this.executeFirestoreOperation(
+      (s) => s.getStrengthWeaknessAnalysis(userId, tenantId),
+      'getStrengthWeaknessAnalysis'
+    );
+  }
+
+  async getStudyConsistency(
+    userId: string,
+    tenantId: number = 1,
+    days: number = 90
+  ): Promise<{
+    currentStreak: number;
+    longestStreak: number;
+    activeDays: number;
+    totalDays: number;
+    calendar: Array<{ date: string; quizCount: number; totalScore: number }>;
+  }> {
+    return this.executeFirestoreOperation(
+      (s) => s.getStudyConsistency(userId, tenantId, days),
+      'getStudyConsistency'
+    );
+  }
+
+  async getPerformanceSummary(
+    userId: string,
+    tenantId: number = 1
+  ): Promise<{
+    overview: {
+      totalQuizzes: number;
+      totalQuestions: number;
+      averageScore: number;
+      passingRate: number;
+      studyStreak: number;
+      totalStudyTime: number;
+    };
+    recentTrend: 'improving' | 'stable' | 'declining';
+    topCategories: Array<{ categoryId: number; categoryName: string; score: number }>;
+    weakCategories: Array<{ categoryId: number; categoryName: string; score: number }>;
+  }> {
+    return this.executeFirestoreOperation(
+      (s) => s.getPerformanceSummary(userId, tenantId),
+      'getPerformanceSummary'
+    );
   }
 }
 

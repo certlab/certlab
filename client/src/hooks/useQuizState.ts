@@ -21,6 +21,8 @@ import { useMutation } from '@tanstack/react-query';
 import { queryClient, queryKeys } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
 import { achievementService } from '@/lib/achievement-service';
+import { gamificationService } from '@/lib/gamification-service';
+import { triggerCelebration } from '@/components/Celebration';
 import { useToast } from '@/hooks/use-toast';
 import { quizReducer } from '@/components/quiz/quizReducer';
 import type { QuizState, Question, Quiz } from '@/components/quiz/types';
@@ -93,15 +95,17 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
 
   /**
    * Mutation for submitting quiz answers to IndexedDB storage.
-   * On success, processes achievements and navigates to results page.
+   * On success, processes achievements, quests, and navigates to results page.
    */
   const submitQuizMutation = useMutation({
     mutationFn: async (quizAnswers: { questionId: number; answer: number }[]) => {
       const completedQuiz = await clientStorage.submitQuiz(quizId, quizAnswers);
 
       // Process achievements after quiz completion
-      // Wrapped in try-catch to ensure quiz submission succeeds even if achievement processing fails
+      // Wrapped in try-catch to ensure quiz submission succeeds even if processing fails
       let achievementResult = null;
+      let questResult = null;
+
       if (completedQuiz.userId) {
         try {
           achievementResult = await achievementService.processQuizCompletion(
@@ -113,20 +117,35 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
           console.error('Failed to process achievements:', error);
           // Achievement processing failed, but quiz submission succeeded
         }
+
+        // Process quest updates
+        try {
+          questResult = await gamificationService.processQuestUpdates(
+            completedQuiz.userId,
+            completedQuiz,
+            completedQuiz.tenantId
+          );
+        } catch (error) {
+          console.error('Failed to process quest updates:', error);
+          // Quest processing failed, but quiz submission succeeded
+        }
       }
 
-      return { quiz: completedQuiz, achievements: achievementResult };
+      return { quiz: completedQuiz, achievements: achievementResult, quests: questResult };
     },
     onSuccess: (result) => {
       // Invalidate user-related queries using the quiz's userId if available
       if (quiz?.userId) {
         queryClient.invalidateQueries({ queryKey: queryKeys.user.all(quiz.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.userQuestProgress.all(quiz.userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.quests.active() });
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.quiz.detail(quizId) });
 
       // Show toast for new badges earned
       if (result.achievements?.newBadges && result.achievements.newBadges.length > 0) {
         const badgeNames = result.achievements.newBadges.map((b) => b.name).join(', ');
+        triggerCelebration('achievement');
         toast({
           title: '🏆 Achievement Unlocked!',
           description: `You earned: ${badgeNames}`,
@@ -135,9 +154,29 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
 
       // Show toast for level up
       if (result.achievements?.levelUp) {
+        triggerCelebration('levelup');
         toast({
           title: '🎉 Level Up!',
           description: `You've reached level ${result.achievements.newLevel}!`,
+        });
+      }
+
+      // Show toast for completed quests
+      if (result.quests?.completedQuests && result.quests.completedQuests.length > 0) {
+        const questTitles = result.quests.completedQuests.map((q) => q.title).join(', ');
+        triggerCelebration('quest');
+        toast({
+          title: '🎯 Quest Completed!',
+          description: `You completed: ${questTitles}`,
+        });
+      }
+
+      // Show toast for unlocked titles
+      if (result.quests?.titlesUnlocked && result.quests.titlesUnlocked.length > 0) {
+        const titles = result.quests.titlesUnlocked.join(', ');
+        toast({
+          title: '👑 Title Unlocked!',
+          description: `New title available: ${titles}`,
         });
       }
 
