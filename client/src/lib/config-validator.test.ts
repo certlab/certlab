@@ -19,18 +19,12 @@ describe('validateRequiredConfiguration', () => {
     expect(Array.isArray(result.errors)).toBe(true);
   });
 
-  it('should require Firebase configuration in all modes (including development)', () => {
-    // Firebase is now mandatory in both development and production
+  it('should make Firebase optional in development mode', () => {
+    // Firebase is now optional in development, mandatory in production
     const result = validateRequiredConfiguration();
 
-    // Should fail without Firebase configuration
-    expect(result.isValid).toBe(false);
-    expect(result.errors.length).toBeGreaterThan(0);
-
-    // Should have Firebase-related errors
-    const hasFirebaseError = result.errors.some(
-      (error) => error.includes('Firebase') || error.includes('VITE_FIREBASE')
-    );
-    expect(hasFirebaseError).toBe(true);
+    // In test mode (similar to development), should pass even without Firebase
+    expect(result.isValid).toBe(true);
+    expect(result.errors.length).toBe(0);
   });
 });
