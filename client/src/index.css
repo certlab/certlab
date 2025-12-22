@@ -1176,3 +1176,253 @@
 .section-rhythm:last-child {
   margin-bottom: 0;
 }
+
+/* Rich Text Editor Styles */
+.ProseMirror {
+  min-height: 300px;
+  padding: 1rem;
+  outline: none;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
+.ProseMirror p {
+  margin-bottom: 1em;
+}
+
+.ProseMirror h1, .ProseMirror h2, .ProseMirror h3 {
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror h1 {
+  font-size: 2em;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5em;
+}
+
+.ProseMirror h3 {
+  font-size: 1.17em;
+}
+
+.ProseMirror ul, .ProseMirror ol {
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.ProseMirror blockquote {
+  border-left: 3px solid hsl(var(--border));
+  padding-left: 1em;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: italic;
+  color: hsl(var(--muted-foreground));
+}
+
+.ProseMirror code {
+  background-color: hsl(var(--muted));
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+}
+
+.ProseMirror pre {
+  background-color: hsl(var(--muted));
+  border-radius: 0.5em;
+  padding: 1em;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+.ProseMirror pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.875em;
+  line-height: 1.5;
+}
+
+.ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1em;
+  overflow: hidden;
+}
+
+.ProseMirror th, .ProseMirror td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.5em;
+  text-align: left;
+}
+
+.ProseMirror th {
+  background-color: hsl(var(--muted));
+  font-weight: 600;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5em;
+  margin: 1em 0;
+}
+
+.ProseMirror a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ProseMirror a:hover {
+  text-decoration: none;
+}
+
+/* Code Block Syntax Highlighting */
+.ProseMirror .hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em;
+  background: hsl(var(--muted));
+  border-radius: 0.5em;
+}
+
+.ProseMirror .hljs-comment,
+.ProseMirror .hljs-quote {
+  color: #6a737d;
+  font-style: italic;
+}
+
+.ProseMirror .hljs-keyword,
+.ProseMirror .hljs-selector-tag,
+.ProseMirror .hljs-literal,
+.ProseMirror .hljs-type {
+  color: #d73a49;
+}
+
+.ProseMirror .hljs-string,
+.ProseMirror .hljs-doctag {
+  color: #032f62;
+}
+
+.ProseMirror .hljs-title,
+.ProseMirror .hljs-section,
+.ProseMirror .hljs-selector-id {
+  color: #6f42c1;
+  font-weight: 700;
+}
+
+.ProseMirror .hljs-subst,
+.ProseMirror .hljs-tag,
+.ProseMirror .hljs-name,
+.ProseMirror .hljs-attr,
+.ProseMirror .hljs-attribute {
+  color: #005cc5;
+}
+
+.ProseMirror .hljs-variable,
+.ProseMirror .hljs-template-variable {
+  color: #e36209;
+}
+
+.ProseMirror .hljs-regexp,
+.ProseMirror .hljs-link {
+  color: #032f62;
+}
+
+.ProseMirror .hljs-number,
+.ProseMirror .hljs-meta {
+  color: #005cc5;
+}
+
+.ProseMirror .hljs-built_in,
+.ProseMirror .hljs-builtin-name,
+.ProseMirror .hljs-class .hljs-title {
+  color: #6f42c1;
+}
+
+.ProseMirror .hljs-emphasis {
+  font-style: italic;
+}
+
+.ProseMirror .hljs-strong {
+  font-weight: 700;
+}
+
+.ProseMirror .hljs-deletion {
+  background-color: #ffeef0;
+}
+
+.ProseMirror .hljs-addition {
+  background-color: #f0fff4;
+}
+
+/* Dark mode syntax highlighting */
+.dark .ProseMirror .hljs {
+  background: hsl(240, 8%, 12%);
+}
+
+.dark .ProseMirror .hljs-comment,
+.dark .ProseMirror .hljs-quote {
+  color: #8b949e;
+}
+
+.dark .ProseMirror .hljs-keyword,
+.dark .ProseMirror .hljs-selector-tag,
+.dark .ProseMirror .hljs-literal,
+.dark .ProseMirror .hljs-type {
+  color: #ff7b72;
+}
+
+.dark .ProseMirror .hljs-string,
+.dark .ProseMirror .hljs-doctag {
+  color: #a5d6ff;
+}
+
+.dark .ProseMirror .hljs-title,
+.dark .ProseMirror .hljs-section,
+.dark .ProseMirror .hljs-selector-id {
+  color: #d2a8ff;
+  font-weight: 700;
+}
+
+.dark .ProseMirror .hljs-subst,
+.dark .ProseMirror .hljs-tag,
+.dark .ProseMirror .hljs-name,
+.dark .ProseMirror .hljs-attr,
+.dark .ProseMirror .hljs-attribute {
+  color: #79c0ff;
+}
+
+.dark .ProseMirror .hljs-variable,
+.dark .ProseMirror .hljs-template-variable {
+  color: #ffa657;
+}
+
+.dark .ProseMirror .hljs-number,
+.dark .ProseMirror .hljs-meta {
+  color: #79c0ff;
+}
+
+/* Math renderer styles */
+.math-renderer {
+  display: inline-block;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.math-renderer.block {
+  display: block;
+  text-align: center;
+}
+
+/* Mermaid diagram container */
+.mermaid-container svg {
+  max-width: 100%;
+  height: auto;
+}
