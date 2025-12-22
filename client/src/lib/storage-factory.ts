@@ -648,6 +648,9 @@ class StorageRouter implements IClientStorage {
       logError('getStudyTimerStats', error);
       throw error;
     }
+  }
+
+  // ==========================================
   // Smart Study Recommendations
   // ==========================================
 

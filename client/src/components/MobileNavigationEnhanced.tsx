@@ -91,6 +91,8 @@ export default function MobileNavigationEnhanced() {
           icon: <Timer className="w-4 h-4" />,
           href: '/app/study-timer',
           description: 'Pomodoro timer for focused study sessions',
+        },
+        {
           id: 'daily-challenges',
           label: 'Daily Challenges',
           icon: <Target className="w-4 h-4" />,

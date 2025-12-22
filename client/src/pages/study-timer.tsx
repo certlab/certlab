@@ -139,61 +139,6 @@ export default function StudyTimerPage() {
     }
   }, [timerSettings, sessionType, isRunning]);
 
-  // Timer countdown logic
-  useEffect(() => {
-    if (isRunning && !isPaused && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            handleSessionComplete();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      // Clean up auto-start timeout on unmount
-      if (autoStartTimeoutRef.current) {
-        clearTimeout(autoStartTimeoutRef.current);
-      }
-    };
-  }, [isRunning, isPaused, timeLeft, handleSessionComplete]);
-
-  // Request notification permission
-  useEffect(() => {
-    if (timerSettings?.enableNotifications && 'Notification' in window) {
-      if (Notification.permission === 'default') {
-        Notification.requestPermission();
-      }
-    }
-  }, [timerSettings?.enableNotifications]);
-
-  // Format time as MM:SS
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Calculate progress percentage
-  const getProgress = (): number => {
-    if (!timerSettings) return 0;
-    const totalDuration =
-      sessionType === 'work'
-        ? timerSettings.workDuration * 60
-        : sessionType === 'break'
-          ? timerSettings.breakDuration * 60
-          : timerSettings.longBreakDuration * 60;
-    return ((totalDuration - timeLeft) / totalDuration) * 100;
-  };
-
   // Start timer
   const handleStart = useCallback(() => {
     if (!sessionStartTimeRef.current) {
@@ -232,47 +177,6 @@ export default function StudyTimerPage() {
       });
     }
   }, [isPaused, pauseStartTime, currentSessionId, timerSettings, sessionType, saveSessionMutation]);
-
-  // Pause timer
-  const handlePause = () => {
-    setIsPaused(true);
-    setIsRunning(false);
-    setPauseStartTime(Date.now());
-
-    if (currentSessionId) {
-      saveSessionMutation.mutate({
-        isPaused: true,
-        pausedAt: new Date(),
-      });
-    }
-  };
-
-  // Reset timer
-  const handleReset = () => {
-    setIsRunning(false);
-    setIsPaused(false);
-    setPauseStartTime(null);
-    setTotalPausedTime(0);
-    sessionStartTimeRef.current = null;
-
-    if (timerSettings) {
-      const duration =
-        sessionType === 'work'
-          ? timerSettings.workDuration
-          : sessionType === 'break'
-            ? timerSettings.breakDuration
-            : timerSettings.longBreakDuration;
-      setTimeLeft(duration * 60);
-    }
-
-    // Mark current session as incomplete if exists
-    if (currentSessionId) {
-      saveSessionMutation.mutate({
-        isCompleted: false,
-      });
-      setCurrentSessionId(null);
-    }
-  };
 
   // Handle session completion
   const handleSessionComplete = useCallback(() => {
@@ -402,6 +306,102 @@ export default function StudyTimerPage() {
     toast,
     handleStart,
   ]);
+
+  // Timer countdown logic
+  useEffect(() => {
+    if (isRunning && !isPaused && timeLeft > 0) {
+      intervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            handleSessionComplete();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      // Clean up auto-start timeout on unmount
+      if (autoStartTimeoutRef.current) {
+        clearTimeout(autoStartTimeoutRef.current);
+      }
+    };
+  }, [isRunning, isPaused, timeLeft, handleSessionComplete]);
+
+  // Request notification permission
+  useEffect(() => {
+    if (timerSettings?.enableNotifications && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+  }, [timerSettings?.enableNotifications]);
+
+  // Format time as MM:SS
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Calculate progress percentage
+  const getProgress = (): number => {
+    if (!timerSettings) return 0;
+    const totalDuration =
+      sessionType === 'work'
+        ? timerSettings.workDuration * 60
+        : sessionType === 'break'
+          ? timerSettings.breakDuration * 60
+          : timerSettings.longBreakDuration * 60;
+    return ((totalDuration - timeLeft) / totalDuration) * 100;
+  };
+
+  // Pause timer
+  const handlePause = () => {
+    setIsPaused(true);
+    setIsRunning(false);
+    setPauseStartTime(Date.now());
+
+    if (currentSessionId) {
+      saveSessionMutation.mutate({
+        isPaused: true,
+        pausedAt: new Date(),
+      });
+    }
+  };
+
+  // Reset timer
+  const handleReset = () => {
+    setIsRunning(false);
+    setIsPaused(false);
+    setPauseStartTime(null);
+    setTotalPausedTime(0);
+    sessionStartTimeRef.current = null;
+
+    if (timerSettings) {
+      const duration =
+        sessionType === 'work'
+          ? timerSettings.workDuration
+          : sessionType === 'break'
+            ? timerSettings.breakDuration
+            : timerSettings.longBreakDuration;
+      setTimeLeft(duration * 60);
+    }
+
+    // Mark current session as incomplete if exists
+    if (currentSessionId) {
+      saveSessionMutation.mutate({
+        isCompleted: false,
+      });
+      setCurrentSessionId(null);
+    }
+  };
 
   // Calculate today's stats
   const todayMinutes = todaySessions

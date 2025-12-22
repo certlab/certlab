@@ -74,7 +74,6 @@
 
 const DB_NAME = 'certlab';
 const DB_VERSION = 6;
-const DB_VERSION = 6; // Increment for Gamification V2 features
 
 // Define all stores (tables)
 const STORES = {
