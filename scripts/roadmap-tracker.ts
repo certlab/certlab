@@ -197,6 +197,21 @@ class RoadmapTracker {
     const titleLine = lines[0].replace(/^#+\s*/, '').trim();
     const title = titleLine;
 
+    // Skip generic section headers that aren't actual features
+    const skipPatterns = [
+      /^From Users?$/i,
+      /^From Contributors?$/i,
+      /^Q[1-4][\s-]*Q[1-4]\s*\d{4}$/i,
+      /^Q[1-4]\s*\d{4}$/i,
+      /^\d{4}$/,
+      /^\d{4}\+$/,
+      /^Requested Features$/i,
+    ];
+
+    if (skipPatterns.some((pattern) => pattern.test(title))) {
+      return;
+    }
+
     // Extract priority and status from the title or subsequent lines
     let priority = '';
     let status = '';
