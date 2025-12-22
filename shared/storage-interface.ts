@@ -674,19 +674,93 @@ export interface IClientStorage extends IStorageAdapter {
   // ==========================================
 
   /** Generate personalized study recommendations for a user */
-  getStudyRecommendations(userId: string): Promise<any[]>;
+  getStudyRecommendations(
+    userId: string
+  ): Promise<
+    Array<{
+      id: string;
+      type: string;
+      title: string;
+      description: string;
+      priority: 'high' | 'medium' | 'low';
+      categoryId?: number;
+      subcategoryId?: number;
+      suggestedQuestionCount?: number;
+      suggestedDifficulty?: number;
+      estimatedTimeMinutes?: number;
+      reasoning: string;
+      actionUrl?: string;
+      confidence: number;
+    }>
+  >;
 
   /** Calculate readiness score for certification */
-  getReadinessScore(userId: string): Promise<any>;
+  getReadinessScore(userId: string): Promise<{
+    overall: number;
+    categoryScores: Array<{
+      categoryId: number;
+      categoryName: string;
+      score: number;
+      questionsAnswered: number;
+      averageScore: number;
+      recommendedStudyTime: number;
+    }>;
+    estimatedDaysToReady: number;
+    confidenceLevel: 'high' | 'medium' | 'low';
+    weakAreas: Array<{
+      categoryId: number;
+      categoryName: string;
+      subcategoryId?: number;
+      subcategoryName?: string;
+      currentScore: number;
+      targetScore: number;
+      questionsNeeded: number;
+      priorityLevel: 'critical' | 'high' | 'medium' | 'low';
+      improvementTrend: 'improving' | 'stable' | 'declining';
+    }>;
+    strengths: string[];
+    nextSteps: string[];
+  }>;
 
   /** Analyze time-of-day performance patterns */
-  getTimeOfDayPerformance(userId: string): Promise<any[]>;
+  getTimeOfDayPerformance(
+    userId: string
+  ): Promise<
+    Array<{
+      hour: number;
+      averageScore: number;
+      quizCount: number;
+      optimalForStudy: boolean;
+    }>
+  >;
 
   /** Calculate learning velocity metrics */
-  getLearningVelocity(userId: string): Promise<any>;
+  getLearningVelocity(userId: string): Promise<{
+    questionsPerDay: number;
+    averageScoreImprovement: number;
+    streakConsistency: number;
+    masteryGrowthRate: number;
+    predictedCertificationDate: Date | null;
+  }>;
 
   /** Analyze performance for a specific category or subcategory */
-  analyzePerformance(userId: string, categoryId?: number, subcategoryId?: number): Promise<any>;
+  analyzePerformance(
+    userId: string,
+    categoryId?: number,
+    subcategoryId?: number
+  ): Promise<{
+    totalAttempts: number;
+    correctAnswers: number;
+    accuracy: number;
+    averageTime: number;
+    difficultyDistribution: Array<{
+      level: number;
+      count: number;
+      accuracy: number;
+    }>;
+    recentTrend: 'improving' | 'stable' | 'declining';
+    lastAttemptDate: Date | null;
+  }>;
 
   // ==========================================
   // Data Management

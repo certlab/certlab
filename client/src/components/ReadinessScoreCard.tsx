@@ -88,15 +88,17 @@ export default function ReadinessScoreCard({
         </div>
 
         {/* Estimated Days to Ready */}
-        {readinessScore.overall < 85 && readinessScore.estimatedDaysToReady > 0 && (
+        {readinessScore.overall < 85 && (
           <div className="mb-6 p-3 rounded-lg bg-muted/30">
             <div className="flex items-center gap-2 mb-1">
               <Calendar className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium">Time to Certification Ready</span>
             </div>
             <p className="text-xs text-muted-foreground text-relaxed">
-              {readinessScore.estimatedDaysToReady === 999
+              {readinessScore.estimatedDaysToReady < 0
                 ? 'Continue practicing to establish a learning trend'
+                : readinessScore.estimatedDaysToReady === 0
+                ? "You're ready now!"
                 : `Approximately ${readinessScore.estimatedDaysToReady} days at your current pace`}
             </p>
           </div>

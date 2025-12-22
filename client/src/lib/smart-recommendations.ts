@@ -134,9 +134,6 @@ export function calculateReadinessScore(
   // Calculate category-level scores
   const categoryScores = categories.map((category) => {
     const categoryMastery = masteryScores.filter((m) => m.categoryId === category.id);
-    const categoryQuizzes = quizzes.filter(
-      (q) => q.categoryIds && Array.isArray(q.categoryIds) && q.categoryIds.includes(category.id)
-    );
 
     const totalAnswers = categoryMastery.reduce((sum, m) => sum + m.totalAnswers, 0);
     const correctAnswers = categoryMastery.reduce((sum, m) => sum + m.correctAnswers, 0);
@@ -166,7 +163,6 @@ export function calculateReadinessScore(
   const weakAreas: WeakArea[] = categoryScores
     .filter((cs) => cs.questionsAnswered > 0 && cs.score < passingThreshold)
     .map((cs) => {
-      const category = categories.find((c) => c.id === cs.categoryId);
       const trend = analyzeScoreTrend(
         quizzes.filter(
           (q) =>
@@ -203,7 +199,7 @@ export function calculateReadinessScore(
       ? Math.ceil(gapToReady / averageImprovementPerDay)
       : gapToReady <= 0
         ? 0
-        : 999; // Not enough data
+        : -1; // Not enough data to predict
 
   // Determine confidence level
   const totalQuestions = categoryScores.reduce((sum, c) => sum + c.questionsAnswered, 0);
@@ -546,7 +542,13 @@ function analyzeScoreTrend(quizzes: Quiz[]): 'improving' | 'stable' | 'declining
   const sumXY = scores.reduce((sum, score, i) => sum + score * (i + 1), 0);
   const sumX2 = (n * (n + 1) * (2 * n + 1)) / 6;
 
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const denominator = n * sumX2 - sumX * sumX;
+  if (denominator === 0) {
+    // No variation in data points - treat as stable
+    return 'stable';
+  }
+
+  const slope = (n * sumXY - sumX * sumY) / denominator;
 
   if (slope > 1) return 'improving';
   if (slope < -1) return 'declining';
@@ -554,17 +556,19 @@ function analyzeScoreTrend(quizzes: Quiz[]): 'improving' | 'stable' | 'declining
 }
 
 function calculateWeeklyScoreImprovement(quizzes: Quiz[]): number {
+  // Compare average scores between the first and second halves of quiz history
+  // (not based on calendar weeks, just chronological halves of the data)
   if (quizzes.length < 4) return 0;
 
-  const firstWeekQuizzes = quizzes.slice(0, Math.ceil(quizzes.length / 2));
-  const secondWeekQuizzes = quizzes.slice(Math.ceil(quizzes.length / 2));
+  const firstHalfQuizzes = quizzes.slice(0, Math.ceil(quizzes.length / 2));
+  const secondHalfQuizzes = quizzes.slice(Math.ceil(quizzes.length / 2));
 
-  const firstWeekAvg =
-    firstWeekQuizzes.reduce((sum, q) => sum + (q.score || 0), 0) / firstWeekQuizzes.length;
-  const secondWeekAvg =
-    secondWeekQuizzes.reduce((sum, q) => sum + (q.score || 0), 0) / secondWeekQuizzes.length;
+  const firstHalfAvg =
+    firstHalfQuizzes.reduce((sum, q) => sum + (q.score || 0), 0) / firstHalfQuizzes.length;
+  const secondHalfAvg =
+    secondHalfQuizzes.reduce((sum, q) => sum + (q.score || 0), 0) / secondHalfQuizzes.length;
 
-  return secondWeekAvg - firstWeekAvg;
+  return secondHalfAvg - firstHalfAvg;
 }
 
 function calculateStreakConsistency(quizzes: Quiz[]): number {
@@ -620,8 +624,21 @@ function generateNextSteps(
 }
 
 function getTimeRange(hour: number): string {
+  // Guard against out-of-range values
+  if (hour < 0 || hour >= 24) return 'morning';
+
+  // Midnight hour (0) should be shown as 12AM-1AM
+  if (hour === 0) return '12AM-1AM';
+
+  // Morning hours 1AM-11AM
   if (hour < 12) return `${hour}AM-${hour + 1}AM`;
+
+  // Noon
   if (hour === 12) return '12PM-1PM';
-  if (hour < 24) return `${hour - 12}PM-${hour - 11}PM`;
-  return 'morning';
+
+  // Afternoon/evening hours 1PM-10PM (13-22)
+  if (hour < 23) return `${hour - 12}PM-${hour - 11}PM`;
+
+  // Last hour of the day: 11PM-12AM (23:00-00:00)
+  return '11PM-12AM';
 }

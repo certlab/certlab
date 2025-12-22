@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import {
   Target,
   Sparkles,
@@ -25,6 +26,7 @@ export default function SmartRecommendations({
   className = '',
   maxRecommendations = 5,
 }: SmartRecommendationsProps) {
+  const navigate = useNavigate();
   const getRecommendationIcon = (type: StudyRecommendation['type']) => {
     switch (type) {
       case 'focus_area':
@@ -168,7 +170,7 @@ export default function SmartRecommendations({
                   variant="ghost"
                   size="sm"
                   className="w-full justify-between h-auto py-2 text-xs font-medium text-primary hover:text-primary/80"
-                  onClick={() => (window.location.href = rec.actionUrl!)}
+                  onClick={() => navigate(rec.actionUrl!)}
                 >
                   <span>Start This Activity</span>
                   <ArrowRight className="w-3 h-3" />
