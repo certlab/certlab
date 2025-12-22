@@ -13,7 +13,7 @@ export default function MarketplacePage() {
     navigate(`/app/marketplace/${materialId}`);
   };
 
-  const handleAddToCart = (e: React.MouseEvent, materialId: string) => {
+  const handleAddToCart = (e: React.MouseEvent, _materialId: string) => {
     e.stopPropagation();
     // Cart button click would add to cart
     // TODO: Implement cart functionality

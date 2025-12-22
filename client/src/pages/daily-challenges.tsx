@@ -31,13 +31,13 @@ export default function DailyChallengesPage() {
     enabled: !!currentUser,
   });
 
-  const { data: userDailyRewards } = useQuery<any[]>({
+  const { data: _userDailyRewards } = useQuery<unknown[]>({
     queryKey: queryKeys.dailyRewards.userClaims(currentUser?.id || ''),
     enabled: !!currentUser,
   });
 
   // Get user game stats for consecutive login days
-  const { data: gameStats } = useQuery<any>({
+  const { data: gameStats } = useQuery<unknown>({
     queryKey: queryKeys.user.stats(currentUser?.id),
     enabled: !!currentUser,
   });

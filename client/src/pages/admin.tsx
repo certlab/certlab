@@ -1,21 +1,35 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { clientStorage } from "@/lib/client-storage";
-import { queryKeys } from "@/lib/queryClient";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { PlusCircle, Edit, Trash2, Users, FileText, FolderOpen, Building } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import type { Tenant } from "@shared/schema";
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { clientStorage } from '@/lib/client-storage';
+import { queryKeys } from '@/lib/queryClient';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { PlusCircle, Edit, Trash2, Users, FileText, FolderOpen, Building } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
+import type { Tenant } from '@shared/schema';
 
 interface Category {
   id: number;
@@ -25,21 +39,13 @@ interface Category {
   icon?: string;
 }
 
-interface Subcategory {
-  id: number;
-  tenantId: number;
-  categoryId: number;
-  name: string;
-  description?: string;
-}
-
 interface Question {
   id: number;
   tenantId: number;
   categoryId: number;
   subcategoryId: number;
   text: string;
-  options: any[];
+  options: unknown[];
   correctAnswer: number;
   explanation?: string;
   difficultyLevel: number;
@@ -65,11 +71,11 @@ interface TenantStats {
 }
 
 // Question Form Component
-function QuestionForm({ 
-  categories, 
-  tenantId, 
-  onSuccess, 
-  onError 
+function QuestionForm({
+  categories,
+  tenantId,
+  onSuccess,
+  onError,
 }: {
   categories: Category[];
   tenantId: number | null;
@@ -78,11 +84,11 @@ function QuestionForm({
 }) {
   const createQuestionMutation = useMutation({
     mutationFn: async (data: any) => {
-      if (!tenantId) throw new Error("No tenant selected");
+      if (!tenantId) throw new Error('No tenant selected');
       // Validate correctAnswer is a valid 1-based index (1-4)
       const correctAnswer = data.correctAnswer;
       if (typeof correctAnswer !== 'number' || correctAnswer < 1 || correctAnswer > 4) {
-        throw new Error("Invalid correct answer: must be between 1 and 4");
+        throw new Error('Invalid correct answer: must be between 1 and 4');
       }
       return await clientStorage.createQuestion({
         tenantId,
@@ -103,23 +109,27 @@ function QuestionForm({
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    
+
     const options = [
-      formData.get("option1") as string,
-      formData.get("option2") as string,
-      formData.get("option3") as string,
-      formData.get("option4") as string,
+      formData.get('option1') as string,
+      formData.get('option2') as string,
+      formData.get('option3') as string,
+      formData.get('option4') as string,
     ].filter(Boolean);
 
     const data = {
-      text: formData.get("text") as string,
-      categoryId: parseInt(formData.get("categoryId") as string),
-      subcategoryId: parseInt(formData.get("subcategoryId") as string) || null,
+      text: formData.get('text') as string,
+      categoryId: parseInt(formData.get('categoryId') as string),
+      subcategoryId: parseInt(formData.get('subcategoryId') as string) || null,
       options,
-      correctAnswer: parseInt(formData.get("correctAnswer") as string),
-      explanation: formData.get("explanation") as string,
-      difficultyLevel: parseInt(formData.get("difficultyLevel") as string),
-      tags: (formData.get("tags") as string)?.split(",").map(t => t.trim()).filter(Boolean) || [],
+      correctAnswer: parseInt(formData.get('correctAnswer') as string),
+      explanation: formData.get('explanation') as string,
+      difficultyLevel: parseInt(formData.get('difficultyLevel') as string),
+      tags:
+        (formData.get('tags') as string)
+          ?.split(',')
+          .map((t) => t.trim())
+          .filter(Boolean) || [],
     };
 
     createQuestionMutation.mutate(data);
@@ -131,20 +141,32 @@ function QuestionForm({
         <Label htmlFor="text">Question Text</Label>
         <Textarea id="text" name="text" placeholder="Enter the question..." required rows={3} />
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="categoryId">Category</Label>
-          <select id="categoryId" name="categoryId" className="w-full border rounded px-3 py-2" required>
+          <select
+            id="categoryId"
+            name="categoryId"
+            className="w-full border rounded px-3 py-2"
+            required
+          >
             <option value="">Select Category</option>
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
             ))}
           </select>
         </div>
         <div>
           <Label htmlFor="difficultyLevel">Difficulty Level</Label>
-          <select id="difficultyLevel" name="difficultyLevel" className="w-full border rounded px-3 py-2" required>
+          <select
+            id="difficultyLevel"
+            name="difficultyLevel"
+            className="w-full border rounded px-3 py-2"
+            required
+          >
             <option value="1">Level 1 (Basic)</option>
             <option value="2">Level 2 (Intermediate)</option>
             <option value="3">Level 3 (Advanced)</option>
@@ -165,7 +187,12 @@ function QuestionForm({
 
       <div>
         <Label htmlFor="correctAnswer">Correct Answer (1-4)</Label>
-        <select id="correctAnswer" name="correctAnswer" className="w-full border rounded px-3 py-2" required>
+        <select
+          id="correctAnswer"
+          name="correctAnswer"
+          className="w-full border rounded px-3 py-2"
+          required
+        >
           <option value="1">Option 1</option>
           <option value="2">Option 2</option>
           <option value="3">Option 3</option>
@@ -175,7 +202,12 @@ function QuestionForm({
 
       <div>
         <Label htmlFor="explanation">Explanation</Label>
-        <Textarea id="explanation" name="explanation" placeholder="Explain why this is the correct answer..." rows={2} />
+        <Textarea
+          id="explanation"
+          name="explanation"
+          placeholder="Explain why this is the correct answer..."
+          rows={2}
+        />
       </div>
 
       <div>
@@ -185,7 +217,7 @@ function QuestionForm({
 
       <DialogFooter>
         <Button type="submit" disabled={createQuestionMutation.isPending}>
-          {createQuestionMutation.isPending ? "Creating..." : "Create Question"}
+          {createQuestionMutation.isPending ? 'Creating...' : 'Create Question'}
         </Button>
       </DialogFooter>
     </form>
@@ -232,9 +264,7 @@ function UserManagement({ selectedTenant }: { selectedTenant: number | null }) {
                   <TableCell className="font-medium">{user.username}</TableCell>
                   <TableCell>{user.email || 'No email'}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">
-                      {user.isAdmin ? 'Admin' : 'User'}
-                    </Badge>
+                    <Badge variant="outline">{user.isAdmin ? 'Admin' : 'User'}</Badge>
                   </TableCell>
                   <TableCell>
                     {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
@@ -275,7 +305,6 @@ export default function AdminDashboard() {
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [editIsActive, setEditIsActive] = useState(true);
   const [newCategoryDialog, setNewCategoryDialog] = useState(false);
-  const [newSubcategoryDialog, setNewSubcategoryDialog] = useState(false);
   const [newQuestionDialog, setNewQuestionDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -293,7 +322,7 @@ export default function AdminDashboard() {
   }, [tenants, selectedTenant]);
 
   // Get the currently selected tenant data
-  const currentTenant = tenants.find(t => t.id === selectedTenant);
+  const currentTenant = tenants.find((t) => t.id === selectedTenant);
 
   // Fetch tenant statistics if tenant is selected
   const { data: tenantStats } = useQuery<TenantStats>({
@@ -326,17 +355,17 @@ export default function AdminDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.all() });
       setNewTenantDialog(false);
-      toast({ title: "Tenant created successfully" });
+      toast({ title: 'Tenant created successfully' });
     },
     onError: () => {
-      toast({ title: "Failed to create tenant", variant: "destructive" });
+      toast({ title: 'Failed to create tenant', variant: 'destructive' });
     },
   });
 
   // Create category mutation
   const createCategoryMutation = useMutation({
     mutationFn: async (data: { name: string; description?: string; icon?: string }) => {
-      if (!selectedTenant) throw new Error("No tenant selected");
+      if (!selectedTenant) throw new Error('No tenant selected');
       return await clientStorage.createCategory({
         tenantId: selectedTenant,
         name: data.name,
@@ -345,13 +374,15 @@ export default function AdminDashboard() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.categories(selectedTenant) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.admin.tenants.categories(selectedTenant),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.stats(selectedTenant) });
       setNewCategoryDialog(false);
-      toast({ title: "Category created successfully" });
+      toast({ title: 'Category created successfully' });
     },
     onError: () => {
-      toast({ title: "Failed to create category", variant: "destructive" });
+      toast({ title: 'Failed to create category', variant: 'destructive' });
     },
   });
 
@@ -363,10 +394,10 @@ export default function AdminDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.all() });
       setEditTenantDialog(false);
-      toast({ title: "Tenant updated successfully" });
+      toast({ title: 'Tenant updated successfully' });
     },
     onError: () => {
-      toast({ title: "Failed to update tenant", variant: "destructive" });
+      toast({ title: 'Failed to update tenant', variant: 'destructive' });
     },
   });
 
@@ -379,10 +410,10 @@ export default function AdminDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.all() });
       setSelectedTenant(null);
-      toast({ title: "Tenant deactivated successfully" });
+      toast({ title: 'Tenant deactivated successfully' });
     },
     onError: () => {
-      toast({ title: "Failed to deactivate tenant", variant: "destructive" });
+      toast({ title: 'Failed to deactivate tenant', variant: 'destructive' });
     },
   });
 
@@ -390,8 +421,8 @@ export default function AdminDashboard() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const data = {
-      name: formData.get("name") as string,
-      domain: formData.get("domain") as string || undefined,
+      name: formData.get('name') as string,
+      domain: (formData.get('domain') as string) || undefined,
     };
     createTenantMutation.mutate(data);
   };
@@ -399,11 +430,11 @@ export default function AdminDashboard() {
   const handleEditTenant = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!editingTenant) return;
-    
+
     const formData = new FormData(event.currentTarget);
     const updates = {
-      name: formData.get("name") as string,
-      domain: formData.get("domain") as string || null,
+      name: formData.get('name') as string,
+      domain: (formData.get('domain') as string) || null,
       isActive: editIsActive,
     };
     updateTenantMutation.mutate({ tenantId: editingTenant.id, updates });
@@ -413,9 +444,9 @@ export default function AdminDashboard() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const data = {
-      name: formData.get("name") as string,
-      description: formData.get("description") as string || undefined,
-      icon: formData.get("icon") as string || undefined,
+      name: formData.get('name') as string,
+      description: (formData.get('description') as string) || undefined,
+      icon: (formData.get('icon') as string) || undefined,
     };
     createCategoryMutation.mutate(data);
   };
@@ -478,26 +509,26 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="edit-name">Tenant Name</Label>
-                  <Input 
-                    id="edit-name" 
-                    name="name" 
-                    placeholder="Organization Name" 
-                    defaultValue={editingTenant?.name || ''} 
-                    required 
+                  <Input
+                    id="edit-name"
+                    name="name"
+                    placeholder="Organization Name"
+                    defaultValue={editingTenant?.name || ''}
+                    required
                   />
                 </div>
                 <div>
                   <Label htmlFor="edit-domain">Domain (optional)</Label>
-                  <Input 
-                    id="edit-domain" 
-                    name="domain" 
-                    placeholder="organization.com" 
-                    defaultValue={editingTenant?.domain || ''} 
+                  <Input
+                    id="edit-domain"
+                    name="domain"
+                    placeholder="organization.com"
+                    defaultValue={editingTenant?.domain || ''}
                   />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="edit-isActive" 
+                  <Checkbox
+                    id="edit-isActive"
                     checked={editIsActive}
                     onCheckedChange={(checked) => setEditIsActive(checked === true)}
                   />
@@ -509,7 +540,7 @@ export default function AdminDashboard() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={updateTenantMutation.isPending}>
-                  {updateTenantMutation.isPending ? "Saving..." : "Save Changes"}
+                  {updateTenantMutation.isPending ? 'Saving...' : 'Save Changes'}
                 </Button>
               </DialogFooter>
             </form>
@@ -534,8 +565,8 @@ export default function AdminDashboard() {
                   key={tenant.id}
                   className={`p-3 rounded-lg cursor-pointer transition-colors ${
                     selectedTenant === tenant.id
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-muted"
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted'
                   }`}
                   onClick={() => setSelectedTenant(tenant.id)}
                 >
@@ -546,8 +577,8 @@ export default function AdminDashboard() {
                         <div className="text-sm text-muted-foreground">{tenant.domain}</div>
                       )}
                     </div>
-                    <Badge variant={tenant.isActive ? "default" : "secondary"}>
-                      {tenant.isActive ? "Active" : "Inactive"}
+                    <Badge variant={tenant.isActive ? 'default' : 'secondary'}>
+                      {tenant.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
                 </div>
@@ -611,7 +642,9 @@ export default function AdminDashboard() {
                       <div className="flex items-center">
                         <FolderOpen className="w-8 h-8 text-orange-600 dark:text-orange-400" />
                         <div className="ml-4">
-                          <div className="text-2xl font-bold">{tenantStats?.subcategories || 0}</div>
+                          <div className="text-2xl font-bold">
+                            {tenantStats?.subcategories || 0}
+                          </div>
                           <div className="text-sm text-muted-foreground">Subcategories</div>
                         </div>
                       </div>
@@ -648,15 +681,27 @@ export default function AdminDashboard() {
                               </div>
                               <div>
                                 <Label htmlFor="categoryDescription">Description</Label>
-                                <Input id="categoryDescription" name="description" placeholder="Certified Information Systems Security Professional" />
+                                <Input
+                                  id="categoryDescription"
+                                  name="description"
+                                  placeholder="Certified Information Systems Security Professional"
+                                />
                               </div>
                               <div>
                                 <Label htmlFor="categoryIcon">Icon</Label>
-                                <Input id="categoryIcon" name="icon" placeholder="fas fa-shield-alt" />
+                                <Input
+                                  id="categoryIcon"
+                                  name="icon"
+                                  placeholder="fas fa-shield-alt"
+                                />
                               </div>
                             </div>
                             <DialogFooter className="mt-6">
-                              <Button type="button" variant="outline" onClick={() => setNewCategoryDialog(false)}>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setNewCategoryDialog(false)}
+                              >
                                 Cancel
                               </Button>
                               <Button type="submit" disabled={createCategoryMutation.isPending}>
@@ -723,18 +768,25 @@ export default function AdminDashboard() {
                           <DialogContent className="max-w-4xl">
                             <DialogHeader>
                               <DialogTitle>Create New Question</DialogTitle>
-                              <DialogDescription>Add a new certification question</DialogDescription>
+                              <DialogDescription>
+                                Add a new certification question
+                              </DialogDescription>
                             </DialogHeader>
-                            <QuestionForm 
+                            <QuestionForm
                               categories={categories}
                               tenantId={selectedTenant}
                               onSuccess={() => {
-                                queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.questions(selectedTenant) });
+                                queryClient.invalidateQueries({
+                                  queryKey: queryKeys.admin.tenants.questions(selectedTenant),
+                                });
                                 setNewQuestionDialog(false);
-                                toast({ title: "Question created successfully" });
+                                toast({ title: 'Question created successfully' });
                               }}
                               onError={() => {
-                                toast({ title: "Failed to create question", variant: "destructive" });
+                                toast({
+                                  title: 'Failed to create question',
+                                  variant: 'destructive',
+                                });
                               }}
                             />
                           </DialogContent>
@@ -752,14 +804,13 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center space-x-4 mb-4">
-                      <Input 
-                        placeholder="Search questions..." 
-                        className="max-w-sm"
-                      />
+                      <Input placeholder="Search questions..." className="max-w-sm" />
                       <select className="border rounded px-3 py-2">
                         <option value="">All Categories</option>
                         {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
                         ))}
                       </select>
                       <select className="border rounded px-3 py-2">
@@ -784,7 +835,7 @@ export default function AdminDashboard() {
                       </TableHeader>
                       <TableBody>
                         {questions.slice(0, 20).map((question: Question) => {
-                          const category = categories.find(c => c.id === question.categoryId);
+                          const category = categories.find((c) => c.id === question.categoryId);
                           return (
                             <TableRow key={question.id}>
                               <TableCell className="max-w-sm">
@@ -795,9 +846,14 @@ export default function AdminDashboard() {
                               <TableCell>{category?.name || 'Unknown'}</TableCell>
                               <TableCell>{question.subcategoryId}</TableCell>
                               <TableCell>
-                                <Badge 
-                                  variant={question.difficultyLevel >= 4 ? "destructive" : 
-                                    question.difficultyLevel >= 3 ? "default" : "secondary"}
+                                <Badge
+                                  variant={
+                                    question.difficultyLevel >= 4
+                                      ? 'destructive'
+                                      : question.difficultyLevel >= 3
+                                        ? 'default'
+                                        : 'secondary'
+                                  }
                                 >
                                   Level {question.difficultyLevel}
                                 </Badge>
@@ -866,14 +922,16 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                           <Label className="text-sm text-muted-foreground">Status</Label>
-                          <Badge variant={currentTenant?.isActive ? "default" : "secondary"}>
-                            {currentTenant?.isActive ? "Active" : "Inactive"}
+                          <Badge variant={currentTenant?.isActive ? 'default' : 'secondary'}>
+                            {currentTenant?.isActive ? 'Active' : 'Inactive'}
                           </Badge>
                         </div>
                         <div>
                           <Label className="text-sm text-muted-foreground">Created</Label>
                           <p className="font-medium">
-                            {currentTenant?.createdAt ? new Date(currentTenant.createdAt).toLocaleDateString() : 'N/A'}
+                            {currentTenant?.createdAt
+                              ? new Date(currentTenant.createdAt).toLocaleDateString()
+                              : 'N/A'}
                           </p>
                         </div>
                       </div>
@@ -909,24 +967,24 @@ export default function AdminDashboard() {
                         <div>
                           <div className="font-medium">Active Status</div>
                           <div className="text-sm text-muted-foreground">
-                            {currentTenant?.isActive 
-                              ? "This tenant is currently active and accessible to users"
-                              : "This tenant is inactive and not accessible to users"}
+                            {currentTenant?.isActive
+                              ? 'This tenant is currently active and accessible to users'
+                              : 'This tenant is inactive and not accessible to users'}
                           </div>
                         </div>
                         <Button
-                          variant={currentTenant?.isActive ? "outline" : "default"}
+                          variant={currentTenant?.isActive ? 'outline' : 'default'}
                           onClick={() => {
                             if (selectedTenant) {
                               updateTenantMutation.mutate({
                                 tenantId: selectedTenant,
-                                updates: { isActive: !currentTenant?.isActive }
+                                updates: { isActive: !currentTenant?.isActive },
                               });
                             }
                           }}
                           disabled={updateTenantMutation.isPending}
                         >
-                          {currentTenant?.isActive ? "Deactivate" : "Activate"}
+                          {currentTenant?.isActive ? 'Deactivate' : 'Activate'}
                         </Button>
                       </div>
 
@@ -941,11 +999,20 @@ export default function AdminDashboard() {
                         <Button
                           variant="destructive"
                           onClick={() => {
-                            if (selectedTenant && confirm("Are you sure you want to deactivate this tenant? Users will no longer be able to access it.")) {
+                            if (
+                              selectedTenant &&
+                              confirm(
+                                'Are you sure you want to deactivate this tenant? Users will no longer be able to access it.'
+                              )
+                            ) {
                               deleteTenantMutation.mutate(selectedTenant);
                             }
                           }}
-                          disabled={!selectedTenant || !currentTenant?.isActive || deleteTenantMutation.isPending}
+                          disabled={
+                            !selectedTenant ||
+                            !currentTenant?.isActive ||
+                            deleteTenantMutation.isPending
+                          }
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Deactivate Tenant

@@ -1,11 +1,11 @@
-import { AchievementBadges } from "@/components/AchievementBadges";
-import { AchievementProgress } from "@/components/AchievementProgress";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Target, Flame, Star, Award } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/lib/auth-provider";
-import { queryKeys } from "@/lib/queryClient";
+import { AchievementBadges } from '@/components/AchievementBadges';
+import { AchievementProgress } from '@/components/AchievementProgress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Trophy, Target, Flame, Star, Award } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/lib/auth-provider';
+import { queryKeys } from '@/lib/queryClient';
 
 interface Badge {
   id: number;
@@ -13,7 +13,7 @@ interface Badge {
   description: string;
   icon: string;
   category: string;
-  requirement: any;
+  requirement: unknown;
   color: string;
   rarity: string;
   points: number;
@@ -21,8 +21,8 @@ interface Badge {
 
 export default function AchievementsPage() {
   const { user: currentUser } = useAuth();
-  
-  const { data: allBadges } = useQuery<Badge[]>({
+
+  const { data: _allBadges } = useQuery<Badge[]>({
     queryKey: queryKeys.badges.all(),
   });
 
@@ -96,9 +96,7 @@ export default function AchievementsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Maintain daily learning consistency
-              </p>
+              <p className="text-sm text-muted-foreground">Maintain daily learning consistency</p>
             </CardContent>
           </Card>
 
@@ -112,9 +110,7 @@ export default function AchievementsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Excel in certification domains
-              </p>
+              <p className="text-sm text-muted-foreground">Excel in certification domains</p>
             </CardContent>
           </Card>
 
@@ -128,9 +124,7 @@ export default function AchievementsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Unlock unique achievements
-              </p>
+              <p className="text-sm text-muted-foreground">Unlock unique achievements</p>
             </CardContent>
           </Card>
         </div>
@@ -147,11 +141,11 @@ export default function AchievementsPage() {
               Progress
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="earned" className="mt-6">
             <AchievementBadges userId={currentUser.id} />
           </TabsContent>
-          
+
           <TabsContent value="progress" className="mt-6">
             <AchievementProgress />
           </TabsContent>

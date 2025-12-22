@@ -15,28 +15,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  User,
-  Clock,
-  Target,
-  BookOpen,
-  CreditCard,
-  Save,
-  Award,
-  Calendar,
-  Settings,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  ChevronRight,
-  Crown,
-  Shield,
-  Cloud,
-  CloudOff,
-} from 'lucide-react';
+import { User, BookOpen, Save, Award, AlertCircle, Shield, Cloud, CloudOff } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
