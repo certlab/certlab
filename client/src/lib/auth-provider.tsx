@@ -46,10 +46,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Check Firebase configuration first (now mandatory)
+        // In development, Firebase is optional - use local auth as fallback
+        const isDevelopment = import.meta.env.DEV;
+
+        // Check Firebase configuration first
         if (!isFirebaseConfigured()) {
-          const error = new Error('Firebase configuration is required but not found');
-          setInitError(error);
+          if (!isDevelopment) {
+            // Firebase is required in production
+            const error = new Error('Firebase configuration is required but not found');
+            setInitError(error);
+            setIsLoading(false);
+            return;
+          }
+          // In development, continue without Firebase
+          console.warn('[Auth] Firebase not configured, using local authentication only');
+          setFirebaseInitialized(true);
+          await initializeStorage(null);
+
+          // Check for existing local session
+          const currentUserId = await storage.getCurrentUserId();
+          if (currentUserId) {
+            const existingUser = await storage.getUserById(currentUserId);
+            if (existingUser) {
+              setUser(existingUser);
+              identifyUser(existingUser.id, existingUser.email);
+            }
+          }
+
           setIsLoading(false);
           return;
         }
