@@ -50,7 +50,7 @@ export function CertificationSelectionDialog({
           // Default to first category if no last selection or if the last selection is no longer valid
           setSelectedCategoryId(categories[0].id.toString());
         }
-      } catch (error) {
+      } catch (_error) {
         // If localStorage fails, just default to first category
         setSelectedCategoryId(categories[0].id.toString());
       }

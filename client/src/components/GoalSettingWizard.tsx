@@ -1,33 +1,21 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  Target,
-  Clock,
-  Brain,
-  Trophy,
-  ChevronRight,
-  ChevronLeft,
-  CheckCircle,
-  BookOpen,
-  Lightbulb,
-} from "lucide-react";
-import { useAuth } from "@/lib/auth-provider";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+} from '@/components/ui/dialog';
+import { Target, Clock, Brain, Trophy, ChevronRight, ChevronLeft, CheckCircle } from 'lucide-react';
+import { useAuth } from '@/lib/auth-provider';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface GoalSettingWizardProps {
   isOpen: boolean;
@@ -54,7 +42,11 @@ interface WizardState {
 
 const availableCertifications = [
   { id: 'CC', name: 'CC Certification', description: 'Certified in Cybersecurity' },
-  { id: 'CISSP', name: 'CISSP', description: 'Certified Information Systems Security Professional' },
+  {
+    id: 'CISSP',
+    name: 'CISSP',
+    description: 'Certified Information Systems Security Professional',
+  },
   { id: 'CISM', name: 'CISM', description: 'Certified Information Security Manager' },
   { id: 'CISA', name: 'CISA', description: 'Certified Information Systems Auditor' },
   { id: 'CGRC', name: 'CGRC', description: 'Certified in Governance, Risk and Compliance' },
@@ -130,7 +122,7 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const [wizardState, setWizardState] = useState<WizardState>({
     certificationGoals: [],
     studyPreferences: {
@@ -150,7 +142,7 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
   });
 
   const updateWizardState = (section: keyof WizardState, updates: any) => {
-    setWizardState(prev => ({
+    setWizardState((prev) => ({
       ...prev,
       [section]: { ...prev[section], ...updates },
     }));
@@ -172,7 +164,7 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
 
   const handleSubmit = async () => {
     if (!user?.id) return;
-    
+
     setIsSubmitting(true);
     try {
       await apiRequest({
@@ -180,19 +172,20 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
         method: 'POST',
         data: wizardState,
       });
-      
+
       toast({
-        title: "Goals Set Successfully!",
-        description: "Helen will now personalize your learning experience based on your preferences.",
+        title: 'Goals Set Successfully!',
+        description:
+          'Helen will now personalize your learning experience based on your preferences.',
       });
-      
+
       onComplete();
     } catch (error) {
       console.error('Failed to save goals:', error);
       toast({
-        title: "Error",
-        description: "Failed to save your goals. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to save your goals. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -211,21 +204,21 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
                 Select the certifications you want to work towards. You can choose multiple goals.
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 gap-3">
-              {availableCertifications.map(cert => (
-                <Card 
-                  key={cert.id} 
+              {availableCertifications.map((cert) => (
+                <Card
+                  key={cert.id}
                   className={`cursor-pointer transition-all ${
-                    wizardState.certificationGoals.includes(cert.id) 
-                      ? 'ring-2 ring-primary bg-primary/5' 
+                    wizardState.certificationGoals.includes(cert.id)
+                      ? 'ring-2 ring-primary bg-primary/5'
                       : 'hover:shadow-md'
                   }`}
                   onClick={() => {
                     const goals = wizardState.certificationGoals.includes(cert.id)
-                      ? wizardState.certificationGoals.filter(g => g !== cert.id)
+                      ? wizardState.certificationGoals.filter((g) => g !== cert.id)
                       : [...wizardState.certificationGoals, cert.id];
-                    setWizardState(prev => ({ ...prev, certificationGoals: goals }));
+                    setWizardState((prev) => ({ ...prev, certificationGoals: goals }));
                   }}
                 >
                   <CardContent className="p-4">
@@ -261,9 +254,11 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
             <div className="space-y-6">
               <div>
                 <Label className="text-base font-medium mb-3 block">Daily Study Time</Label>
-                <RadioGroup 
+                <RadioGroup
                   value={wizardState.studyPreferences.dailyTimeMinutes.toString()}
-                  onValueChange={(value) => updateWizardState('studyPreferences', { dailyTimeMinutes: parseInt(value) })}
+                  onValueChange={(value) =>
+                    updateWizardState('studyPreferences', { dailyTimeMinutes: parseInt(value) })
+                  }
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="15" />
@@ -285,10 +280,14 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
               </div>
 
               <div>
-                <Label className="text-base font-medium mb-3 block">Preferred Difficulty Level</Label>
-                <RadioGroup 
+                <Label className="text-base font-medium mb-3 block">
+                  Preferred Difficulty Level
+                </Label>
+                <RadioGroup
                   value={wizardState.studyPreferences.preferredDifficulty}
-                  onValueChange={(value: any) => updateWizardState('studyPreferences', { preferredDifficulty: value })}
+                  onValueChange={(value: any) =>
+                    updateWizardState('studyPreferences', { preferredDifficulty: value })
+                  }
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="beginner" />
@@ -308,14 +307,14 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
               <div>
                 <Label className="text-base font-medium mb-3 block">Focus Areas (Optional)</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  {focusAreas.map(area => (
+                  {focusAreas.map((area) => (
                     <div key={area} className="flex items-center space-x-2">
-                      <Checkbox 
+                      <Checkbox
                         checked={wizardState.studyPreferences.focusAreas.includes(area)}
                         onCheckedChange={(checked) => {
-                          const areas = checked 
+                          const areas = checked
                             ? [...wizardState.studyPreferences.focusAreas, area]
-                            : wizardState.studyPreferences.focusAreas.filter(a => a !== area);
+                            : wizardState.studyPreferences.focusAreas.filter((a) => a !== area);
                           updateWizardState('studyPreferences', { focusAreas: areas });
                         }}
                       />
@@ -342,11 +341,13 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
             <div className="space-y-6">
               <div>
                 <Label className="text-base font-medium mb-3 block">Experience Level</Label>
-                <RadioGroup 
+                <RadioGroup
                   value={wizardState.skillsAssessment.experienceLevel}
-                  onValueChange={(value: any) => updateWizardState('skillsAssessment', { experienceLevel: value })}
+                  onValueChange={(value: any) =>
+                    updateWizardState('skillsAssessment', { experienceLevel: value })
+                  }
                 >
-                  {experienceLevels.map(level => (
+                  {experienceLevels.map((level) => (
                     <div key={level.value} className="flex items-center space-x-2">
                       <RadioGroupItem value={level.value} />
                       <div>
@@ -360,11 +361,13 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
 
               <div>
                 <Label className="text-base font-medium mb-3 block">Learning Style</Label>
-                <RadioGroup 
+                <RadioGroup
                   value={wizardState.skillsAssessment.learningStyle}
-                  onValueChange={(value: any) => updateWizardState('skillsAssessment', { learningStyle: value })}
+                  onValueChange={(value: any) =>
+                    updateWizardState('skillsAssessment', { learningStyle: value })
+                  }
                 >
-                  {learningStyles.map(style => (
+                  {learningStyles.map((style) => (
                     <div key={style.value} className="flex items-center space-x-2">
                       <RadioGroupItem value={style.value} />
                       <div>
@@ -377,16 +380,20 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
               </div>
 
               <div>
-                <Label className="text-base font-medium mb-3 block">What motivates you? (Select all that apply)</Label>
+                <Label className="text-base font-medium mb-3 block">
+                  What motivates you? (Select all that apply)
+                </Label>
                 <div className="grid grid-cols-2 gap-2">
-                  {motivations.map(motivation => (
+                  {motivations.map((motivation) => (
                     <div key={motivation} className="flex items-center space-x-2">
-                      <Checkbox 
+                      <Checkbox
                         checked={wizardState.skillsAssessment.motivations.includes(motivation)}
                         onCheckedChange={(checked) => {
-                          const motivs = checked 
+                          const motivs = checked
                             ? [...wizardState.skillsAssessment.motivations, motivation]
-                            : wizardState.skillsAssessment.motivations.filter(m => m !== motivation);
+                            : wizardState.skillsAssessment.motivations.filter(
+                                (m) => m !== motivation
+                              );
                           updateWizardState('skillsAssessment', { motivations: motivs });
                         }}
                       />
@@ -420,9 +427,9 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    {wizardState.certificationGoals.map(goalId => (
+                    {wizardState.certificationGoals.map((goalId) => (
                       <Badge key={goalId} variant="secondary">
-                        {availableCertifications.find(c => c.id === goalId)?.name}
+                        {availableCertifications.find((c) => c.id === goalId)?.name}
                       </Badge>
                     ))}
                   </div>
@@ -437,10 +444,18 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <p className="text-sm"><strong>Daily Time:</strong> {wizardState.studyPreferences.dailyTimeMinutes} minutes</p>
-                  <p className="text-sm"><strong>Difficulty:</strong> {wizardState.studyPreferences.preferredDifficulty}</p>
+                  <p className="text-sm">
+                    <strong>Daily Time:</strong> {wizardState.studyPreferences.dailyTimeMinutes}{' '}
+                    minutes
+                  </p>
+                  <p className="text-sm">
+                    <strong>Difficulty:</strong> {wizardState.studyPreferences.preferredDifficulty}
+                  </p>
                   {wizardState.studyPreferences.focusAreas.length > 0 && (
-                    <p className="text-sm"><strong>Focus Areas:</strong> {wizardState.studyPreferences.focusAreas.join(', ')}</p>
+                    <p className="text-sm">
+                      <strong>Focus Areas:</strong>{' '}
+                      {wizardState.studyPreferences.focusAreas.join(', ')}
+                    </p>
                   )}
                 </CardContent>
               </Card>
@@ -453,10 +468,17 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <p className="text-sm"><strong>Experience:</strong> {wizardState.skillsAssessment.experienceLevel}</p>
-                  <p className="text-sm"><strong>Learning Style:</strong> {wizardState.skillsAssessment.learningStyle}</p>
+                  <p className="text-sm">
+                    <strong>Experience:</strong> {wizardState.skillsAssessment.experienceLevel}
+                  </p>
+                  <p className="text-sm">
+                    <strong>Learning Style:</strong> {wizardState.skillsAssessment.learningStyle}
+                  </p>
                   {wizardState.skillsAssessment.motivations.length > 0 && (
-                    <p className="text-sm"><strong>Motivations:</strong> {wizardState.skillsAssessment.motivations.join(', ')}</p>
+                    <p className="text-sm">
+                      <strong>Motivations:</strong>{' '}
+                      {wizardState.skillsAssessment.motivations.join(', ')}
+                    </p>
                   )}
                 </CardContent>
               </Card>
@@ -488,16 +510,18 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
 
   return (
     <Dialog open={isOpen} onOpenChange={onComplete}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" aria-describedby="goal-wizard-description">
+      <DialogContent
+        className="max-w-2xl max-h-[80vh] overflow-y-auto"
+        aria-describedby="goal-wizard-description"
+      >
         <DialogHeader>
-          <DialogTitle className="text-center">
-            Set Your Learning Goals
-          </DialogTitle>
+          <DialogTitle className="text-center">Set Your Learning Goals</DialogTitle>
           <DialogDescription id="goal-wizard-description" className="sr-only">
-            Set your certification goals and learning preferences to get personalized study recommendations
+            Set your certification goals and learning preferences to get personalized study
+            recommendations
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           {/* Progress indicator */}
           <div className="flex justify-center gap-2">
@@ -506,10 +530,10 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
                 key={step.id}
                 className={`w-3 h-3 rounded-full transition-colors ${
                   index + 1 === currentStep
-                    ? "bg-primary"
+                    ? 'bg-primary'
                     : index + 1 < currentStep
-                    ? "bg-primary/50"
-                    : "bg-muted"
+                      ? 'bg-primary/50'
+                      : 'bg-muted'
                 }`}
               />
             ))}
@@ -523,9 +547,7 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
           </div>
 
           {/* Step content */}
-          <div className="min-h-[400px]">
-            {renderStepContent()}
-          </div>
+          <div className="min-h-[400px]">{renderStepContent()}</div>
 
           {/* Navigation */}
           <div className="flex justify-between items-center pt-4 border-t">
@@ -537,19 +559,15 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
             >
               Skip for now
             </Button>
-            
+
             <div className="flex gap-2">
               {currentStep > 1 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrevious}
-                >
+                <Button variant="outline" size="sm" onClick={handlePrevious}>
                   <ChevronLeft className="w-4 h-4 mr-1" />
                   Previous
                 </Button>
               )}
-              
+
               <Button
                 size="sm"
                 onClick={handleNext}
@@ -557,9 +575,9 @@ export default function GoalSettingWizard({ isOpen, onComplete }: GoalSettingWiz
                 className="min-w-[100px]"
               >
                 {isSubmitting ? (
-                  "Saving..."
+                  'Saving...'
                 ) : isLastStep ? (
-                  "Complete Setup"
+                  'Complete Setup'
                 ) : (
                   <>
                     Next

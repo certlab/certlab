@@ -9,7 +9,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
-import { TOUCH_TARGET, TOUCH_STATES, MOBILE_Z_INDEX } from '@/lib/mobile-layout';
 import { Home, BookOpen, Trophy, User, ShoppingBag } from 'lucide-react';
 
 interface NavItem {

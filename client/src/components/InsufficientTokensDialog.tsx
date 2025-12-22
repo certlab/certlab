@@ -41,7 +41,7 @@ export function InsufficientTokensDialog({
 
     setIsAdding(true);
     try {
-      const newBalance = await storage.addTokens(user.id, suggestedAmount);
+      const _newBalance = await storage.addTokens(user.id, suggestedAmount);
 
       // Invalidate tokenBalance query to refetch updated balance from storage
       await queryClient.invalidateQueries({
@@ -55,7 +55,7 @@ export function InsufficientTokensDialog({
 
       onOpenChange(false);
       onTokensAdded();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Error',
         description: 'Failed to add tokens. Please try again.',

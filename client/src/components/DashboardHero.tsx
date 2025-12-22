@@ -7,7 +7,7 @@ import { queryKeys, queryClient } from '@/lib/queryClient';
 import { clientStorage } from '@/lib/client-storage';
 import { useToast } from '@/hooks/use-toast';
 import { BookOpen, Brain } from 'lucide-react';
-import type { UserStats, Category, MasteryScore } from '@shared/schema';
+import type { UserStats, Category } from '@shared/schema';
 
 export default function DashboardHero() {
   const { user: currentUser, refreshUser } = useAuth();

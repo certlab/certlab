@@ -1,15 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useAuth } from "@/lib/auth-provider";
-import { ChevronDown, ChevronUp, Grid, List, BarChart3 } from "lucide-react";
-import { queryKeys } from "@/lib/queryClient";
-import type { Category, Subcategory, MasteryScore } from "@shared/schema";
-import { useState } from "react";
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
+import { useAuth } from '@/lib/auth-provider';
+import { ChevronDown, ChevronUp, Grid, List, BarChart3 } from 'lucide-react';
+import { queryKeys } from '@/lib/queryClient';
+import type { Category, Subcategory, MasteryScore } from '@shared/schema';
+import { useState } from 'react';
 
 interface MasteryMeterProps {
   selectedCategoryId?: number;
@@ -34,21 +33,24 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
   });
 
   // Filter by selected category if provided
-  const filteredCategories = selectedCategoryId 
-    ? categories.filter(cat => cat.id === selectedCategoryId)
+  const filteredCategories = selectedCategoryId
+    ? categories.filter((cat) => cat.id === selectedCategoryId)
     : categories;
 
   const getMasteryLevel = (score: number) => {
-    if (score >= 90) return { level: "Expert", color: "bg-emerald-500", textColor: "text-emerald-700" };
-    if (score >= 80) return { level: "Advanced", color: "bg-blue-500", textColor: "text-blue-700" };
-    if (score >= 70) return { level: "Intermediate", color: "bg-yellow-500", textColor: "text-yellow-700" };
-    if (score >= 60) return { level: "Beginner", color: "bg-orange-500", textColor: "text-orange-700" };
-    return { level: "Novice", color: "bg-red-500", textColor: "text-red-700" };
+    if (score >= 90)
+      return { level: 'Expert', color: 'bg-emerald-500', textColor: 'text-emerald-700' };
+    if (score >= 80) return { level: 'Advanced', color: 'bg-blue-500', textColor: 'text-blue-700' };
+    if (score >= 70)
+      return { level: 'Intermediate', color: 'bg-yellow-500', textColor: 'text-yellow-700' };
+    if (score >= 60)
+      return { level: 'Beginner', color: 'bg-orange-500', textColor: 'text-orange-700' };
+    return { level: 'Novice', color: 'bg-red-500', textColor: 'text-red-700' };
   };
 
   const calculateCategoryMastery = (categoryId: number) => {
-    const categorySubcategories = subcategories.filter(sub => sub.categoryId === categoryId);
-    const categoryMasteryScores = masteryScores.filter(score => score.categoryId === categoryId);
+    const _categorySubcategories = subcategories.filter((sub) => sub.categoryId === categoryId);
+    const categoryMasteryScores = masteryScores.filter((score) => score.categoryId === categoryId);
 
     if (categoryMasteryScores.length === 0) return 0;
 
@@ -66,8 +68,8 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
   };
 
   const getSubcategoryMastery = (categoryId: number, subcategoryId: number) => {
-    const masteryScore = masteryScores.find(score => 
-      score.categoryId === categoryId && score.subcategoryId === subcategoryId
+    const masteryScore = masteryScores.find(
+      (score) => score.categoryId === categoryId && score.subcategoryId === subcategoryId
     );
     return masteryScore ? masteryScore.rollingAverage : 0;
   };
@@ -86,9 +88,7 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
     return (
       <Card className="bg-card border-border/50 card-hover">
         <CardHeader className="p-6 border-b border-gray-100">
-          <CardTitle className="text-xl font-medium text-gray-900">
-            Mastery Meter
-          </CardTitle>
+          <CardTitle className="text-xl font-medium text-gray-900">Mastery Meter</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <p className="text-gray-600 text-sm">
@@ -105,9 +105,9 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
       {filteredCategories.map((category) => {
         const categoryMastery = calculateCategoryMastery(category.id);
         const masteryInfo = getMasteryLevel(categoryMastery);
-        const categorySubcategories = subcategories.filter(sub => sub.categoryId === category.id);
-        const completedDomains = categorySubcategories.filter(sub => 
-          getSubcategoryMastery(category.id, sub.id) >= 85
+        const categorySubcategories = subcategories.filter((sub) => sub.categoryId === category.id);
+        const completedDomains = categorySubcategories.filter(
+          (sub) => getSubcategoryMastery(category.id, sub.id) >= 85
         ).length;
 
         return (
@@ -127,27 +127,28 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
                   <Badge variant="outline" className={masteryInfo.textColor}>
                     {masteryInfo.level}
                   </Badge>
-                  <p className="text-lg font-semibold text-gray-700 mt-1">
-                    {categoryMastery}%
-                  </p>
+                  <p className="text-lg font-semibold text-gray-700 mt-1">{categoryMastery}%</p>
                 </div>
               </div>
-              
+
               <Progress value={categoryMastery} className="h-2 mb-3" />
-              
+
               {/* Domain Progress Visualization */}
               <div className="mb-3">
                 <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
                   <span>Domain Progress</span>
-                  <span>{completedDomains}/{categorySubcategories.length} ready</span>
+                  <span>
+                    {completedDomains}/{categorySubcategories.length} ready
+                  </span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {categorySubcategories.map((subcategory) => {
                     const subcategoryMastery = getSubcategoryMastery(category.id, subcategory.id);
-                    const hasData = masteryScores.some(score => 
-                      score.categoryId === category.id && score.subcategoryId === subcategory.id
+                    const hasData = masteryScores.some(
+                      (score) =>
+                        score.categoryId === category.id && score.subcategoryId === subcategory.id
                     );
-                    
+
                     const getStatusColor = () => {
                       if (!hasData) return 'bg-gray-200';
                       if (subcategoryMastery >= 85) return 'bg-green-500';
@@ -170,7 +171,7 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
                   })}
                 </div>
               </div>
-              
+
               {/* Details View */}
               <Button
                 variant="ghost"
@@ -179,45 +180,64 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
                 className="w-full justify-between text-xs"
               >
                 View Details
-                {expandedCategories.has(category.id) ? 
-                  <ChevronUp className="h-4 w-4" /> : 
+                {expandedCategories.has(category.id) ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
                   <ChevronDown className="h-4 w-4" />
-                }
+                )}
               </Button>
-              
+
               <Collapsible open={expandedCategories.has(category.id)}>
                 <CollapsibleContent className="mt-3 space-y-2">
                   {categorySubcategories.map((subcategory) => {
                     const subcategoryMastery = getSubcategoryMastery(category.id, subcategory.id);
-                    const hasData = masteryScores.some(score => 
-                      score.categoryId === category.id && score.subcategoryId === subcategory.id
+                    const hasData = masteryScores.some(
+                      (score) =>
+                        score.categoryId === category.id && score.subcategoryId === subcategory.id
                     );
 
                     return (
                       <div key={subcategory.id} className="flex items-center gap-3 text-sm">
-                        <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                          !hasData ? 'bg-gray-200' :
-                          subcategoryMastery >= 85 ? 'bg-green-500' :
-                          subcategoryMastery >= 70 ? 'bg-blue-500' :
-                          subcategoryMastery >= 50 ? 'bg-yellow-500' : 'bg-red-400'
-                        }`}></div>
+                        <div
+                          className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                            !hasData
+                              ? 'bg-gray-200'
+                              : subcategoryMastery >= 85
+                                ? 'bg-green-500'
+                                : subcategoryMastery >= 70
+                                  ? 'bg-blue-500'
+                                  : subcategoryMastery >= 50
+                                    ? 'bg-yellow-500'
+                                    : 'bg-red-400'
+                          }`}
+                        ></div>
                         <span className="text-gray-600 truncate flex-1">{subcategory.name}</span>
                         <div className="flex items-center gap-2">
                           <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                            <div 
+                            <div
                               className={`h-1.5 rounded-full ${
-                                !hasData ? 'bg-gray-300' :
-                                subcategoryMastery >= 85 ? 'bg-green-500' :
-                                subcategoryMastery >= 70 ? 'bg-blue-500' :
-                                subcategoryMastery >= 50 ? 'bg-yellow-500' : 'bg-red-400'
+                                !hasData
+                                  ? 'bg-gray-300'
+                                  : subcategoryMastery >= 85
+                                    ? 'bg-green-500'
+                                    : subcategoryMastery >= 70
+                                      ? 'bg-blue-500'
+                                      : subcategoryMastery >= 50
+                                        ? 'bg-yellow-500'
+                                        : 'bg-red-400'
                               }`}
                               style={{ width: `${Math.max(subcategoryMastery, 5)}%` }}
                             ></div>
                           </div>
-                          <span className={`text-xs font-medium min-w-8 text-right ${
-                            subcategoryMastery >= 85 ? 'text-green-600' : 
-                            subcategoryMastery >= 70 ? 'text-blue-600' : 'text-gray-500'
-                          }`}>
+                          <span
+                            className={`text-xs font-medium min-w-8 text-right ${
+                              subcategoryMastery >= 85
+                                ? 'text-green-600'
+                                : subcategoryMastery >= 70
+                                  ? 'text-blue-600'
+                                  : 'text-gray-500'
+                            }`}
+                          >
                             {hasData ? `${subcategoryMastery}%` : '--'}
                           </span>
                         </div>
@@ -239,33 +259,42 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
       {filteredCategories.map((category) => {
         const categoryMastery = calculateCategoryMastery(category.id);
         const masteryInfo = getMasteryLevel(categoryMastery);
-        const categorySubcategories = subcategories.filter(sub => sub.categoryId === category.id);
-        const completedDomains = categorySubcategories.filter(sub => 
-          getSubcategoryMastery(category.id, sub.id) >= 85
+        const categorySubcategories = subcategories.filter((sub) => sub.categoryId === category.id);
+        const completedDomains = categorySubcategories.filter(
+          (sub) => getSubcategoryMastery(category.id, sub.id) >= 85
         ).length;
 
         return (
-          <Card key={category.id} className="material-shadow border border-gray-100 text-center hover:border-primary/50 transition-colors">
+          <Card
+            key={category.id}
+            className="material-shadow border border-gray-100 text-center hover:border-primary/50 transition-colors"
+          >
             <CardContent className="p-4">
               <i className={`${category.icon} text-primary text-2xl mb-3 block`}></i>
               <h3 className="font-medium text-gray-900 text-sm mb-2">{category.name}</h3>
-              
+
               {/* Mini domain indicators */}
               <div className="flex justify-center gap-1 mb-3">
                 {categorySubcategories.slice(0, 6).map((subcategory) => {
                   const subcategoryMastery = getSubcategoryMastery(category.id, subcategory.id);
-                  const hasData = masteryScores.some(score => 
-                    score.categoryId === category.id && score.subcategoryId === subcategory.id
+                  const hasData = masteryScores.some(
+                    (score) =>
+                      score.categoryId === category.id && score.subcategoryId === subcategory.id
                   );
-                  
+
                   return (
                     <div
                       key={subcategory.id}
                       className={`w-2 h-2 rounded-full ${
-                        !hasData ? 'bg-gray-200' :
-                        subcategoryMastery >= 85 ? 'bg-green-500' :
-                        subcategoryMastery >= 70 ? 'bg-blue-500' :
-                        subcategoryMastery >= 50 ? 'bg-yellow-500' : 'bg-red-400'
+                        !hasData
+                          ? 'bg-gray-200'
+                          : subcategoryMastery >= 85
+                            ? 'bg-green-500'
+                            : subcategoryMastery >= 70
+                              ? 'bg-blue-500'
+                              : subcategoryMastery >= 50
+                                ? 'bg-yellow-500'
+                                : 'bg-red-400'
                       }`}
                       title={`${subcategory.name}: ${hasData ? `${subcategoryMastery}%` : 'No data'}`}
                     ></div>
@@ -275,7 +304,7 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
                   <span className="text-xs text-gray-400">+{categorySubcategories.length - 6}</span>
                 )}
               </div>
-              
+
               <div className="space-y-2">
                 <Progress value={categoryMastery} className="h-2" />
                 <div className="flex items-center justify-between">
@@ -333,7 +362,7 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
       </CardHeader>
       <CardContent className="p-4">
         {viewMode === 'summary' ? <SummaryView /> : <GridView />}
-        
+
         {/* Legend and Info */}
         <div className="mt-4 space-y-3">
           <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
@@ -359,11 +388,13 @@ export default function MasteryMeter({ selectedCategoryId }: MasteryMeterProps) 
               <span>No Data</span>
             </div>
           </div>
-          
+
           <div className="p-3 bg-muted/50 rounded-lg border border-border">
             <div className="flex items-center space-x-2 text-sm text-foreground">
               <BarChart3 className="h-4 w-4" />
-              <span className="font-medium">Goal: 85%+ mastery in all domains for certification readiness</span>
+              <span className="font-medium">
+                Goal: 85%+ mastery in all domains for certification readiness
+              </span>
             </div>
           </div>
         </div>

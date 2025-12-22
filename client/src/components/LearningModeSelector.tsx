@@ -90,7 +90,7 @@ export default function LearningModeSelector() {
     },
   });
 
-  const handleCategoryToggle = (categoryId: number, checked: boolean, categoryName: string) => {
+  const handleCategoryToggle = (categoryId: number, checked: boolean, _categoryName: string) => {
     if (selectedMode === 'quiz' && checked && selectedCategories.length > 0) {
       // For quiz mode, only allow one category at a time
       setSelectedCategories([categoryId]);

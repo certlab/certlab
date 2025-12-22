@@ -15,7 +15,6 @@ import {
   Settings,
   ChevronRight,
   X,
-  Zap,
   Target,
   BarChart3,
   Building,

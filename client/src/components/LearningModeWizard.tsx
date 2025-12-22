@@ -211,17 +211,6 @@ export default function LearningModeWizard() {
     }
   };
 
-  const getModeColor = (mode: LearningMode) => {
-    switch (mode) {
-      case 'study':
-        return 'border-primary bg-primary/5';
-      case 'quiz':
-        return 'border-secondary bg-secondary/5';
-      case 'challenge':
-        return 'border-orange-500 bg-orange-500/5';
-    }
-  };
-
   const filteredSubcategories = subcategories.filter((sub) =>
     sessionConfig.categories.includes(sub.categoryId)
   );
