@@ -27,6 +27,7 @@ import { initializeFirestoreService, isFirestoreInitialized } from './firestore-
 import { getCurrentFirebaseUser } from './firebase';
 import { logError } from './errors';
 import type { IClientStorage } from '@shared/storage-interface';
+import type { StudyTimerSettings, StudyTimerSession, StudyTimerStats } from '@shared/schema';
 
 /**
  * Storage mode type - now always 'cloud' (Firestore)
@@ -579,7 +580,7 @@ class StorageRouter implements IClientStorage {
   // Study Timer Methods
   // ==========================================
 
-  async getStudyTimerSettings(userId: string): Promise<any> {
+  async getStudyTimerSettings(userId: string): Promise<StudyTimerSettings | null> {
     try {
       return await clientStorage.getStudyTimerSettings(userId);
     } catch (error) {
@@ -588,7 +589,7 @@ class StorageRouter implements IClientStorage {
     }
   }
 
-  async saveStudyTimerSettings(settings: any): Promise<any> {
+  async saveStudyTimerSettings(settings: Partial<StudyTimerSettings>): Promise<StudyTimerSettings> {
     try {
       return await clientStorage.saveStudyTimerSettings(settings);
     } catch (error) {
@@ -597,7 +598,7 @@ class StorageRouter implements IClientStorage {
     }
   }
 
-  async createStudyTimerSession(session: any): Promise<any> {
+  async createStudyTimerSession(session: Partial<StudyTimerSession>): Promise<StudyTimerSession> {
     try {
       return await clientStorage.createStudyTimerSession(session);
     } catch (error) {
@@ -606,7 +607,10 @@ class StorageRouter implements IClientStorage {
     }
   }
 
-  async updateStudyTimerSession(sessionId: number, updates: any): Promise<any> {
+  async updateStudyTimerSession(
+    sessionId: number,
+    updates: Partial<StudyTimerSession>
+  ): Promise<StudyTimerSession> {
     try {
       return await clientStorage.updateStudyTimerSession(sessionId, updates);
     } catch (error) {
@@ -619,7 +623,7 @@ class StorageRouter implements IClientStorage {
     userId: string,
     startDate: Date,
     endDate: Date
-  ): Promise<any[]> {
+  ): Promise<StudyTimerSession[]> {
     try {
       return await clientStorage.getStudyTimerSessionsByDateRange(userId, startDate, endDate);
     } catch (error) {
@@ -628,7 +632,7 @@ class StorageRouter implements IClientStorage {
     }
   }
 
-  async getStudyTimerSessions(userId: string): Promise<any[]> {
+  async getStudyTimerSessions(userId: string): Promise<StudyTimerSession[]> {
     try {
       return await clientStorage.getStudyTimerSessions(userId);
     } catch (error) {
@@ -637,7 +641,7 @@ class StorageRouter implements IClientStorage {
     }
   }
 
-  async getStudyTimerStats(userId: string): Promise<any> {
+  async getStudyTimerStats(userId: string): Promise<StudyTimerStats> {
     try {
       return await clientStorage.getStudyTimerStats(userId);
     } catch (error) {

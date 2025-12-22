@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-provider';
 import { queryClient, queryKeys } from '@/lib/queryClient';
@@ -7,7 +7,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import {
   Play,
@@ -18,12 +17,11 @@ import {
   Coffee,
   TrendingUp,
   Calendar,
-  Timer,
   Bell,
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import type { StudyTimerSession, StudyTimerSettings, Category } from '@shared/schema';
+import type { StudyTimerSession, StudyTimerSettings } from '@shared/schema';
 
 export default function StudyTimerPage() {
   const { user } = useAuth();
@@ -44,6 +42,24 @@ export default function StudyTimerPage() {
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartTimeRef = useRef<Date | null>(null);
+  const autoStartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Get default settings (defined outside queries for clarity)
+  const getDefaultSettings = (): StudyTimerSettings => ({
+    id: 0,
+    userId: user?.id || '',
+    tenantId: 1,
+    workDuration: 25,
+    breakDuration: 5,
+    longBreakDuration: 15,
+    sessionsUntilLongBreak: 4,
+    autoStartBreaks: false,
+    autoStartWork: false,
+    enableNotifications: true,
+    enableSound: true,
+    dailyGoalMinutes: 120,
+    updatedAt: new Date(),
+  });
 
   // Get user's timer settings
   const { data: timerSettings, isLoading: isLoadingSettings } = useQuery({
@@ -67,11 +83,6 @@ export default function StudyTimerPage() {
       return sessions;
     },
     enabled: !!user?.id,
-  });
-
-  // Get categories for optional categorization
-  const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: queryKeys.categories.all(),
   });
 
   // Create or update session mutation
@@ -115,23 +126,6 @@ export default function StudyTimerPage() {
     },
   });
 
-  // Get default settings
-  const getDefaultSettings = (): StudyTimerSettings => ({
-    id: 0,
-    userId: user?.id || '',
-    tenantId: 1,
-    workDuration: 25,
-    breakDuration: 5,
-    longBreakDuration: 15,
-    sessionsUntilLongBreak: 4,
-    autoStartBreaks: false,
-    autoStartWork: false,
-    enableNotifications: true,
-    enableSound: true,
-    dailyGoalMinutes: 120,
-    updatedAt: new Date(),
-  });
-
   // Initialize timer with settings
   useEffect(() => {
     if (timerSettings && !isRunning) {
@@ -165,8 +159,12 @@ export default function StudyTimerPage() {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
+      // Clean up auto-start timeout on unmount
+      if (autoStartTimeoutRef.current) {
+        clearTimeout(autoStartTimeoutRef.current);
+      }
     };
-  }, [isRunning, isPaused, timeLeft]);
+  }, [isRunning, isPaused, timeLeft, handleSessionComplete]);
 
   // Request notification permission
   useEffect(() => {
@@ -197,7 +195,7 @@ export default function StudyTimerPage() {
   };
 
   // Start timer
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     if (!sessionStartTimeRef.current) {
       sessionStartTimeRef.current = new Date();
     }
@@ -214,13 +212,26 @@ export default function StudyTimerPage() {
 
     // Create session if starting new
     if (!currentSessionId) {
+      // Use configured duration, not remaining time
+      const configuredDuration = timerSettings
+        ? sessionType === 'work'
+          ? timerSettings.workDuration
+          : sessionType === 'break'
+            ? timerSettings.breakDuration
+            : timerSettings.longBreakDuration
+        : sessionType === 'work'
+          ? 25
+          : sessionType === 'break'
+            ? 5
+            : 15;
+
       saveSessionMutation.mutate({
         sessionType,
-        duration: Math.floor(timeLeft / 60),
+        duration: configuredDuration,
         startedAt: sessionStartTimeRef.current,
       });
     }
-  };
+  }, [isPaused, pauseStartTime, currentSessionId, timerSettings, sessionType, saveSessionMutation]);
 
   // Pause timer
   const handlePause = () => {
@@ -264,7 +275,7 @@ export default function StudyTimerPage() {
   };
 
   // Handle session completion
-  const handleSessionComplete = () => {
+  const handleSessionComplete = useCallback(() => {
     setIsRunning(false);
     setIsPaused(false);
 
@@ -337,7 +348,11 @@ export default function StudyTimerPage() {
         setTimeLeft(timerSettings.longBreakDuration * 60);
 
         if (timerSettings.autoStartBreaks) {
-          setTimeout(() => handleStart(), AUTO_START_DELAY_MS);
+          // Clear any existing timeout before setting new one
+          if (autoStartTimeoutRef.current) {
+            clearTimeout(autoStartTimeoutRef.current);
+          }
+          autoStartTimeoutRef.current = setTimeout(() => handleStart(), AUTO_START_DELAY_MS);
         }
       } else {
         setSessionType('break');
@@ -346,7 +361,11 @@ export default function StudyTimerPage() {
         }
 
         if (timerSettings?.autoStartBreaks) {
-          setTimeout(() => handleStart(), AUTO_START_DELAY_MS);
+          // Clear any existing timeout before setting new one
+          if (autoStartTimeoutRef.current) {
+            clearTimeout(autoStartTimeoutRef.current);
+          }
+          autoStartTimeoutRef.current = setTimeout(() => handleStart(), AUTO_START_DELAY_MS);
         }
       }
     } else {
@@ -356,7 +375,11 @@ export default function StudyTimerPage() {
       }
 
       if (timerSettings?.autoStartWork) {
-        setTimeout(() => handleStart(), AUTO_START_DELAY_MS);
+        // Clear any existing timeout before setting new one
+        if (autoStartTimeoutRef.current) {
+          clearTimeout(autoStartTimeoutRef.current);
+        }
+        autoStartTimeoutRef.current = setTimeout(() => handleStart(), AUTO_START_DELAY_MS);
       }
     }
 
@@ -369,7 +392,16 @@ export default function StudyTimerPage() {
       description:
         sessionType === 'work' ? 'Time for a well-deserved break.' : 'Ready to get back to work!',
     });
-  };
+  }, [
+    currentSessionId,
+    saveSessionMutation,
+    totalPausedTime,
+    timerSettings,
+    sessionType,
+    workSessionsCompleted,
+    toast,
+    handleStart,
+  ]);
 
   // Calculate today's stats
   const todayMinutes = todaySessions
@@ -649,7 +681,9 @@ export default function StudyTimerPage() {
                         {session.sessionType === 'work' ? 'Work Session' : 'Break'}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(session.startedAt!).toLocaleTimeString()}
+                        {session.startedAt
+                          ? new Date(session.startedAt).toLocaleTimeString()
+                          : 'N/A'}
                       </p>
                     </div>
                   </div>

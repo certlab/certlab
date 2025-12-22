@@ -1337,8 +1337,8 @@ class ClientStorage implements IClientStorage {
         breakDuration: settings.breakDuration || 5,
         longBreakDuration: settings.longBreakDuration || 15,
         sessionsUntilLongBreak: settings.sessionsUntilLongBreak || 4,
-        autoStartBreaks: settings.autoStartBreaks || false,
-        autoStartWork: settings.autoStartWork || false,
+        autoStartBreaks: settings.autoStartBreaks !== undefined ? settings.autoStartBreaks : false,
+        autoStartWork: settings.autoStartWork !== undefined ? settings.autoStartWork : false,
         enableNotifications:
           settings.enableNotifications !== undefined ? settings.enableNotifications : true,
         enableSound: settings.enableSound !== undefined ? settings.enableSound : true,
