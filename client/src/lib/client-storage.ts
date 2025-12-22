@@ -1657,7 +1657,17 @@ class ClientStorage implements IClientStorage {
   // ==========================================
   // Smart Study Recommendations & Analytics
   // ==========================================
+  // TODO: These methods are stub implementations that need to be completed.
+  // They return empty/default values to satisfy the IClientStorage interface.
+  // Implementation timeline: Q1 2025
+  // See: SMART_RECOMMENDATIONS_DOCS.md for design details
 
+  /**
+   * Get personalized study recommendations for a user.
+   * @param userId - The user's unique identifier
+   * @returns Array of study recommendations
+   * @todo Implement IndexedDB-based recommendation engine using quiz history and mastery scores
+   */
   async getStudyRecommendations(userId: string): Promise<
     Array<{
       id: string;
@@ -1684,6 +1694,12 @@ class ClientStorage implements IClientStorage {
     return [];
   }
 
+  /**
+   * Calculate certification readiness score for a user.
+   * @param userId - The user's unique identifier
+   * @returns Readiness score with category breakdown and weak areas
+   * @todo Implement using quiz history, mastery scores, and learning velocity
+   */
   async getReadinessScore(userId: string): Promise<{
     overall: number;
     categoryScores: Array<{
@@ -1722,6 +1738,12 @@ class ClientStorage implements IClientStorage {
     };
   }
 
+  /**
+   * Analyze time-of-day performance patterns.
+   * @param userId - The user's unique identifier
+   * @returns Array of hourly performance statistics
+   * @todo Implement using quiz timestamps and scores from IndexedDB
+   */
   async getTimeOfDayPerformance(userId: string): Promise<
     Array<{
       hour: number;
@@ -1734,6 +1756,12 @@ class ClientStorage implements IClientStorage {
     return [];
   }
 
+  /**
+   * Calculate learning velocity metrics.
+   * @param userId - The user's unique identifier
+   * @returns Velocity metrics including questions per day and mastery growth rate
+   * @todo Implement using quiz history and mastery score deltas
+   */
   async getLearningVelocity(userId: string): Promise<{
     questionsPerDay: number;
     averageScoreImprovement: number;
@@ -1751,6 +1779,14 @@ class ClientStorage implements IClientStorage {
     };
   }
 
+  /**
+   * Analyze performance for a category or subcategory.
+   * @param userId - The user's unique identifier
+   * @param categoryId - Optional category filter
+   * @param subcategoryId - Optional subcategory filter
+   * @returns Performance analysis with accuracy, difficulty distribution, and trends
+   * @todo Implement using quiz answers and question difficulty from IndexedDB
+   */
   async analyzePerformance(
     userId: string,
     categoryId?: number,
