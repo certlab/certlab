@@ -27,7 +27,15 @@ import { initializeFirestoreService, isFirestoreInitialized } from './firestore-
 import { getCurrentFirebaseUser } from './firebase';
 import { logError } from './errors';
 import type { IClientStorage } from '@shared/storage-interface';
-import type { StudyTimerSettings, StudyTimerSession, StudyTimerStats } from '@shared/schema';
+import type {
+  StudyTimerSettings,
+  StudyTimerSession,
+  StudyTimerStats,
+  Quest,
+  UserQuestProgress,
+  UserTitle,
+  UserDailyReward,
+} from '@shared/schema';
 
 /**
  * Storage mode type - now always 'cloud' (Firestore)
@@ -202,21 +210,21 @@ class StorageRouter implements IClientStorage {
   // Quest Management
   // ==========================================
 
-  async getQuests(): Promise<any[]> {
-    return this.executeFirestoreOperation((s) => (s as any).getQuests(), 'getQuests');
+  async getQuests(): Promise<Quest[]> {
+    return this.executeFirestoreOperation((s) => s.getQuests(), 'getQuests');
   }
 
-  async getActiveQuests(): Promise<any[]> {
-    return this.executeFirestoreOperation((s) => (s as any).getActiveQuests(), 'getActiveQuests');
+  async getActiveQuests(): Promise<Quest[]> {
+    return this.executeFirestoreOperation((s) => s.getActiveQuests(), 'getActiveQuests');
   }
 
   async getUserQuestProgressByQuest(
     userId: string,
     questId: number,
     tenantId: number
-  ): Promise<any> {
+  ): Promise<UserQuestProgress | null> {
     return this.executeFirestoreOperation(
-      (s) => (s as any).getUserQuestProgressByQuest(userId, questId, tenantId),
+      (s) => s.getUserQuestProgressByQuest(userId, questId, tenantId),
       'getUserQuestProgressByQuest'
     );
   }
@@ -228,21 +236,21 @@ class StorageRouter implements IClientStorage {
     tenantId: number
   ): Promise<void> {
     return this.executeFirestoreOperation(
-      (s) => (s as any).updateUserQuestProgress(userId, questId, progress, tenantId),
+      (s) => s.updateUserQuestProgress(userId, questId, progress, tenantId),
       'updateUserQuestProgress'
     );
   }
 
   async completeQuest(userId: string, questId: number, tenantId: number): Promise<void> {
     return this.executeFirestoreOperation(
-      (s) => (s as any).completeQuest(userId, questId, tenantId),
+      (s) => s.completeQuest(userId, questId, tenantId),
       'completeQuest'
     );
   }
 
   async claimQuestReward(userId: string, questId: number, tenantId: number): Promise<void> {
     return this.executeFirestoreOperation(
-      (s) => (s as any).claimQuestReward(userId, questId, tenantId),
+      (s) => s.claimQuestReward(userId, questId, tenantId),
       'claimQuestReward'
     );
   }
@@ -259,21 +267,21 @@ class StorageRouter implements IClientStorage {
     tenantId: number
   ): Promise<void> {
     return this.executeFirestoreOperation(
-      (s) => (s as any).unlockTitle(userId, title, description, source, tenantId),
+      (s) => s.unlockTitle(userId, title, description, source, tenantId),
       'unlockTitle'
     );
   }
 
-  async getUserTitles(userId: string, tenantId: number): Promise<any[]> {
+  async getUserTitles(userId: string, tenantId: number): Promise<UserTitle[]> {
     return this.executeFirestoreOperation(
-      (s) => (s as any).getUserTitles(userId, tenantId),
+      (s) => s.getUserTitles(userId, tenantId),
       'getUserTitles'
     );
   }
 
   async setSelectedTitle(userId: string, title: string | null): Promise<void> {
     return this.executeFirestoreOperation(
-      (s) => (s as any).setSelectedTitle(userId, title),
+      (s) => s.setSelectedTitle(userId, title),
       'setSelectedTitle'
     );
   }
@@ -284,14 +292,14 @@ class StorageRouter implements IClientStorage {
 
   async hasClaimedDailyReward(userId: string, day: number): Promise<boolean> {
     return this.executeFirestoreOperation(
-      (s) => (s as any).hasClaimedDailyReward(userId, day),
+      (s) => s.hasClaimedDailyReward(userId, day),
       'hasClaimedDailyReward'
     );
   }
 
-  async claimDailyReward(userId: string, day: number, tenantId: number): Promise<any> {
+  async claimDailyReward(userId: string, day: number, tenantId: number): Promise<UserDailyReward> {
     return this.executeFirestoreOperation(
-      (s) => (s as any).claimDailyReward(userId, day, tenantId),
+      (s) => s.claimDailyReward(userId, day, tenantId),
       'claimDailyReward'
     );
   }

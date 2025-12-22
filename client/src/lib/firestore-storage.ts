@@ -65,6 +65,10 @@ import type {
   InsertQuestion,
   InsertUserProgress,
   Lecture,
+  Quest,
+  UserQuestProgress,
+  UserTitle,
+  UserDailyReward,
 } from '@shared/schema';
 import type {
   IClientStorage,
@@ -1849,6 +1853,94 @@ class FirestoreStorage implements IClientStorage {
       topCategories,
       weakCategories,
     };
+  }
+
+  // ==========================================
+  // Quest Management
+  // ==========================================
+
+  async getQuests(): Promise<Quest[]> {
+    // TODO: Implement Firestore collection for quests
+    console.warn('[FirestoreStorage] getQuests not yet implemented');
+    return [];
+  }
+
+  async getActiveQuests(): Promise<Quest[]> {
+    // TODO: Implement Firestore collection for quests
+    console.warn('[FirestoreStorage] getActiveQuests not yet implemented');
+    return [];
+  }
+
+  async getUserQuestProgressByQuest(
+    userId: string,
+    questId: number,
+    tenantId: number
+  ): Promise<UserQuestProgress | null> {
+    // TODO: Implement Firestore collection for quest progress
+    console.warn('[FirestoreStorage] getUserQuestProgressByQuest not yet implemented');
+    return null;
+  }
+
+  async updateUserQuestProgress(
+    userId: string,
+    questId: number,
+    progress: number,
+    tenantId: number
+  ): Promise<void> {
+    // TODO: Implement Firestore collection for quest progress
+    console.warn('[FirestoreStorage] updateUserQuestProgress not yet implemented');
+  }
+
+  async completeQuest(userId: string, questId: number, tenantId: number): Promise<void> {
+    // TODO: Implement Firestore collection for quest progress
+    console.warn('[FirestoreStorage] completeQuest not yet implemented');
+  }
+
+  async claimQuestReward(userId: string, questId: number, tenantId: number): Promise<void> {
+    // TODO: Implement Firestore collection for quest rewards
+    console.warn('[FirestoreStorage] claimQuestReward not yet implemented');
+  }
+
+  // ==========================================
+  // Title Management
+  // ==========================================
+
+  async unlockTitle(
+    userId: string,
+    title: string,
+    description: string,
+    source: string,
+    tenantId: number
+  ): Promise<void> {
+    // TODO: Implement Firestore collection for titles
+    console.warn('[FirestoreStorage] unlockTitle not yet implemented');
+  }
+
+  async getUserTitles(userId: string, tenantId: number): Promise<UserTitle[]> {
+    // TODO: Implement Firestore collection for titles
+    console.warn('[FirestoreStorage] getUserTitles not yet implemented');
+    return [];
+  }
+
+  async setSelectedTitle(userId: string, title: string | null): Promise<void> {
+    // TODO: Implement Firestore collection for selected title
+    console.warn('[FirestoreStorage] setSelectedTitle not yet implemented');
+  }
+
+  // ==========================================
+  // Daily Rewards
+  // ==========================================
+
+  async hasClaimedDailyReward(userId: string, day: number): Promise<boolean> {
+    // TODO: Implement Firestore collection for daily rewards
+    console.warn('[FirestoreStorage] hasClaimedDailyReward not yet implemented');
+    return false;
+  }
+
+  async claimDailyReward(userId: string, day: number, tenantId: number): Promise<UserDailyReward> {
+    // TODO: Implement Firestore collection for daily rewards
+    console.warn('[FirestoreStorage] claimDailyReward not yet implemented');
+    throw new Error('Daily rewards not yet implemented for Firestore');
   }
 }
 

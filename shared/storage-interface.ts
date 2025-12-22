@@ -39,6 +39,10 @@ import type {
   Lecture,
   QuizAnswer,
   WebhookDetails,
+  Quest,
+  UserQuestProgress,
+  UserTitle,
+  UserDailyReward,
 } from './schema';
 
 /**
@@ -666,6 +670,66 @@ export interface IClientStorage extends IStorageAdapter {
 
   /** Calculate token cost for a quiz */
   calculateQuizTokenCost(questionCount: number): number;
+
+  // ==========================================
+  // Quest Management
+  // ==========================================
+
+  /** Get all quests */
+  getQuests(): Promise<Quest[]>;
+
+  /** Get active quests (not completed) */
+  getActiveQuests(): Promise<Quest[]>;
+
+  /** Get user's progress for a specific quest */
+  getUserQuestProgressByQuest(
+    userId: string,
+    questId: number,
+    tenantId: number
+  ): Promise<UserQuestProgress | null>;
+
+  /** Update user's progress on a quest */
+  updateUserQuestProgress(
+    userId: string,
+    questId: number,
+    progress: number,
+    tenantId: number
+  ): Promise<void>;
+
+  /** Mark a quest as completed */
+  completeQuest(userId: string, questId: number, tenantId: number): Promise<void>;
+
+  /** Claim reward for a completed quest */
+  claimQuestReward(userId: string, questId: number, tenantId: number): Promise<void>;
+
+  // ==========================================
+  // Title Management
+  // ==========================================
+
+  /** Unlock a title for a user */
+  unlockTitle(
+    userId: string,
+    title: string,
+    description: string,
+    source: string,
+    tenantId: number
+  ): Promise<void>;
+
+  /** Get all titles unlocked by a user */
+  getUserTitles(userId: string, tenantId: number): Promise<UserTitle[]>;
+
+  /** Set the user's currently selected/displayed title */
+  setSelectedTitle(userId: string, title: string | null): Promise<void>;
+
+  // ==========================================
+  // Daily Rewards
+  // ==========================================
+
+  /** Check if user has claimed daily reward for a specific day */
+  hasClaimedDailyReward(userId: string, day: number): Promise<boolean>;
+
+  /** Claim daily reward for a specific day */
+  claimDailyReward(userId: string, day: number, tenantId: number): Promise<UserDailyReward>;
 
   // ==========================================
   // Smart Study Recommendations

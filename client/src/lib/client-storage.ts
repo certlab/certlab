@@ -69,6 +69,10 @@ import type {
   StudyTimerSession,
   StudyTimerSettings,
   StudyTimerStats,
+  Quest,
+  UserQuestProgress,
+  UserTitle,
+  UserDailyReward,
 } from '@shared/schema';
 import type {
   IClientStorage,
@@ -1540,6 +1544,94 @@ class ClientStorage implements IClientStorage {
       longestStreak,
       currentStreak,
     };
+  }
+
+  // ==========================================
+  // Quest Management
+  // ==========================================
+
+  async getQuests(): Promise<Quest[]> {
+    // TODO: Implement IndexedDB store for quests
+    console.warn('[ClientStorage] getQuests not yet implemented for IndexedDB');
+    return [];
+  }
+
+  async getActiveQuests(): Promise<Quest[]> {
+    // TODO: Implement IndexedDB store for quests
+    console.warn('[ClientStorage] getActiveQuests not yet implemented for IndexedDB');
+    return [];
+  }
+
+  async getUserQuestProgressByQuest(
+    userId: string,
+    questId: number,
+    tenantId: number
+  ): Promise<UserQuestProgress | null> {
+    // TODO: Implement IndexedDB store for quest progress
+    console.warn('[ClientStorage] getUserQuestProgressByQuest not yet implemented for IndexedDB');
+    return null;
+  }
+
+  async updateUserQuestProgress(
+    userId: string,
+    questId: number,
+    progress: number,
+    tenantId: number
+  ): Promise<void> {
+    // TODO: Implement IndexedDB store for quest progress
+    console.warn('[ClientStorage] updateUserQuestProgress not yet implemented for IndexedDB');
+  }
+
+  async completeQuest(userId: string, questId: number, tenantId: number): Promise<void> {
+    // TODO: Implement IndexedDB store for quest progress
+    console.warn('[ClientStorage] completeQuest not yet implemented for IndexedDB');
+  }
+
+  async claimQuestReward(userId: string, questId: number, tenantId: number): Promise<void> {
+    // TODO: Implement IndexedDB store for quest rewards
+    console.warn('[ClientStorage] claimQuestReward not yet implemented for IndexedDB');
+  }
+
+  // ==========================================
+  // Title Management
+  // ==========================================
+
+  async unlockTitle(
+    userId: string,
+    title: string,
+    description: string,
+    source: string,
+    tenantId: number
+  ): Promise<void> {
+    // TODO: Implement IndexedDB store for titles
+    console.warn('[ClientStorage] unlockTitle not yet implemented for IndexedDB');
+  }
+
+  async getUserTitles(userId: string, tenantId: number): Promise<UserTitle[]> {
+    // TODO: Implement IndexedDB store for titles
+    console.warn('[ClientStorage] getUserTitles not yet implemented for IndexedDB');
+    return [];
+  }
+
+  async setSelectedTitle(userId: string, title: string | null): Promise<void> {
+    // TODO: Implement IndexedDB store for selected title
+    console.warn('[ClientStorage] setSelectedTitle not yet implemented for IndexedDB');
+  }
+
+  // ==========================================
+  // Daily Rewards
+  // ==========================================
+
+  async hasClaimedDailyReward(userId: string, day: number): Promise<boolean> {
+    // TODO: Implement IndexedDB store for daily rewards
+    console.warn('[ClientStorage] hasClaimedDailyReward not yet implemented for IndexedDB');
+    return false;
+  }
+
+  async claimDailyReward(userId: string, day: number, tenantId: number): Promise<UserDailyReward> {
+    // TODO: Implement IndexedDB store for daily rewards
+    console.warn('[ClientStorage] claimDailyReward not yet implemented for IndexedDB');
+    throw new Error('Daily rewards not yet implemented for IndexedDB');
   }
 }
 
