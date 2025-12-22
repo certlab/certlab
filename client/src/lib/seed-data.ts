@@ -52,7 +52,7 @@
 import { clientStorage } from './client-storage';
 import { indexedDBService } from './indexeddb';
 
-const SEED_VERSION = 4;
+const SEED_VERSION = 6; // Gamification V2 features (matches DB_VERSION 6)
 
 export async function seedInitialData(): Promise<void> {
   // Check seed version - this is the primary mechanism for determining whether to reseed
@@ -275,6 +275,27 @@ export async function seedInitialData(): Promise<void> {
           'Information security aims to maintain the CIA triad: Confidentiality, Integrity, and Availability of information.',
         difficultyLevel: 1,
         tags: ['fundamentals', 'CIA triad'],
+        // V2 Explanation features demonstration
+        explanationSteps: [
+          'Confidentiality ensures that information is accessible only to authorized individuals',
+          'Integrity guarantees that data remains accurate and unmodified',
+          'Availability ensures that information and systems are accessible when needed',
+          'All three components work together to form the foundation of information security',
+        ],
+        referenceLinks: [
+          {
+            title: 'NIST SP 800-12: Introduction to Information Security',
+            url: 'https://csrc.nist.gov/publications/detail/sp/800-12/rev-1/final',
+            type: 'documentation',
+          },
+          {
+            title: 'Understanding the CIA Triad',
+            url: 'https://www.itgovernance.co.uk/blog/the-cia-triad',
+            type: 'article',
+          },
+        ],
+        explanationVotes: 12,
+        hasAlternativeViews: false,
       });
 
       await clientStorage.createQuestion({
@@ -333,6 +354,51 @@ export async function seedInitialData(): Promise<void> {
           'Defense in depth is a security strategy that uses multiple layers of security controls throughout an IT system to provide redundancy in case one control fails.',
         difficultyLevel: 2,
         tags: ['defense in depth', 'architecture'],
+        // V2 Explanation features with video and community explanations
+        explanationSteps: [
+          'Start with perimeter security (firewalls, IDS/IPS)',
+          'Add network segmentation to limit lateral movement',
+          'Implement endpoint protection and access controls',
+          'Include monitoring and logging at every layer',
+          'Ensure each layer provides independent protection',
+        ],
+        referenceLinks: [
+          {
+            title: 'NIST Defense in Depth Guide',
+            url: 'https://csrc.nist.gov/glossary/term/defense_in_depth',
+            type: 'documentation',
+          },
+          {
+            title: 'Defense in Depth: Best Practices',
+            url: 'https://www.sans.org/white-papers/defense-in-depth/',
+            type: 'article',
+          },
+        ],
+        videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        communityExplanations: [
+          {
+            id: 'comm-1',
+            userId: 'demo-user-1',
+            userName: 'Security Expert',
+            content:
+              'Think of defense in depth like protecting your home: you have a fence, locks on doors, an alarm system, and cameras. If one fails, the others still protect you. Same concept applies to IT security - use firewalls, antivirus, encryption, access controls, etc.',
+            votes: 15,
+            createdAt: new Date('2024-01-15'),
+            isVerified: true,
+          },
+          {
+            id: 'comm-2',
+            userId: 'demo-user-2',
+            userName: 'CISSP Certified',
+            content:
+              'A good analogy is a castle: moat, walls, guards, and inner keep. Each layer provides protection even if the outer layers are breached. No single point of failure.',
+            votes: 8,
+            createdAt: new Date('2024-01-20'),
+            isVerified: false,
+          },
+        ],
+        explanationVotes: 23,
+        hasAlternativeViews: true,
       });
     }
 
@@ -444,7 +510,7 @@ export async function seedInitialData(): Promise<void> {
     createdAt: new Date(),
   });
 
-  // Additional progress badges
+  // Additional progress badges with tiers
   await indexedDBService.put('badges', {
     id: 6,
     name: 'Getting Started',
@@ -454,6 +520,7 @@ export async function seedInitialData(): Promise<void> {
     requirement: { type: 'quizzes_completed', value: 5 },
     color: 'blue',
     rarity: 'common',
+    tier: 'bronze',
     points: 25,
     createdAt: new Date(),
   });
@@ -467,6 +534,7 @@ export async function seedInitialData(): Promise<void> {
     requirement: { type: 'quizzes_completed', value: 25 },
     color: 'gold',
     rarity: 'rare',
+    tier: 'silver',
     points: 100,
     createdAt: new Date(),
   });
@@ -480,6 +548,7 @@ export async function seedInitialData(): Promise<void> {
     requirement: { type: 'quizzes_completed', value: 50 },
     color: 'rainbow',
     rarity: 'legendary',
+    tier: 'platinum',
     points: 250,
     createdAt: new Date(),
   });
@@ -630,6 +699,145 @@ export async function seedInitialData(): Promise<void> {
     points: 250,
     createdAt: new Date(),
   });
+
+  // === Gamification V2: Quests ===
+  console.log('Seeding quests...');
+
+  // Daily quests
+  await indexedDBService.put('quests', {
+    id: 1,
+    title: 'Daily Warm-up',
+    description: 'Complete 1 quiz today',
+    type: 'daily',
+    requirement: { type: 'quizzes_completed', target: 1 },
+    reward: { points: 10 },
+    isActive: true,
+    validFrom: new Date(),
+    validUntil: null, // Daily quests renew each day
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('quests', {
+    id: 2,
+    title: 'Answer Sprint',
+    description: 'Answer 20 questions correctly today',
+    type: 'daily',
+    requirement: { type: 'questions_answered', target: 20 },
+    reward: { points: 15 },
+    isActive: true,
+    validFrom: new Date(),
+    validUntil: null,
+    createdAt: new Date(),
+  });
+
+  // Weekly quests
+  await indexedDBService.put('quests', {
+    id: 3,
+    title: 'Weekly Warrior',
+    description: 'Complete 5 quizzes this week',
+    type: 'weekly',
+    requirement: { type: 'quizzes_completed', target: 5 },
+    reward: { points: 50, title: 'Weekly Warrior' },
+    isActive: true,
+    validFrom: new Date(),
+    validUntil: null, // Weekly quests renew each week
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('quests', {
+    id: 4,
+    title: 'Perfect Practice',
+    description: 'Get 3 perfect scores (100%) this week',
+    type: 'weekly',
+    requirement: { type: 'perfect_scores', target: 3 },
+    reward: { points: 75, title: 'Perfectionist' },
+    isActive: true,
+    validFrom: new Date(),
+    validUntil: null,
+    createdAt: new Date(),
+  });
+
+  await indexedDBService.put('quests', {
+    id: 5,
+    title: 'Study Streak',
+    description: 'Study 5 days in a row this week',
+    type: 'weekly',
+    requirement: { type: 'study_streak', target: 5 },
+    reward: { points: 100 },
+    isActive: true,
+    validFrom: new Date(),
+    validUntil: null,
+    createdAt: new Date(),
+  });
+
+  // Monthly quests
+  await indexedDBService.put('quests', {
+    id: 6,
+    title: 'Monthly Master',
+    description: 'Complete 20 quizzes this month',
+    type: 'monthly',
+    requirement: { type: 'quizzes_completed', target: 20 },
+    reward: { points: 200, title: 'Monthly Master' },
+    isActive: true,
+    validFrom: new Date(),
+    validUntil: null,
+    createdAt: new Date(),
+  });
+
+  // === Gamification V2: Daily Rewards ===
+  console.log('Seeding daily rewards...');
+
+  // 7-day reward cycle
+  await indexedDBService.put('dailyRewards', {
+    id: 1,
+    day: 1,
+    reward: { points: 5 },
+    description: 'Login Day 1: 5 points',
+  });
+
+  await indexedDBService.put('dailyRewards', {
+    id: 2,
+    day: 2,
+    reward: { points: 10 },
+    description: 'Login Day 2: 10 points',
+  });
+
+  await indexedDBService.put('dailyRewards', {
+    id: 3,
+    day: 3,
+    reward: { points: 15 },
+    description: 'Login Day 3: 15 points',
+  });
+
+  await indexedDBService.put('dailyRewards', {
+    id: 4,
+    day: 4,
+    reward: { points: 20 },
+    description: 'Login Day 4: 20 points',
+  });
+
+  await indexedDBService.put('dailyRewards', {
+    id: 5,
+    day: 5,
+    reward: { points: 25 },
+    description: 'Login Day 5: 25 points',
+  });
+
+  await indexedDBService.put('dailyRewards', {
+    id: 6,
+    day: 6,
+    reward: { points: 30 },
+    description: 'Login Day 6: 30 points',
+  });
+
+  await indexedDBService.put('dailyRewards', {
+    id: 7,
+    day: 7,
+    reward: { points: 50, streakFreeze: true },
+    description: 'Login Day 7: 50 points + Bonus Streak Freeze!',
+  });
+
+  console.log('Gamification V2 data seeded successfully');
 
   // Save seed version
   await indexedDBService.put('settings', { key: 'seedVersion', value: SEED_VERSION });

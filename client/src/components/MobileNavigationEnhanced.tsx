@@ -20,6 +20,7 @@ import {
   BarChart3,
   Building,
   ShoppingCart,
+  Timer,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -66,12 +67,39 @@ export default function MobileNavigationEnhanced() {
           href: '/app/achievements',
           description: 'Track your progress and badges',
         },
+        {
+          id: 'analytics',
+          label: 'Analytics',
+          icon: <BarChart3 className="w-4 h-4" />,
+          href: '/app/analytics',
+          description: 'Deep insights into learning patterns',
+          id: 'performance',
+          label: 'Performance',
+          icon: <BarChart3 className="w-4 h-4" />,
+          href: '/app/performance',
+          description: 'View detailed analytics and insights',
+        },
       ],
     },
     {
       id: 'learning',
       title: 'Learning Features',
       items: [
+        {
+          id: 'study-timer',
+          label: 'Study Timer',
+          icon: <Timer className="w-4 h-4" />,
+          href: '/app/study-timer',
+          description: 'Pomodoro timer for focused study sessions',
+        },
+        {
+          id: 'daily-challenges',
+          label: 'Daily Challenges',
+          icon: <Target className="w-4 h-4" />,
+          href: '/app/daily-challenges',
+          description: 'Complete quests and earn rewards',
+          badge: 'NEW',
+        },
         {
           id: 'study-notes',
           label: 'Study Notes',
