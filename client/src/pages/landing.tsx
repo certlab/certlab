@@ -21,7 +21,6 @@ import {
   Star,
   CheckCircle2,
   Sparkles,
-  Palette,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { useNavigate } from 'react-router-dom';
@@ -246,7 +245,11 @@ export default function Landing() {
       className={`min-h-screen ${theme.bg} ${theme.text} overflow-x-hidden transition-colors duration-500`}
     >
       {/* Color Scheme Switcher - Floating on the right */}
-      <div className="fixed top-24 right-6 z-50 flex flex-col gap-3">
+      <div
+        className="fixed top-24 right-6 z-50 flex flex-col gap-3"
+        role="group"
+        aria-label="Color theme selector"
+      >
         <div className={`${theme.cardBg} ${theme.shadow} rounded-3xl p-2 flex flex-col gap-2`}>
           <button
             onClick={() => setColorScheme('peachy')}
@@ -254,8 +257,9 @@ export default function Landing() {
               colorScheme === 'peachy'
                 ? 'ring-4 ring-[#FF6B6B] ring-offset-2 ring-offset-[#FFE5D9]'
                 : ''
-            } shadow-[6px_6px_12px_rgba(139,69,19,0.2),-6px_-6px_12px_rgba(255,255,255,0.8)] hover:scale-110 transition-all duration-300`}
+            } shadow-[6px_6px_12px_rgba(139,69,19,0.2),-6px_-6px_12px_rgba(255,255,255,0.8)] hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
             aria-label="Peachy clay theme"
+            aria-pressed={colorScheme === 'peachy'}
             title="Peachy Clay"
           />
           <button
@@ -264,8 +268,9 @@ export default function Landing() {
               colorScheme === 'minty'
                 ? 'ring-4 ring-[#05C896] ring-offset-2 ring-offset-[#D4F1F4]'
                 : ''
-            } shadow-[6px_6px_12px_rgba(26,83,92,0.2),-6px_-6px_12px_rgba(255,255,255,0.8)] hover:scale-110 transition-all duration-300`}
+            } shadow-[6px_6px_12px_rgba(26,83,92,0.2),-6px_-6px_12px_rgba(255,255,255,0.8)] hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
             aria-label="Minty clay theme"
+            aria-pressed={colorScheme === 'minty'}
             title="Minty Clay"
           />
           <button
@@ -274,8 +279,9 @@ export default function Landing() {
               colorScheme === 'lavender'
                 ? 'ring-4 ring-[#A78BFA] ring-offset-2 ring-offset-[#E8D5F2]'
                 : ''
-            } shadow-[6px_6px_12px_rgba(74,26,107,0.2),-6px_-6px_12px_rgba(255,255,255,0.8)] hover:scale-110 transition-all duration-300`}
+            } shadow-[6px_6px_12px_rgba(74,26,107,0.2),-6px_-6px_12px_rgba(255,255,255,0.8)] hover:scale-110 transition-all duration-300 motion-reduce:transform-none`}
             aria-label="Lavender clay theme"
+            aria-pressed={colorScheme === 'lavender'}
             title="Lavender Clay"
           />
         </div>
@@ -292,7 +298,7 @@ export default function Landing() {
               <span className={`text-3xl font-bold ${theme.text}`}>CertLab</span>
             </div>
             <button
-              className={`${theme.cardBg} size-12 inline-flex justify-center items-center rounded-2xl md:hidden ${theme.shadow} hover:scale-105 transition-transform`}
+              className={`${theme.cardBg} size-12 inline-flex justify-center items-center rounded-2xl md:hidden ${theme.shadow} hover:scale-105 transition-transform motion-reduce:transform-none`}
               aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
@@ -307,20 +313,20 @@ export default function Landing() {
             <nav className={`${theme.textLight} items-center gap-8 hidden md:flex`}>
               <button
                 onClick={handleScrollToFeatures}
-                className={`${theme.text} hover:scale-105 transition-transform font-bold text-lg`}
+                className={`${theme.text} hover:scale-105 transition-transform motion-reduce:transform-none font-bold text-lg`}
               >
                 Features
               </button>
               <button
                 onClick={handleScrollToFaq}
-                className={`${theme.text} hover:scale-105 transition-transform font-bold text-lg`}
+                className={`${theme.text} hover:scale-105 transition-transform motion-reduce:transform-none font-bold text-lg`}
               >
                 FAQ
               </button>
               {isAuthenticated ? (
                 <button
                   onClick={handleGoToDashboard}
-                  className={`${theme.primary} text-white py-3 px-8 rounded-3xl font-bold text-lg ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all`}
+                  className={`${theme.primary} text-white py-3 px-8 rounded-3xl font-bold text-lg ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none`}
                   data-testid="dashboard-button"
                 >
                   Dashboard
@@ -328,7 +334,7 @@ export default function Landing() {
               ) : (
                 <button
                   onClick={handleLogin}
-                  className={`${theme.primary} text-white py-3 px-8 rounded-3xl font-bold text-lg ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all`}
+                  className={`${theme.primary} text-white py-3 px-8 rounded-3xl font-bold text-lg ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none`}
                   data-testid="get-started-button"
                 >
                   Get Started
@@ -342,13 +348,13 @@ export default function Landing() {
               <div className="flex flex-col gap-4">
                 <button
                   onClick={handleScrollToFeatures}
-                  className={`${theme.text} hover:scale-105 transition-transform text-left font-bold text-lg`}
+                  className={`${theme.text} hover:scale-105 transition-transform motion-reduce:transform-none text-left font-bold text-lg`}
                 >
                   Features
                 </button>
                 <button
                   onClick={handleScrollToFaq}
-                  className={`${theme.text} hover:scale-105 transition-transform text-left font-bold text-lg`}
+                  className={`${theme.text} hover:scale-105 transition-transform motion-reduce:transform-none text-left font-bold text-lg`}
                 >
                   FAQ
                 </button>
@@ -384,7 +390,7 @@ export default function Landing() {
         <div className="container mx-auto px-4 relative">
           <div className="flex items-center justify-center mb-10">
             <div
-              className={`inline-flex items-center gap-3 ${theme.cardBg} py-3 px-6 rounded-full ${theme.shadow} hover:scale-105 transition-all cursor-pointer`}
+              className={`inline-flex items-center gap-3 ${theme.cardBg} py-3 px-6 rounded-full ${theme.shadow} hover:scale-105 transition-all motion-reduce:transform-none cursor-pointer`}
               onClick={handleScrollToFeatures}
             >
               <Sparkles className={`w-5 h-5 ${theme.text}`} />
@@ -418,7 +424,7 @@ export default function Landing() {
                   </p>
                   <button
                     onClick={handleGoToDashboard}
-                    className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all inline-flex items-center gap-3`}
+                    className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none inline-flex items-center gap-3`}
                     data-testid="hero-dashboard-button"
                   >
                     Continue Learning
@@ -429,7 +435,7 @@ export default function Landing() {
                 <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                   <button
                     onClick={handleLogin}
-                    className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all inline-flex items-center gap-3`}
+                    className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none inline-flex items-center gap-3`}
                     data-testid="hero-get-started-button"
                   >
                     Get Started Free
@@ -437,7 +443,7 @@ export default function Landing() {
                   </button>
                   <button
                     onClick={handleScrollToFeatures}
-                    className={`${theme.cardBg} ${theme.text} py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} hover:scale-105 transition-all inline-flex items-center gap-3`}
+                    className={`${theme.cardBg} ${theme.text} py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} hover:scale-105 transition-all motion-reduce:transform-none inline-flex items-center gap-3`}
                   >
                     Learn More
                   </button>
@@ -493,7 +499,7 @@ export default function Landing() {
             {features.map(({ title, description, icon: Icon }, index) => (
               <div
                 key={title}
-                className={`${theme.cardBg} rounded-[2.5rem] p-10 ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all duration-300`}
+                className={`${theme.cardBg} rounded-[2.5rem] p-10 ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none duration-300`}
               >
                 <div
                   className={`${theme.primary} inline-flex p-5 rounded-3xl mb-6 ${theme.innerShadow}`}
@@ -534,7 +540,7 @@ export default function Landing() {
             {testimonials.map((testimonial, index) => (
               <div
                 key={index}
-                className={`${theme.cardBg} rounded-[2.5rem] p-10 ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all`}
+                className={`${theme.cardBg} rounded-[2.5rem] p-10 ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none`}
               >
                 <div className="flex gap-1 mb-6">
                   {[...Array(testimonial.rating)].map((_, i) => (
@@ -585,7 +591,7 @@ export default function Landing() {
               {isAuthenticated ? (
                 <button
                   onClick={handleGoToDashboard}
-                  className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all inline-flex items-center justify-center gap-3`}
+                  className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none inline-flex items-center justify-center gap-3`}
                 >
                   Go to Dashboard
                   <ArrowRight className="w-6 h-6" />
@@ -593,7 +599,7 @@ export default function Landing() {
               ) : (
                 <button
                   onClick={handleLogin}
-                  className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all inline-flex items-center justify-center gap-3`}
+                  className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none inline-flex items-center justify-center gap-3`}
                 >
                   Start Free Trial
                   <ArrowRight className="w-6 h-6" />
@@ -675,13 +681,13 @@ export default function Landing() {
             <div className="flex flex-wrap gap-8">
               <button
                 onClick={handleScrollToFeatures}
-                className={`${theme.text} hover:scale-105 transition-transform font-bold text-lg`}
+                className={`${theme.text} hover:scale-105 transition-transform motion-reduce:transform-none font-bold text-lg`}
               >
                 Features
               </button>
               <button
                 onClick={handleScrollToFaq}
-                className={`${theme.text} hover:scale-105 transition-transform font-bold text-lg`}
+                className={`${theme.text} hover:scale-105 transition-transform motion-reduce:transform-none font-bold text-lg`}
               >
                 FAQ
               </button>
