@@ -203,11 +203,11 @@ class StorageRouter implements IClientStorage {
   // ==========================================
 
   async getQuests(): Promise<any[]> {
-    return this.executeFirestoreOperation((s) => s.getQuests(), 'getQuests');
+    return this.executeFirestoreOperation((s) => (s as any).getQuests(), 'getQuests');
   }
 
   async getActiveQuests(): Promise<any[]> {
-    return this.executeFirestoreOperation((s) => s.getActiveQuests(), 'getActiveQuests');
+    return this.executeFirestoreOperation((s) => (s as any).getActiveQuests(), 'getActiveQuests');
   }
 
   async getUserQuestProgressByQuest(
@@ -216,7 +216,7 @@ class StorageRouter implements IClientStorage {
     tenantId: number
   ): Promise<any> {
     return this.executeFirestoreOperation(
-      (s) => s.getUserQuestProgressByQuest(userId, questId, tenantId),
+      (s) => (s as any).getUserQuestProgressByQuest(userId, questId, tenantId),
       'getUserQuestProgressByQuest'
     );
   }
@@ -228,21 +228,21 @@ class StorageRouter implements IClientStorage {
     tenantId: number
   ): Promise<void> {
     return this.executeFirestoreOperation(
-      (s) => s.updateUserQuestProgress(userId, questId, progress, tenantId),
+      (s) => (s as any).updateUserQuestProgress(userId, questId, progress, tenantId),
       'updateUserQuestProgress'
     );
   }
 
   async completeQuest(userId: string, questId: number, tenantId: number): Promise<void> {
     return this.executeFirestoreOperation(
-      (s) => s.completeQuest(userId, questId, tenantId),
+      (s) => (s as any).completeQuest(userId, questId, tenantId),
       'completeQuest'
     );
   }
 
   async claimQuestReward(userId: string, questId: number, tenantId: number): Promise<void> {
     return this.executeFirestoreOperation(
-      (s) => s.claimQuestReward(userId, questId, tenantId),
+      (s) => (s as any).claimQuestReward(userId, questId, tenantId),
       'claimQuestReward'
     );
   }
@@ -259,21 +259,21 @@ class StorageRouter implements IClientStorage {
     tenantId: number
   ): Promise<void> {
     return this.executeFirestoreOperation(
-      (s) => s.unlockTitle(userId, title, description, source, tenantId),
+      (s) => (s as any).unlockTitle(userId, title, description, source, tenantId),
       'unlockTitle'
     );
   }
 
   async getUserTitles(userId: string, tenantId: number): Promise<any[]> {
     return this.executeFirestoreOperation(
-      (s) => s.getUserTitles(userId, tenantId),
+      (s) => (s as any).getUserTitles(userId, tenantId),
       'getUserTitles'
     );
   }
 
   async setSelectedTitle(userId: string, title: string | null): Promise<void> {
     return this.executeFirestoreOperation(
-      (s) => s.setSelectedTitle(userId, title),
+      (s) => (s as any).setSelectedTitle(userId, title),
       'setSelectedTitle'
     );
   }
@@ -284,14 +284,14 @@ class StorageRouter implements IClientStorage {
 
   async hasClaimedDailyReward(userId: string, day: number): Promise<boolean> {
     return this.executeFirestoreOperation(
-      (s) => s.hasClaimedDailyReward(userId, day),
+      (s) => (s as any).hasClaimedDailyReward(userId, day),
       'hasClaimedDailyReward'
     );
   }
 
   async claimDailyReward(userId: string, day: number, tenantId: number): Promise<any> {
     return this.executeFirestoreOperation(
-      (s) => s.claimDailyReward(userId, day, tenantId),
+      (s) => (s as any).claimDailyReward(userId, day, tenantId),
       'claimDailyReward'
     );
   }
