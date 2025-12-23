@@ -70,7 +70,7 @@ export default function WalletPage() {
       const newBalance = await clientStorage.addTokens(currentUser.id, pkg.tokens);
       return { pkg, newBalance };
     },
-    onSuccess: async ({ pkg, newBalance }) => {
+    onSuccess: async ({ pkg, newBalance: _newBalance }) => {
       // Invalidate tokenBalance query to refetch updated balance from storage
       await queryClient.invalidateQueries({
         queryKey: queryKeys.user.tokenBalance(currentUser?.id),

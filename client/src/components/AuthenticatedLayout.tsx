@@ -10,11 +10,23 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { RightSidebar } from '@/components/RightSidebar';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
-import type { UserStats } from '@shared/schema';
+import type { UserStats, UserBadge, Badge } from '@shared/schema';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import MobileNavigationEnhanced from '@/components/MobileNavigationEnhanced';
 import MobileBottomNav from '@/components/MobileBottomNav';
+
+// Type for the achievements query response
+type AchievementsData = {
+  badges: Array<UserBadge & { badge: Badge; isNotified: boolean }>;
+  gameStats: {
+    totalPoints: number;
+    currentStreak: number;
+    longestStreak: number;
+    totalBadgesEarned: number;
+  };
+  newBadges: number;
+};
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -51,14 +63,14 @@ function AuthenticatedHeader() {
   });
 
   // Get achievements to check for unread notifications
-  const { data: achievements } = useQuery({
+  const { data: achievements } = useQuery<AchievementsData>({
     queryKey: queryKeys.user.achievements(currentUser?.id),
     enabled: !!currentUser?.id,
     refetchInterval: 5000, // Check for new achievements every 5 seconds
   });
 
   // Count unread notifications
-  const unreadCount = (achievements as any)?.badges?.filter((b: any) => !b.isNotified)?.length || 0;
+  const unreadCount = achievements?.badges?.filter((b) => !b.isNotified)?.length || 0;
 
   // Calculate level and XP based on total quizzes and average score
   const level = stats ? Math.floor((stats.totalQuizzes || 0) / 10) + 1 : 1;
