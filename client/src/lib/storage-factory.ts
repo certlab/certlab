@@ -941,6 +941,72 @@ class StorageRouter implements IClientStorage {
       'getPerformanceSummary'
     );
   }
+
+  // ==========================================
+  // Study Notes (not in IClientStorage interface)
+  // ==========================================
+  // TODO: These methods should be added to IClientStorage interface
+
+  async getUserStudyNotes(userId: string, tenantId?: number): Promise<any[]> {
+    return this.executeStorageOperation(
+      (s) => (s as any).getUserStudyNotes(userId, tenantId),
+      'getUserStudyNotes'
+    );
+  }
+
+  async createStudyNote(studyNote: any): Promise<any> {
+    return this.executeStorageOperation(
+      (s) => (s as any).createStudyNote(studyNote),
+      'createStudyNote'
+    );
+  }
+
+  async updateStudyNote(id: number, updates: any): Promise<any> {
+    return this.executeStorageOperation(
+      (s) => (s as any).updateStudyNote(id, updates),
+      'updateStudyNote'
+    );
+  }
+
+  async deleteStudyNote(id: number): Promise<void> {
+    return this.executeStorageOperation((s) => (s as any).deleteStudyNote(id), 'deleteStudyNote');
+  }
+
+  // ==========================================
+  // Quest Methods (not in IClientStorage interface)
+  // ==========================================
+  // TODO: These methods should be added to IClientStorage interface
+
+  async getQuestsByType(type: string): Promise<any[]> {
+    // Fallback implementation: filter all quests by type
+    const quests = await this.getQuests();
+    return quests.filter((quest: any) => quest.type === type);
+  }
+
+  async getUserQuestProgress(userId: string, tenantId: number): Promise<any[]> {
+    // TODO: Implement proper method in storage interface
+    console.warn(
+      '[StorageRouter] getUserQuestProgress not yet implemented - returning empty array'
+    );
+    return [];
+  }
+
+  // ==========================================
+  // Daily Rewards (not in IClientStorage interface)
+  // ==========================================
+  // TODO: These methods should be added to IClientStorage interface
+
+  async getDailyRewards(): Promise<any[]> {
+    // TODO: Implement proper method in storage interface
+    console.warn('[StorageRouter] getDailyRewards not yet implemented - returning empty array');
+    return [];
+  }
+
+  async getUserDailyRewards(userId: string, tenantId: number): Promise<any[]> {
+    // TODO: Implement proper method in storage interface
+    console.warn('[StorageRouter] getUserDailyRewards not yet implemented - returning empty array');
+    return [];
+  }
 }
 
 // Export the storage router as the default storage interface

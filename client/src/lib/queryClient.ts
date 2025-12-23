@@ -687,7 +687,7 @@ export function getQueryFn<T>(options: { on401: UnauthorizedBehavior }): QueryFu
         const match = path.match(/\/quests\/type\/([^/]+)/);
         if (match) {
           const type = match[1];
-          return (await (storage as any).getQuestsByType(type)) as T;
+          return (await storage.getQuestsByType(type)) as T;
         }
       }
 
@@ -705,19 +705,19 @@ export function getQueryFn<T>(options: { on401: UnauthorizedBehavior }): QueryFu
         }
 
         // Return all quest progress
-        return (await (storage as any).getUserQuestProgress(userId, tenantId)) as T;
+        return (await storage.getUserQuestProgress(userId, tenantId)) as T;
       }
 
       // Handle Gamification V2: Daily Rewards
       if (path === '/api/daily-rewards') {
-        return (await (storage as any).getDailyRewards()) as T;
+        return (await storage.getDailyRewards()) as T;
       }
 
       if (path.includes('/daily-rewards') && key[2]) {
         const userId = key[2] as string;
         const user = await storage.getUser(userId);
         const tenantId = user?.tenantId || 1;
-        return (await (storage as any).getUserDailyRewards(userId, tenantId)) as T;
+        return (await storage.getUserDailyRewards(userId, tenantId)) as T;
       }
 
       // Handle Gamification V2: User Titles
