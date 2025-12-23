@@ -13,6 +13,8 @@ export interface StudyMaterial {
   duration?: string;
   author?: string;
   lastUpdated?: string;
+  subject?: string; // Subject category for filtering
+  tags?: string[]; // Additional tags for filtering
 }
 
 export const studyMaterials: StudyMaterial[] = [
@@ -28,6 +30,8 @@ export const studyMaterials: StudyMaterial[] = [
     size: '15 MB',
     author: 'Dr. Sarah Chen',
     lastUpdated: 'December 2024',
+    subject: 'Computer Science',
+    tags: ['algorithms', 'data structures', 'programming'],
   },
   {
     id: '2',
@@ -40,6 +44,8 @@ export const studyMaterials: StudyMaterial[] = [
     duration: '12 hours',
     author: 'Prof. Michael Torres',
     lastUpdated: 'November 2024',
+    subject: 'Chemistry',
+    tags: ['organic chemistry', 'reactions', 'mechanisms'],
   },
   {
     id: '3',
@@ -53,6 +59,8 @@ export const studyMaterials: StudyMaterial[] = [
     size: '8 MB',
     author: 'Dr. James Wilson',
     lastUpdated: 'October 2024',
+    subject: 'Economics',
+    tags: ['economics', 'microeconomics', 'macroeconomics'],
   },
   {
     id: '4',
@@ -66,6 +74,8 @@ export const studyMaterials: StudyMaterial[] = [
     size: '22 MB',
     author: 'Dr. Emily Rodriguez',
     lastUpdated: 'December 2024',
+    subject: 'Physics',
+    tags: ['physics', 'experiments', 'lab work'],
   },
   {
     id: '5',
@@ -78,6 +88,8 @@ export const studyMaterials: StudyMaterial[] = [
     duration: '18 hours',
     author: 'Prof. David Kim',
     lastUpdated: 'January 2025',
+    subject: 'Mathematics',
+    tags: ['calculus', 'mathematics', 'integration', 'derivatives'],
   },
   {
     id: '6',
@@ -91,5 +103,7 @@ export const studyMaterials: StudyMaterial[] = [
     size: '12 MB',
     author: 'Dr. Lisa Anderson',
     lastUpdated: 'September 2024',
+    subject: 'Chemistry',
+    tags: ['chemistry', 'periodic table', 'bonding'],
   },
 ];
