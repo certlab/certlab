@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import MarketplacePage from './marketplace';
 
@@ -27,9 +27,15 @@ describe('MarketplacePage', () => {
     // Find all clickable cards with role="button"
     const cards = screen.getAllByRole('button');
 
-    // Should have 6 product cards (each card has role="button")
-    // Filter out the cart buttons by checking if they have aria-label
-    const productCards = cards.filter((card) => !card.getAttribute('aria-label'));
+    // Should have 6 product cards plus 1 Filters button and 1 sort dropdown
+    // Filter to get only the product cards (ones without aria-label and not the filters button)
+    const productCards = cards.filter(
+      (card) =>
+        !card.getAttribute('aria-label') &&
+        !card.textContent?.includes('Filters') &&
+        card.getAttribute('role') === 'button' &&
+        card.getAttribute('tabindex') === '0'
+    );
     expect(productCards.length).toBe(6);
 
     // Cards should have tabIndex for keyboard navigation
@@ -45,6 +51,25 @@ describe('MarketplacePage', () => {
 
     const searchInput = screen.getByPlaceholderText('Search study materials...');
     expect(searchInput).toBeInTheDocument();
+  });
+
+  it('filters materials by search query', () => {
+    render(
+      <MemoryRouter>
+        <MarketplacePage />
+      </MemoryRouter>
+    );
+
+    const searchInput = screen.getByPlaceholderText('Search study materials...');
+
+    // Search for "calculus"
+    fireEvent.change(searchInput, { target: { value: 'calculus' } });
+
+    // Should show Calculus Lecture Series
+    expect(screen.getByText('Calculus Lecture Series')).toBeInTheDocument();
+
+    // Should not show other materials
+    expect(screen.queryByText('Economics 101 Guide')).not.toBeInTheDocument();
   });
 
   it('displays price and rating for each material', () => {
@@ -73,5 +98,40 @@ describe('MarketplacePage', () => {
     // Check that type badges exist
     const badges = screen.getAllByText(/PDF|VIDEO/);
     expect(badges.length).toBeGreaterThan(0);
+  });
+
+  it('displays sort dropdown', () => {
+    render(
+      <MemoryRouter>
+        <MarketplacePage />
+      </MemoryRouter>
+    );
+
+    // Check that sort dropdown exists
+    const sortButton = screen.getByRole('combobox');
+    expect(sortButton).toBeInTheDocument();
+  });
+
+  it('displays filters button', () => {
+    render(
+      <MemoryRouter>
+        <MarketplacePage />
+      </MemoryRouter>
+    );
+
+    // Check that filters button exists
+    const filtersButton = screen.getByText('Filters');
+    expect(filtersButton).toBeInTheDocument();
+  });
+
+  it('displays results count', () => {
+    render(
+      <MemoryRouter>
+        <MarketplacePage />
+      </MemoryRouter>
+    );
+
+    // Check that results count is displayed
+    expect(screen.getByText(/Showing \d+ of \d+ materials/)).toBeInTheDocument();
   });
 });
