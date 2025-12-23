@@ -70,6 +70,13 @@ describe('MarketplacePage', () => {
 
     // Should not show other materials
     expect(screen.queryByText('Economics 101 Guide')).not.toBeInTheDocument();
+    expect(screen.queryByText('Advanced Algorithms Notes')).not.toBeInTheDocument();
+    expect(screen.queryByText('Organic Chem Video Course')).not.toBeInTheDocument();
+    expect(screen.queryByText('Physics Lab Manual')).not.toBeInTheDocument();
+    expect(screen.queryByText('Chemistry Study Pack')).not.toBeInTheDocument();
+
+    // Verify results count shows only 1 of 6 materials
+    expect(screen.getByText('Showing 1 of 6 materials')).toBeInTheDocument();
   });
 
   it('displays price and rating for each material', () => {

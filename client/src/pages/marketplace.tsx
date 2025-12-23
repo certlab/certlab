@@ -78,26 +78,29 @@ export default function MarketplacePage() {
       return matchesSearch && matchesType && matchesSubject && matchesPrice && matchesRating;
     });
 
+    // Create a copy before sorting to avoid mutation
+    const sorted = [...filtered];
+
     // Sort materials
     switch (sortBy) {
       case 'price-low':
-        filtered.sort((a, b) => a.price - b.price);
+        sorted.sort((a, b) => a.price - b.price);
         break;
       case 'price-high':
-        filtered.sort((a, b) => b.price - a.price);
+        sorted.sort((a, b) => b.price - a.price);
         break;
       case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating);
+        sorted.sort((a, b) => b.rating - a.rating);
         break;
       case 'name':
-        filtered.sort((a, b) => a.title.localeCompare(b.title));
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
         break;
       default:
         // Keep original order
         break;
     }
 
-    return filtered;
+    return sorted;
   }, [searchQuery, selectedTypes, selectedSubjects, priceRange, minRating, sortBy]);
 
   const handleCardClick = (materialId: string) => {
@@ -296,28 +299,53 @@ export default function MarketplacePage() {
               {selectedTypes.map((type) => (
                 <Badge key={type} variant="secondary" className="gap-1">
                   {type}
-                  <X className="w-3 h-3 cursor-pointer" onClick={() => handleTypeToggle(type)} />
+                  <button
+                    type="button"
+                    className="ml-1 inline-flex items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                    onClick={() => handleTypeToggle(type)}
+                    aria-label={`Remove ${type} filter`}
+                  >
+                    <X className="w-3 h-3" aria-hidden="true" />
+                  </button>
                 </Badge>
               ))}
               {selectedSubjects.map((subject) => (
                 <Badge key={subject} variant="secondary" className="gap-1">
                   {subject}
-                  <X
-                    className="w-3 h-3 cursor-pointer"
+                  <button
+                    type="button"
+                    className="ml-1 inline-flex items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                     onClick={() => handleSubjectToggle(subject)}
-                  />
+                    aria-label={`Remove ${subject} filter`}
+                  >
+                    <X className="w-3 h-3" aria-hidden="true" />
+                  </button>
                 </Badge>
               ))}
               {(priceRange[0] > 0 || priceRange[1] < 50) && (
                 <Badge variant="secondary" className="gap-1">
                   ${priceRange[0]} - ${priceRange[1]}
-                  <X className="w-3 h-3 cursor-pointer" onClick={() => setPriceRange([0, 50])} />
+                  <button
+                    type="button"
+                    className="ml-1 inline-flex items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                    onClick={() => setPriceRange([0, 50])}
+                    aria-label="Clear price range filter"
+                  >
+                    <X className="w-3 h-3" aria-hidden="true" />
+                  </button>
                 </Badge>
               )}
               {minRating > 0 && (
                 <Badge variant="secondary" className="gap-1">
                   Rating: {minRating}+
-                  <X className="w-3 h-3 cursor-pointer" onClick={() => setMinRating(0)} />
+                  <button
+                    type="button"
+                    className="ml-1 inline-flex items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                    onClick={() => setMinRating(0)}
+                    aria-label="Clear rating filter"
+                  >
+                    <X className="w-3 h-3" aria-hidden="true" />
+                  </button>
                 </Badge>
               )}
             </div>
