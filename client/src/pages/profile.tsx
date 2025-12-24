@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, BookOpen, Save, Award, AlertCircle, Shield, Cloud, CloudOff } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import ContributionHeatmap from '@/components/ContributionHeatmap';
 
 interface UserProfile {
   id: string;
@@ -637,6 +638,11 @@ export default function ProfilePage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Contribution Heatmap */}
+      <div className="mt-6">
+        <ContributionHeatmap />
+      </div>
 
       <div className="mt-6 flex justify-end">
         <Button
