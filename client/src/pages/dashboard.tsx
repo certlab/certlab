@@ -356,7 +356,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Left Column - AI-Adapted Learning Path */}
           <div className="lg:col-span-2">
-            <Card className="border-primary/20">
+            <Card className="h-full border-primary/20">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg font-semibold">AI-Adapted Learning Path</CardTitle>
@@ -451,7 +451,7 @@ export default function Dashboard() {
 
           {/* Right Column - Achievements & Progress */}
           <div>
-            <Card className="border-primary/20">
+            <Card className="h-full border-primary/20">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-semibold">Achievements & Progress</CardTitle>
               </CardHeader>
