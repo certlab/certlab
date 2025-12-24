@@ -3,13 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-provider';
 import { queryKeys } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import type { Quiz } from '@shared/schema';
@@ -49,8 +42,8 @@ function HeatmapCell({ date, contribution, level }: HeatmapCellProps) {
 
   const tooltipContent =
     count === 0
-      ? `No contributions on ${dateStr}`
-      : `${count} ${count === 1 ? 'contribution' : 'contributions'} on ${dateStr}`;
+      ? `No activity on ${dateStr}`
+      : `${count} ${count === 1 ? 'activity' : 'activities'} on ${dateStr}`;
 
   return (
     <TooltipProvider delayDuration={100}>
@@ -67,7 +60,7 @@ function HeatmapCell({ date, contribution, level }: HeatmapCellProps) {
           <div className="text-sm">
             <p className="font-semibold">{dateStr}</p>
             <p className="text-muted-foreground">
-              {count} {count === 1 ? 'contribution' : 'contributions'}
+              {count} {count === 1 ? 'activity' : 'activities'}
             </p>
             {contribution && contribution.activities.length > 0 && (
               <ul className="mt-1 text-xs text-muted-foreground">
@@ -228,8 +221,8 @@ export default function ContributionHeatmap() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Contribution Activity</CardTitle>
-          <CardDescription>Loading your contribution history...</CardDescription>
+          <CardTitle>Activity Level</CardTitle>
+          <CardDescription>Loading your activity history...</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center py-8">
           <LoadingSpinner />
@@ -243,26 +236,26 @@ export default function ContributionHeatmap() {
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div>
           <CardTitle>
-            {totalContributions} {totalContributions === 1 ? 'contribution' : 'contributions'} in{' '}
+            {totalContributions} {totalContributions === 1 ? 'activity' : 'activities'} in{' '}
             {selectedYear}
           </CardTitle>
           <CardDescription>Your learning activity throughout the year</CardDescription>
         </div>
-        <Select
-          value={selectedYear.toString()}
-          onValueChange={(value) => setSelectedYear(parseInt(value))}
-        >
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder="Select year" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableYears.map((year) => (
-              <SelectItem key={year} value={year.toString()}>
-                {year}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          {availableYears.map((year) => (
+            <button
+              key={year}
+              onClick={() => setSelectedYear(year)}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                selectedYear === year
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              {year}
+            </button>
+          ))}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
@@ -293,8 +286,8 @@ export default function ContributionHeatmap() {
               <div className="h-3 flex items-center">Fri</div>
             </div>
 
-            {/* Contribution grid */}
-            <div className="flex gap-[3px]" role="grid" aria-label="Contribution heatmap">
+            {/* Activity grid */}
+            <div className="flex gap-[3px]" role="grid" aria-label="Activity heatmap">
               {calendarGrid.map((week, weekIndex) => (
                 <div key={weekIndex} className="flex flex-col gap-[3px]" role="row">
                   {week.map((date, dayIndex) => {
@@ -319,28 +312,28 @@ export default function ContributionHeatmap() {
           </div>
 
           {/* Legend */}
-          <div className="flex items-center gap-2 pt-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 pt-2 text-xs text-muted-foreground">
             <span>Less</span>
             <div className="flex gap-1">
               <div
                 className="w-3 h-3 rounded-sm bg-muted border border-border/50"
-                aria-label="No contributions"
+                aria-label="No activity"
               />
               <div
                 className="w-3 h-3 rounded-sm bg-green-200 dark:bg-green-900/40 border border-border/50"
-                aria-label="Low contributions"
+                aria-label="Low activity"
               />
               <div
                 className="w-3 h-3 rounded-sm bg-green-400 dark:bg-green-700/60 border border-border/50"
-                aria-label="Medium contributions"
+                aria-label="Medium activity"
               />
               <div
                 className="w-3 h-3 rounded-sm bg-green-600 dark:bg-green-600/80 border border-border/50"
-                aria-label="High contributions"
+                aria-label="High activity"
               />
               <div
                 className="w-3 h-3 rounded-sm bg-green-700 dark:bg-green-500 border border-border/50"
-                aria-label="Very high contributions"
+                aria-label="Very high activity"
               />
             </div>
             <span>More</span>
