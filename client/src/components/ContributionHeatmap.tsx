@@ -53,7 +53,7 @@ function HeatmapCell({ date, contribution, level }: HeatmapCellProps) {
       <TooltipTrigger asChild>
         <button
           type="button"
-          className={`w-3 h-3 rounded-sm border border-border/50 transition-all duration-200 ${colorClasses[level]}`}
+          className={`w-2 h-2 sm:w-3 sm:h-3 rounded-sm border border-border/50 transition-all duration-200 ${colorClasses[level]}`}
           aria-label={tooltipContent}
         >
           <span className="sr-only">{tooltipContent}</span>
@@ -294,13 +294,15 @@ export default function ContributionHeatmap() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-4">
         <div>
-          <CardTitle>
+          <CardTitle className="text-lg sm:text-xl">
             {totalContributions} {totalContributions === 1 ? 'activity' : 'activities'} in{' '}
             {selectedYear}
           </CardTitle>
-          <CardDescription>Your learning activity throughout the year</CardDescription>
+          <CardDescription className="text-xs sm:text-sm">
+            Your learning activity throughout the year
+          </CardDescription>
         </div>
         <div className="flex gap-2" role="radiogroup" aria-label="Select year">
           {availableYears.map((year) => (
@@ -310,7 +312,7 @@ export default function ContributionHeatmap() {
               onClick={() => setSelectedYear(year)}
               role="radio"
               aria-checked={selectedYear === year}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
                 selectedYear === year
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -324,20 +326,20 @@ export default function ContributionHeatmap() {
       <CardContent>
         <TooltipProvider delayDuration={100}>
           <div className="space-y-2">
-            {/* Scrollable container for mobile responsiveness */}
-            <div className="overflow-x-auto -mx-6 px-6 md:overflow-x-visible md:mx-0 md:px-0">
-              <div className="min-w-max md:min-w-0">
-                {/* Month labels */}
-                <div className="flex gap-[3px] pl-8 text-xs text-muted-foreground">
+            {/* Remove horizontal scroll - make everything fit */}
+            <div className="w-full">
+              <div className="w-full">
+                {/* Month labels - more compact on mobile */}
+                <div className="flex gap-[2px] sm:gap-[3px] pl-6 sm:pl-8 text-[10px] sm:text-xs text-muted-foreground mb-1">
                   {monthLabels.map((label, index) => {
                     const prevOffset = index > 0 ? monthLabels[index - 1].offset : 0;
+                    const spacing = (label.offset - prevOffset) * 8.5; // Adjusted for mobile
                     return (
                       <div
                         key={label.month}
-                        className="text-xs"
+                        className="text-[10px] sm:text-xs whitespace-nowrap"
                         style={{
-                          marginLeft:
-                            label.offset === 0 ? 0 : `${(label.offset - prevOffset) * 12.5}px`,
+                          marginLeft: label.offset === 0 ? 0 : `${spacing}px`,
                         }}
                       >
                         {label.month}
@@ -347,20 +349,37 @@ export default function ContributionHeatmap() {
                 </div>
 
                 {/* Calendar grid */}
-                <div className="flex gap-2">
-                  {/* Day labels */}
-                  <div className="flex flex-col gap-[3px] text-xs text-muted-foreground pr-1">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                      <div key={day} className="h-3 flex items-center">
-                        {day}
+                <div className="flex gap-1 sm:gap-2">
+                  {/* Day labels - abbreviated on mobile */}
+                  <div className="flex flex-col gap-[2px] sm:gap-[3px] text-[9px] sm:text-xs text-muted-foreground pr-0.5 sm:pr-1">
+                    {[
+                      { full: 'Sun', short: 'S' },
+                      { full: 'Mon', short: 'M' },
+                      { full: 'Tue', short: 'T' },
+                      { full: 'Wed', short: 'W' },
+                      { full: 'Thu', short: 'T' },
+                      { full: 'Fri', short: 'F' },
+                      { full: 'Sat', short: 'S' },
+                    ].map((day) => (
+                      <div key={day.full} className="h-2 sm:h-3 flex items-center">
+                        <span className="hidden sm:inline">{day.full}</span>
+                        <span className="sm:hidden">{day.short}</span>
                       </div>
                     ))}
                   </div>
 
-                  {/* Activity grid */}
-                  <div className="flex gap-[3px]" role="grid" aria-label="Activity heatmap">
+                  {/* Activity grid - responsive sizing */}
+                  <div
+                    className="flex gap-[2px] sm:gap-[3px] flex-1 min-w-0"
+                    role="grid"
+                    aria-label="Activity heatmap"
+                  >
                     {calendarGrid.map((week, weekIndex) => (
-                      <div key={weekIndex} className="flex flex-col gap-[3px]" role="row">
+                      <div
+                        key={weekIndex}
+                        className="flex flex-col gap-[2px] sm:gap-[3px] flex-shrink-0"
+                        role="row"
+                      >
                         {week.map((date, dayIndex) => {
                           const dateKey = date.toISOString().split('T')[0];
                           const contribution = contributionData[dateKey];
@@ -375,7 +394,11 @@ export default function ContributionHeatmap() {
                               level={level}
                             />
                           ) : (
-                            <div key={dayIndex} className="w-3 h-3 rounded-sm" aria-hidden="true" />
+                            <div
+                              key={dayIndex}
+                              className="w-2 h-2 sm:w-3 sm:h-3 rounded-sm"
+                              aria-hidden="true"
+                            />
                           );
                         })}
                       </div>
@@ -385,28 +408,28 @@ export default function ContributionHeatmap() {
               </div>
             </div>
 
-            {/* Legend */}
-            <div className="flex items-center gap-2 pt-2 text-xs text-muted-foreground">
+            {/* Legend - responsive sizing */}
+            <div className="flex items-center gap-1.5 sm:gap-2 pt-2 text-[10px] sm:text-xs text-muted-foreground">
               <span>Less</span>
-              <div className="flex gap-1">
+              <div className="flex gap-0.5 sm:gap-1">
                 <div
-                  className="w-3 h-3 rounded-sm bg-muted border border-border/50"
+                  className="w-2 h-2 sm:w-3 sm:h-3 rounded-sm bg-muted border border-border/50"
                   aria-label="No activity"
                 />
                 <div
-                  className="w-3 h-3 rounded-sm bg-green-200 dark:bg-green-900/40 border border-border/50"
+                  className="w-2 h-2 sm:w-3 sm:h-3 rounded-sm bg-green-200 dark:bg-green-900/40 border border-border/50"
                   aria-label="Low activity"
                 />
                 <div
-                  className="w-3 h-3 rounded-sm bg-green-400 dark:bg-green-700/60 border border-border/50"
+                  className="w-2 h-2 sm:w-3 sm:h-3 rounded-sm bg-green-400 dark:bg-green-700/60 border border-border/50"
                   aria-label="Medium activity"
                 />
                 <div
-                  className="w-3 h-3 rounded-sm bg-green-600 dark:bg-green-600/80 border border-border/50"
+                  className="w-2 h-2 sm:w-3 sm:h-3 rounded-sm bg-green-600 dark:bg-green-600/80 border border-border/50"
                   aria-label="High activity"
                 />
                 <div
-                  className="w-3 h-3 rounded-sm bg-green-700 dark:bg-green-500 border border-border/50"
+                  className="w-2 h-2 sm:w-3 sm:h-3 rounded-sm bg-green-700 dark:bg-green-500 border border-border/50"
                   aria-label="Very high activity"
                 />
               </div>
