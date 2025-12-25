@@ -1,14 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { render, screen, waitFor } from '@testing-library/react';
 
 // Mock all the required modules
 const mockUseAuth = vi.fn();
+const mockUseLocation = vi.fn();
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useLocation: () => mockUseLocation(),
+    BrowserRouter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  };
+});
+
 vi.mock('@/lib/auth-provider', async () => {
   const actual = await vi.importActual('@/lib/auth-provider');
   return {
     ...actual,
     useAuth: () => mockUseAuth(),
+    AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   };
 });
 
@@ -23,8 +34,40 @@ vi.mock('@/lib/errors', () => ({
   logError: vi.fn(),
 }));
 
+vi.mock('@/lib/config-validator', () => ({
+  validateRequiredConfiguration: () => ({ isValid: true, errors: [] }),
+}));
+
+vi.mock('@/lib/seed-data', () => ({
+  ensureDataSeeded: vi.fn(),
+}));
+
 vi.mock('@/hooks/use-mobile-keyboard', () => ({
   useMobileKeyboard: () => {},
+}));
+
+vi.mock('@/lib/theme-provider', () => ({
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock('@tanstack/react-query', async () => {
+  const actual = await vi.importActual('@tanstack/react-query');
+  return {
+    ...actual,
+    QueryClientProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  };
+});
+
+vi.mock('@/components/ui/toaster', () => ({
+  Toaster: () => null,
+}));
+
+vi.mock('@/components/ui/tooltip', () => ({
+  TooltipProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock('@/components/UnhandledRejectionHandler', () => ({
+  UnhandledRejectionHandler: () => null,
 }));
 
 // Mock the Landing page component
@@ -39,76 +82,75 @@ vi.mock('@/components/PageLoader', () => ({
 
 // Mock ErrorBoundary
 vi.mock('@/components/ErrorBoundary', () => ({
-  ErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  ErrorBoundary: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 // Mock ProtectedRoute
 vi.mock('@/components/ProtectedRoute', () => ({
-  ProtectedRoute: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  ProtectedRoute: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 // Mock AuthenticatedLayout
 vi.mock('@/components/AuthenticatedLayout', () => ({
-  AuthenticatedLayout: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AuthenticatedLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-// Test the core routing logic for the authentication loading state
+// Import App after all mocks are set up
+import App from './App';
+
+// Test the actual Router component behavior through the App component
 describe('App Router - Authentication Flash Prevention', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default location to root path
+    mockUseLocation.mockReturnValue({ pathname: '/' });
   });
 
-  // Create a minimal wrapper that tests the specific loading behavior
-  // without duplicating all Router component logic
-  function TestLoadingBehavior({ isLoading }: { isLoading: boolean }) {
-    mockUseAuth.mockReturnValue({
-      isAuthenticated: false,
-      isLoading,
-      user: null,
-    });
-
-    // Test only the conditional rendering logic at root path
-    if (isLoading) {
-      return <div data-testid="page-loader">Loading...</div>;
-    }
-    return <div data-testid="landing-page">Landing Page</div>;
-  }
-
-  it('shows loading state on root path when auth is loading', () => {
-    render(<TestLoadingBehavior isLoading={true} />);
-
-    // Should show loading state, not landing page
-    expect(screen.getByTestId('page-loader')).toBeInTheDocument();
-    expect(screen.queryByTestId('landing-page')).not.toBeInTheDocument();
-  });
-
-  it('shows landing page on root path when auth is not loading', () => {
-    render(<TestLoadingBehavior isLoading={false} />);
-
-    // Should show landing page
-    expect(screen.getByTestId('landing-page')).toBeInTheDocument();
-    expect(screen.queryByTestId('page-loader')).not.toBeInTheDocument();
-  });
-
-  it('auth context returns correct loading states', () => {
-    // Test with loading
+  it('shows loading state on root path when auth is loading', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       isLoading: true,
       user: null,
     });
 
-    let authState = mockUseAuth();
-    expect(authState.isLoading).toBe(true);
+    render(<App />);
 
-    // Test without loading
+    // Should show loading state, not landing page
+    await waitFor(() => {
+      expect(screen.getByTestId('page-loader')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('landing-page')).not.toBeInTheDocument();
+  });
+
+  it('shows landing page on root path when auth is not loading and user is not authenticated', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
       user: null,
     });
 
-    authState = mockUseAuth();
-    expect(authState.isLoading).toBe(false);
+    render(<App />);
+
+    // Should show landing page
+    await waitFor(() => {
+      expect(screen.getByTestId('landing-page')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('page-loader')).not.toBeInTheDocument();
+  });
+
+  it('shows landing page on root path when auth is not loading and user is authenticated', async () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: '1', email: 'test@example.com', role: 'user', tenantId: 1 },
+    });
+
+    render(<App />);
+
+    // Should show landing page (landing page will handle redirect internally)
+    await waitFor(() => {
+      expect(screen.getByTestId('landing-page')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('page-loader')).not.toBeInTheDocument();
   });
 });
