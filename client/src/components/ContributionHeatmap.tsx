@@ -46,36 +46,35 @@ function HeatmapCell({ date, contribution, level }: HeatmapCellProps) {
       : `${count} ${count === 1 ? 'activity' : 'activities'} on ${dateStr}`;
 
   return (
-    <TooltipProvider delayDuration={100}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className={`w-3 h-3 rounded-sm border border-border/50 transition-all duration-200 cursor-pointer ${colorClasses[level]}`}
-            role="gridcell"
-            aria-label={tooltipContent}
-            tabIndex={0}
-          />
-        </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs">
-          <div className="text-sm">
-            <p className="font-semibold">{dateStr}</p>
-            <p className="text-muted-foreground">
-              {count} {count === 1 ? 'activity' : 'activities'}
-            </p>
-            {contribution && contribution.activities.length > 0 && (
-              <ul className="mt-1 text-xs text-muted-foreground">
-                {contribution.activities.slice(0, 3).map((activity, idx) => (
-                  <li key={idx}>• {activity}</li>
-                ))}
-                {contribution.activities.length > 3 && (
-                  <li>• and {contribution.activities.length - 3} more...</li>
-                )}
-              </ul>
-            )}
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className={`w-3 h-3 rounded-sm border border-border/50 transition-all duration-200 ${colorClasses[level]}`}
+          aria-label={tooltipContent}
+        >
+          <span className="sr-only">{tooltipContent}</span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs">
+        <div className="text-sm">
+          <p className="font-semibold">{dateStr}</p>
+          <p className="text-muted-foreground">
+            {count} {count === 1 ? 'activity' : 'activities'}
+          </p>
+          {contribution && contribution.activities.length > 0 && (
+            <ul className="mt-1 text-xs text-muted-foreground">
+              {contribution.activities.slice(0, 3).map((activity, idx) => (
+                <li key={idx}>• {activity}</li>
+              ))}
+              {contribution.activities.length > 3 && (
+                <li>• and {contribution.activities.length - 3} more...</li>
+              )}
+            </ul>
+          )}
+        </div>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -91,14 +90,13 @@ export default function ContributionHeatmap() {
   });
 
   // Calculate contribution data
-  const { contributionData, totalContributions, availableYears } = useMemo(() => {
+  const { contributionData, availableYears } = useMemo(() => {
     if (!quizzes) {
-      return { contributionData: {}, totalContributions: 0, availableYears: [currentYear] };
+      return { contributionData: {}, availableYears: [currentYear] };
     }
 
     const data: ContributionData = {};
     const years = new Set<number>();
-    let total = 0;
 
     // Process completed quizzes
     quizzes.forEach((quiz) => {
@@ -117,7 +115,6 @@ export default function ContributionHeatmap() {
       }
 
       data[dateKey].count += 1;
-      total += 1;
 
       const activityDesc =
         quiz.mode === 'challenge'
@@ -134,10 +131,20 @@ export default function ContributionHeatmap() {
 
     return {
       contributionData: data,
-      totalContributions: total,
       availableYears: Array.from(years).sort((a, b) => b - a), // Most recent first
     };
   }, [quizzes, currentYear]);
+
+  // Calculate total contributions for selected year
+  const totalContributions = useMemo(() => {
+    return Object.values(contributionData).reduce((total, day) => {
+      const date = new Date(day.date);
+      if (date.getFullYear() === selectedYear) {
+        return total + day.count;
+      }
+      return total;
+    }, 0);
+  }, [contributionData, selectedYear]);
 
   // Generate calendar grid for selected year
   const calendarGrid = useMemo(() => {
@@ -241,11 +248,14 @@ export default function ContributionHeatmap() {
           </CardTitle>
           <CardDescription>Your learning activity throughout the year</CardDescription>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2" role="radiogroup" aria-label="Select year">
           {availableYears.map((year) => (
             <button
               key={year}
+              type="button"
               onClick={() => setSelectedYear(year)}
+              role="radio"
+              aria-checked={selectedYear === year}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 selectedYear === year
                   ? 'bg-primary text-primary-foreground'
@@ -258,87 +268,93 @@ export default function ContributionHeatmap() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
-          {/* Month labels */}
-          <div className="flex gap-[3px] pl-8 text-xs text-muted-foreground">
-            {monthLabels.map((label) => (
-              <div
-                key={label.month}
-                className="text-xs"
-                style={{
-                  marginLeft:
-                    label.offset === 0
-                      ? 0
-                      : `${(label.offset - (monthLabels[monthLabels.indexOf(label) - 1]?.offset || 0)) * 12.5}px`,
-                }}
-              >
-                {label.month}
+        <TooltipProvider delayDuration={100}>
+          <div className="space-y-2">
+            {/* Month labels */}
+            <div className="flex gap-[3px] pl-8 text-xs text-muted-foreground">
+              {monthLabels.map((label, index) => {
+                const prevOffset = index > 0 ? monthLabels[index - 1].offset : 0;
+                return (
+                  <div
+                    key={label.month}
+                    className="text-xs"
+                    style={{
+                      marginLeft:
+                        label.offset === 0 ? 0 : `${(label.offset - prevOffset) * 12.5}px`,
+                    }}
+                  >
+                    {label.month}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Calendar grid */}
+            <div className="flex gap-2">
+              {/* Day labels */}
+              <div className="flex flex-col gap-[3px] text-xs text-muted-foreground pr-1">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                  <div key={day} className="h-3 flex items-center">
+                    {day}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Calendar grid */}
-          <div className="flex gap-2">
-            {/* Day labels */}
-            <div className="flex flex-col gap-[3px] text-xs text-muted-foreground justify-around pr-1">
-              <div className="h-3 flex items-center">Mon</div>
-              <div className="h-3 flex items-center">Wed</div>
-              <div className="h-3 flex items-center">Fri</div>
+              {/* Activity grid */}
+              <div className="flex gap-[3px]" role="grid" aria-label="Activity heatmap">
+                {calendarGrid.map((week, weekIndex) => (
+                  <div key={weekIndex} className="flex flex-col gap-[3px]" role="row">
+                    {week.map((date, dayIndex) => {
+                      const dateKey = date.toISOString().split('T')[0];
+                      const contribution = contributionData[dateKey];
+                      const level = getContributionLevel(contribution?.count || 0);
+                      const isCurrentYear = date.getFullYear() === selectedYear;
+
+                      return isCurrentYear ? (
+                        <HeatmapCell
+                          key={dayIndex}
+                          date={date}
+                          contribution={contribution}
+                          level={level}
+                        />
+                      ) : (
+                        <div key={dayIndex} className="w-3 h-3 rounded-sm" aria-hidden="true" />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Activity grid */}
-            <div className="flex gap-[3px]" role="grid" aria-label="Activity heatmap">
-              {calendarGrid.map((week, weekIndex) => (
-                <div key={weekIndex} className="flex flex-col gap-[3px]" role="row">
-                  {week.map((date, dayIndex) => {
-                    const dateKey = date.toISOString().split('T')[0];
-                    const contribution = contributionData[dateKey];
-                    const level = getContributionLevel(contribution?.count || 0);
-                    const isCurrentYear = date.getFullYear() === selectedYear;
-
-                    return (
-                      <div key={dayIndex} role="gridcell">
-                        {isCurrentYear ? (
-                          <HeatmapCell date={date} contribution={contribution} level={level} />
-                        ) : (
-                          <div className="w-3 h-3 rounded-sm border border-transparent" />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
+            {/* Legend */}
+            <div className="flex items-center gap-2 pt-2 text-xs text-muted-foreground">
+              <span>Less</span>
+              <div className="flex gap-1">
+                <div
+                  className="w-3 h-3 rounded-sm bg-muted border border-border/50"
+                  aria-label="No activity"
+                />
+                <div
+                  className="w-3 h-3 rounded-sm bg-green-200 dark:bg-green-900/40 border border-border/50"
+                  aria-label="Low activity"
+                />
+                <div
+                  className="w-3 h-3 rounded-sm bg-green-400 dark:bg-green-700/60 border border-border/50"
+                  aria-label="Medium activity"
+                />
+                <div
+                  className="w-3 h-3 rounded-sm bg-green-600 dark:bg-green-600/80 border border-border/50"
+                  aria-label="High activity"
+                />
+                <div
+                  className="w-3 h-3 rounded-sm bg-green-700 dark:bg-green-500 border border-border/50"
+                  aria-label="Very high activity"
+                />
+              </div>
+              <span>More</span>
             </div>
           </div>
-
-          {/* Legend */}
-          <div className="flex items-center gap-2 pt-2 text-xs text-muted-foreground">
-            <span>Less</span>
-            <div className="flex gap-1">
-              <div
-                className="w-3 h-3 rounded-sm bg-muted border border-border/50"
-                aria-label="No activity"
-              />
-              <div
-                className="w-3 h-3 rounded-sm bg-green-200 dark:bg-green-900/40 border border-border/50"
-                aria-label="Low activity"
-              />
-              <div
-                className="w-3 h-3 rounded-sm bg-green-400 dark:bg-green-700/60 border border-border/50"
-                aria-label="Medium activity"
-              />
-              <div
-                className="w-3 h-3 rounded-sm bg-green-600 dark:bg-green-600/80 border border-border/50"
-                aria-label="High activity"
-              />
-              <div
-                className="w-3 h-3 rounded-sm bg-green-700 dark:bg-green-500 border border-border/50"
-                aria-label="Very high activity"
-              />
-            </div>
-            <span>More</span>
-          </div>
-        </div>
+        </TooltipProvider>
       </CardContent>
     </Card>
   );
