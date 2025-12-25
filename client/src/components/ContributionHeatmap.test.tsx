@@ -162,4 +162,49 @@ describe('ContributionHeatmap', () => {
     // When not authenticated, should show sign-in message
     expect(screen.getByText(/Sign in with your Firebase account/i)).toBeInTheDocument();
   });
+
+  it('should display "last 30 days" in the title when data is available', async () => {
+    const { isCloudSyncAvailable } = await import('@/lib/storage-factory');
+    vi.mocked(isCloudSyncAvailable).mockReturnValue(true);
+
+    // Mock quiz data
+    queryClient.setQueryData(
+      ['quizzes', 'test-user-123'],
+      [
+        {
+          id: '1',
+          completedAt: new Date().toISOString(),
+          mode: 'practice',
+          isPassing: true,
+          title: 'Test Quiz',
+        },
+      ]
+    );
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ContributionHeatmap />
+      </QueryClientProvider>
+    );
+
+    // Should show "last 30 days" in the title
+    expect(screen.getByText(/in last 30 days/i)).toBeInTheDocument();
+  });
+
+  it('should display "past month" in the description', async () => {
+    const { isCloudSyncAvailable } = await import('@/lib/storage-factory');
+    vi.mocked(isCloudSyncAvailable).mockReturnValue(true);
+
+    // Mock quiz data
+    queryClient.setQueryData(['quizzes', 'test-user-123'], []);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ContributionHeatmap />
+      </QueryClientProvider>
+    );
+
+    // Should show "past month" in the description
+    expect(screen.getByText(/over the past month/i)).toBeInTheDocument();
+  });
 });
