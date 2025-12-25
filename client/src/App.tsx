@@ -52,12 +52,22 @@ const BASE_PATH =
   import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
 
 function Router() {
-  const { user } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
   const location = useLocation();
   const isAdmin = user?.role === 'admin';
 
   // Landing page should never have authenticated layout
   if (location.pathname === '/' || location.pathname === '') {
+    // Show loading state while auth is initializing to prevent flash
+    // Only for authenticated users - unauthenticated users should see landing page immediately
+    if (isLoading) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <PageLoader />
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-background">
         <ErrorBoundary>
