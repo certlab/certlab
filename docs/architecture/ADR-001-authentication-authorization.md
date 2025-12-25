@@ -24,38 +24,41 @@
 
 ## Executive Summary
 
-CertLab uses a **hybrid client-side authentication system** with local PBKDF2-based password hashing and optional Firebase Google Authentication. User state is managed through **React Context** for global state and **TanStack Query** for async data operations. Route protection is implemented via a **ProtectedRoute Higher-Order Component (HOC)** that wraps authenticated routes.
+CertLab uses a **cloud-first authentication system** with Firebase Authentication in production, and a local PBKDF2 fallback for development. User state is managed through **React Context** for global state and **TanStack Query** for async data operations. Route protection is implemented via a **ProtectedRoute Higher-Order Component (HOC)** that wraps authenticated routes.
+
+> **Production vs Development**: Firebase Authentication with Firestore storage is required for production deployments. During local development, the app can fall back to client-side PBKDF2 authentication with IndexedDB storage when Firebase credentials are not configured.
 
 ### Quick Reference
 
 | Concern | Technology/Pattern | Implementation |
 |---------|-------------------|----------------|
-| **Authentication** | Client-side PBKDF2 + Firebase Auth | `client-auth.ts`, `auth-provider.tsx`, `firebase.ts` |
+| **Authentication (Production)** | Firebase Auth (Google Sign-In) | `firebase.ts`, `auth-provider.tsx` |
+| **Authentication (Development)** | Client-side PBKDF2 fallback | `client-auth.ts` (when Firebase not configured) |
+| **Storage (Production)** | Cloud Firestore with offline cache | `firestore-storage.ts`, `storage-factory.ts` |
+| **Storage (Development)** | IndexedDB fallback | `client-storage.ts` (when Firebase not configured) |
 | **Authorization** | Role-based + Tenant-based | `user.role`, `user.tenantId` |
 | **User State** | React Context + TanStack Query | `AuthProvider`, `useAuth()` hook |
 | **Route Protection** | Higher-Order Component | `<ProtectedRoute>` wrapper component |
-| **Session Storage** | IndexedDB + localStorage | `client-storage.ts`, `indexeddb.ts` |
-| **Token Management** | JWT-like session info | Session timestamp tracking |
+| **Session Management** | Firebase session + local cache | Session persistence via Firestore |
 
 ---
 
 ## Context and Problem Statement
 
-As a client-side SPA running entirely in the browser, CertLab needed to establish:
+As a cloud-first SPA with offline support, CertLab needed to establish:
 
-1. **Secure authentication** without a backend server
+1. **Secure authentication** using Firebase in production with local fallback for development
 2. **User state management** that works across the application
 3. **Route protection** to secure authenticated pages
 4. **Authorization** for role-based and tenant-based access control
 5. **Session persistence** across browser refreshes
-6. **Optional cloud sync** via Firebase for multi-device support
+6. **Cloud sync** via Firebase for multi-device support with offline capability
 
 ### Requirements
 
-- ✅ Client-side authentication (no backend required)
-- ✅ Strong password hashing (PBKDF2 with 100,000 iterations)
-- ✅ Support for passwordless accounts
-- ✅ Optional Google Sign-In via Firebase
+- ✅ Firebase Authentication for production (Google Sign-In)
+- ✅ Client-side authentication fallback for development (PBKDF2)
+- ✅ Cloud storage via Firestore with offline persistence
 - ✅ Role-based authorization (user, admin)
 - ✅ Multi-tenant data isolation
 - ✅ Session persistence across page refreshes
@@ -67,15 +70,16 @@ As a client-side SPA running entirely in the browser, CertLab needed to establis
 
 ## Decision
 
-We have adopted a **layered authentication and authorization architecture** with the following key components:
+We have adopted a **cloud-first authentication and authorization architecture** with local fallback for development:
 
-1. **Client-side authentication** using PBKDF2 password hashing
-2. **Firebase Authentication** for optional Google Sign-In
-3. **React Context** for global authentication state
-4. **TanStack Query** for async user data operations
-5. **Protected Route HOC** for route-level authorization
-6. **IndexedDB** for persistent session storage
-7. **Role-based and tenant-based authorization** patterns
+1. **Firebase Authentication** for production (Google Sign-In, mandatory)
+2. **Client-side PBKDF2 authentication** as development fallback
+3. **Cloud Firestore** for production data storage with offline caching
+4. **IndexedDB** as development fallback storage
+5. **React Context** for global authentication state
+6. **TanStack Query** for async user data operations
+7. **Protected Route HOC** for route-level authorization
+8. **Role-based and tenant-based authorization** patterns
 
 ---
 

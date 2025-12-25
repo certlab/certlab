@@ -17,7 +17,7 @@ This document describes the technical architecture of CertLab, including the ove
 
 ## System Overview
 
-CertLab is a **client-side only** web application designed for certification exam preparation. The entire application runs in the browser with no backend server required.
+CertLab is a **cloud-first Single-Page Application (SPA)** designed for certification exam preparation. The application uses Firebase for authentication and cloud storage, with offline capability through Firestore's built-in caching.
 
 ### Key Characteristics
 
@@ -25,10 +25,11 @@ CertLab is a **client-side only** web application designed for certification exa
 |--------|-------------|
 | **Type** | Single-Page Application (SPA) |
 | **Runtime** | Browser (Chrome, Firefox, Safari, Edge) |
-| **Storage** | IndexedDB (browser storage) |
-| **Authentication** | Client-side, browser-based |
-| **Hosting** | Static file hosting (Firebase Hosting) |
-| **Offline Support** | Full offline capability after initial load |
+| **Storage** | Cloud Firestore with IndexedDB caching |
+| **Authentication** | Firebase Authentication (Google Sign-In) |
+| **Hosting** | Firebase Hosting |
+| **Offline Support** | Offline-first with automatic sync |
+| **Development** | IndexedDB fallback for local development |
 
 ## Architecture Diagram
 

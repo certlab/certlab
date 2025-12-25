@@ -1,9 +1,8 @@
 # Firebase Setup Guide for CertLab
 
-This guide walks you through setting up Firebase for CertLab's optional cloud sync features.
+This guide walks you through setting up Firebase for CertLab's cloud storage and authentication.
 
-> **Note**: Firebase setup is **optional**. CertLab works fully offline using IndexedDB for local storage.
-> Firebase integration is currently in development (60% complete - see [../architecture/firebase-status.md](../architecture/firebase-status.md)).
+> **Note**: Firebase setup is **required for production deployment**. During local development, CertLab can fall back to IndexedDB if Firebase credentials are not configured.
 
 ## Table of Contents
 
@@ -19,19 +18,20 @@ This guide walks you through setting up Firebase for CertLab's optional cloud sy
 
 ## Overview
 
-Firebase integration (in development) will provide:
-- **Authentication**: Email/password and Google sign-in (planned)
-- **Cloud Firestore**: Optional cloud storage for multi-device sync (in progress)
-- **Hosting**: Static site hosting (already configured)
+Firebase provides the production infrastructure for CertLab:
+- **Authentication**: Google Sign-In and email/password authentication
+- **Cloud Firestore**: Cloud storage for multi-device sync with offline support
+- **Hosting**: Static site hosting via Firebase Hosting
 
 **Current Status**: 
-- ✅ Firebase infrastructure foundation complete (60%)
-- ⏳ Storage layer integration in progress
-- ⏳ Authentication integration not yet implemented
-- ✅ Local storage via IndexedDB fully functional
+- ✅ Firebase Authentication fully implemented
+- ✅ Firestore storage fully integrated
+- ✅ Offline persistence with IndexedDB cache
+- ✅ Firebase Hosting configured for deployment
 
-The app currently uses IndexedDB for all data storage and local PBKDF2 authentication. 
-Firebase features are being developed but are not required to use the application.
+**Development Mode**: IndexedDB fallback is available for local development when Firebase credentials are not configured. This allows developers to work on features without requiring Firebase setup.
+
+**Production Mode**: Firebase/Firestore is mandatory. The application will not function in production without proper Firebase configuration.
 
 ## Prerequisites
 
