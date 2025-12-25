@@ -187,6 +187,20 @@ export default function ContributionHeatmap() {
     return weeks;
   }, [selectedYear]);
 
+  // For mobile, show only recent weeks to fit in viewport
+  const mobileWeeksToShow = 16; // ~4 months
+  const mobileCalendarGrid = useMemo(() => {
+    // Show the most recent weeks for current year, or last weeks for past years
+    const isCurrentYear = selectedYear === new Date().getFullYear();
+    if (isCurrentYear) {
+      // Show last N weeks up to today
+      return calendarGrid.slice(-mobileWeeksToShow);
+    } else {
+      // For past years, show last N weeks of that year
+      return calendarGrid.slice(-mobileWeeksToShow);
+    }
+  }, [calendarGrid, selectedYear, mobileWeeksToShow]);
+
   // Get contribution level (0-4) based on count
   const getContributionLevel = (count: number): number => {
     if (count === 0) return 0;
@@ -230,6 +244,41 @@ export default function ContributionHeatmap() {
 
     return labels;
   }, [calendarGrid, selectedYear]);
+
+  // Generate month labels for mobile (based on mobileCalendarGrid)
+  const mobileMonthLabels = useMemo(() => {
+    const labels: { month: string; offset: number }[] = [];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    let lastMonth = -1;
+    mobileCalendarGrid.forEach((week, weekIndex) => {
+      const firstDayOfWeek = week[0];
+      const month = firstDayOfWeek.getMonth();
+
+      if (month !== lastMonth && firstDayOfWeek.getFullYear() === selectedYear) {
+        labels.push({
+          month: months[month],
+          offset: weekIndex,
+        });
+        lastMonth = month;
+      }
+    });
+
+    return labels;
+  }, [mobileCalendarGrid, selectedYear]);
 
   // Show Firebase connectivity error if Firebase is not available
   if (!isFirebaseAvailable) {
@@ -294,9 +343,9 @@ export default function ContributionHeatmap() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-4">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div>
-          <CardTitle className="text-lg sm:text-xl">
+          <CardTitle className="text-base sm:text-xl">
             {totalContributions} {totalContributions === 1 ? 'activity' : 'activities'} in{' '}
             {selectedYear}
           </CardTitle>
@@ -326,88 +375,122 @@ export default function ContributionHeatmap() {
       <CardContent>
         <TooltipProvider delayDuration={100}>
           <div className="space-y-2">
-            {/* Remove horizontal scroll - make everything fit */}
-            <div className="w-full">
-              <div className="w-full">
-                {/* Month labels - more compact on mobile */}
-                <div className="flex gap-[2px] sm:gap-[3px] pl-6 sm:pl-8 text-[10px] sm:text-xs text-muted-foreground mb-1">
-                  {monthLabels.map((label, index) => {
-                    const prevOffset = index > 0 ? monthLabels[index - 1].offset : 0;
-                    // Calculate spacing: (cell width + gap) * number of weeks
-                    // Mobile: 8px cell + 2px gap = 10px per week, but we use 8.5px for visual balance
-                    // Desktop: 12px cell + 3px gap = 15px per week (handled by responsive gap classes)
-                    const MOBILE_WEEK_WIDTH = 8.5; // 8px cell + 2px gap - slight adjustment for visual alignment
-                    const spacing = (label.offset - prevOffset) * MOBILE_WEEK_WIDTH;
-                    return (
-                      <div
-                        key={label.month}
-                        className="text-[10px] sm:text-xs whitespace-nowrap"
-                        style={{
-                          marginLeft: label.offset === 0 ? 0 : `${spacing}px`,
-                        }}
-                      >
-                        {label.month}
-                      </div>
-                    );
-                  })}
+            {/* Desktop view - show full year */}
+            <div className="hidden sm:block w-full">
+              {/* Month labels */}
+              <div className="flex gap-[3px] pl-8 text-xs text-muted-foreground mb-1">
+                {monthLabels.map((label, index) => {
+                  const prevOffset = index > 0 ? monthLabels[index - 1].offset : 0;
+                  const WEEK_WIDTH = 15; // 12px cell + 3px gap
+                  const spacing = (label.offset - prevOffset) * WEEK_WIDTH;
+                  return (
+                    <div
+                      key={label.month}
+                      className="text-xs whitespace-nowrap"
+                      style={{
+                        marginLeft: label.offset === 0 ? 0 : `${spacing}px`,
+                      }}
+                    >
+                      {label.month}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Calendar grid */}
+              <div className="flex gap-2">
+                {/* Day labels */}
+                <div className="flex flex-col gap-[3px] text-xs text-muted-foreground pr-1">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                    <div key={day} className="h-3 flex items-center">
+                      {day}
+                    </div>
+                  ))}
                 </div>
 
-                {/* Calendar grid */}
-                <div className="flex gap-1 sm:gap-2">
-                  {/* Day labels - abbreviated on mobile */}
-                  <div className="flex flex-col gap-[2px] sm:gap-[3px] text-[9px] sm:text-xs text-muted-foreground pr-0.5 sm:pr-1">
-                    {[
-                      { full: 'Sun', short: 'S' },
-                      { full: 'Mon', short: 'M' },
-                      { full: 'Tue', short: 'T' },
-                      { full: 'Wed', short: 'W' },
-                      { full: 'Thu', short: 'T' },
-                      { full: 'Fri', short: 'F' },
-                      { full: 'Sat', short: 'S' },
-                    ].map((day) => (
-                      <div key={day.full} className="h-2 sm:h-3 flex items-center">
-                        <span className="hidden sm:inline">{day.full}</span>
-                        <span className="sm:hidden">{day.short}</span>
-                      </div>
-                    ))}
-                  </div>
+                {/* Activity grid */}
+                <div className="flex gap-[3px]" role="grid" aria-label="Activity heatmap">
+                  {calendarGrid.map((week, weekIndex) => (
+                    <div key={weekIndex} className="flex flex-col gap-[3px]" role="row">
+                      {week.map((date, dayIndex) => {
+                        const dateKey = date.toISOString().split('T')[0];
+                        const contribution = contributionData[dateKey];
+                        const level = getContributionLevel(contribution?.count || 0);
+                        const isCurrentYear = date.getFullYear() === selectedYear;
 
-                  {/* Activity grid - responsive sizing */}
-                  <div
-                    className="flex gap-[2px] sm:gap-[3px] flex-1 min-w-0"
-                    role="grid"
-                    aria-label="Activity heatmap"
-                  >
-                    {calendarGrid.map((week, weekIndex) => (
-                      <div
-                        key={weekIndex}
-                        className="flex flex-col gap-[2px] sm:gap-[3px] flex-shrink-0"
-                        role="row"
-                      >
-                        {week.map((date, dayIndex) => {
-                          const dateKey = date.toISOString().split('T')[0];
-                          const contribution = contributionData[dateKey];
-                          const level = getContributionLevel(contribution?.count || 0);
-                          const isCurrentYear = date.getFullYear() === selectedYear;
+                        return isCurrentYear ? (
+                          <HeatmapCell
+                            key={dayIndex}
+                            date={date}
+                            contribution={contribution}
+                            level={level}
+                          />
+                        ) : (
+                          <div key={dayIndex} className="w-3 h-3 rounded-sm" aria-hidden="true" />
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-                          return isCurrentYear ? (
-                            <HeatmapCell
-                              key={dayIndex}
-                              date={date}
-                              contribution={contribution}
-                              level={level}
-                            />
-                          ) : (
-                            <div
-                              key={dayIndex}
-                              className="w-2 h-2 sm:w-3 sm:h-3 rounded-sm"
-                              aria-hidden="true"
-                            />
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
+            {/* Mobile view - show recent weeks only */}
+            <div className="block sm:hidden w-full">
+              {/* Month labels */}
+              <div className="flex gap-[2px] pl-6 text-[10px] text-muted-foreground mb-1">
+                {mobileMonthLabels.map((label, index) => {
+                  const prevOffset = index > 0 ? mobileMonthLabels[index - 1].offset : 0;
+                  const MOBILE_WEEK_WIDTH = 10; // 8px cell + 2px gap
+                  const spacing = (label.offset - prevOffset) * MOBILE_WEEK_WIDTH;
+                  return (
+                    <div
+                      key={label.month}
+                      className="text-[10px] whitespace-nowrap"
+                      style={{
+                        marginLeft: label.offset === 0 ? 0 : `${spacing}px`,
+                      }}
+                    >
+                      {label.month}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Calendar grid */}
+              <div className="flex gap-1">
+                {/* Day labels - abbreviated */}
+                <div className="flex flex-col gap-[2px] text-[9px] text-muted-foreground pr-0.5">
+                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+                    <div key={idx} className="h-2 flex items-center">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Activity grid - show limited weeks */}
+                <div className="flex gap-[2px]" role="grid" aria-label="Activity heatmap">
+                  {mobileCalendarGrid.map((week, weekIndex) => (
+                    <div key={weekIndex} className="flex flex-col gap-[2px]" role="row">
+                      {week.map((date, dayIndex) => {
+                        const dateKey = date.toISOString().split('T')[0];
+                        const contribution = contributionData[dateKey];
+                        const level = getContributionLevel(contribution?.count || 0);
+                        const isCurrentYear = date.getFullYear() === selectedYear;
+
+                        return isCurrentYear ? (
+                          <HeatmapCell
+                            key={dayIndex}
+                            date={date}
+                            contribution={contribution}
+                            level={level}
+                          />
+                        ) : (
+                          <div key={dayIndex} className="w-2 h-2 rounded-sm" aria-hidden="true" />
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
