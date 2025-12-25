@@ -58,8 +58,8 @@ function Router() {
 
   // Landing page should never have authenticated layout
   if (location.pathname === '/' || location.pathname === '') {
-    // Show loading state while auth is initializing to prevent flash
-    // Only for authenticated users - unauthenticated users should see landing page immediately
+    // Show loading state while auth is initializing to prevent flash of landing page
+    // before redirecting authenticated users to dashboard
     if (isLoading) {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center">
