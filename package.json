@@ -1,9 +1,30 @@
 {
   "name": "certlab",
   "version": "2.0.0",
+  "description": "A modern, cloud-based certification study platform for CISSP, CISM, and more with adaptive quizzes, achievements, and progress tracking",
+  "keywords": [
+    "certification",
+    "cissp",
+    "cism",
+    "security-plus",
+    "learning",
+    "quiz",
+    "education",
+    "firebase",
+    "react",
+    "typescript"
+  ],
+  "author": "archubbuck",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/archubbuck/certlab.git"
+  },
+  "bugs": {
+    "url": "https://github.com/archubbuck/certlab/issues"
+  },
+  "homepage": "https://github.com/archubbuck/certlab#readme",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://archubbuck.github.io/certlab",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

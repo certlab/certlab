@@ -272,19 +272,18 @@ For more details, see [docs/features/tenant-switching.md](docs/features/tenant-s
 
 ## 🔒 Security & Privacy
 
-### Local-Only Mode
-- **Local Only**: Your data never leaves your browser
-- **Password Hashing**: Passwords hashed using PBKDF2 via Web Crypto API
-- **No Tracking**: No analytics or external tracking
-- **Private**: Single-user per browser, no data sharing
-- **Offline**: Works completely without internet after initial load
+CertLab uses Firebase and Firestore for secure, cloud-based storage:
 
-### Cloud Sync Mode (Optional)
-- **Firebase Auth**: Industry-standard authentication
-- **Firestore Security Rules**: Per-user data isolation
+- **Firebase Authentication**: Industry-standard Google Sign-In
+- **Firestore Security Rules**: Per-user data isolation and access control
 - **Encryption**: TLS in transit, Google Cloud encryption at rest
 - **Privacy**: Your data is yours - not shared or sold
-- **Offline-First**: Works offline, syncs when online
+- **Offline-First**: Works offline with automatic sync when online
+- **Local Caching**: Firestore SDK uses IndexedDB for offline persistence
+
+### Development Mode
+- **Local Development**: IndexedDB fallback available when Firebase credentials are not configured
+- **Production Requirement**: Firebase/Firestore is mandatory for production deployments
 
 ## 🌐 Deployment
 
@@ -350,7 +349,8 @@ For detailed deployment instructions, see [docs/setup/deployment.md](docs/setup/
 | **Styling** | TailwindCSS | Utility-first CSS |
 | **Components** | Radix UI | Accessible component primitives |
 | **State** | TanStack Query | Async state management |
-| **Storage** | IndexedDB | Browser data persistence |
+| **Authentication** | Firebase Auth | Google Sign-In authentication |
+| **Storage** | Firestore | Cloud database with offline persistence |
 | **Routing** | Wouter | Lightweight client-side routing |
 | **Validation** | Zod | Schema validation |
 | **Animation** | Framer Motion | UI animations |
@@ -390,29 +390,24 @@ Comprehensive documentation is available in the [docs/](docs/) directory:
 
 ## ⚠️ Limitations
 
-### Local-Only Mode
+### Current Limitations
 
 | Limitation | Description |
 |------------|-------------|
-| **Single User** | One user per browser/profile |
-| **Browser-Bound** | Data doesn't sync across devices |
-| **Local Storage** | Data tied to browser (can be cleared) |
-
-### Both Modes
-
-| Limitation | Description |
-|------------|-------------|
+| **Firebase Required** | Production deployment requires Firebase project with Firestore |
 | **No AI Features** | Original AI lecture generation removed |
 | **No Payments** | Credit system and payments removed |
 | **Study Groups** | Local to device (no real-time collaboration) |
 
-### Cloud Sync Benefits
+### Firebase/Firestore Benefits
 
-With Firebase/Firestore enabled:
+With Firebase/Firestore:
 - ✅ Multi-device sync
 - ✅ Cloud backup
 - ✅ Data persistence across browser clears
 - ✅ Access from any device
+- ✅ Offline-first with automatic sync
+- ✅ Secure Google Sign-In authentication
 
 ## 🔄 Migration from Server Version
 
@@ -427,9 +422,9 @@ For more details, see [CHANGELOG.md](CHANGELOG.md).
 
 ## 📝 Data Structure
 
-The app stores data in these IndexedDB stores:
+The app stores data in Firestore collections (with local IndexedDB caching for offline access):
 
-| Store | Purpose |
+| Collection | Purpose |
 |-------|---------|
 | `users` | User accounts and profiles |
 | `tenants` | Multi-tenant organizations |

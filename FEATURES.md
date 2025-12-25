@@ -28,43 +28,43 @@ This document provides a comprehensive list of all features currently implemente
 
 **Status**: ✅ Fully Implemented
 
-- **Local Authentication** (IndexedDB mode)
-  - Email/password registration with PBKDF2 password hashing
-  - Secure login with Web Crypto API
-  - Client-side session management
-  - Password reset capability
-  
-- **Firebase Authentication** (Cloud Sync mode)
+- **Firebase Authentication** (Production)
   - Google Sign-In integration
   - Email/password authentication
   - Email verification
   - Password reset via email
   - Secure session management
   
+- **Development Fallback** (Local Development)
+  - Email/password registration with PBKDF2 password hashing
+  - Secure login with Web Crypto API
+  - Client-side session management
+  - Available only when Firebase credentials are not configured
+   
 - **Role-Based Access Control**
   - User and admin roles
   - Protected routes
   - Admin-only features and pages
 
-### Storage Modes
+### Storage Architecture
 
 **Status**: ✅ Fully Implemented
 
-CertLab supports two storage modes:
+CertLab uses cloud-first storage with offline support:
 
-- **Local-Only Mode** (Default)
-  - All data stored in browser's IndexedDB
-  - No account required
-  - Single-user per browser
-  - Works completely offline
-  - Private and secure
-  
-- **Cloud Sync Mode** (Optional)
-  - Firebase/Firestore backend
+- **Production Mode** (Firebase/Firestore Required)
+  - All data stored in Firestore cloud database
   - Multi-device synchronization
   - Cloud backup
   - Data persistence across browser clears
   - Offline-first with automatic sync
+  - IndexedDB used for local caching only
+  
+- **Development Mode** (IndexedDB Fallback)
+  - All data stored in browser's IndexedDB
+  - Available when Firebase credentials are not configured
+  - Local development and testing only
+  - Works completely offline
 
 ### Multi-Tenancy
 
