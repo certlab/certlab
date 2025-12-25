@@ -200,13 +200,6 @@ export default function Landing() {
 
   const theme = COLOR_SCHEMES[colorScheme];
 
-  // Auto-redirect authenticated users to the app
-  useEffect(() => {
-    if (isAuthenticated && !showLogin) {
-      navigate('/app', { replace: true });
-    }
-  }, [isAuthenticated, showLogin, navigate]);
-
   const handleLogin = useCallback(() => {
     setShowLogin(true);
   }, []);
