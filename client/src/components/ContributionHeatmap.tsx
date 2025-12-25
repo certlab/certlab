@@ -333,7 +333,11 @@ export default function ContributionHeatmap() {
                 <div className="flex gap-[2px] sm:gap-[3px] pl-6 sm:pl-8 text-[10px] sm:text-xs text-muted-foreground mb-1">
                   {monthLabels.map((label, index) => {
                     const prevOffset = index > 0 ? monthLabels[index - 1].offset : 0;
-                    const spacing = (label.offset - prevOffset) * 8.5; // Adjusted for mobile
+                    // Calculate spacing: (cell width + gap) * number of weeks
+                    // Mobile: 8px cell + 2px gap = 10px per week, but we use 8.5px for visual balance
+                    // Desktop: 12px cell + 3px gap = 15px per week (handled by responsive gap classes)
+                    const MOBILE_WEEK_WIDTH = 8.5; // 8px cell + 2px gap - slight adjustment for visual alignment
+                    const spacing = (label.offset - prevOffset) * MOBILE_WEEK_WIDTH;
                     return (
                       <div
                         key={label.month}
