@@ -277,7 +277,7 @@ export default function ContributionHeatmap() {
       <Card>
         <CardHeader>
           <CardTitle>Activity Level</CardTitle>
-          <CardDescription>Loading your activity history from Firebase...</CardDescription>
+          <CardDescription>Loading your activity history...</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center py-8">
           <LoadingSpinner />

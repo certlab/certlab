@@ -79,8 +79,27 @@ export default function ContributionHeatmap() {
   });
   
   if (!isFirebaseAvailable) {
-    // Show error message
-    return <FirebaseErrorMessage />;
+    // Show error with Card and Alert components
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CloudOff className="h-5 w-5" />
+            Activity Level
+          </CardTitle>
+          <CardDescription>Firebase connectivity required</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Firebase Not Connected</AlertTitle>
+            <AlertDescription>
+              {/* Error message content */}
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
   }
   
   // Render heatmap...
@@ -197,4 +216,4 @@ Potential improvements to consider:
 - [Firebase Documentation](https://firebase.google.com/docs)
 - [Firestore Offline Persistence](https://firebase.google.com/docs/firestore/manage-data/enable-offline)
 - [Firebase Security Rules](https://firebase.google.com/docs/firestore/security/get-started)
-- [React Query Documentation](https://tanstack.com/query/latest)
+- [TanStack Query Documentation](https://tanstack.com/query/latest)

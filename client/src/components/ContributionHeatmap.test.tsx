@@ -74,7 +74,7 @@ describe('ContributionHeatmap', () => {
     );
 
     // Check for loading message
-    expect(screen.getByText(/Loading your activity history from Firebase/i)).toBeInTheDocument();
+    expect(screen.getByText(/Loading your activity history/i)).toBeInTheDocument();
   });
 
   it('should not fetch quiz data when Firebase is unavailable', async () => {
