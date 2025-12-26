@@ -40,8 +40,14 @@ const AUTH_STATE_KEY = 'certlab_auth_state';
 const AUTH_USER_KEY = 'certlab_auth_user';
 
 // Helper to get cached auth state synchronously
+// Helper to get cached auth state synchronously
 function getCachedAuthState(): { isAuthenticated: boolean; user: User | null } {
   try {
+    // Check if sessionStorage is available (not in SSR or restricted environments)
+    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') {
+      return { isAuthenticated: false, user: null };
+    }
+
     const authState = sessionStorage.getItem(AUTH_STATE_KEY);
     const userJson = sessionStorage.getItem(AUTH_USER_KEY);
 
@@ -59,6 +65,11 @@ function getCachedAuthState(): { isAuthenticated: boolean; user: User | null } {
 // Helper to cache auth state synchronously
 function cacheAuthState(isAuthenticated: boolean, user: User | null) {
   try {
+    // Check if sessionStorage is available (not in SSR or restricted environments)
+    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') {
+      return;
+    }
+
     if (isAuthenticated && user) {
       sessionStorage.setItem(AUTH_STATE_KEY, 'authenticated');
       sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
