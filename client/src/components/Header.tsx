@@ -44,19 +44,8 @@ import MobileNavigationEnhanced from '@/components/MobileNavigationEnhanced';
 import TenantSwitcher from '@/components/TenantSwitcher';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
-import type { UserGameStats, UserBadge, Badge as BadgeType } from '@shared/schema';
-
-// Type for the achievements query response
-type AchievementsData = {
-  badges: Array<UserBadge & { badge: BadgeType; isNotified: boolean }>;
-  gameStats: {
-    totalPoints: number;
-    currentStreak: number;
-    longestStreak: number;
-    totalBadgesEarned: number;
-  };
-  newBadges: number;
-};
+import type { UserGameStats } from '@shared/schema';
+import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 
 export default function Header() {
   const location = useLocation();
@@ -78,15 +67,8 @@ export default function Header() {
     enabled: !!currentUser?.id,
   });
 
-  // Get achievements to check for unread notifications
-  const { data: achievements } = useQuery<AchievementsData>({
-    queryKey: queryKeys.user.achievements(currentUser?.id),
-    enabled: !!currentUser?.id,
-    refetchInterval: 5000, // Check for new achievements every 5 seconds
-  });
-
-  // Count unread notifications
-  const unreadCount = achievements?.badges?.filter((b) => !b.isNotified)?.length || 0;
+  // Get unread notifications count using custom hook
+  const { unreadCount } = useUnreadNotifications();
 
   const handleSignOut = async () => {
     // Navigate to home page BEFORE logout to prevent 404 flash
@@ -556,7 +538,11 @@ export default function Header() {
                       <div className="px-3 py-2">
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-xs font-medium text-muted-foreground">Notifications</p>
-                          <Badge variant="destructive" className="text-xs h-5 px-2">
+                          <Badge
+                            variant="destructive"
+                            className="text-xs h-5 px-2"
+                            aria-label={`${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`}
+                          >
                             {unreadCount}
                           </Badge>
                         </div>
@@ -568,6 +554,7 @@ export default function Header() {
                           size="sm"
                           className="w-full"
                           onClick={() => navigate('/app/achievements')}
+                          aria-label={`Navigate to achievements page to view ${unreadCount} notification${unreadCount > 1 ? 's' : ''}`}
                         >
                           <Bell className="w-4 h-4 mr-2" />
                           View All Notifications
