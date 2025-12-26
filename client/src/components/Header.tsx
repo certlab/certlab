@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { CloudSyncIndicator } from '@/components/CloudSyncIndicator';
 import { Badge } from '@/components/ui/badge';
+import { formatNotificationCount } from '@/lib/utils';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -450,7 +451,7 @@ export default function Header() {
                     className="relative h-10 rounded-full px-2 hover:bg-accent/10"
                     aria-label={
                       unreadCount > 0
-                        ? `User menu - ${unreadCount} new notification${unreadCount > 1 ? 's' : ''}`
+                        ? `User menu - ${formatNotificationCount(unreadCount)}`
                         : `User menu for ${getUserDisplayName(currentUser)}`
                     }
                   >
@@ -541,7 +542,7 @@ export default function Header() {
                           <Badge
                             variant="destructive"
                             className="text-xs h-5 px-2"
-                            aria-label={`${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`}
+                            aria-label={formatNotificationCount(unreadCount, false)}
                           >
                             {unreadCount}
                           </Badge>
@@ -554,7 +555,7 @@ export default function Header() {
                           size="sm"
                           className="w-full"
                           onClick={() => navigate('/app/achievements')}
-                          aria-label={`Navigate to achievements page to view ${unreadCount} notification${unreadCount > 1 ? 's' : ''}`}
+                          aria-label={`Navigate to achievements page to view ${formatNotificationCount(unreadCount)}`}
                         >
                           <Bell className="w-4 h-4 mr-2" />
                           View All Notifications

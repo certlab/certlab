@@ -37,7 +37,8 @@ export function useUnreadNotifications() {
   });
 
   // Count unread notifications (badges where isNotified is false)
-  const unreadCount = achievements?.badges?.filter((b) => !b.isNotified)?.length || 0;
+  const badges = achievements?.badges || [];
+  const unreadCount = badges.filter((b) => !b.isNotified).length;
 
   return {
     unreadCount,

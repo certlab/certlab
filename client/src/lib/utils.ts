@@ -102,3 +102,32 @@ export function getUserDisplayName(user: UserForDisplayName | null): string {
   if (user.email) return user.email.split('@')[0];
   return 'User';
 }
+
+/**
+ * Formats notification count with proper pluralization.
+ *
+ * @param count - Number of notifications
+ * @param includeNumber - Whether to include the count in the output (default: true)
+ * @returns Formatted notification text
+ *
+ * @example
+ * formatNotificationCount(0)
+ * // Returns: "0 notifications"
+ *
+ * @example
+ * formatNotificationCount(1)
+ * // Returns: "1 notification"
+ *
+ * @example
+ * formatNotificationCount(5)
+ * // Returns: "5 notifications"
+ *
+ * @example
+ * formatNotificationCount(1, false)
+ * // Returns: "notification"
+ */
+export function formatNotificationCount(count: number, includeNumber = true): string {
+  const pluralSuffix = count === 1 ? '' : 's';
+  const word = `notification${pluralSuffix}`;
+  return includeNumber ? `${count} ${word}` : word;
+}

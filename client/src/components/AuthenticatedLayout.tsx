@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Home, ShoppingBag, Wallet, User, Download, Shield, Timer } from 'lucide-react';
-import { getInitials } from '@/lib/utils';
+import { getInitials, formatNotificationCount } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-provider';
 import { RightSidebarProvider, useRightSidebar } from '@/lib/right-sidebar-provider';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -148,11 +148,14 @@ function AuthenticatedHeader() {
                 variant="ghost"
                 className="relative h-10 w-10 rounded-full p-0 bg-white hover:bg-white/90"
                 onClick={() => {
-                  // If there are unread notifications, open notifications panel, otherwise open user panel
+                  // Smart behavior: Open notifications panel if unread notifications exist,
+                  // otherwise open user panel for profile/settings access
                   togglePanel(unreadCount > 0 ? 'notifications' : 'user');
                 }}
                 aria-label={
-                  unreadCount > 0 ? `Open notifications - ${unreadCount} unread` : 'Open user menu'
+                  unreadCount > 0
+                    ? `Open notifications - ${formatNotificationCount(unreadCount)}`
+                    : 'Open user menu'
                 }
               >
                 <Avatar className="h-10 w-10">
@@ -170,9 +173,7 @@ function AuthenticatedHeader() {
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              {unreadCount > 0
-                ? `${unreadCount} new notification${unreadCount > 1 ? 's' : ''}`
-                : 'User menu'}
+              {unreadCount > 0 ? formatNotificationCount(unreadCount) : 'User menu'}
             </TooltipContent>
           </Tooltip>
         </div>
