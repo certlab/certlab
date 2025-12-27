@@ -15,6 +15,7 @@ import { X, LogOut, User, Trophy, Bell, Settings, Check, Palette, Star } from 'l
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
 import { storage } from '@/lib/storage-factory';
+import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 
 function SettingsPanel() {
   const { theme, setTheme } = useTheme();
@@ -79,9 +80,10 @@ function SettingsPanel() {
 function UserPanel() {
   const navigate = useNavigate();
   const { user: currentUser, logout } = useAuth();
-  const { closePanel } = useRightSidebar();
+  const { closePanel, openPanel } = useRightSidebar();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
+  const { unreadCount } = useUnreadNotifications();
 
   const handleSignOut = async () => {
     // Close panel and navigate to home page BEFORE logout to prevent 404 flash
@@ -140,6 +142,23 @@ function UserPanel() {
             >
               <User className="mr-3 h-5 w-5" />
               My Profile
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start rounded-xl h-12 relative"
+              onClick={() => openPanel('notifications')}
+            >
+              <Bell className="mr-3 h-5 w-5" />
+              Notifications
+              {unreadCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="ml-auto h-5 px-2 text-xs"
+                  aria-label={`${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`}
+                >
+                  {unreadCount}
+                </Badge>
+              )}
             </Button>
             <Button
               variant="ghost"
