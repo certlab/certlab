@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useCallback, useEffect } from 'react';
+import { useState, lazy, Suspense, useCallback } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -199,13 +199,6 @@ export default function Landing() {
   const [colorScheme, setColorScheme] = useState<ColorScheme>('slate');
 
   const theme = COLOR_SCHEMES[colorScheme];
-
-  // Auto-redirect authenticated users to the app
-  useEffect(() => {
-    if (isAuthenticated && !showLogin) {
-      navigate('/app', { replace: true });
-    }
-  }, [isAuthenticated, showLogin, navigate]);
 
   const handleLogin = useCallback(() => {
     setShowLogin(true);
