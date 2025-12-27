@@ -13,13 +13,13 @@ import {
   BookOpen,
   Trophy,
   Settings,
-  ChevronRight,
   X,
   Target,
   BarChart3,
   Building,
   ShoppingCart,
   Timer,
+  FileText,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -29,14 +29,8 @@ interface NavigationItem {
   icon: React.ReactNode;
   href: string;
   badge?: string;
-  description?: string;
   comingSoon?: boolean;
-}
-
-interface NavigationSection {
-  id: string;
-  title: string;
-  items: NavigationItem[];
+  dividerAfter?: boolean;
 }
 
 export default function MobileNavigationEnhanced() {
@@ -44,120 +38,78 @@ export default function MobileNavigationEnhanced() {
   const { user } = useAuth();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin';
 
-  const navigationSections: NavigationSection[] = [
+  // Simplified flat navigation structure with logical groupings
+  const navigationItems: NavigationItem[] = [
     {
-      id: 'main',
-      title: 'Main Navigation',
-      items: [
-        {
-          id: 'dashboard',
-          label: 'Dashboard',
-          icon: <Home className="w-4 h-4" />,
-          href: '/',
-          description: 'Your learning overview',
-        },
-        {
-          id: 'achievements',
-          label: 'Achievements',
-          icon: <Trophy className="w-4 h-4" />,
-          href: '/app/achievements',
-          description: 'Track your progress and badges',
-        },
-        {
-          id: 'analytics',
-          label: 'Analytics',
-          icon: <BarChart3 className="w-4 h-4" />,
-          href: '/app/analytics',
-          description: 'Deep insights into learning patterns',
-        },
-      ],
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: <Home className="w-5 h-5" />,
+      href: '/',
     },
     {
-      id: 'learning',
-      title: 'Learning Features',
-      items: [
-        {
-          id: 'study-timer',
-          label: 'Study Timer',
-          icon: <Timer className="w-4 h-4" />,
-          href: '/app/study-timer',
-          description: 'Pomodoro timer for focused study sessions',
-        },
-        {
-          id: 'daily-challenges',
-          label: 'Daily Challenges',
-          icon: <Target className="w-4 h-4" />,
-          href: '/app/daily-challenges',
-          description: 'Complete quests and earn rewards',
-          badge: 'NEW',
-        },
-        {
-          id: 'study-notes',
-          label: 'Study Notes',
-          icon: <BookOpen className="w-4 h-4" />,
-          href: '/app/study-notes',
-          description: 'View and export saved study notes',
-        },
-        {
-          id: 'marketplace',
-          label: 'Study Materials',
-          icon: <ShoppingCart className="w-4 h-4" />,
-          href: '/app/marketplace',
-          description: 'Browse and purchase study materials',
-        },
-      ],
+      id: 'achievements',
+      label: 'Achievements',
+      icon: <Trophy className="w-5 h-5" />,
+      href: '/app/achievements',
     },
     {
-      id: 'tools',
-      title: 'Tools & Features',
-      items: [
-        {
-          id: 'accessibility',
-          label: 'Accessibility',
-          icon: <Settings className="w-4 h-4" />,
-          href: '/accessibility',
-          description: 'Color contrast analysis',
-        },
-        {
-          id: 'ui-structure',
-          label: 'UI Structure',
-          icon: <BarChart3 className="w-4 h-4" />,
-          href: '/ui-structure',
-          description: 'Application architecture',
-        },
-      ],
+      id: 'analytics',
+      label: 'Analytics',
+      icon: <BarChart3 className="w-5 h-5" />,
+      href: '/app/analytics',
+      dividerAfter: true,
     },
-    // Administration section - only shown to admin users
+    {
+      id: 'daily-challenges',
+      label: 'Daily Challenges',
+      icon: <Target className="w-5 h-5" />,
+      href: '/app/daily-challenges',
+      badge: 'NEW',
+    },
+    {
+      id: 'practice-tests',
+      label: 'Practice Tests',
+      icon: <FileText className="w-5 h-5" />,
+      href: '/app/practice-tests',
+    },
+    {
+      id: 'study-timer',
+      label: 'Study Timer',
+      icon: <Timer className="w-5 h-5" />,
+      href: '/app/study-timer',
+    },
+    {
+      id: 'study-notes',
+      label: 'Study Notes',
+      icon: <BookOpen className="w-5 h-5" />,
+      href: '/app/study-notes',
+    },
+    {
+      id: 'marketplace',
+      label: 'Study Materials',
+      icon: <ShoppingCart className="w-5 h-5" />,
+      href: '/app/marketplace',
+      dividerAfter: !isAdmin,
+    },
+    // Admin section - only shown to admin users
     ...(isAdmin
       ? [
           {
-            id: 'admin',
-            title: 'Administration',
-            items: [
-              {
-                id: 'admin-dashboard',
-                label: 'Admin Dashboard',
-                icon: <Building className="w-4 h-4" />,
-                href: '/admin',
-                description: 'Manage tenants, users, and content',
-              },
-            ],
-          },
+            id: 'admin-dashboard',
+            label: 'Admin Dashboard',
+            icon: <Building className="w-5 h-5" />,
+            href: '/admin',
+            dividerAfter: true,
+          } as NavigationItem,
         ]
       : []),
   ];
 
-  const handleItemClick = (href: string, comingSoon?: boolean) => {
+  const handleItemClick = (comingSoon?: boolean) => {
     if (comingSoon) return;
     setIsOpen(false);
-    // Navigation will be handled by Link component
-  };
-
-  const toggleSection = (sectionId: string) => {
-    setActiveSection(activeSection === sectionId ? null : sectionId);
   };
 
   if (!isMobile) {
@@ -177,7 +129,7 @@ export default function MobileNavigationEnhanced() {
         <div className="flex flex-col h-full">
           {/* Header */}
           <SheetHeader className="p-4 border-b">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-3">
               <SheetTitle className="text-lg font-semibold">Navigation</SheetTitle>
               <Button
                 variant="ghost"
@@ -190,11 +142,11 @@ export default function MobileNavigationEnhanced() {
               </Button>
             </div>
 
-            {/* User info */}
+            {/* User info - Simplified */}
             {user && (
-              <div className="mt-3 space-y-2">
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium">
                     {user.email?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -210,109 +162,59 @@ export default function MobileNavigationEnhanced() {
             )}
           </SheetHeader>
 
-          {/* Navigation sections */}
+          {/* Navigation items - Flat structure */}
           <ScrollArea className="flex-1">
-            <div className="p-4 space-y-4">
-              {navigationSections.map((section) => (
-                <div key={section.id}>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                      {section.title}
-                    </h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleSection(section.id)}
-                      className="h-6 w-6 p-0"
-                      aria-label={`${activeSection === section.id ? 'Collapse' : 'Expand'} ${section.title}`}
-                      aria-expanded={activeSection === section.id}
-                    >
-                      <ChevronRight
-                        className={`w-3 h-3 transition-transform ${
-                          activeSection === section.id ? 'rotate-90' : ''
-                        }`}
-                      />
-                    </Button>
-                  </div>
-
-                  {(activeSection === section.id || activeSection === null) && (
-                    <div className="space-y-1">
-                      {section.items.map((item) => (
-                        <div key={item.id}>
-                          {item.comingSoon ? (
-                            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 opacity-60">
-                              <div className="flex-shrink-0 text-muted-foreground">{item.icon}</div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium">{item.label}</span>
-                                  {item.badge && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      {item.badge}
-                                    </Badge>
-                                  )}
-                                </div>
-                                {item.description && (
-                                  <p className="text-xs text-muted-foreground">
-                                    {item.description}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          ) : (
-                            <Link to={item.href}>
-                              <div
-                                className={`
-                                  flex items-center gap-3 p-3 rounded-lg transition-colors
-                                  hover:bg-muted/50 active:bg-muted
-                                  ${location.pathname === item.href ? 'bg-muted border border-border' : ''}
-                                `}
-                                onClick={() => handleItemClick(item.href, item.comingSoon)}
-                              >
-                                <div
-                                  className={`
-                                  flex-shrink-0 
-                                  ${location.pathname === item.href ? 'text-primary' : 'text-muted-foreground'}
-                                `}
-                                >
-                                  {item.icon}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium">{item.label}</span>
-                                    {item.badge && (
-                                      <Badge variant="outline" className="text-xs">
-                                        {item.badge}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  {item.description && (
-                                    <p className="text-xs text-muted-foreground">
-                                      {item.description}
-                                    </p>
-                                  )}
-                                </div>
-                                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                              </div>
-                            </Link>
-                          )}
-                        </div>
-                      ))}
+            <nav className="p-3" aria-label="Main navigation">
+              {navigationItems.map((item) => (
+                <div key={item.id}>
+                  {item.comingSoon ? (
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/30 opacity-60 mb-1">
+                      <div className="flex-shrink-0 text-muted-foreground">{item.icon}</div>
+                      <span className="text-sm font-medium flex-1">{item.label}</span>
+                      {item.badge && (
+                        <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                          {item.badge}
+                        </Badge>
+                      )}
                     </div>
+                  ) : (
+                    <Link to={item.href} onClick={() => handleItemClick(item.comingSoon)}>
+                      <div
+                        className={`
+                          flex items-center gap-3 px-4 py-3 rounded-lg transition-colors mb-1
+                          hover:bg-accent active:bg-accent/80
+                          ${location.pathname === item.href ? 'bg-accent text-accent-foreground font-medium' : ''}
+                        `}
+                      >
+                        <div
+                          className={`
+                            flex-shrink-0 
+                            ${location.pathname === item.href ? 'text-primary' : 'text-muted-foreground'}
+                          `}
+                        >
+                          {item.icon}
+                        </div>
+                        <span className="text-sm flex-1">{item.label}</span>
+                        {item.badge && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs px-2 py-0.5 border-primary/20"
+                          >
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </div>
+                    </Link>
                   )}
-
-                  {section.id !== navigationSections[navigationSections.length - 1].id && (
-                    <Separator className="my-3" />
-                  )}
+                  {item.dividerAfter && <Separator className="my-2" />}
                 </div>
               ))}
-            </div>
+            </nav>
           </ScrollArea>
 
           {/* Footer */}
           <div className="p-4 border-t">
-            <p className="text-xs text-center text-muted-foreground">
-              Cert Lab • Enhanced Mobile Experience
-            </p>
+            <p className="text-xs text-center text-muted-foreground">Cert Lab</p>
           </div>
         </div>
       </SheetContent>
