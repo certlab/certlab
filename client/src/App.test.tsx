@@ -115,9 +115,9 @@ describe('App Router - Authentication Flash Prevention', () => {
 
     render(<App />);
 
-    // Should show loading state, not landing page
+    // Should show session loading state with proper message
     await waitFor(() => {
-      expect(screen.getByTestId('page-loader')).toBeInTheDocument();
+      expect(screen.getByText('Initializing application...')).toBeInTheDocument();
     });
     expect(screen.queryByTestId('landing-page')).not.toBeInTheDocument();
   });

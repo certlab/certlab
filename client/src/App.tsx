@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '@/lib/auth-provider';
 import { UnhandledRejectionHandler } from '@/components/UnhandledRejectionHandler';
 import { AuthenticatedLayout } from '@/components/AuthenticatedLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { SessionLoader } from '@/components/SessionLoader';
 import PageLoader from '@/components/PageLoader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ConfigurationError } from '@/components/ConfigurationError';
@@ -58,14 +59,10 @@ function Router() {
 
   // Landing page should never have authenticated layout
   if (location.pathname === '/' || location.pathname === '') {
-    // Show loading state while auth is initializing to prevent flash of landing page
+    // Show session loader while auth is initializing to prevent flash of landing page
     // before redirecting authenticated users to dashboard
     if (isLoading) {
-      return (
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <PageLoader />
-        </div>
-      );
+      return <SessionLoader message="Initializing application..." />;
     }
 
     return (

@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-provider';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { SessionLoader } from '@/components/SessionLoader';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 /**
  * ProtectedRoute component that wraps routes requiring authentication.
  *
- * - Shows a loading spinner while checking authentication status
+ * - Shows a session loader while checking authentication status
  * - Redirects to landing page (/) if user is not authenticated
  * - Saves the attempted location in navigation state for post-login redirect
  * - Renders children if user is authenticated
@@ -19,13 +19,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
-  // Show loading spinner while checking authentication
+  // Show session loader while checking authentication
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <LoadingSpinner size="xl" label="Loading application..." />
-      </div>
-    );
+    return <SessionLoader message="Loading application..." />;
   }
 
   // Redirect to landing page if not authenticated

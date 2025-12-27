@@ -7,7 +7,11 @@ import { AuthProvider, useAuth } from './auth-provider';
 vi.mock('./firebase', () => ({
   isFirebaseConfigured: vi.fn().mockReturnValue(true),
   initializeFirebase: vi.fn().mockReturnValue(true),
-  onFirebaseAuthStateChanged: vi.fn().mockReturnValue(() => {}),
+  onFirebaseAuthStateChanged: vi.fn((callback) => {
+    // Immediately call the callback with null (no user) to simulate no auth
+    setTimeout(() => callback(null), 0);
+    return () => {}; // Return cleanup function
+  }),
   signOutFromGoogle: vi.fn().mockResolvedValue(undefined),
   getCurrentFirebaseUser: vi.fn().mockReturnValue(null),
 }));

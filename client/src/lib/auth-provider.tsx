@@ -38,8 +38,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Session storage keys for optimistic auth state
 const AUTH_STATE_KEY = 'certlab_auth_state';
 const AUTH_USER_KEY = 'certlab_auth_user';
+const AUTH_TIMESTAMP_KEY = 'certlab_auth_timestamp';
 
-// Helper to get cached auth state synchronously
+// Session considered stale after 24 hours
+const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
 // Helper to get cached auth state synchronously
 function getCachedAuthState(): { isAuthenticated: boolean; user: User | null } {
   try {
@@ -50,8 +53,21 @@ function getCachedAuthState(): { isAuthenticated: boolean; user: User | null } {
 
     const authState = sessionStorage.getItem(AUTH_STATE_KEY);
     const userJson = sessionStorage.getItem(AUTH_USER_KEY);
+    const timestamp = sessionStorage.getItem(AUTH_TIMESTAMP_KEY);
 
-    if (authState === 'authenticated' && userJson) {
+    if (authState === 'authenticated' && userJson && timestamp) {
+      const sessionAge = Date.now() - parseInt(timestamp, 10);
+
+      // Check if session is stale
+      if (sessionAge > SESSION_MAX_AGE_MS) {
+        console.log('[Auth] Cached session is stale, clearing cache');
+        // Clear stale session
+        sessionStorage.removeItem(AUTH_STATE_KEY);
+        sessionStorage.removeItem(AUTH_USER_KEY);
+        sessionStorage.removeItem(AUTH_TIMESTAMP_KEY);
+        return { isAuthenticated: false, user: null };
+      }
+
       const user = JSON.parse(userJson) as User;
       return { isAuthenticated: true, user };
     }
@@ -73,9 +89,11 @@ function cacheAuthState(isAuthenticated: boolean, user: User | null) {
     if (isAuthenticated && user) {
       sessionStorage.setItem(AUTH_STATE_KEY, 'authenticated');
       sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+      sessionStorage.setItem(AUTH_TIMESTAMP_KEY, Date.now().toString());
     } else {
       sessionStorage.removeItem(AUTH_STATE_KEY);
       sessionStorage.removeItem(AUTH_USER_KEY);
+      sessionStorage.removeItem(AUTH_TIMESTAMP_KEY);
     }
   } catch (error) {
     console.warn('[Auth] Failed to cache auth state:', error);
@@ -86,8 +104,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initialize with cached auth state to prevent flash
   const cachedAuth = getCachedAuthState();
   const [user, setUser] = useState<User | null>(cachedAuth.user);
-  // Only show loading if we don't have cached auth state
-  const [isLoading, setIsLoading] = useState(!cachedAuth.isAuthenticated);
+  // Show loading state if we have a cached authenticated session that needs validation
+  // or if we have no cached session (need to check storage)
+  const [isLoading, setIsLoading] = useState(true);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [firebaseInitialized, setFirebaseInitialized] = useState(false);
   const [initError, setInitError] = useState<Error | null>(null);
@@ -106,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const error = new Error('Firebase configuration is required but not found');
             setInitError(error);
             setIsLoading(false);
+            setAuthInitialized(true);
             return;
           }
           // In development, continue without Firebase
@@ -121,10 +142,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUser(existingUser);
               cacheAuthState(true, existingUser);
               identifyUser(existingUser.id);
+            } else {
+              // Session was invalid, clear cache
+              cacheAuthState(false, null);
+              setUser(null);
             }
+          } else {
+            // No session found, clear any stale cache
+            cacheAuthState(false, null);
+            setUser(null);
           }
 
           setIsLoading(false);
+          setAuthInitialized(true);
           return;
         }
 
@@ -134,6 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const error = new Error('Failed to initialize Firebase');
           setInitError(error);
           setIsLoading(false);
+          setAuthInitialized(true);
           return;
         }
 
@@ -143,12 +174,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Initialize storage factory after Firebase is ready
         await initializeStorage();
 
-        // Set loading to false after successful initialization
-        setIsLoading(false);
+        // Don't set loading to false yet - wait for Firebase auth state listener
+        // to determine if user is authenticated
       } catch (error) {
         logError('initializeAuth', error);
         setInitError(error instanceof Error ? error : new Error('Unknown initialization error'));
         setIsLoading(false);
+        setAuthInitialized(true);
       }
     };
 
@@ -211,7 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         (!previousFirebaseUser && fbUser) || // User signed in
         (previousFirebaseUser && !fbUser); // User signed out
 
-      if (isSubstantiveChange) {
+      if (isSubstantiveChange && authInitialized) {
         setIsLoading(true);
       }
 
@@ -240,14 +272,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Trigger user load whenever Firebase auth state changes
       await loadUser();
 
+      // Mark auth as initialized after first load
+      if (!authInitialized) {
+        setAuthInitialized(true);
+      }
+
       // Set loading to false after Firebase sync completes
-      if (isSubstantiveChange) {
+      if (isSubstantiveChange || !authInitialized) {
         setIsLoading(false);
       }
     });
 
     return () => unsubscribe();
-  }, [firebaseInitialized, loadUser, firebaseUser]);
+  }, [firebaseInitialized, loadUser, firebaseUser, authInitialized]);
 
   const logout = useCallback(async () => {
     try {
