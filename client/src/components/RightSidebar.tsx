@@ -254,7 +254,7 @@ function NotificationsPanel() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { closePanel } = useRightSidebar();
+  const { closePanel, openPanel } = useRightSidebar();
   const [processedBadges, setProcessedBadges] = useState<Set<number>>(new Set());
 
   const { data: achievements } = useQuery<AchievementData>({
@@ -426,9 +426,19 @@ function NotificationsPanel() {
         )}
       </ScrollArea>
 
-      {unnotifiedBadges.length > 0 && (
-        <>
-          <Separator className="my-4" />
+      <Separator className="my-4" />
+
+      <div className="space-y-2">
+        <Button
+          variant="ghost"
+          className="w-full justify-start rounded-xl h-12"
+          onClick={() => openPanel('user')}
+        >
+          <User className="mr-3 h-5 w-5" />
+          Back to Account
+        </Button>
+
+        {unnotifiedBadges.length > 0 && (
           <Button
             variant="outline"
             className="w-full"
@@ -440,8 +450,8 @@ function NotificationsPanel() {
             <Trophy className="mr-2 h-4 w-4" />
             View All Achievements
           </Button>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 }
