@@ -24,10 +24,20 @@ Implemented a comprehensive session persistence and validation system that:
 
 ```typescript
 // Session expiry detection
-const sessionAge = Date.now() - parseInt(timestamp, 10);
+const timestampNum = parseInt(timestamp, 10);
+if (isNaN(timestampNum)) {
+  // Clear invalid timestamp
+  sessionStorage.removeItem(AUTH_STATE_KEY);
+  sessionStorage.removeItem(AUTH_USER_KEY);
+  sessionStorage.removeItem(AUTH_TIMESTAMP_KEY);
+}
+
+const sessionAge = Date.now() - timestampNum;
 if (sessionAge > SESSION_MAX_AGE_MS) {
-  // Clear stale session
-  sessionStorage.clear();
+  // Clear stale auth session keys only
+  sessionStorage.removeItem(AUTH_STATE_KEY);
+  sessionStorage.removeItem(AUTH_USER_KEY);
+  sessionStorage.removeItem(AUTH_TIMESTAMP_KEY);
 }
 ```
 

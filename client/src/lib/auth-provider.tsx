@@ -56,7 +56,18 @@ function getCachedAuthState(): { isAuthenticated: boolean; user: User | null } {
     const timestamp = sessionStorage.getItem(AUTH_TIMESTAMP_KEY);
 
     if (authState === 'authenticated' && userJson && timestamp) {
-      const sessionAge = Date.now() - parseInt(timestamp, 10);
+      const timestampNum = parseInt(timestamp, 10);
+
+      // Validate timestamp is a valid number
+      if (isNaN(timestampNum)) {
+        console.warn('[Auth] Invalid cached timestamp, clearing cache');
+        sessionStorage.removeItem(AUTH_STATE_KEY);
+        sessionStorage.removeItem(AUTH_USER_KEY);
+        sessionStorage.removeItem(AUTH_TIMESTAMP_KEY);
+        return { isAuthenticated: false, user: null };
+      }
+
+      const sessionAge = Date.now() - timestampNum;
 
       // Check if session is stale
       if (sessionAge > SESSION_MAX_AGE_MS) {
@@ -68,8 +79,17 @@ function getCachedAuthState(): { isAuthenticated: boolean; user: User | null } {
         return { isAuthenticated: false, user: null };
       }
 
-      const user = JSON.parse(userJson) as User;
-      return { isAuthenticated: true, user };
+      // Parse cached user data with error handling
+      try {
+        const user = JSON.parse(userJson) as User;
+        return { isAuthenticated: true, user };
+      } catch (parseError) {
+        console.warn('[Auth] Failed to parse cached user data, clearing cache:', parseError);
+        sessionStorage.removeItem(AUTH_STATE_KEY);
+        sessionStorage.removeItem(AUTH_USER_KEY);
+        sessionStorage.removeItem(AUTH_TIMESTAMP_KEY);
+        return { isAuthenticated: false, user: null };
+      }
     }
   } catch (error) {
     console.warn('[Auth] Failed to read cached auth state:', error);
@@ -284,7 +304,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [firebaseInitialized, loadUser, firebaseUser, authInitialized]);
+  }, [firebaseInitialized, loadUser, firebaseUser]);
 
   const logout = useCallback(async () => {
     try {
