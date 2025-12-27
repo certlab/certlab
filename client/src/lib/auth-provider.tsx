@@ -104,8 +104,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initialize with cached auth state to prevent flash
   const cachedAuth = getCachedAuthState();
   const [user, setUser] = useState<User | null>(cachedAuth.user);
-  // Show loading state if we have a cached authenticated session that needs validation
-  // or if we have no cached session (need to check storage)
+  // Always start with loading state true - will be set to false after auth validation completes
+  // This ensures we validate the session (even cached ones) before showing content
   const [isLoading, setIsLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
