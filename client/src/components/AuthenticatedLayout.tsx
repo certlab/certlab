@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Home, ShoppingBag, Wallet, User, Download, Shield, Timer } from 'lucide-react';
+import { Home, ShoppingBag, Wallet, User, Download, Shield, Timer } from 'lucide-react';
 import { getInitials, formatNotificationCount } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-provider';
 import { RightSidebarProvider, useRightSidebar } from '@/lib/right-sidebar-provider';

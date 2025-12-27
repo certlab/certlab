@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cn } from './utils';
+import { cn, formatNotificationCount } from './utils';
 
 describe('cn utility function', () => {
   it('should merge class names correctly', () => {
@@ -32,5 +32,38 @@ describe('cn utility function', () => {
 
   it('should handle objects with boolean values', () => {
     expect(cn({ foo: true, bar: false, baz: true })).toBe('foo baz');
+  });
+});
+
+describe('formatNotificationCount utility function', () => {
+  describe('with includeNumber=true (default)', () => {
+    it('should format zero notifications', () => {
+      expect(formatNotificationCount(0)).toBe('0 notifications');
+    });
+
+    it('should format singular notification', () => {
+      expect(formatNotificationCount(1)).toBe('1 notification');
+    });
+
+    it('should format multiple notifications', () => {
+      expect(formatNotificationCount(2)).toBe('2 notifications');
+      expect(formatNotificationCount(5)).toBe('5 notifications');
+      expect(formatNotificationCount(100)).toBe('100 notifications');
+    });
+  });
+
+  describe('with includeNumber=false', () => {
+    it('should return plural form for zero', () => {
+      expect(formatNotificationCount(0, false)).toBe('notifications');
+    });
+
+    it('should return singular form for one', () => {
+      expect(formatNotificationCount(1, false)).toBe('notification');
+    });
+
+    it('should return plural form for multiple', () => {
+      expect(formatNotificationCount(2, false)).toBe('notifications');
+      expect(formatNotificationCount(10, false)).toBe('notifications');
+    });
   });
 });

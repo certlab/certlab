@@ -548,7 +548,7 @@ export default function Header() {
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground mb-2">
-                          You have {unreadCount} new achievement{unreadCount > 1 ? 's' : ''}!
+                          You have {formatNotificationCount(unreadCount)}!
                         </p>
                         <Button
                           variant="outline"
