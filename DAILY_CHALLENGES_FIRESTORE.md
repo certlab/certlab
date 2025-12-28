@@ -363,7 +363,304 @@ if (result.completedQuests.length > 0) {
 }
 ```
 
-## Troubleshooting
+## Testing
+
+### Prerequisites for Testing
+
+Since Firebase credentials are required to test the Firestore implementation:
+
+1. **Set up Firebase project** (if not already done)
+   - See `FIREBASE_SETUP.md` for instructions
+   
+2. **Configure environment variables**
+   - Copy `.env.example` to `.env`
+   - Add your Firebase credentials:
+     ```
+     VITE_FIREBASE_API_KEY=your_api_key
+     VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+     VITE_FIREBASE_PROJECT_ID=your_project_id
+     VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+     VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+     VITE_FIREBASE_APP_ID=your_app_id
+     ```
+
+3. **Seed the data**
+   ```bash
+   export FIREBASE_SERVICE_ACCOUNT_KEY="$(cat firebase-service-account.json)"
+   npx tsx scripts/seed-gamification-data.ts
+   ```
+
+### Manual Testing Steps
+
+#### 1. Test Quest Display
+
+**Steps:**
+1. Start the dev server: `npm run dev`
+2. Log in to the application
+3. Navigate to "Daily Challenges" page (`/daily-challenges`)
+4. Verify you see three tabs: Daily, Weekly, Monthly
+5. Click through each tab and verify quests are displayed
+6. Check that each quest shows:
+   - Title and description
+   - Progress bar (0/target initially)
+   - Point reward
+   - Type badge (Daily/Weekly/Monthly)
+
+**Expected Results:**
+- Daily tab: 3 quests (Complete 3 quizzes, Answer 20 questions, Get perfect score)
+- Weekly tab: 3 quests (Complete 20 quizzes, Answer 100 questions, 7-day streak)
+- Monthly tab: 3 quests (Complete 100 quizzes, Answer 500 questions, 10 perfect scores)
+
+**Console Check:**
+- Open browser console
+- Should NOT see warnings about "not yet implemented"
+- Check Network tab for Firestore requests (if online)
+
+#### 2. Test Quest Progress Tracking
+
+**Steps:**
+1. While on Daily Challenges page, note current progress
+2. Navigate to Quiz page and complete a quiz
+3. Return to Daily Challenges page
+4. Verify progress has updated for relevant quests
+
+**Expected Results:**
+- "Complete 3 quizzes" quest: progress increases by 1
+- "Answer X questions correctly" quest: progress increases by number of correct answers
+- "Perfect Score" quest: progress increases by 1 if you got 100%
+- Progress bars update to show new percentage
+- When quest reaches 100%, "Claim Reward" button appears
+
+**Console Check:**
+```javascript
+// Open browser console and run:
+import { storage } from './lib/storage-factory';
+const userId = '<your-user-id>'; // Get from auth context
+const tenantId = 1;
+
+// Check quest progress
+const progress = await storage.getUserQuestProgress(userId, tenantId);
+console.log('Quest Progress:', progress);
+```
+
+#### 3. Test Quest Reward Claiming
+
+**Steps:**
+1. Complete a quest (get progress to 100%)
+2. Click "Claim Reward" button
+3. Verify celebration animation plays
+4. Verify toast notification shows points earned
+5. Verify button changes to "Completed" with checkmark
+6. Refresh page and verify quest still shows as completed
+
+**Expected Results:**
+- Celebration animation appears
+- Toast: "✨ Quest Reward Claimed! You earned X points for completing '[Quest Title]'!"
+- Button text changes from "Claim Reward" to "Completed"
+- If quest unlocks a title, toast shows "and unlocked [Title]!"
+- Points added to user's total (check profile/stats)
+
+**Console Check:**
+```javascript
+// Verify reward was claimed
+const progress = await storage.getUserQuestProgressByQuest(userId, questId, tenantId);
+console.log('Reward Claimed:', progress.rewardClaimed); // Should be true
+```
+
+#### 4. Test Daily Login Rewards
+
+**Steps:**
+1. Navigate to Daily Challenges page
+2. Look at "Daily Login Rewards" section
+3. Note which day of the cycle you're on
+4. Click "Claim Today's Reward" button
+5. Verify celebration animation
+6. Verify toast shows points earned
+7. Button should change to "Already Claimed"
+8. Close and reopen the page - button should still show "Already Claimed"
+
+**Expected Results:**
+- Shows "Day X of 7-day cycle"
+- Current day has pulsing border and different styling
+- Previous days show checkmark (if consecutive logins)
+- Claim button shows appropriate state
+- On Day 7: "You earned 50 points and a Streak Freeze!"
+
+**Test Consecutive Days:**
+1. Note current `consecutiveLoginDays` in userGameStats
+2. Come back tomorrow and login
+3. Day number should increment
+4. After claiming 7 days consecutively, cycle resets to Day 1
+
+**Console Check:**
+```javascript
+// Check user's consecutive login days
+const gameStats = await storage.getUserGameStats(userId);
+console.log('Consecutive Login Days:', gameStats.consecutiveLoginDays);
+console.log('Last Login:', gameStats.lastLoginDate);
+
+// Check claimed rewards
+const claims = await storage.getUserDailyRewards(userId, tenantId);
+console.log('Claimed Rewards:', claims);
+```
+
+#### 5. Test 7-Day Cycle Reset
+
+**Steps:**
+1. Check current day in cycle: `(consecutiveLoginDays % 7) + 1`
+2. Simulate 7 consecutive days of logins (may require manual date manipulation in console)
+3. Verify cycle resets to Day 1 after Day 7
+4. Verify streak freeze is granted on Day 7
+
+**Manual Date Testing (Console):**
+```javascript
+// WARNING: This is for testing only - manipulates dates
+const userId = '<your-user-id>';
+
+// Simulate advancing to next day
+const gameStats = await storage.getUserGameStats(userId);
+const newDate = new Date();
+newDate.setDate(newDate.getDate() + 1); // Next day
+await storage.updateUserGameStats(userId, {
+  lastLoginDate: newDate,
+  consecutiveLoginDays: gameStats.consecutiveLoginDays + 1
+});
+
+// Check new cycle day
+const updated = await storage.getUserGameStats(userId);
+const currentDay = (updated.consecutiveLoginDays % 7) + 1;
+console.log('Current Day:', currentDay);
+```
+
+#### 6. Test Edge Cases
+
+##### Missed Days
+**Steps:**
+1. Note current `consecutiveLoginDays`
+2. Simulate missing 2+ days:
+   ```javascript
+   const pastDate = new Date();
+   pastDate.setDate(pastDate.getDate() - 3);
+   await storage.updateUserGameStats(userId, { lastLoginDate: pastDate });
+   ```
+3. Reload page and trigger daily login
+4. Verify `consecutiveLoginDays` resets to 1
+5. Verify Daily Reward cycle restarts at Day 1
+
+**Expected Results:**
+- Streak is broken (unless streak freeze is used)
+- `consecutiveLoginDays` resets to 1
+- Daily reward cycle shows Day 1
+- Previous claims are preserved but cycle restarts
+
+##### Double Claim Prevention
+**Steps:**
+1. Claim today's daily reward
+2. Try to claim again (button should be disabled)
+3. Check console for error if attempting programmatically
+
+**Expected Results:**
+- Button shows "Already Claimed" and is disabled
+- If called via console: Error thrown "Daily reward for day X has already been claimed"
+
+##### Expired Quests
+**Steps:**
+1. Create a quest with `validUntil` in the past
+2. Verify it doesn't appear in active quests
+3. Check `getActiveQuests()` filters it out
+
+**Console Check:**
+```javascript
+const allQuests = await storage.getQuests();
+const activeQuests = await storage.getActiveQuests();
+console.log('Total Quests:', allQuests.length);
+console.log('Active Quests:', activeQuests.length);
+// Active should be <= Total
+```
+
+#### 7. Test Title Unlocking
+
+**Steps:**
+1. Complete a quest that grants a title (e.g., Quest #3: "Perfectionist")
+2. Verify toast shows title unlock
+3. Navigate to Profile page
+4. Check if titles section exists
+5. Verify unlocked title appears in list
+
+**Expected Results:**
+- Quest reward claim shows: "You earned X points and unlocked '[Title]'!"
+- Title appears in user's titles collection
+- Title can be selected as display title
+
+**Console Check:**
+```javascript
+const titles = await storage.getUserTitles(userId, tenantId);
+console.log('Unlocked Titles:', titles);
+
+// Should include title from quest
+const hasTitle = titles.some(t => t.title === 'Perfectionist');
+console.log('Has Perfectionist Title:', hasTitle);
+```
+
+### Automated Testing
+
+Currently, the codebase doesn't have automated tests for the gamification system. To add tests:
+
+1. **Unit Tests** (with Vitest)
+   - Test storage methods in isolation
+   - Mock Firestore calls
+   - Test edge cases and error handling
+
+2. **Integration Tests**
+   - Test full quest completion flow
+   - Test daily reward claiming flow
+   - Test streak calculation logic
+
+3. **E2E Tests** (with Playwright or Cypress)
+   - Test full user journey
+   - Test UI interactions
+   - Test multi-day scenarios
+
+Example test structure:
+```typescript
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { firestoreStorage } from '@/lib/firestore-storage';
+
+describe('Quest Management', () => {
+  beforeEach(() => {
+    // Reset mocks
+    vi.clearAllMocks();
+  });
+
+  it('should fetch all quests', async () => {
+    const quests = await firestoreStorage.getQuests();
+    expect(quests).toHaveLength(9);
+  });
+
+  it('should filter active quests', async () => {
+    const active = await firestoreStorage.getActiveQuests();
+    // Verify no expired quests
+    active.forEach(quest => {
+      if (quest.validUntil) {
+        expect(new Date(quest.validUntil)).toBeAfter(new Date());
+      }
+    });
+  });
+
+  it('should track quest progress', async () => {
+    const userId = 'test-user';
+    const questId = 1;
+    const tenantId = 1;
+    
+    await firestoreStorage.updateUserQuestProgress(userId, questId, 5, tenantId);
+    const progress = await firestoreStorage.getUserQuestProgressByQuest(userId, questId, tenantId);
+    
+    expect(progress?.progress).toBe(5);
+  });
+});
+```
+
+### Troubleshooting
 
 ### Issue: "Firestore is not initialized"
 **Solution:** Ensure Firebase is configured with valid credentials. Check `VITE_FIREBASE_*` environment variables.
