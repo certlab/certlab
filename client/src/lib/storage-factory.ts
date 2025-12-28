@@ -74,7 +74,12 @@ export async function initializeStorage(firebaseUser?: any | null): Promise<void
     firestoreAvailable = await initializeFirestoreService();
 
     if (!firestoreAvailable) {
-      throw new Error('Failed to initialize Firestore - this is required for the application');
+      throw new Error(
+        'Failed to initialize Firestore. This application cannot run without Firebase/Firestore.\n' +
+          '- Verify that your Firebase project configuration is correctly set in client/src/lib/firebase.ts.\n' +
+          '- Ensure your Firebase Web config (apiKey, authDomain, projectId, etc.) matches the values from the Firebase console.\n' +
+          '- For setup instructions, see: https://firebase.google.com/docs/web/setup\n'
+      );
     }
 
     console.log('[Storage Factory] Firestore initialized successfully');
@@ -118,10 +123,16 @@ export function isUsingCloudSync(): boolean {
 class StorageRouter implements IClientStorage {
   /**
    * Get the active storage backend (always Firestore)
+   * @throws {Error} If Firestore is not initialized. This indicates a critical initialization failure
+   * that should have been caught during app startup in initializeStorage().
    */
   private getActiveStorage(): IClientStorage {
     if (!firestoreAvailable) {
-      throw new Error('Firestore is not available - this is required for the application');
+      throw new Error(
+        'Firestore is not available. This indicates a critical initialization failure.\n' +
+          'Storage operations cannot proceed without Firestore.\n' +
+          'Ensure initializeStorage() is called and completes successfully before any storage operations.'
+      );
     }
     return firestoreStorage;
   }

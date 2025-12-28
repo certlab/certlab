@@ -228,22 +228,33 @@ class ClientAuth {
       loginAt: Date.now(),
       isPasswordless,
     };
-    // Use localStorage for session info instead of IndexedDB
-    localStorage.setItem('sessionInfo', JSON.stringify(sessionInfo));
+    try {
+      // Use localStorage for session info instead of IndexedDB
+      localStorage.setItem('sessionInfo', JSON.stringify(sessionInfo));
+    } catch (error) {
+      logError('Failed to save sessionInfo to localStorage', error);
+      // Continue despite localStorage failure - session will be invalid
+    }
   }
 
   private async getSessionInfo(): Promise<SessionInfo | null> {
-    const value = localStorage.getItem('sessionInfo');
-    if (!value) return null;
     try {
+      const value = localStorage.getItem('sessionInfo');
+      if (!value) return null;
       return JSON.parse(value) as SessionInfo;
-    } catch {
+    } catch (error) {
+      logError('Failed to parse sessionInfo from localStorage', error);
       return null;
     }
   }
 
   private async clearSessionInfo(): Promise<void> {
-    localStorage.removeItem('sessionInfo');
+    try {
+      localStorage.removeItem('sessionInfo');
+    } catch (error) {
+      logError('Failed to clear sessionInfo from localStorage', error);
+      // Continue despite localStorage failure
+    }
   }
 
   // Helper method to log password-less login events

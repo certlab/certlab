@@ -18,24 +18,25 @@
  * not through client-side code. This file is kept for compatibility
  * but the seeding logic has been disabled.
  *
+ * @deprecated Client-side seeding is no longer supported. Use Firestore admin SDK scripts,
+ * Firebase console, or initial database setup procedures to seed shared content.
+ *
  * @module seed-data
  */
 
-import { storage } from './storage-factory';
-
-const SEED_VERSION = 6; // Gamification V2 features
-
+/**
+ * @deprecated Client-side seeding is disabled in Firestore-only architecture.
+ * This function is a no-op that logs a deprecation warning.
+ * Use Firestore admin tools to seed data instead.
+ */
 export async function seedInitialData(): Promise<void> {
-  // Note: With Firestore-only storage, seeding is handled differently
-  // Shared content (categories, questions, badges) should be seeded via:
-  // 1. Firestore admin SDK scripts
-  // 2. Firebase console
-  // 3. Initial database setup procedures
-  //
-  // Client-side seeding has been disabled to avoid conflicts and ensure
-  // data consistency across all users in the cloud storage system.
-
-  console.log('[Seed Data] Firestore-based seeding skipped - use admin tools to seed data');
+  console.warn(
+    '[Seed Data] DEPRECATED: Client-side seeding is disabled.\n' +
+      'Firestore shared content must be seeded via:\n' +
+      '  1. Firestore admin SDK scripts\n' +
+      '  2. Firebase console\n' +
+      '  3. Initial database setup procedures'
+  );
   return;
 }
 
