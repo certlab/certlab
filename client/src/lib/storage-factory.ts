@@ -2,40 +2,37 @@
  * Storage Factory
  *
  * Provides a unified storage interface using Firestore for cloud storage.
- * Firebase and Firestore are now mandatory for the application in production.
+ * Firebase and Firestore are MANDATORY for the application.
  *
  * ## Architecture
  *
- * - **Primary storage**: Uses Firestore via firestore-storage.ts (REQUIRED in production)
- * - **Development fallback**: IndexedDB available in development mode only when Firebase is not configured
+ * - **Primary storage**: Uses Firestore via firestore-storage.ts (REQUIRED)
  * - **Offline support**: Firestore SDK provides automatic offline persistence with IndexedDB cache
- * - **Heatmap requirement**: Activity heatmap and analytics features require full Firebase/Firestore connectivity
+ * - **Cloud-first**: All data operations go through Firestore
  *
  * ## Important Notes
  *
- * - **Production**: Firebase/Firestore is MANDATORY. Application will not function without it.
- * - **Development**: Can fallback to IndexedDB for local development without Firebase credentials.
- * - **Local storage role**: IndexedDB is used ONLY for caching and offline access, NOT as primary data source.
- * - **Heatmap data**: Always requires Firebase connectivity - no local storage fallback for analytics.
+ * - **Firebase/Firestore is MANDATORY**: Application will not function without it.
+ * - **No local fallback**: IndexedDB standalone storage has been removed.
+ * - **Offline caching**: Firestore SDK manages IndexedDB caching automatically for offline support.
  *
  * ## Usage
  *
  * ```typescript
  * import { storage } from './storage-factory';
  *
- * // Use storage (routes to Firestore in production, IndexedDB fallback in dev)
+ * // Use storage (always routes to Firestore)
  * const quizzes = await storage.getUserQuizzes(userId);
  *
- * // Check if cloud sync is available (required for heatmap)
+ * // Check if cloud sync is available
  * if (isCloudSyncAvailable()) {
- *   // Heatmap can be displayed
+ *   // Cloud storage is ready
  * }
  * ```
  *
  * @module storage-factory
  */
 
-import { clientStorage } from './client-storage';
 import { firestoreStorage } from './firestore-storage';
 import { initializeFirestoreService, isFirestoreInitialized } from './firestore-service';
 import { getCurrentFirebaseUser } from './firebase';
@@ -52,7 +49,7 @@ import type {
 } from '@shared/schema';
 
 /**
- * Storage mode type - now always 'cloud' (Firestore)
+ * Storage mode type - always 'cloud' (Firestore)
  */
 export type StorageMode = 'cloud';
 
@@ -69,20 +66,14 @@ let firestoreAvailable = false;
 /**
  * Initialize the storage system
  * This should be called on app startup
- * In development, Firestore is optional; in production, it's required
+ * Firestore is mandatory for the application
  */
 export async function initializeStorage(firebaseUser?: any | null): Promise<void> {
   try {
-    const isDevelopment = import.meta.env.DEV;
-
-    // Initialize Firestore (mandatory in production, optional in development)
+    // Initialize Firestore (mandatory)
     firestoreAvailable = await initializeFirestoreService();
 
     if (!firestoreAvailable) {
-      if (isDevelopment) {
-        console.log('[Storage Factory] Firestore not available, using IndexedDB only');
-        return; // Allow app to continue with IndexedDB in development
-      }
       throw new Error('Failed to initialize Firestore - this is required for the application');
     }
 
@@ -95,16 +86,8 @@ export async function initializeStorage(firebaseUser?: any | null): Promise<void
       await firestoreStorage.setCurrentUserId(currentFirebaseUser.uid);
     }
   } catch (error) {
-    const isDevelopment = import.meta.env.DEV;
-    if (isDevelopment) {
-      console.warn(
-        '[Storage Factory] Firestore initialization failed, continuing with IndexedDB:',
-        error
-      );
-      return; // Allow app to continue with IndexedDB in development
-    }
     logError('initializeStorage', error);
-    throw error; // Re-throw in production since Firestore is mandatory
+    throw error; // Re-throw since Firestore is mandatory
   }
 }
 
@@ -116,34 +99,28 @@ export function getStorageMode(): StorageMode {
 }
 
 /**
- * Check if cloud sync is available (always true when Firestore is initialized)
+ * Check if cloud sync is available (Firestore is initialized)
  */
 export function isCloudSyncAvailable(): boolean {
   return firestoreAvailable && isFirestoreInitialized();
 }
 
 /**
- * Check if currently using cloud sync (always true)
+ * Check if currently using cloud sync (always true when Firestore is available)
  */
 export function isUsingCloudSync(): boolean {
   return firestoreAvailable;
 }
 
 /**
- * Storage adapter that uses Firestore in production and can fallback to IndexedDB in development
+ * Storage adapter that uses Firestore exclusively
  */
 class StorageRouter implements IClientStorage {
   /**
-   * Get the active storage backend
-   * Falls back to IndexedDB in development when Firestore is unavailable
+   * Get the active storage backend (always Firestore)
    */
   private getActiveStorage(): IClientStorage {
     if (!firestoreAvailable) {
-      const isDevelopment = import.meta.env.DEV;
-      if (isDevelopment) {
-        // Use IndexedDB as fallback in development
-        return clientStorage;
-      }
       throw new Error('Firestore is not available - this is required for the application');
     }
     return firestoreStorage;
@@ -151,7 +128,7 @@ class StorageRouter implements IClientStorage {
 
   /**
    * Execute a storage operation with error logging
-   * Routes to Firestore in production, IndexedDB in development when Firestore unavailable
+   * Always routes to Firestore
    */
   private async executeStorageOperation<T>(
     operation: (storage: IClientStorage) => Promise<T>,

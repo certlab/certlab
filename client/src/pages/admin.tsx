@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { queryKeys } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -90,7 +90,7 @@ function QuestionForm({
       if (typeof correctAnswer !== 'number' || correctAnswer < 1 || correctAnswer > 4) {
         throw new Error('Invalid correct answer: must be between 1 and 4');
       }
-      return await clientStorage.createQuestion({
+      return await storage.createQuestion({
         tenantId,
         categoryId: data.categoryId,
         subcategoryId: data.subcategoryId,
@@ -345,7 +345,7 @@ export default function AdminDashboard() {
   // Create tenant mutation
   const createTenantMutation = useMutation({
     mutationFn: async (data: { name: string; domain?: string }) => {
-      return await clientStorage.createTenant({
+      return await storage.createTenant({
         name: data.name,
         domain: data.domain || null,
         settings: {},
@@ -366,7 +366,7 @@ export default function AdminDashboard() {
   const createCategoryMutation = useMutation({
     mutationFn: async (data: { name: string; description?: string; icon?: string }) => {
       if (!selectedTenant) throw new Error('No tenant selected');
-      return await clientStorage.createCategory({
+      return await storage.createCategory({
         tenantId: selectedTenant,
         name: data.name,
         description: data.description || null,
@@ -389,7 +389,7 @@ export default function AdminDashboard() {
   // Update tenant mutation
   const updateTenantMutation = useMutation({
     mutationFn: async ({ tenantId, updates }: { tenantId: number; updates: Partial<Tenant> }) => {
-      return await clientStorage.updateTenant(tenantId, updates);
+      return await storage.updateTenant(tenantId, updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.all() });
@@ -405,7 +405,7 @@ export default function AdminDashboard() {
   const deleteTenantMutation = useMutation({
     mutationFn: async (tenantId: number) => {
       // We deactivate instead of deleting to preserve data integrity
-      return await clientStorage.updateTenant(tenantId, { isActive: false });
+      return await storage.updateTenant(tenantId, { isActive: false });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.tenants.all() });

@@ -31,7 +31,7 @@
  * @module achievement-service
  */
 
-import { clientStorage } from './client-storage';
+import { storage } from './storage-factory';
 import type { Quiz, Badge, UserGameStats } from '@shared/schema';
 import { calculateLevelFromPoints, calculatePointsForLevel } from './level-utils';
 
@@ -95,7 +95,7 @@ class AchievementService {
     const pointsEarned = this.calculateQuizPoints(quiz);
 
     // Get or create user game stats
-    let gameStats = await clientStorage.getUserGameStats(userId);
+    let gameStats = await storage.getUserGameStats(userId);
 
     // Calculate new streak
     const streakInfo = this.calculateStreak(gameStats);
@@ -107,7 +107,7 @@ class AchievementService {
     const levelUp = newLevel > oldLevel;
 
     // Update game stats
-    gameStats = await clientStorage.updateUserGameStats(userId, {
+    gameStats = await storage.updateUserGameStats(userId, {
       totalPoints: newTotalPoints,
       currentStreak: streakInfo.currentStreak,
       longestStreak: Math.max(gameStats?.longestStreak || 0, streakInfo.currentStreak),
@@ -121,7 +121,7 @@ class AchievementService {
 
     // Update total badges earned count
     if (newBadges.length > 0) {
-      await clientStorage.updateUserGameStats(userId, {
+      await storage.updateUserGameStats(userId, {
         totalBadgesEarned: (gameStats.totalBadgesEarned || 0) + newBadges.length,
       });
     }
@@ -202,16 +202,16 @@ class AchievementService {
     gameStats: UserGameStats,
     tenantId: number
   ): Promise<Badge[]> {
-    const allBadges = await clientStorage.getBadges();
-    const userBadges = await clientStorage.getUserBadges(userId, tenantId);
+    const allBadges = await storage.getBadges();
+    const userBadges = await storage.getUserBadges(userId, tenantId);
     const earnedBadgeIds = new Set(userBadges.map((ub) => ub.badgeId));
 
     // Get user's quiz history for requirement calculations
-    const userQuizzes = await clientStorage.getUserQuizzes(userId, tenantId);
+    const userQuizzes = await storage.getUserQuizzes(userId, tenantId);
     const completedQuizzes = userQuizzes.filter((q) => q.completedAt);
 
     // Get user's lectures for lecture-based badges
-    const userLectures = await clientStorage.getUserLectures(userId, tenantId);
+    const userLectures = await storage.getUserLectures(userId, tenantId);
     const readLectures = userLectures.filter((l) => l.isRead);
 
     const newBadges: Badge[] = [];
@@ -278,7 +278,7 @@ class AchievementService {
 
       if (earned) {
         // Award the badge
-        await clientStorage.createUserBadge({
+        await storage.createUserBadge({
           userId,
           tenantId,
           badgeId: badge.id,
@@ -307,17 +307,17 @@ class AchievementService {
       progressText: string;
     }>
   > {
-    const allBadges = await clientStorage.getBadges();
-    const userBadges = await clientStorage.getUserBadges(userId, tenantId);
+    const allBadges = await storage.getBadges();
+    const userBadges = await storage.getUserBadges(userId, tenantId);
     const earnedBadgeIds = new Set(userBadges.map((ub) => ub.badgeId));
 
-    const userQuizzes = await clientStorage.getUserQuizzes(userId, tenantId);
+    const userQuizzes = await storage.getUserQuizzes(userId, tenantId);
     const completedQuizzes = userQuizzes.filter((q) => q.completedAt);
 
-    const userLectures = await clientStorage.getUserLectures(userId, tenantId);
+    const userLectures = await storage.getUserLectures(userId, tenantId);
     const readLectures = userLectures.filter((l) => l.isRead);
 
-    const gameStats = await clientStorage.getUserGameStats(userId);
+    const gameStats = await storage.getUserGameStats(userId);
 
     return allBadges.map((badge) => {
       const earned = earnedBadgeIds.has(badge.id);
@@ -422,11 +422,11 @@ class AchievementService {
     // Award points for reading a lecture
     const pointsEarned = 5;
 
-    let gameStats = await clientStorage.getUserGameStats(userId);
+    let gameStats = await storage.getUserGameStats(userId);
     const newTotalPoints = (gameStats?.totalPoints || 0) + pointsEarned;
     const newLevel = calculateLevelFromPoints(newTotalPoints);
 
-    gameStats = await clientStorage.updateUserGameStats(userId, {
+    gameStats = await storage.updateUserGameStats(userId, {
       totalPoints: newTotalPoints,
       lastActivityDate: new Date(),
       level: newLevel,
@@ -434,11 +434,11 @@ class AchievementService {
     });
 
     // Check for lecture-based badges
-    const allBadges = await clientStorage.getBadges();
-    const userBadges = await clientStorage.getUserBadges(userId, tenantId);
+    const allBadges = await storage.getBadges();
+    const userBadges = await storage.getUserBadges(userId, tenantId);
     const earnedBadgeIds = new Set(userBadges.map((ub) => ub.badgeId));
 
-    const userLectures = await clientStorage.getUserLectures(userId, tenantId);
+    const userLectures = await storage.getUserLectures(userId, tenantId);
     const readLectures = userLectures.filter((l) => l.isRead);
 
     const newBadges: Badge[] = [];
@@ -448,7 +448,7 @@ class AchievementService {
 
       const requirement = badge.requirement as BadgeRequirement;
       if (requirement?.type === 'lectures_read' && readLectures.length >= requirement.value) {
-        await clientStorage.createUserBadge({
+        await storage.createUserBadge({
           userId,
           tenantId,
           badgeId: badge.id,
@@ -460,7 +460,7 @@ class AchievementService {
     }
 
     if (newBadges.length > 0) {
-      await clientStorage.updateUserGameStats(userId, {
+      await storage.updateUserGameStats(userId, {
         totalBadgesEarned: (gameStats.totalBadgesEarned || 0) + newBadges.length,
       });
     }

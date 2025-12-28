@@ -19,7 +19,7 @@ import { useReducer, useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { queryClient, queryKeys } from '@/lib/queryClient';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { achievementService } from '@/lib/achievement-service';
 import { gamificationService } from '@/lib/gamification-service';
 import { triggerCelebration } from '@/components/Celebration';
@@ -94,12 +94,12 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
-   * Mutation for submitting quiz answers to IndexedDB storage.
+   * Mutation for submitting quiz answers to Firestore storage.
    * On success, processes achievements, quests, and navigates to results page.
    */
   const submitQuizMutation = useMutation({
     mutationFn: async (quizAnswers: { questionId: number; answer: number }[]) => {
-      const completedQuiz = await clientStorage.submitQuiz(quizId, quizAnswers);
+      const completedQuiz = await storage.submitQuiz(quizId, quizAnswers);
 
       // Process achievements after quiz completion
       // Wrapped in try-catch to ensure quiz submission succeeds even if processing fails

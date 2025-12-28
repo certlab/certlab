@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Wallet as WalletIcon, Zap, Coins } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { useToast } from '@/hooks/use-toast';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { queryKeys, queryClient } from '@/lib/queryClient';
 import { calculateLevelAndXP } from '@/lib/level-utils';
 import type { UserStats } from '@shared/schema';
@@ -67,7 +67,7 @@ export default function WalletPage() {
       if (!pkg || !currentUser?.id) throw new Error('Invalid package or user');
 
       // Add tokens to user balance
-      const newBalance = await clientStorage.addTokens(currentUser.id, pkg.tokens);
+      const newBalance = await storage.addTokens(currentUser.id, pkg.tokens);
       return { pkg, newBalance };
     },
     onSuccess: async ({ pkg, newBalance: _newBalance }) => {

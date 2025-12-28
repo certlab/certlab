@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth-provider';
 import { queryClient, queryKeys } from '@/lib/queryClient';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
 import { Play, RotateCcw, TrendingUp, Clock, Target, BookOpen, Award } from 'lucide-react';
 import type { Quiz, UserStats, Category } from '@shared/schema';
@@ -34,10 +34,10 @@ export default function ContextualQuickActions() {
     mutationFn: async (quizData: any) => {
       if (!currentUser?.id) throw new Error('Not authenticated');
 
-      const tokenCost = clientStorage.calculateQuizTokenCost(quizData.questionCount);
+      const tokenCost = storage.calculateQuizTokenCost(quizData.questionCount);
 
       // Check and consume tokens
-      const tokenResult = await clientStorage.consumeTokens(currentUser.id, tokenCost);
+      const tokenResult = await storage.consumeTokens(currentUser.id, tokenCost);
 
       if (!tokenResult.success) {
         throw new Error(
@@ -46,7 +46,7 @@ export default function ContextualQuickActions() {
       }
 
       // Create the quiz
-      const quiz = await clientStorage.createQuiz({
+      const quiz = await storage.createQuiz({
         userId: currentUser.id,
         ...quizData,
       });

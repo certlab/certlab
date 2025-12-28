@@ -14,7 +14,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/auth-provider';
 import { queryClient, queryKeys } from '@/lib/queryClient';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
 import { InsufficientTokensDialog } from '@/components/InsufficientTokensDialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -55,14 +55,14 @@ export default function QuizCreator() {
     mutationFn: async (quizData: any) => {
       if (!currentUser?.id) throw new Error('Not authenticated');
 
-      const tokenCost = clientStorage.calculateQuizTokenCost(quizData.questionCount);
+      const tokenCost = storage.calculateQuizTokenCost(quizData.questionCount);
 
       // Check and consume tokens
-      const tokenResult = await clientStorage.consumeTokens(currentUser.id, tokenCost);
+      const tokenResult = await storage.consumeTokens(currentUser.id, tokenCost);
 
       if (!tokenResult.success) {
         // Get current balance and show dialog
-        const balance = await clientStorage.getUserTokenBalance(currentUser.id);
+        const balance = await storage.getUserTokenBalance(currentUser.id);
         setCurrentTokenBalance(balance);
         setRequiredTokens(tokenCost);
         setPendingQuizData(quizData);
@@ -71,7 +71,7 @@ export default function QuizCreator() {
       }
 
       // Create the quiz
-      const quiz = await clientStorage.createQuiz({
+      const quiz = await storage.createQuiz({
         userId: currentUser.id,
         ...quizData,
       });

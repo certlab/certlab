@@ -13,9 +13,8 @@
  *   attackers with device access
  */
 
-import { clientStorage } from './client-storage';
+import { storage } from './storage-factory';
 import type { User } from '@shared/schema';
-import { indexedDBService, STORES } from './indexeddb';
 import { AuthError, AuthErrorCode, logError, isStorageError } from './errors';
 import {
   initializeFirebase,
@@ -229,27 +228,22 @@ class ClientAuth {
       loginAt: Date.now(),
       isPasswordless,
     };
-    await indexedDBService.put(STORES.settings, {
-      key: 'sessionInfo',
-      value: JSON.stringify(sessionInfo),
-    });
+    // Use localStorage for session info instead of IndexedDB
+    localStorage.setItem('sessionInfo', JSON.stringify(sessionInfo));
   }
 
   private async getSessionInfo(): Promise<SessionInfo | null> {
-    const setting = await indexedDBService.get<{ key: string; value: string }>(
-      STORES.settings,
-      'sessionInfo'
-    );
-    if (!setting?.value) return null;
+    const value = localStorage.getItem('sessionInfo');
+    if (!value) return null;
     try {
-      return JSON.parse(setting.value) as SessionInfo;
+      return JSON.parse(value) as SessionInfo;
     } catch {
       return null;
     }
   }
 
   private async clearSessionInfo(): Promise<void> {
-    await indexedDBService.delete(STORES.settings, 'sessionInfo');
+    localStorage.removeItem('sessionInfo');
   }
 
   // Helper method to log password-less login events
@@ -306,7 +300,7 @@ class ClientAuth {
       }
 
       // Check if user already exists
-      const existingUser = await clientStorage.getUserByEmail(email);
+      const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         const error = new AuthError(AuthErrorCode.USER_EXISTS, { email });
         return { success: false, message: error.message, errorCode: error.code };
@@ -315,7 +309,7 @@ class ClientAuth {
       // Create user with optional password
       const isPasswordless = !password || password.length === 0;
       const passwordHash = isPasswordless ? null : await hashPassword(password);
-      const user = await clientStorage.createUser({
+      const user = await storage.createUser({
         email,
         passwordHash,
         firstName: firstName || null,
@@ -325,7 +319,7 @@ class ClientAuth {
       });
 
       // Set as current user
-      await clientStorage.setCurrentUserId(user.id);
+      await storage.setCurrentUserId(user.id);
 
       // Set session timestamp
       await this.setSessionTimestamp(isPasswordless);
@@ -356,7 +350,7 @@ class ClientAuth {
   async login(email: string, password: string): Promise<AuthResponse> {
     try {
       // Find user by email
-      const user = await clientStorage.getUserByEmail(email);
+      const user = await storage.getUserByEmail(email);
       if (!user) {
         logSecurityEvent('LOGIN_FAILED', {
           email,
@@ -369,7 +363,7 @@ class ClientAuth {
       // If user has no password set, allow password-less login
       if (!user.passwordHash) {
         // Set as current user
-        await clientStorage.setCurrentUserId(user.id);
+        await storage.setCurrentUserId(user.id);
 
         // Set session timestamp for password-less account
         await this.setSessionTimestamp(true);
@@ -398,11 +392,11 @@ class ClientAuth {
       // rehash with the new algorithm
       if (needsRehash) {
         const newHash = await hashPassword(password);
-        await clientStorage.updateUser(user.id, { passwordHash: newHash });
+        await storage.updateUser(user.id, { passwordHash: newHash });
       }
 
       // Set as current user
-      await clientStorage.setCurrentUserId(user.id);
+      await storage.setCurrentUserId(user.id);
 
       // Set session timestamp for password-protected account
       await this.setSessionTimestamp(false);
@@ -432,9 +426,9 @@ class ClientAuth {
 
   async logout(): Promise<AuthResponse> {
     try {
-      const userId = await clientStorage.getCurrentUserId();
+      const userId = await storage.getCurrentUserId();
       logSecurityEvent('LOGOUT', { userId });
-      await clientStorage.clearCurrentUser();
+      await storage.clearCurrentUser();
       await this.clearSessionInfo();
       // Also sign out from Google if applicable
       await this.signOutFromGoogle();
@@ -448,13 +442,13 @@ class ClientAuth {
 
   async getCurrentUser(): Promise<Omit<User, 'passwordHash'> | null> {
     try {
-      const userId = await clientStorage.getCurrentUserId();
+      const userId = await storage.getCurrentUserId();
       if (!userId) return null;
 
-      const user = await clientStorage.getUser(userId);
+      const user = await storage.getUser(userId);
       if (!user) {
         // Clear invalid session
-        await clientStorage.clearCurrentUser();
+        await storage.clearCurrentUser();
         await this.clearSessionInfo();
         return null;
       }
@@ -465,7 +459,7 @@ class ClientAuth {
           userId: user.id,
           email: user.email,
         });
-        await clientStorage.clearCurrentUser();
+        await storage.clearCurrentUser();
         await this.clearSessionInfo();
         return null;
       }
@@ -485,7 +479,7 @@ class ClientAuth {
 
   async updateProfile(updates: Partial<User>): Promise<AuthResponse> {
     try {
-      const userId = await clientStorage.getCurrentUserId();
+      const userId = await storage.getCurrentUserId();
       if (!userId) {
         const error = new AuthError(AuthErrorCode.NOT_AUTHENTICATED);
         return { success: false, message: error.message, errorCode: error.code };
@@ -494,7 +488,7 @@ class ClientAuth {
       // Don't allow updating password through this method
       const { passwordHash: _passwordHash, ...safeUpdates } = updates as any;
 
-      const updatedUser = await clientStorage.updateUser(userId, safeUpdates);
+      const updatedUser = await storage.updateUser(userId, safeUpdates);
       if (!updatedUser) {
         const error = new AuthError(AuthErrorCode.USER_NOT_FOUND, { userId });
         return { success: false, message: error.message, errorCode: error.code };
@@ -517,13 +511,13 @@ class ClientAuth {
 
   async changePassword(currentPassword: string, newPassword: string): Promise<AuthResponse> {
     try {
-      const userId = await clientStorage.getCurrentUserId();
+      const userId = await storage.getCurrentUserId();
       if (!userId) {
         const error = new AuthError(AuthErrorCode.NOT_AUTHENTICATED);
         return { success: false, message: error.message, errorCode: error.code };
       }
 
-      const user = await clientStorage.getUser(userId);
+      const user = await storage.getUser(userId);
       if (!user) {
         const error = new AuthError(AuthErrorCode.USER_NOT_FOUND, { userId });
         return { success: false, message: error.message, errorCode: error.code };
@@ -539,7 +533,7 @@ class ClientAuth {
 
         // Set password
         const newHash = await hashPassword(newPassword);
-        const updatedUser = await clientStorage.updateUser(userId, { passwordHash: newHash });
+        const updatedUser = await storage.updateUser(userId, { passwordHash: newHash });
         if (!updatedUser) {
           const error = new AuthError(AuthErrorCode.PASSWORD_CHANGE_FAILED);
           return { success: false, message: error.message, errorCode: error.code };
@@ -579,7 +573,7 @@ class ClientAuth {
 
       // Update password with new PBKDF2 hash
       const newHash = await hashPassword(newPassword);
-      const updatedUser = await clientStorage.updateUser(userId, { passwordHash: newHash });
+      const updatedUser = await storage.updateUser(userId, { passwordHash: newHash });
       if (!updatedUser) {
         const error = new AuthError(AuthErrorCode.PASSWORD_CHANGE_FAILED);
         return { success: false, message: error.message, errorCode: error.code };
@@ -608,7 +602,7 @@ class ClientAuth {
 
   async getAllUsers(): Promise<(Omit<User, 'passwordHash'> & { hasPassword: boolean })[]> {
     try {
-      const users = await clientStorage.getAllUsers();
+      const users = await storage.getAllUsers();
 
       // Return users without password hashes, but include hasPassword flag
       return users.map((user) => {
@@ -623,7 +617,7 @@ class ClientAuth {
 
   async hasPassword(userId: string): Promise<boolean> {
     try {
-      const user = await clientStorage.getUser(userId);
+      const user = await storage.getUser(userId);
       return !!user?.passwordHash;
     } catch (error) {
       logError('hasPassword', error, { userId });
@@ -634,7 +628,7 @@ class ClientAuth {
   async loginPasswordless(email: string): Promise<AuthResponse> {
     try {
       // Find user by email
-      const user = await clientStorage.getUserByEmail(email);
+      const user = await storage.getUserByEmail(email);
       if (!user) {
         logSecurityEvent('PASSWORDLESS_LOGIN_FAILED', {
           email,
@@ -656,7 +650,7 @@ class ClientAuth {
       }
 
       // Set as current user
-      await clientStorage.setCurrentUserId(user.id);
+      await storage.setCurrentUserId(user.id);
 
       // Set session timestamp for password-less account
       await this.setSessionTimestamp(true);
@@ -729,12 +723,12 @@ class ClientAuth {
       }
 
       // Check if user already exists in our database
-      let user = await clientStorage.getUserByEmail(firebaseUser.email);
+      let user = await storage.getUserByEmail(firebaseUser.email);
 
       if (user) {
         // User exists, update profile image if changed
         if (firebaseUser.photoURL && user.profileImageUrl !== firebaseUser.photoURL) {
-          const updatedUser = await clientStorage.updateUser(user.id, {
+          const updatedUser = await storage.updateUser(user.id, {
             profileImageUrl: firebaseUser.photoURL,
           });
           if (updatedUser) {
@@ -754,7 +748,7 @@ class ClientAuth {
         const firstName = nameParts[0] || null;
         const lastName = nameParts.slice(1).join(' ') || null;
 
-        user = await clientStorage.createUser({
+        user = await storage.createUser({
           email: firebaseUser.email,
           passwordHash: null, // Google users don't have a password
           firstName,
@@ -782,7 +776,7 @@ class ClientAuth {
       }
 
       // Set as current user
-      await clientStorage.setCurrentUserId(user.id);
+      await storage.setCurrentUserId(user.id);
 
       // Set session timestamp for Google accounts.
       // Google-authenticated users are treated similarly to password-less accounts with a 24-hour

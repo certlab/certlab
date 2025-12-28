@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Trophy, X, Star } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 
 /**
  * Base64-encoded achievement sound effect.
@@ -79,7 +79,7 @@ export function AchievementNotification({ userId, onClose }: AchievementNotifica
         newAchievements.map(async (achievement) => {
           try {
             // Update the user badge to mark it as notified
-            await clientStorage.updateUserBadge(achievement.id, { isNotified: true });
+            await storage.updateUserBadge(achievement.id, { isNotified: true });
           } catch (err) {
             console.warn(`Error notifying badge ${achievement.badgeId}:`, err);
           }
