@@ -46,6 +46,7 @@ import type {
   UserQuestProgress,
   UserTitle,
   UserDailyReward,
+  DailyReward,
 } from '@shared/schema';
 
 /**
@@ -994,20 +995,18 @@ class StorageRouter implements IClientStorage {
   }
 
   // ==========================================
-  // Daily Rewards (not in IClientStorage interface)
+  // Daily Rewards
   // ==========================================
-  // TODO: These methods should be added to IClientStorage interface
 
-  async getDailyRewards(): Promise<any[]> {
-    // TODO: Implement proper method in storage interface
-    console.warn('[StorageRouter] getDailyRewards not yet implemented - returning empty array');
-    return [];
+  async getDailyRewards(): Promise<DailyReward[]> {
+    return this.executeStorageOperation((s) => s.getDailyRewards(), 'getDailyRewards');
   }
 
-  async getUserDailyRewards(userId: string, tenantId: number): Promise<any[]> {
-    // TODO: Implement proper method in storage interface
-    console.warn('[StorageRouter] getUserDailyRewards not yet implemented - returning empty array');
-    return [];
+  async getUserDailyRewards(userId: string, tenantId: number): Promise<UserDailyReward[]> {
+    return this.executeStorageOperation(
+      (s) => s.getUserDailyRewards(userId, tenantId),
+      'getUserDailyRewards'
+    );
   }
 }
 
