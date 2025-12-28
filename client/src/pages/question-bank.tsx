@@ -55,7 +55,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { queryKeys, invalidateStaticData } from '@/lib/queryClient';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import type { Question, Category, Subcategory, QuestionOption } from '@shared/schema';
@@ -113,7 +113,7 @@ export default function QuestionBankPage() {
   const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<Question[]>({
     queryKey: queryKeys.questions.byTenant(tenantId),
     queryFn: async () => {
-      return await clientStorage.getQuestionsByTenant(tenantId ?? 1);
+      return await storage.getQuestionsByTenant(tenantId ?? 1);
     },
     enabled: !!currentUser && tenantId !== undefined,
   });
@@ -153,7 +153,7 @@ export default function QuestionBankPage() {
         .map((t) => t.trim())
         .filter(Boolean);
 
-      return await clientStorage.createQuestion({
+      return await storage.createQuestion({
         tenantId: tenantId ?? 1,
         categoryId: data.categoryId,
         subcategoryId: data.subcategoryId,
@@ -209,7 +209,7 @@ export default function QuestionBankPage() {
         .map((t) => t.trim())
         .filter(Boolean);
 
-      return await clientStorage.updateQuestion(id, {
+      return await storage.updateQuestion(id, {
         categoryId: data.categoryId,
         subcategoryId: data.subcategoryId,
         text: data.text,
@@ -243,7 +243,7 @@ export default function QuestionBankPage() {
   // Delete question mutation
   const deleteQuestionMutation = useMutation({
     mutationFn: async (questionId: number) => {
-      await clientStorage.deleteQuestion(questionId);
+      await storage.deleteQuestion(questionId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api', 'question-bank', tenantId] });

@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { generateStudyNotes } from '@/lib/study-notes';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { queryKeys } from '@/lib/queryClient';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { useAuth } from '@/lib/auth-provider';
 import { safeMarkdownToHtml, generateStudyNotesPdfHtml } from '@/lib/sanitize';
 import { EnhancedExplanation } from '@/components/EnhancedExplanation';
@@ -114,7 +114,7 @@ export default function Review() {
           .filter(Boolean)
           .join(', ') || 'Mixed Quiz';
 
-      const note = await clientStorage.createStudyNote({
+      const note = await storage.createStudyNote({
         userId: currentUser.id,
         tenantId: tenantId,
         quizId: quiz.id,

@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/lib/auth-provider';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { queryClient, queryKeys } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Clock, FileText, Trophy, AlertCircle, CheckCircle } from 'lucide-react';
@@ -32,11 +32,11 @@ interface UserAttemptWithTest extends PracticeTestAttempt {
 // Helper function to start a practice test
 async function startPracticeTest(userId: string, test: PracticeTest): Promise<Quiz> {
   // Get current user to determine tenant
-  const user = await clientStorage.getUser(userId);
+  const user = await storage.getUser(userId);
   const tenantId = user?.tenantId || 1;
 
   // Check if there are questions available for this test
-  const questions = await clientStorage.getQuestionsByCategories(
+  const questions = await storage.getQuestionsByCategories(
     test.categoryIds,
     undefined,
     undefined,
@@ -48,7 +48,7 @@ async function startPracticeTest(userId: string, test: PracticeTest): Promise<Qu
   }
 
   // Create a quiz based on the practice test configuration
-  const quiz = await clientStorage.createQuiz({
+  const quiz = await storage.createQuiz({
     userId: userId,
     tenantId: tenantId,
     title: test.name,
@@ -60,7 +60,7 @@ async function startPracticeTest(userId: string, test: PracticeTest): Promise<Qu
   });
 
   // Create a practice test attempt
-  await clientStorage.createPracticeTestAttempt({
+  await storage.createPracticeTestAttempt({
     userId: userId,
     testId: test.id,
     quizId: quiz.id,
@@ -101,7 +101,7 @@ export default function PracticeTestMode() {
       }
 
       // Get the practice test details
-      const test = await clientStorage.getPracticeTest(testId);
+      const test = await storage.getPracticeTest(testId);
       if (!test) {
         throw new Error('Practice test not found');
       }
@@ -258,7 +258,7 @@ export default function PracticeTestMode() {
                 setIsCreating(true);
                 try {
                   // Create a quick practice test on-demand
-                  const test = await clientStorage.createPracticeTest({
+                  const test = await storage.createPracticeTest({
                     name: `Quick ${categories.find((c) => c.id.toString() === selectedTest)?.name} Test`,
                     description: 'Quick practice test',
                     categoryIds: [parseInt(selectedTest)],

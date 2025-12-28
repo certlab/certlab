@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth-provider';
 import { queryKeys, queryClient } from '@/lib/queryClient';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
 import { BookOpen, Brain } from 'lucide-react';
 import type { UserStats, Category } from '@shared/schema';
@@ -46,10 +46,10 @@ export default function DashboardHero() {
 
       const categoryIds = categories.slice(0, 2).map((c) => c.id);
       const questionCount = 15;
-      const tokenCost = clientStorage.calculateQuizTokenCost(questionCount);
+      const tokenCost = storage.calculateQuizTokenCost(questionCount);
 
       // Check and consume tokens
-      const tokenResult = await clientStorage.consumeTokens(currentUser.id, tokenCost);
+      const tokenResult = await storage.consumeTokens(currentUser.id, tokenCost);
 
       if (!tokenResult.success) {
         toast({
@@ -61,7 +61,7 @@ export default function DashboardHero() {
       }
 
       // Create the quiz
-      const quiz = await clientStorage.createQuiz({
+      const quiz = await storage.createQuiz({
         userId: currentUser.id,
         categoryIds,
         questionCount,

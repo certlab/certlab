@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-provider';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
 import { queryKeys } from '@/lib/queryClient';
 import {
@@ -27,7 +27,7 @@ export default function TenantSwitcher() {
   const { data: tenants = [], isLoading } = useQuery<Tenant[]>({
     queryKey: queryKeys.tenants.all(),
     queryFn: async () => {
-      return await clientStorage.getTenants();
+      return await storage.getTenants();
     },
   });
 
@@ -36,7 +36,7 @@ export default function TenantSwitcher() {
     queryKey: queryKeys.tenants.detail(user?.tenantId),
     queryFn: async () => {
       if (!user?.tenantId) return undefined;
-      return await clientStorage.getTenant(user.tenantId);
+      return await storage.getTenant(user.tenantId);
     },
     enabled: !!user?.tenantId,
   });
@@ -45,7 +45,7 @@ export default function TenantSwitcher() {
     if (tenantId === user?.tenantId || isSwitching) return;
 
     // Validate that the target tenant is active
-    const targetTenant = tenants.find(t => t.id === tenantId);
+    const targetTenant = tenants.find((t) => t.id === tenantId);
     if (!targetTenant?.isActive) {
       toast({
         title: 'Cannot switch to inactive tenant',
@@ -58,13 +58,13 @@ export default function TenantSwitcher() {
     setIsSwitching(true);
     try {
       await switchTenant(tenantId);
-      
+
       // Invalidate all queries to refetch with new tenant context
       queryClient.invalidateQueries();
-      
+
       toast({
         title: 'Tenant switched',
-        description: `You are now viewing ${tenants.find(t => t.id === tenantId)?.name || 'the new tenant'}`,
+        description: `You are now viewing ${tenants.find((t) => t.id === tenantId)?.name || 'the new tenant'}`,
       });
     } catch (error) {
       console.error('Failed to switch tenant:', error);
@@ -105,7 +105,7 @@ export default function TenantSwitcher() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {tenants
-          .filter(tenant => tenant.isActive)
+          .filter((tenant) => tenant.isActive)
           .map((tenant) => (
             <DropdownMenuItem
               key={tenant.id}
@@ -127,9 +127,7 @@ export default function TenantSwitcher() {
                     )}
                   </div>
                 </div>
-                {tenant.id === user.tenantId && (
-                  <Check className="w-4 h-4 text-primary" />
-                )}
+                {tenant.id === user.tenantId && <Check className="w-4 h-4 text-primary" />}
               </div>
             </DropdownMenuItem>
           ))}

@@ -43,7 +43,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { queryKeys } from '@/lib/queryClient';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { safeMarkdownToHtml, generateStudyNotesPdfHtml } from '@/lib/sanitize';
@@ -63,7 +63,7 @@ export default function StudyNotesPage() {
     queryKey: queryKeys.studyNotes.all(currentUser?.id),
     queryFn: async () => {
       if (!currentUser) return [];
-      return await clientStorage.getUserStudyNotes(currentUser.id, tenantId);
+      return await storage.getUserStudyNotes(currentUser.id, tenantId);
     },
     enabled: !!currentUser,
   });
@@ -74,7 +74,7 @@ export default function StudyNotesPage() {
 
   const deleteNoteMutation = useMutation({
     mutationFn: async (noteId: number) => {
-      await clientStorage.deleteStudyNote(noteId);
+      await storage.deleteStudyNote(noteId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.studyNotes.all(currentUser?.id) });

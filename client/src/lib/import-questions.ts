@@ -4,7 +4,7 @@
  */
 
 import yaml from 'js-yaml';
-import { clientStorage } from './client-storage';
+import { storage } from './storage-factory';
 import type { Subcategory } from '@shared/schema';
 import { questionOptionsSchema, validateCorrectAnswer } from '@shared/schema';
 
@@ -113,11 +113,11 @@ export async function importQuestionsFromYAML(
     });
 
     // Find or create category
-    const existingCategories = await clientStorage.getCategories(tenantId);
+    const existingCategories = await storage.getCategories(tenantId);
     let category = existingCategories.find((c) => c.name === data.category);
 
     if (!category) {
-      category = await clientStorage.createCategory({
+      category = await storage.createCategory({
         tenantId,
         name: data.category,
         description: data.description || `${data.category} certification questions`,
@@ -128,7 +128,7 @@ export async function importQuestionsFromYAML(
 
     // Get or create subcategories
     const subcategoryMap = new Map<string, Subcategory>();
-    const existingSubcategories = await clientStorage.getSubcategories(category.id, tenantId);
+    const existingSubcategories = await storage.getSubcategories(category.id, tenantId);
 
     const uniqueSubcategories = Array.from(new Set(data.questions.map((q) => q.subcategory)));
 
@@ -143,7 +143,7 @@ export async function importQuestionsFromYAML(
       let subcat = existingSubcategories.find((s) => s.name === subcatName);
 
       if (!subcat) {
-        subcat = await clientStorage.createSubcategory({
+        subcat = await storage.createSubcategory({
           tenantId,
           categoryId: category.id,
           name: subcatName,
@@ -197,7 +197,7 @@ export async function importQuestionsFromYAML(
             continue;
           }
 
-          await clientStorage.createQuestion({
+          await storage.createQuestion({
             tenantId,
             categoryId: category.id,
             subcategoryId: subcategory.id,
@@ -296,17 +296,17 @@ export async function importFromFile(
  * Clear all questions for a specific category (useful before re-importing)
  */
 export async function clearCategoryQuestions(categoryName: string): Promise<number> {
-  const categories = await clientStorage.getCategories();
+  const categories = await storage.getCategories();
   const category = categories.find((c) => c.name === categoryName);
 
   if (!category) {
     return 0;
   }
 
-  const questions = await clientStorage.getQuestionsByCategories([category.id]);
+  const questions = await storage.getQuestionsByCategories([category.id]);
 
   for (const question of questions) {
-    await clientStorage.deleteQuestion(question.id);
+    await storage.deleteQuestion(question.id);
   }
 
   return questions.length;

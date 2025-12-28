@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth-provider';
 import { useNavigate } from 'react-router-dom';
 import { queryClient, queryKeys } from '@/lib/queryClient';
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
 import { Play, RotateCcw, Brain, Clock, TrendingUp, BookOpen } from 'lucide-react';
 import type { Quiz, Category, UserStats } from '@shared/schema';
@@ -37,10 +37,10 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
     mutationFn: async (quizData: any) => {
       if (!currentUser?.id) throw new Error('Not authenticated');
 
-      const tokenCost = clientStorage.calculateQuizTokenCost(quizData.questionCount);
+      const tokenCost = storage.calculateQuizTokenCost(quizData.questionCount);
 
       // Check and consume tokens
-      const tokenResult = await clientStorage.consumeTokens(currentUser.id, tokenCost);
+      const tokenResult = await storage.consumeTokens(currentUser.id, tokenCost);
 
       if (!tokenResult.success) {
         throw new Error(
@@ -49,7 +49,7 @@ export default function QuickStartMode({ onToggleMode }: QuickStartModeProps) {
       }
 
       // Create the quiz
-      const quiz = await clientStorage.createQuiz({
+      const quiz = await storage.createQuiz({
         userId: currentUser.id,
         ...quizData,
       });
