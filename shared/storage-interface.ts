@@ -43,6 +43,7 @@ import type {
   UserQuestProgress,
   UserTitle,
   UserDailyReward,
+  DailyReward,
 } from './schema';
 
 /**
@@ -681,12 +682,18 @@ export interface IClientStorage extends IStorageAdapter {
   /** Get active quests (not completed) */
   getActiveQuests(): Promise<Quest[]>;
 
+  /** Get quests filtered by type (daily, weekly, monthly, special) */
+  getQuestsByType(type: string): Promise<Quest[]>;
+
   /** Get user's progress for a specific quest */
   getUserQuestProgressByQuest(
     userId: string,
     questId: number,
     tenantId: number
   ): Promise<UserQuestProgress | null>;
+
+  /** Get all quest progress for a user */
+  getUserQuestProgress(userId: string, tenantId: number): Promise<UserQuestProgress[]>;
 
   /** Update user's progress on a quest */
   updateUserQuestProgress(
@@ -724,6 +731,12 @@ export interface IClientStorage extends IStorageAdapter {
   // ==========================================
   // Daily Rewards
   // ==========================================
+
+  /** Get all daily rewards configuration */
+  getDailyRewards(): Promise<DailyReward[]>;
+
+  /** Get user's claimed daily rewards */
+  getUserDailyRewards(userId: string, tenantId: number): Promise<UserDailyReward[]>;
 
   /** Check if user has claimed daily reward for a specific day */
   hasClaimedDailyReward(userId: string, day: number): Promise<boolean>;

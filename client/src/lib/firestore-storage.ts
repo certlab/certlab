@@ -1884,17 +1884,17 @@ class FirestoreStorage implements IClientStorage {
     try {
       const allQuests = await this.getQuests();
       const now = new Date();
-      
+
       return allQuests.filter((quest) => {
         // Include quest if it's active
         if (!quest.isActive) return false;
-        
+
         // Check if quest has expired
         if (quest.validUntil) {
           const expiryDate = new Date(quest.validUntil);
           if (expiryDate < now) return false;
         }
-        
+
         return true;
       });
     } catch (error) {
@@ -1931,9 +1931,9 @@ class FirestoreStorage implements IClientStorage {
         'questProgress',
         questId.toString()
       );
-      
+
       if (!progress) return null;
-      
+
       return convertTimestamps(progress);
     } catch (error) {
       logError('getUserQuestProgressByQuest', error);
@@ -1968,7 +1968,7 @@ class FirestoreStorage implements IClientStorage {
     try {
       const questIdStr = questId.toString();
       const existing = await this.getUserQuestProgressByQuest(userId, questId, tenantId);
-      
+
       if (existing) {
         // Update existing progress
         await updateUserDocument(userId, 'questProgress', questIdStr, {
@@ -1977,8 +1977,9 @@ class FirestoreStorage implements IClientStorage {
         });
       } else {
         // Create new progress document
-        await setUserDocument(userId, 'questProgress', questIdStr, {
-          id: Date.now(), // Generate a numeric ID
+        const progressId = questId.toString();
+        await setUserDocument(userId, 'questProgress', progressId, {
+          id: questId, // Use questId as the numeric ID for consistency
           userId,
           tenantId,
           questId,
@@ -2051,16 +2052,17 @@ class FirestoreStorage implements IClientStorage {
       const existing = await getUserDocuments<UserTitle>(userId, 'titles', [
         where('title', '==', title),
       ]);
-      
+
       if (existing.length > 0) {
         // Title already unlocked
         return;
       }
-      
-      // Create new title document with timestamp-based ID
-      const titleId = Date.now().toString();
+
+      // Create new title document with generated ID and timestamp-based numeric id
+      const titleId = generateId();
+      const numericId = Date.now();
       await setUserDocument(userId, 'titles', titleId, {
-        id: Date.now(),
+        id: numericId,
         userId,
         tenantId,
         title,
@@ -2112,7 +2114,9 @@ class FirestoreStorage implements IClientStorage {
    */
   async getDailyRewards(): Promise<DailyReward[]> {
     try {
-      const rewards = await getSharedDocuments<DailyReward>('dailyRewards', [orderBy('day', 'asc')]);
+      const rewards = await getSharedDocuments<DailyReward>('dailyRewards', [
+        orderBy('day', 'asc'),
+      ]);
       return rewards;
     } catch (error) {
       logError('getDailyRewards', error);
@@ -2160,17 +2164,17 @@ class FirestoreStorage implements IClientStorage {
       if (alreadyClaimed) {
         throw new Error(`Daily reward for day ${day} has already been claimed`);
       }
-      
+
       // Get the reward configuration
       const allRewards = await this.getDailyRewards();
       const rewardConfig = allRewards.find((r) => r.day === day);
-      
+
       if (!rewardConfig) {
         throw new Error(`No daily reward configured for day ${day}`);
       }
-      
+
       // Create claim record
-      const claimId = Date.now().toString();
+      const claimId = generateId();
       const claim: UserDailyReward = {
         id: Date.now(),
         userId,
@@ -2179,9 +2183,9 @@ class FirestoreStorage implements IClientStorage {
         claimedAt: new Date(),
         rewardData: rewardConfig.reward,
       };
-      
+
       await setUserDocument(userId, 'dailyRewardClaims', claimId, claim);
-      
+
       return claim;
     } catch (error) {
       logError('claimDailyReward', error);
