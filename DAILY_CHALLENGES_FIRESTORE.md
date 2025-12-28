@@ -235,10 +235,11 @@ Extended to support daily login tracking and selected titles.
 ### Running the Seed Script
 
 ```bash
-# Install dependencies (if not already installed)
-npm install firebase-admin
+# Install project dependencies (firebase-admin should already be in package.json)
+npm install
 
 # Run the seed script
+export FIREBASE_SERVICE_ACCOUNT_KEY="$(cat firebase-service-account.json)"
 npx tsx scripts/seed-gamification-data.ts
 ```
 

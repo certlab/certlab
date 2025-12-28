@@ -1,13 +1,13 @@
 /**
  * Seed Gamification Data to Firestore
- * 
+ *
  * This script seeds the Firestore database with:
  * - Quests (daily, weekly, monthly)
  * - Daily rewards (7-day cycle)
- * 
+ *
  * Usage:
- *   npm run seed:gamification
- * 
+ *   npx tsx scripts/seed-gamification-data.ts
+ *
  * Prerequisites:
  * - Firebase credentials configured in environment
  * - Admin SDK initialized
@@ -18,8 +18,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin SDK
 if (getApps().length === 0) {
-  // For local development, use service account key
-  // For production, use application default credentials
+  // Use service account key from environment variable
   if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
     initializeApp({
@@ -52,7 +51,7 @@ const quests = [
       points: 50,
     },
     isActive: true,
-    validFrom: new Date('2024-01-01'),
+    validFrom: new Date(),
     validUntil: null,
     createdAt: new Date(),
   },
@@ -69,7 +68,7 @@ const quests = [
       points: 75,
     },
     isActive: true,
-    validFrom: new Date('2024-01-01'),
+    validFrom: new Date(),
     validUntil: null,
     createdAt: new Date(),
   },
@@ -87,11 +86,11 @@ const quests = [
       title: 'Perfectionist',
     },
     isActive: true,
-    validFrom: new Date('2024-01-01'),
+    validFrom: new Date(),
     validUntil: null,
     createdAt: new Date(),
   },
-  
+
   // Weekly Quests
   {
     id: 4,
@@ -107,7 +106,7 @@ const quests = [
       title: 'Study Warrior',
     },
     isActive: true,
-    validFrom: new Date('2024-01-01'),
+    validFrom: new Date(),
     validUntil: null,
     createdAt: new Date(),
   },
@@ -124,7 +123,7 @@ const quests = [
       points: 300,
     },
     isActive: true,
-    validFrom: new Date('2024-01-01'),
+    validFrom: new Date(),
     validUntil: null,
     createdAt: new Date(),
   },
@@ -142,11 +141,11 @@ const quests = [
       title: 'Streak Champion',
     },
     isActive: true,
-    validFrom: new Date('2024-01-01'),
+    validFrom: new Date(),
     validUntil: null,
     createdAt: new Date(),
   },
-  
+
   // Monthly Quests
   {
     id: 7,
@@ -162,7 +161,7 @@ const quests = [
       title: 'Quiz Master',
     },
     isActive: true,
-    validFrom: new Date('2024-01-01'),
+    validFrom: new Date(),
     validUntil: null,
     createdAt: new Date(),
   },
@@ -180,7 +179,7 @@ const quests = [
       title: 'Knowledge Guru',
     },
     isActive: true,
-    validFrom: new Date('2024-01-01'),
+    validFrom: new Date(),
     validUntil: null,
     createdAt: new Date(),
   },
@@ -198,7 +197,7 @@ const quests = [
       title: 'Perfection Seeker',
     },
     isActive: true,
-    validFrom: new Date('2024-01-01'),
+    validFrom: new Date(),
     validUntil: null,
     createdAt: new Date(),
   },
@@ -272,14 +271,14 @@ const dailyRewards = [
  */
 async function seedQuests() {
   console.log('Seeding quests...');
-  
+
   const batch = db.batch();
-  
+
   for (const quest of quests) {
     const questRef = db.collection('quests').doc(quest.id.toString());
     batch.set(questRef, quest);
   }
-  
+
   await batch.commit();
   console.log(`✓ Seeded ${quests.length} quests`);
 }
@@ -289,14 +288,14 @@ async function seedQuests() {
  */
 async function seedDailyRewards() {
   console.log('Seeding daily rewards...');
-  
+
   const batch = db.batch();
-  
+
   for (const reward of dailyRewards) {
     const rewardRef = db.collection('dailyRewards').doc(reward.id.toString());
     batch.set(rewardRef, reward);
   }
-  
+
   await batch.commit();
   console.log(`✓ Seeded ${dailyRewards.length} daily rewards`);
 }
@@ -307,17 +306,17 @@ async function seedDailyRewards() {
 async function main() {
   try {
     console.log('Starting gamification data seeding...\n');
-    
+
     await seedQuests();
     await seedDailyRewards();
-    
+
     console.log('\n✓ All gamification data seeded successfully!');
     console.log('\nSummary:');
-    console.log(`  - ${quests.filter(q => q.type === 'daily').length} daily quests`);
-    console.log(`  - ${quests.filter(q => q.type === 'weekly').length} weekly quests`);
-    console.log(`  - ${quests.filter(q => q.type === 'monthly').length} monthly quests`);
+    console.log(`  - ${quests.filter((q) => q.type === 'daily').length} daily quests`);
+    console.log(`  - ${quests.filter((q) => q.type === 'weekly').length} weekly quests`);
+    console.log(`  - ${quests.filter((q) => q.type === 'monthly').length} monthly quests`);
     console.log(`  - ${dailyRewards.length} daily rewards (7-day cycle)`);
-    
+
     process.exit(0);
   } catch (error) {
     console.error('Error seeding gamification data:', error);
