@@ -392,11 +392,11 @@ export default function Header() {
                             <div className="grid grid-cols-2 gap-3">
                               <NavigationMenuLink
                                 className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                                  isActivePath('/accessibility')
+                                  isActivePath('/app/accessibility')
                                     ? 'bg-primary/10 border-2 border-primary'
                                     : 'hover:bg-accent/10'
                                 }`}
-                                onClick={() => navigate('/accessibility')}
+                                onClick={() => navigate('/app/accessibility')}
                               >
                                 <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                   <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
@@ -410,11 +410,11 @@ export default function Header() {
                               </NavigationMenuLink>
                               <NavigationMenuLink
                                 className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                                  isActivePath('/ui-structure')
+                                  isActivePath('/app/ui-structure')
                                     ? 'bg-primary/10 border-2 border-primary'
                                     : 'hover:bg-accent/10'
                                 }`}
-                                onClick={() => navigate('/ui-structure')}
+                                onClick={() => navigate('/app/ui-structure')}
                               >
                                 <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                   <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
