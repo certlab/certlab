@@ -315,13 +315,13 @@ export default function Dashboard() {
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Study Timer Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-foreground">Study Timer</h2>
-            <p className="text-sm text-muted-foreground">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-foreground">Study Timer</h2>
+            <p className="text-xs text-muted-foreground">
               Use the Pomodoro technique to boost your focus and productivity
             </p>
           </div>
-          <StudyTimer />
+          <StudyTimer compact />
         </div>
 
         {/* Learning Velocity Section */}
