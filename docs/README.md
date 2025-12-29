@@ -22,9 +22,16 @@ Technical design and system architecture documentation:
 - **[firebase-status.md](architecture/firebase-status.md)** - Firebase integration implementation status
 
 ### Features (`features/`)
-Feature-specific documentation:
+Feature-specific documentation and implementation details:
 
+- **[README.md](features/README.md)** - 📋 Feature documentation index
 - **[tenant-switching.md](features/tenant-switching.md)** - Multi-tenancy feature documentation
+- **Analytics & Insights** - Analytics, performance insights, smart recommendations
+- **Study Features** - Study timer, Pomodoro integration
+- **Gamification** - Daily challenges, rewards, marketplace
+- **UI/UX** - Dashboard redesign, heatmap requirements
+
+See the [features/README.md](features/README.md) for a complete index of all feature documentation.
 
 ### Project Organization
 
