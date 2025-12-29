@@ -2654,6 +2654,292 @@ class FirestoreStorage implements IClientStorage {
       lastAttemptDate: null,
     };
   }
+
+  // ==========================================
+  // Study Timer Methods
+  // ==========================================
+
+  /**
+   * Get study timer settings for a user.
+   * @param userId - The user's unique identifier
+   * @returns Study timer settings or null if not found
+   */
+  async getStudyTimerSettings(userId: string): Promise<StudyTimerSettings | null> {
+    try {
+      const doc = await getUserDocument<StudyTimerSettings>(
+        userId,
+        'studyTimerSettings',
+        'default'
+      );
+      return doc ? convertTimestamps<StudyTimerSettings>(doc) : null;
+    } catch (error) {
+      logError('getStudyTimerSettings', error, { userId });
+      return null;
+    }
+  }
+
+  /**
+   * Save study timer settings for a user.
+   * @param settings - Partial settings to save (must include userId)
+   * @returns Updated settings
+   */
+  async saveStudyTimerSettings(settings: Partial<StudyTimerSettings>): Promise<StudyTimerSettings> {
+    try {
+      const userId = settings.userId || this.currentUserId;
+      if (!userId) throw new Error('User ID required');
+
+      const existing = await this.getStudyTimerSettings(userId);
+      const updatedSettings: StudyTimerSettings = {
+        id: existing?.id || 0,
+        userId,
+        tenantId: settings.tenantId || existing?.tenantId || 1,
+        workDuration: settings.workDuration ?? existing?.workDuration ?? 25,
+        breakDuration: settings.breakDuration ?? existing?.breakDuration ?? 5,
+        longBreakDuration: settings.longBreakDuration ?? existing?.longBreakDuration ?? 15,
+        sessionsUntilLongBreak:
+          settings.sessionsUntilLongBreak ?? existing?.sessionsUntilLongBreak ?? 4,
+        autoStartBreaks: settings.autoStartBreaks ?? existing?.autoStartBreaks ?? false,
+        autoStartWork: settings.autoStartWork ?? existing?.autoStartWork ?? false,
+        enableNotifications: settings.enableNotifications ?? existing?.enableNotifications ?? true,
+        enableSound: settings.enableSound ?? existing?.enableSound ?? true,
+        dailyGoalMinutes: settings.dailyGoalMinutes ?? existing?.dailyGoalMinutes ?? 120,
+        updatedAt: new Date(),
+      };
+
+      await setUserDocument(userId, 'studyTimerSettings', 'default', updatedSettings);
+      return convertTimestamps(updatedSettings);
+    } catch (error) {
+      logError('saveStudyTimerSettings', error, { settings });
+      throw error;
+    }
+  }
+
+  /**
+   * Create a new study timer session.
+   * @param session - Partial session data (must include userId)
+   * @returns Created session
+   */
+  async createStudyTimerSession(session: Partial<StudyTimerSession>): Promise<StudyTimerSession> {
+    try {
+      const userId = session.userId || this.currentUserId;
+      if (!userId) throw new Error('User ID required');
+
+      const id = Date.now();
+      const newSession: StudyTimerSession = {
+        id,
+        userId,
+        tenantId: session.tenantId || 1,
+        sessionType: session.sessionType || 'work',
+        duration: session.duration || 25,
+        startedAt: session.startedAt || new Date(),
+        completedAt: session.completedAt || null,
+        isCompleted: session.isCompleted ?? false,
+        isPaused: session.isPaused ?? false,
+        pausedAt: session.pausedAt || null,
+        totalPausedTime: session.totalPausedTime || 0,
+        categoryId: session.categoryId || null,
+        notes: session.notes || null,
+      };
+
+      await setUserDocument(userId, 'studyTimerSessions', id.toString(), newSession);
+      return convertTimestamps(newSession);
+    } catch (error) {
+      logError('createStudyTimerSession', error, { session });
+      throw error;
+    }
+  }
+
+  /**
+   * Update an existing study timer session.
+   * @param sessionId - The session ID
+   * @param updates - Partial session updates
+   * @returns Updated session
+   */
+  async updateStudyTimerSession(
+    sessionId: number,
+    updates: Partial<StudyTimerSession>
+  ): Promise<StudyTimerSession> {
+    try {
+      const userId = this.currentUserId;
+      if (!userId) throw new Error('User ID required');
+
+      await updateUserDocument(userId, 'studyTimerSessions', sessionId.toString(), updates);
+      const session = await getUserDocument<StudyTimerSession>(
+        userId,
+        'studyTimerSessions',
+        sessionId.toString()
+      );
+      if (!session) throw new Error('Session not found after update');
+      return convertTimestamps(session);
+    } catch (error) {
+      logError('updateStudyTimerSession', error, { sessionId, updates });
+      throw error;
+    }
+  }
+
+  /**
+   * Get study timer sessions within a date range.
+   * @param userId - The user's unique identifier
+   * @param startDate - Start of date range
+   * @param endDate - End of date range
+   * @returns Array of sessions within the date range
+   */
+  async getStudyTimerSessionsByDateRange(
+    userId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<StudyTimerSession[]> {
+    try {
+      const allSessions = await getUserDocuments<StudyTimerSession>(userId, 'studyTimerSessions');
+
+      // Filter sessions by date range
+      const filtered = allSessions.filter((session) => {
+        if (!session.startedAt) return false;
+        const sessionDate =
+          session.startedAt instanceof Date ? session.startedAt : new Date(session.startedAt);
+        return sessionDate >= startDate && sessionDate <= endDate;
+      });
+
+      return filtered.map((s) => convertTimestamps<StudyTimerSession>(s));
+    } catch (error) {
+      logError('getStudyTimerSessionsByDateRange', error, { userId, startDate, endDate });
+      return [];
+    }
+  }
+
+  /**
+   * Get all study timer sessions for a user.
+   * @param userId - The user's unique identifier
+   * @returns Array of all sessions
+   */
+  async getStudyTimerSessions(userId: string): Promise<StudyTimerSession[]> {
+    try {
+      const sessions = await getUserDocuments<StudyTimerSession>(userId, 'studyTimerSessions');
+      return sessions.map((s) => convertTimestamps<StudyTimerSession>(s));
+    } catch (error) {
+      logError('getStudyTimerSessions', error, { userId });
+      return [];
+    }
+  }
+
+  /**
+   * Get study timer statistics for a user.
+   * @param userId - The user's unique identifier
+   * @returns Study timer statistics
+   */
+  async getStudyTimerStats(userId: string): Promise<StudyTimerStats> {
+    try {
+      const sessions = await this.getStudyTimerSessions(userId);
+      const completedSessions = sessions.filter((s) => s.isCompleted);
+
+      // Calculate today's minutes
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todaySessions = sessions.filter((s) => {
+        if (!s.startedAt) return false;
+        const sessionDate = s.startedAt instanceof Date ? s.startedAt : new Date(s.startedAt);
+        return sessionDate >= today;
+      });
+      const todayMinutes = todaySessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+
+      // Calculate week's minutes
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      weekAgo.setHours(0, 0, 0, 0);
+      const weekSessions = sessions.filter((s) => {
+        if (!s.startedAt) return false;
+        const sessionDate = s.startedAt instanceof Date ? s.startedAt : new Date(s.startedAt);
+        return sessionDate >= weekAgo;
+      });
+      const weekMinutes = weekSessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+
+      // Calculate month's minutes
+      const monthAgo = new Date();
+      monthAgo.setDate(monthAgo.getDate() - 30);
+      monthAgo.setHours(0, 0, 0, 0);
+      const monthSessions = sessions.filter((s) => {
+        if (!s.startedAt) return false;
+        const sessionDate = s.startedAt instanceof Date ? s.startedAt : new Date(s.startedAt);
+        return sessionDate >= monthAgo;
+      });
+      const monthMinutes = monthSessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+
+      // Calculate average session length
+      const averageSessionLength =
+        completedSessions.length > 0
+          ? completedSessions.reduce((sum, s) => sum + (s.duration || 0), 0) /
+            completedSessions.length
+          : 0;
+
+      // Calculate streaks (simplified - counting consecutive days with sessions)
+      const sortedSessions = [...sessions]
+        .filter((s) => s.startedAt)
+        .sort((a, b) => {
+          const dateA = a.startedAt instanceof Date ? a.startedAt : new Date(a.startedAt!);
+          const dateB = b.startedAt instanceof Date ? b.startedAt : new Date(b.startedAt!);
+          return dateB.getTime() - dateA.getTime();
+        });
+
+      let currentStreak = 0;
+      let longestStreak = 0;
+      let tempStreak = 0;
+      let lastDate: Date | null = null;
+
+      for (const session of sortedSessions) {
+        if (!session.startedAt) continue;
+        const sessionDate =
+          session.startedAt instanceof Date ? session.startedAt : new Date(session.startedAt);
+        const sessionDay = new Date(
+          sessionDate.getFullYear(),
+          sessionDate.getMonth(),
+          sessionDate.getDate()
+        );
+
+        if (!lastDate) {
+          tempStreak = 1;
+          lastDate = sessionDay;
+        } else {
+          const dayDiff = Math.floor(
+            (lastDate.getTime() - sessionDay.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (dayDiff === 1) {
+            tempStreak++;
+            lastDate = sessionDay;
+          } else if (dayDiff > 1) {
+            longestStreak = Math.max(longestStreak, tempStreak);
+            tempStreak = 1;
+            lastDate = sessionDay;
+          }
+        }
+      }
+
+      currentStreak = tempStreak;
+      longestStreak = Math.max(longestStreak, currentStreak);
+
+      return {
+        todayMinutes,
+        weekMinutes,
+        monthMinutes,
+        totalSessions: sessions.length,
+        completedSessions: completedSessions.length,
+        averageSessionLength: Math.round(averageSessionLength),
+        longestStreak,
+        currentStreak,
+      };
+    } catch (error) {
+      logError('getStudyTimerStats', error, { userId });
+      return {
+        todayMinutes: 0,
+        weekMinutes: 0,
+        monthMinutes: 0,
+        totalSessions: 0,
+        completedSessions: 0,
+        averageSessionLength: 0,
+        longestStreak: 0,
+        currentStreak: 0,
+      };
+    }
+  }
 }
 
 // Export singleton instance
