@@ -15,7 +15,6 @@ import {
   Settings,
   Clock,
   Coffee,
-  TrendingUp,
   Calendar,
   Bell,
   Volume2,
@@ -877,56 +876,6 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
           </CardContent>
         </Card>
       </div>
-
-      {/* Recent Sessions - Full Width */}
-      <Card className="lg:col-span-3">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Today's Sessions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {todaySessions.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              No sessions yet today. Start your first session!
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {todaySessions.slice(0, 10).map((session: StudyTimerSession) => (
-                <div
-                  key={session.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    {session.sessionType === 'work' ? (
-                      <Clock className="h-4 w-4 text-blue-600" />
-                    ) : (
-                      <Coffee className="h-4 w-4 text-orange-600" />
-                    )}
-                    <div>
-                      <p className="text-sm font-medium">
-                        {session.sessionType === 'work' ? 'Work Session' : 'Break'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {session.startedAt
-                          ? new Date(session.startedAt).toLocaleTimeString()
-                          : 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">{session.duration}m</span>
-                    <Badge variant={session.isCompleted ? 'default' : 'secondary'}>
-                      {session.isCompleted ? 'Complete' : 'Incomplete'}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
