@@ -23,7 +23,11 @@ import {
 } from 'lucide-react';
 import type { StudyTimerSession, StudyTimerSettings } from '@shared/schema';
 
-export function StudyTimer() {
+interface StudyTimerProps {
+  compact?: boolean;
+}
+
+export function StudyTimer({ compact = false }: StudyTimerProps) {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -421,6 +425,239 @@ export function StudyTimer() {
     );
   }
 
+  // Compact layout for dashboard
+  if (compact) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Main Timer Card - Compact */}
+        <Card className="lg:col-span-2">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              {/* Left: Timer Display */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  {sessionType === 'work' ? (
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Coffee className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium">
+                      {sessionType === 'work'
+                        ? 'Work Session'
+                        : sessionType === 'break'
+                          ? 'Short Break'
+                          : 'Long Break'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {sessionType === 'work'
+                        ? 'Focus time - minimize distractions'
+                        : 'Relax and recharge'}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-center border-l pl-4">
+                  <div className="text-4xl font-bold font-mono">{formatTime(timeLeft)}</div>
+                  <Progress value={getProgress()} className="h-1 mt-2 w-32" />
+                </div>
+              </div>
+
+              {/* Right: Controls */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  {!isRunning && !isPaused ? (
+                    <Button size="sm" onClick={handleStart}>
+                      <Play className="h-4 w-4 mr-1" />
+                      Start
+                    </Button>
+                  ) : isPaused ? (
+                    <Button size="sm" onClick={handleStart}>
+                      <Play className="h-4 w-4 mr-1" />
+                      Resume
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={handlePause}>
+                      <Pause className="h-4 w-4 mr-1" />
+                      Pause
+                    </Button>
+                  )}
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleReset}
+                    disabled={!isRunning && !isPaused}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Session Type Selector - Compact */}
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant={sessionType === 'work' ? 'default' : 'ghost'}
+                    onClick={() => {
+                      if (!isRunning && !isPaused) {
+                        setSessionType('work');
+                      }
+                    }}
+                    disabled={isRunning || isPaused}
+                    className="h-7 text-xs px-2"
+                  >
+                    <Clock className="h-3 w-3 mr-1" />
+                    Work
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={sessionType === 'break' ? 'default' : 'ghost'}
+                    onClick={() => {
+                      if (!isRunning && !isPaused) {
+                        setSessionType('break');
+                      }
+                    }}
+                    disabled={isRunning || isPaused}
+                    className="h-7 text-xs px-2"
+                  >
+                    <Coffee className="h-3 w-3 mr-1" />
+                    Short Break
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={sessionType === 'long_break' ? 'default' : 'ghost'}
+                    onClick={() => {
+                      if (!isRunning && !isPaused) {
+                        setSessionType('long_break');
+                      }
+                    }}
+                    disabled={isRunning || isPaused}
+                    className="h-7 text-xs px-2"
+                  >
+                    <Coffee className="h-3 w-3 mr-1" />
+                    Long Break
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Messages */}
+            {isPaused && (
+              <div className="text-center text-xs text-muted-foreground mt-3">
+                Timer paused - click Resume to continue
+              </div>
+            )}
+            {!isRunning && !isPaused && (
+              <div className="text-center text-xs text-muted-foreground mt-3">
+                Click Start to begin your {sessionType === 'work' ? 'work' : 'break'} session
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Today's Progress - Compact */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Calendar className="h-4 w-4" />
+              Today's Progress
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-muted-foreground">Study Time</span>
+                <span className="text-xl font-bold">{todayMinutes}m</span>
+              </div>
+              <Progress value={todayGoalProgress} className="h-1.5" />
+              <p className="text-xs text-muted-foreground mt-1">
+                Goal: {timerSettings?.dailyGoalMinutes || 120}m
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Sessions</span>
+              <span className="text-base font-semibold">
+                {todaySessions.filter((s: StudyTimerSession) => s.isCompleted).length}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">This Round</span>
+              <span className="text-base font-semibold">
+                {workSessionsCompleted} / {timerSettings?.sessionsUntilLongBreak || 4}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Settings - Compact - Full Width */}
+        <Card className="lg:col-span-3">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Settings className="h-4 w-4" />
+              Quick Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg">
+                <span className="text-xs text-muted-foreground mb-1">Work Duration</span>
+                <span className="text-base font-semibold">
+                  {timerSettings?.workDuration || 25}m
+                </span>
+              </div>
+              <div className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg">
+                <span className="text-xs text-muted-foreground mb-1">Break Duration</span>
+                <span className="text-base font-semibold">
+                  {timerSettings?.breakDuration || 5}m
+                </span>
+              </div>
+              <div className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg">
+                <span className="text-xs text-muted-foreground mb-1">Long Break</span>
+                <span className="text-base font-semibold">
+                  {timerSettings?.longBreakDuration || 15}m
+                </span>
+              </div>
+              <div className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-1 mb-1">
+                  {timerSettings?.enableNotifications ? (
+                    <Bell className="h-3 w-3 text-green-600" />
+                  ) : (
+                    <Bell className="h-3 w-3 text-muted-foreground" />
+                  )}
+                  <span className="text-xs text-muted-foreground">Notifications</span>
+                </div>
+                <Badge
+                  variant={timerSettings?.enableNotifications ? 'default' : 'secondary'}
+                  className="text-xs"
+                >
+                  {timerSettings?.enableNotifications ? 'On' : 'Off'}
+                </Badge>
+              </div>
+              <div className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-1 mb-1">
+                  {timerSettings?.enableSound ? (
+                    <Volume2 className="h-3 w-3 text-green-600" />
+                  ) : (
+                    <VolumeX className="h-3 w-3 text-muted-foreground" />
+                  )}
+                  <span className="text-xs text-muted-foreground">Sound</span>
+                </div>
+                <Badge
+                  variant={timerSettings?.enableSound ? 'default' : 'secondary'}
+                  className="text-xs"
+                >
+                  {timerSettings?.enableSound ? 'On' : 'Off'}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Full layout for dedicated study timer page
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Main Timer Card */}
