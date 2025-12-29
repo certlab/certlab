@@ -25,7 +25,6 @@ interface AuthenticatedLayoutProps {
 const getNavigationItems = (isAdmin: boolean) => {
   const items = [
     { title: 'Dashboard', icon: Home, url: '/app' },
-    { title: 'Study Timer', icon: Timer, url: '/app/study-timer' },
     { title: 'Marketplace', icon: ShoppingBag, url: '/app/marketplace' },
   ];
 

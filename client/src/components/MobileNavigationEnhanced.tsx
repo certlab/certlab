@@ -18,7 +18,6 @@ import {
   BarChart3,
   Building,
   ShoppingCart,
-  Timer,
   FileText,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -73,12 +72,6 @@ export default function MobileNavigationEnhanced() {
       label: 'Practice Tests',
       icon: <FileText className="w-5 h-5" />,
       href: '/app/practice-tests',
-    },
-    {
-      id: 'study-timer',
-      label: 'Study Timer',
-      icon: <Timer className="w-5 h-5" />,
-      href: '/app/study-timer',
     },
     {
       id: 'study-notes',
