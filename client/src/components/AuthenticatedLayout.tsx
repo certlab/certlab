@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { Home, ShoppingBag, Wallet, User, Download, Shield } from 'lucide-react';
+import { Home, ShoppingBag, Shield, Timer } from 'lucide-react';
 import { getInitials, formatNotificationCount } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-provider';
 import { RightSidebarProvider, useRightSidebar } from '@/lib/right-sidebar-provider';
@@ -26,9 +26,6 @@ const getNavigationItems = (isAdmin: boolean) => {
   const items = [
     { title: 'Dashboard', icon: Home, url: '/app' },
     { title: 'Marketplace', icon: ShoppingBag, url: '/app/marketplace' },
-    { title: 'Wallet', icon: Wallet, url: '/app/wallet' },
-    { title: 'Profile', icon: User, url: '/app/profile' },
-    { title: 'Import', icon: Download, url: '/app/data-import' },
   ];
 
   if (isAdmin) {

@@ -9,7 +9,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
-import { Home, BookOpen, Trophy, User, ShoppingBag } from 'lucide-react';
+import { Home, BookOpen, Trophy, ShoppingBag } from 'lucide-react';
 
 interface NavItem {
   id: string;
@@ -44,12 +44,6 @@ const navItems: NavItem[] = [
     label: 'Achievements',
     icon: Trophy,
     path: '/app/achievements',
-  },
-  {
-    id: 'profile',
-    label: 'Profile',
-    icon: User,
-    path: '/app/profile',
   },
 ];
 
