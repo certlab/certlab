@@ -44,6 +44,9 @@ import type {
   UserTitle,
   UserDailyReward,
   DailyReward,
+  StudyTimerSession,
+  StudyTimerSettings,
+  StudyTimerStats,
 } from './schema';
 
 /**
@@ -940,4 +943,36 @@ export interface IClientStorage extends IStorageAdapter {
     topCategories: Array<{ categoryId: number; categoryName: string; score: number }>;
     weakCategories: Array<{ categoryId: number; categoryName: string; score: number }>;
   }>;
+
+  // ==========================================
+  // Study Timer Operations
+  // ==========================================
+
+  /** Get study timer settings for a user */
+  getStudyTimerSettings(userId: string): Promise<StudyTimerSettings | null>;
+
+  /** Update study timer settings for a user */
+  updateStudyTimerSettings(
+    userId: string,
+    settings: Partial<StudyTimerSettings>
+  ): Promise<StudyTimerSettings>;
+
+  /** Create a new study timer session */
+  createStudyTimerSession(session: Partial<StudyTimerSession>): Promise<StudyTimerSession>;
+
+  /** Update an existing study timer session */
+  updateStudyTimerSession(
+    sessionId: string | number,
+    updates: Partial<StudyTimerSession>
+  ): Promise<StudyTimerSession>;
+
+  /** Get study timer sessions within a date range */
+  getStudyTimerSessionsByDateRange(
+    userId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<StudyTimerSession[]>;
+
+  /** Get study timer statistics for a user */
+  getStudyTimerStats(userId: string): Promise<StudyTimerStats>;
 }

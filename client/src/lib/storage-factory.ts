@@ -699,31 +699,34 @@ class StorageRouter implements IClientStorage {
 
   async getStudyTimerSettings(userId: string): Promise<StudyTimerSettings | null> {
     return this.executeStorageOperation(
-      (s) => (s as any).getStudyTimerSettings(userId),
+      (s) => s.getStudyTimerSettings(userId),
       'getStudyTimerSettings'
     );
   }
 
-  async saveStudyTimerSettings(settings: Partial<StudyTimerSettings>): Promise<StudyTimerSettings> {
+  async updateStudyTimerSettings(
+    userId: string,
+    settings: Partial<StudyTimerSettings>
+  ): Promise<StudyTimerSettings> {
     return this.executeStorageOperation(
-      (s) => (s as any).saveStudyTimerSettings(settings),
-      'saveStudyTimerSettings'
+      (s) => s.updateStudyTimerSettings(userId, settings),
+      'updateStudyTimerSettings'
     );
   }
 
   async createStudyTimerSession(session: Partial<StudyTimerSession>): Promise<StudyTimerSession> {
     return this.executeStorageOperation(
-      (s) => (s as any).createStudyTimerSession(session),
+      (s) => s.createStudyTimerSession(session),
       'createStudyTimerSession'
     );
   }
 
   async updateStudyTimerSession(
-    sessionId: number,
+    sessionId: string | number,
     updates: Partial<StudyTimerSession>
   ): Promise<StudyTimerSession> {
     return this.executeStorageOperation(
-      (s) => (s as any).updateStudyTimerSession(sessionId, updates),
+      (s) => s.updateStudyTimerSession(sessionId, updates),
       'updateStudyTimerSession'
     );
   }
@@ -734,23 +737,13 @@ class StorageRouter implements IClientStorage {
     endDate: Date
   ): Promise<StudyTimerSession[]> {
     return this.executeStorageOperation(
-      (s) => (s as any).getStudyTimerSessionsByDateRange(userId, startDate, endDate),
+      (s) => s.getStudyTimerSessionsByDateRange(userId, startDate, endDate),
       'getStudyTimerSessionsByDateRange'
     );
   }
 
-  async getStudyTimerSessions(userId: string): Promise<StudyTimerSession[]> {
-    return this.executeStorageOperation(
-      (s) => (s as any).getStudyTimerSessions(userId),
-      'getStudyTimerSessions'
-    );
-  }
-
   async getStudyTimerStats(userId: string): Promise<StudyTimerStats> {
-    return this.executeStorageOperation(
-      (s) => (s as any).getStudyTimerStats(userId),
-      'getStudyTimerStats'
-    );
+    return this.executeStorageOperation((s) => s.getStudyTimerStats(userId), 'getStudyTimerStats');
   }
 
   // ==========================================

@@ -728,6 +728,33 @@ export function getQueryFn<T>(options: { on401: UnauthorizedBehavior }): QueryFu
         return (await storage.getUserTitles(userId, tenantId)) as T;
       }
 
+      // Handle Study Timer queries
+      if (path.includes('/study-timer')) {
+        const userId = key[2] as string;
+        if (!userId) {
+          throw new Error('Not authenticated');
+        }
+
+        // Handle settings
+        if (path.includes('/settings')) {
+          return (await storage.getStudyTimerSettings(userId)) as T;
+        }
+
+        // Handle today's sessions
+        if (path.includes('/today-sessions')) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const tomorrow = new Date(today);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          return (await storage.getStudyTimerSessionsByDateRange(userId, today, tomorrow)) as T;
+        }
+
+        // Handle stats
+        if (path.includes('/stats')) {
+          return (await storage.getStudyTimerStats(userId)) as T;
+        }
+      }
+
       // Default: return null for unsupported queries
       console.warn(`Unsupported query path: ${path}`);
       return null as T;
