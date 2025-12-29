@@ -75,12 +75,6 @@ export default function MobileNavigationEnhanced() {
       href: '/app/practice-tests',
     },
     {
-      id: 'study-timer',
-      label: 'Study Timer',
-      icon: <Timer className="w-5 h-5" />,
-      href: '/app/study-timer',
-    },
-    {
       id: 'study-notes',
       label: 'Study Notes',
       icon: <BookOpen className="w-5 h-5" />,
