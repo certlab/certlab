@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-provider';
 import { queryClient, queryKeys } from '@/lib/queryClient';
@@ -407,10 +407,16 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
     }
   };
 
-  // Calculate today's stats
-  const todayMinutes = todaySessions
-    .filter((s: StudyTimerSession) => s.isCompleted)
-    .reduce((sum: number, s: StudyTimerSession) => sum + s.duration, 0);
+  // Calculate today's stats (memoized to avoid filtering on every render)
+  const completedSessionsToday = useMemo(
+    () => todaySessions.filter((s: StudyTimerSession) => s.isCompleted),
+    [todaySessions]
+  );
+
+  const todayMinutes = useMemo(
+    () => completedSessionsToday.reduce((sum: number, s: StudyTimerSession) => sum + s.duration, 0),
+    [completedSessionsToday]
+  );
 
   const todayGoalProgress = timerSettings
     ? (todayMinutes / (timerSettings.dailyGoalMinutes ?? 120)) * 100
@@ -576,9 +582,7 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Sessions</span>
-              <span className="text-base font-semibold">
-                {todaySessions.filter((s: StudyTimerSession) => s.isCompleted).length}
-              </span>
+              <span className="text-base font-semibold">{completedSessionsToday.length}</span>
             </div>
 
             <div className="flex items-center justify-between">
@@ -809,9 +813,7 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
 
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Sessions</span>
-              <span className="text-lg font-semibold">
-                {todaySessions.filter((s: StudyTimerSession) => s.isCompleted).length}
-              </span>
+              <span className="text-lg font-semibold">{completedSessionsToday.length}</span>
             </div>
 
             <div className="flex items-center justify-between">
