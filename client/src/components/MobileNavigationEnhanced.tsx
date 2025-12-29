@@ -18,7 +18,6 @@ import {
   BarChart3,
   Building,
   ShoppingCart,
-  Timer,
   FileText,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
