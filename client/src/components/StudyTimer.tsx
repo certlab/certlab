@@ -408,15 +408,14 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
   };
 
   // Calculate today's stats (memoized to avoid filtering on every render)
-  const completedSessionsToday = useMemo(
-    () => todaySessions.filter((s: StudyTimerSession) => s.isCompleted),
-    [todaySessions]
-  );
-
-  const todayMinutes = useMemo(
-    () => completedSessionsToday.reduce((sum: number, s: StudyTimerSession) => sum + s.duration, 0),
-    [completedSessionsToday]
-  );
+  const { completedSessionsToday, todayMinutes } = useMemo(() => {
+    const completed = todaySessions.filter((s: StudyTimerSession) => s.isCompleted);
+    const minutes = completed.reduce((sum: number, s: StudyTimerSession) => sum + s.duration, 0);
+    return {
+      completedSessionsToday: completed,
+      todayMinutes: minutes,
+    };
+  }, [todaySessions]);
 
   const todayGoalProgress = timerSettings
     ? (todayMinutes / (timerSettings.dailyGoalMinutes ?? 120)) * 100
@@ -493,6 +492,7 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
                     variant="outline"
                     onClick={handleReset}
                     disabled={!isRunning && !isPaused}
+                    aria-label="Reset timer"
                   >
                     <RotateCcw className="h-4 w-4" />
                   </Button>
@@ -502,7 +502,7 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
                 <div className="flex items-center gap-1">
                   <Button
                     size="sm"
-                    variant={sessionType === 'work' ? 'default' : 'ghost'}
+                    variant={sessionType === 'work' ? 'default' : 'outline'}
                     onClick={() => {
                       if (!isRunning && !isPaused) {
                         setSessionType('work');
@@ -516,7 +516,7 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
                   </Button>
                   <Button
                     size="sm"
-                    variant={sessionType === 'break' ? 'default' : 'ghost'}
+                    variant={sessionType === 'break' ? 'default' : 'outline'}
                     onClick={() => {
                       if (!isRunning && !isPaused) {
                         setSessionType('break');
@@ -530,7 +530,7 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
                   </Button>
                   <Button
                     size="sm"
-                    variant={sessionType === 'long_break' ? 'default' : 'ghost'}
+                    variant={sessionType === 'long_break' ? 'default' : 'outline'}
                     onClick={() => {
                       if (!isRunning && !isPaused) {
                         setSessionType('long_break');
