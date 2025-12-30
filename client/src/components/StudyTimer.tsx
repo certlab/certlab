@@ -503,9 +503,9 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
   // Compact layout for dashboard
   if (compact) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="space-y-4">
         {/* Main Timer Card - Compact with Improved Styling */}
-        <Card className="lg:col-span-2 shadow-md">
+        <Card className="shadow-md">
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               {/* Left: Timer Display with Mini Progress Ring */}
@@ -636,48 +636,8 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
           </CardContent>
         </Card>
 
-        {/* Today's Progress - Compact with Visual Improvements */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Calendar className="h-4 w-4" />
-              Today's Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-muted-foreground">Study Time</span>
-                <span className="text-xl font-bold">{todayMinutes}m</span>
-              </div>
-              <Progress value={todayGoalProgress} className="h-2" />
-              <p className="text-xs text-muted-foreground mt-1">
-                Goal: {timerSettings?.dailyGoalMinutes || 120}m
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Sessions</span>
-              <span className="text-base font-semibold">{completedSessionsToday.length}</span>
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">This Round</span>
-                <span className="text-xs font-medium">
-                  {workSessionsCompleted} / {timerSettings?.sessionsUntilLongBreak || 4}
-                </span>
-              </div>
-              <PomodoroPips
-                completed={workSessionsCompleted}
-                total={timerSettings?.sessionsUntilLongBreak || 4}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Quick Settings - Compact - Full Width with Improved Design */}
-        <Card className="lg:col-span-3">
+        <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Settings className="h-4 w-4" />
