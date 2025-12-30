@@ -47,8 +47,9 @@ import {
   type DocumentData,
   type QueryConstraint,
   connectFirestoreEmulator,
-  enableIndexedDbPersistence,
   initializeFirestore,
+  persistentLocalCache,
+  persistentSingleTabManager,
 } from 'firebase/firestore';
 import { getFirebaseAuth, isFirebaseConfigured, initializeFirebase } from './firebase';
 import { logError } from './errors';
@@ -95,8 +96,14 @@ export async function initializeFirestoreService(): Promise<boolean> {
     const auth = getFirebaseAuth();
 
     // Initialize Firestore with settings for offline persistence
+    // Using the new cache API instead of deprecated enableIndexedDbPersistence()
     firestoreInstance = initializeFirestore(auth.app, {
       ignoreUndefinedProperties: true,
+      // Enable persistent local cache with single tab manager
+      // This replaces the deprecated enableIndexedDbPersistence()
+      localCache: persistentLocalCache({
+        tabManager: persistentSingleTabManager(),
+      }),
     });
 
     // Connect to emulator if enabled
@@ -106,24 +113,7 @@ export async function initializeFirestoreService(): Promise<boolean> {
       connectFirestoreEmulator(firestoreInstance, 'localhost', 8080);
     }
 
-    // Enable offline persistence
-    try {
-      await enableIndexedDbPersistence(firestoreInstance);
-      console.log('[Firestore] Offline persistence enabled');
-    } catch (err) {
-      const error = err as { code?: string };
-      if (error?.code === 'failed-precondition') {
-        // Multiple tabs open, persistence can only be enabled in one tab at a time.
-        console.warn('[Firestore] Multiple tabs open, offline persistence disabled');
-      } else if (error?.code === 'unimplemented') {
-        // The current browser doesn't support offline persistence
-        console.warn('[Firestore] Browser does not support offline persistence');
-      } else {
-        logError('initializeFirestoreService', err);
-      }
-    }
-
-    console.log('[Firestore] Initialized successfully');
+    console.log('[Firestore] Initialized successfully with persistent local cache');
     return true;
   } catch (error) {
     logError('initializeFirestoreService', error);
