@@ -376,12 +376,13 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Study Timer Section */}
+        {/* Activity Timer Section */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-foreground">Study Timer</h2>
+            <h2 className="text-lg font-bold text-foreground">Activity Timer</h2>
             <p className="text-xs text-muted-foreground">
-              Use the Pomodoro technique to boost your focus and productivity
+              Track any activity with custom labels - work, study, exercise, meditation, or anything
+              else
             </p>
           </div>
           <StudyTimer />
