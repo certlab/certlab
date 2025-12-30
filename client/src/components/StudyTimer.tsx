@@ -23,7 +23,6 @@ import {
   Bell,
   Volume2,
   VolumeX,
-  ChevronDown,
 } from 'lucide-react';
 import type { StudyTimerSession, StudyTimerSettings } from '@shared/schema';
 
@@ -115,6 +114,8 @@ export function StudyTimer() {
   const [pauseStartTime, setPauseStartTime] = useState<number | null>(null);
   const [totalPausedTime, setTotalPausedTime] = useState(0);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const [manualDuration, setManualDuration] = useState<string>('');
+  const [isEditingDuration, setIsEditingDuration] = useState(false);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartTimeRef = useRef<Date | null>(null);
@@ -503,6 +504,41 @@ export function StudyTimer() {
     }
   };
 
+  // Handle manual duration input
+  const handleManualDurationChange = (value: string) => {
+    // Only allow numbers
+    const numValue = value.replace(/[^0-9]/g, '');
+    setManualDuration(numValue);
+  };
+
+  const applyManualDuration = () => {
+    const minutes = parseInt(manualDuration, 10);
+    if (!isNaN(minutes) && minutes > 0 && minutes <= 999) {
+      setTimeLeft(minutes * 60);
+      setIsEditingDuration(false);
+      setManualDuration('');
+    } else {
+      toast({
+        title: 'Invalid Duration',
+        description: 'Please enter a valid duration between 1 and 999 minutes.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const startEditingDuration = () => {
+    if (!isRunning && !isPaused) {
+      const currentMinutes = Math.ceil(timeLeft / 60);
+      setManualDuration(currentMinutes.toString());
+      setIsEditingDuration(true);
+    }
+  };
+
+  const cancelEditingDuration = () => {
+    setIsEditingDuration(false);
+    setManualDuration('');
+  };
+
   // Calculate today's stats (memoized to avoid filtering on every render)
   const { completedSessionsToday, todayMinutes } = useMemo(() => {
     const completed = todaySessions.filter((s: StudyTimerSession) => s.isCompleted);
@@ -532,124 +568,181 @@ export function StudyTimer() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Main Timer Card - Left Side */}
         <Card className="lg:col-span-2 shadow-md">
-          <CardContent className="p-4">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Activity Timer</CardTitle>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsSettingsDialogOpen(true)}
+                className="h-8 w-8 p-0"
+                aria-label="Open timer settings"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </div>
+            <CardDescription>
+              Track work, study, exercise, meditation, or any activity with custom labels.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
             <div className="flex flex-col gap-4">
-              {/* Timer Display and Controls Row */}
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                {/* Left: Timer Display with Mini Progress Ring */}
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <CircularProgress value={getProgress()} size={80} strokeWidth={4}>
-                      <div
-                        className={`text-2xl font-bold font-mono tabular-nums ${
-                          sessionType === 'work'
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-green-600 dark:text-green-400'
-                        }`}
-                      >
-                        {formatTime(timeLeft).split(':')[0]}
-                      </div>
-                    </CircularProgress>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {sessionType === 'work' && activityLabel
-                        ? activityLabel
-                        : sessionType === 'work'
-                          ? 'Work Session'
-                          : sessionType === 'break'
-                            ? 'Short Break'
-                            : 'Long Break'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{formatTime(timeLeft)}</p>
-                  </div>
+              {/* Timer Display Section */}
+              <div className="flex items-center justify-center">
+                <div className="relative">
+                  <CircularProgress value={getProgress()} size={200} strokeWidth={8}>
+                    <div className="flex flex-col items-center">
+                      {isEditingDuration ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={manualDuration}
+                            onChange={(e) => handleManualDurationChange(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                applyManualDuration();
+                              } else if (e.key === 'Escape') {
+                                cancelEditingDuration();
+                              }
+                            }}
+                            className="w-16 h-10 text-center text-xl font-bold font-mono"
+                            placeholder="25"
+                            autoFocus
+                          />
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={applyManualDuration}
+                              className="h-6 px-2 text-xs"
+                            >
+                              Set
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={cancelEditingDuration}
+                              className="h-6 px-2 text-xs"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={startEditingDuration}
+                          disabled={isRunning || isPaused}
+                          className={`text-5xl font-bold font-mono tabular-nums ${
+                            sessionType === 'work'
+                              ? 'text-blue-600 dark:text-blue-400'
+                              : 'text-green-600 dark:text-green-400'
+                          } ${!isRunning && !isPaused ? 'hover:opacity-70 cursor-pointer' : 'cursor-default'}`}
+                          aria-label="Click to edit duration"
+                        >
+                          {formatTime(timeLeft)}
+                        </button>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {sessionType === 'work' && activityLabel
+                          ? activityLabel
+                          : sessionType === 'work'
+                            ? 'Work Session'
+                            : sessionType === 'break'
+                              ? 'Short Break'
+                              : 'Long Break'}
+                      </p>
+                    </div>
+                  </CircularProgress>
                 </div>
+              </div>
 
-                {/* Right: Controls */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2">
-                    {!isRunning && !isPaused ? (
-                      <Button
-                        size="sm"
-                        onClick={handleStart}
-                        className={
-                          sessionType === 'work'
-                            ? 'bg-blue-600 hover:bg-blue-700'
-                            : 'bg-green-600 hover:bg-green-700'
-                        }
-                      >
-                        <Play className="h-4 w-4 mr-1" />
-                        Start
-                      </Button>
-                    ) : isPaused ? (
-                      <Button
-                        size="sm"
-                        onClick={handleStart}
-                        className={
-                          sessionType === 'work'
-                            ? 'bg-blue-600 hover:bg-blue-700'
-                            : 'bg-green-600 hover:bg-green-700'
-                        }
-                      >
-                        <Play className="h-4 w-4 mr-1" />
-                        Resume
-                      </Button>
-                    ) : (
-                      <Button size="sm" variant="outline" onClick={handlePause}>
-                        <Pause className="h-4 w-4 mr-1" />
-                        Pause
-                      </Button>
-                    )}
-
+              {/* Controls */}
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex items-center gap-2">
+                  {!isRunning && !isPaused ? (
                     <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleReset}
-                      disabled={!isRunning && !isPaused}
-                      aria-label="Reset timer"
+                      size="lg"
+                      onClick={handleStart}
+                      className={`min-w-[120px] ${
+                        sessionType === 'work'
+                          ? 'bg-blue-600 hover:bg-blue-700'
+                          : 'bg-green-600 hover:bg-green-700'
+                      }`}
                     >
-                      <RotateCcw className="h-4 w-4" />
+                      <Play className="h-5 w-5 mr-2" />
+                      Start
                     </Button>
-                  </div>
+                  ) : isPaused ? (
+                    <Button
+                      size="lg"
+                      onClick={handleStart}
+                      className={`min-w-[120px] ${
+                        sessionType === 'work'
+                          ? 'bg-blue-600 hover:bg-blue-700'
+                          : 'bg-green-600 hover:bg-green-700'
+                      }`}
+                    >
+                      <Play className="h-5 w-5 mr-2" />
+                      Resume
+                    </Button>
+                  ) : (
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={handlePause}
+                      className="min-w-[120px]"
+                    >
+                      <Pause className="h-5 w-5 mr-2" />
+                      Pause
+                    </Button>
+                  )}
 
-                  {/* Session Type Selector - Compact Segmented Control */}
-                  <ToggleGroup
-                    type="single"
-                    value={sessionType}
-                    onValueChange={(value) => {
-                      if (value && !isRunning && !isPaused) {
-                        setSessionType(value as 'work' | 'break' | 'long_break');
-                      }
-                    }}
-                    className={`inline-flex rounded-md p-0.5 ${
-                      sessionType === 'work'
-                        ? 'bg-blue-100 dark:bg-blue-950'
-                        : 'bg-green-100 dark:bg-green-950'
-                    }`}
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={handleReset}
+                    disabled={!isRunning && !isPaused}
+                    aria-label="Reset timer"
                   >
-                    <ToggleGroupItem
-                      value="work"
-                      disabled={isRunning || isPaused}
-                      className="h-7 text-xs px-2 text-blue-700 dark:text-blue-200 data-[state=on]:bg-blue-600 data-[state=on]:text-white"
-                    >
-                      Work
-                    </ToggleGroupItem>
-                    <ToggleGroupItem
-                      value="break"
-                      disabled={isRunning || isPaused}
-                      className="h-7 text-xs px-2 text-green-700 dark:text-green-200 data-[state=on]:bg-green-600 data-[state=on]:text-white"
-                    >
-                      Short
-                    </ToggleGroupItem>
-                    <ToggleGroupItem
-                      value="long_break"
-                      disabled={isRunning || isPaused}
-                      className="h-7 text-xs px-2 text-green-700 dark:text-green-200 data-[state=on]:bg-green-600 data-[state=on]:text-white"
-                    >
-                      Long
-                    </ToggleGroupItem>
-                  </ToggleGroup>
+                    <RotateCcw className="h-5 w-5" />
+                  </Button>
                 </div>
+
+                {/* Session Type Selector */}
+                <ToggleGroup
+                  type="single"
+                  value={sessionType}
+                  onValueChange={(value) => {
+                    if (value && !isRunning && !isPaused) {
+                      setSessionType(value as 'work' | 'break' | 'long_break');
+                    }
+                  }}
+                  className="inline-flex rounded-lg border p-1"
+                >
+                  <ToggleGroupItem
+                    value="work"
+                    disabled={isRunning || isPaused}
+                    className="px-4 py-2 data-[state=on]:bg-blue-600 data-[state=on]:text-white"
+                  >
+                    Work
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="break"
+                    disabled={isRunning || isPaused}
+                    className="px-4 py-2 data-[state=on]:bg-green-600 data-[state=on]:text-white"
+                  >
+                    Short
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="long_break"
+                    disabled={isRunning || isPaused}
+                    className="px-4 py-2 data-[state=on]:bg-green-600 data-[state=on]:text-white"
+                  >
+                    Long
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
 
               {/* Activity Label Input - Only shown for work sessions */}
@@ -657,7 +750,7 @@ export function StudyTimer() {
                 <div className="space-y-2">
                   <label
                     htmlFor="activity-label"
-                    className="text-xs font-medium text-muted-foreground"
+                    className="text-sm font-medium text-muted-foreground"
                   >
                     Activity Label
                   </label>
@@ -668,26 +761,20 @@ export function StudyTimer() {
                     value={activityLabel}
                     onChange={(e) => setActivityLabel(e.target.value)}
                     disabled={isRunning || isPaused}
-                    className="h-8 text-sm"
+                    className="h-9 text-sm"
                   />
                 </div>
               )}
 
               {/* Status Messages */}
               {isPaused && (
-                <div className="text-center text-xs text-muted-foreground">
+                <div className="text-center text-sm text-muted-foreground">
                   Timer paused - click Resume to continue
                 </div>
               )}
-              {!isRunning && !isPaused && (
-                <div className="text-center text-xs text-muted-foreground">
-                  Click Start to begin your{' '}
-                  {sessionType === 'work' && activityLabel
-                    ? activityLabel.toLowerCase()
-                    : sessionType === 'work'
-                      ? 'activity'
-                      : 'break'}{' '}
-                  session
+              {!isRunning && !isPaused && !isEditingDuration && (
+                <div className="text-center text-sm text-muted-foreground">
+                  Click Start to begin your activity session
                 </div>
               )}
             </div>
@@ -697,95 +784,6 @@ export function StudyTimer() {
         {/* Activity Timeline - Right Side */}
         <ActivityTimeline sessions={todaySessions} />
       </div>
-
-      {/* Quick Settings - Compact - Full Width with Improved Design */}
-      <Card className="mt-4">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Settings className="h-4 w-4" />
-            Quick Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <div
-              className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-              onClick={() => setIsSettingsDialogOpen(true)}
-            >
-              <div className="flex items-center gap-1 mb-1">
-                <Clock className="h-3 w-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Work</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-base font-semibold">
-                  {timerSettings?.workDuration || 25}m
-                </span>
-                <ChevronDown className="h-3 w-3 text-muted-foreground" />
-              </div>
-            </div>
-            <div
-              className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-              onClick={() => setIsSettingsDialogOpen(true)}
-            >
-              <div className="flex items-center gap-1 mb-1">
-                <Coffee className="h-3 w-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Break</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-base font-semibold">
-                  {timerSettings?.breakDuration || 5}m
-                </span>
-                <ChevronDown className="h-3 w-3 text-muted-foreground" />
-              </div>
-            </div>
-            <div
-              className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-              onClick={() => setIsSettingsDialogOpen(true)}
-            >
-              <div className="flex items-center gap-1 mb-1">
-                <Coffee className="h-3 w-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Long Break</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-base font-semibold">
-                  {timerSettings?.longBreakDuration || 15}m
-                </span>
-                <ChevronDown className="h-3 w-3 text-muted-foreground" />
-              </div>
-            </div>
-            <div className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg">
-              <div className="flex items-center gap-1 mb-1">
-                <Bell className="h-3 w-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Notifications</span>
-              </div>
-              <Switch
-                checked={timerSettings?.enableNotifications ?? false}
-                onCheckedChange={(checked) =>
-                  updateSettingsMutation.mutate({ enableNotifications: checked })
-                }
-                className="scale-75"
-              />
-            </div>
-            <div className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg">
-              <div className="flex items-center gap-1 mb-1">
-                {timerSettings?.enableSound ? (
-                  <Volume2 className="h-3 w-3 text-muted-foreground" />
-                ) : (
-                  <VolumeX className="h-3 w-3 text-muted-foreground" />
-                )}
-                <span className="text-xs text-muted-foreground">Sound</span>
-              </div>
-              <Switch
-                checked={timerSettings?.enableSound ?? false}
-                onCheckedChange={(checked) =>
-                  updateSettingsMutation.mutate({ enableSound: checked })
-                }
-                className="scale-75"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       <TimerSettingsDialog
         open={isSettingsDialogOpen}
