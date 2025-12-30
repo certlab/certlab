@@ -11,7 +11,7 @@ export function ActivityTimeline({ sessions }: ActivityTimelineProps) {
   // Get last 5 completed sessions, sorted by completion date (most recent first)
   const recentSessions = useMemo(() => {
     return sessions
-      .filter((s) => s.isCompleted && s.completedAt)
+      .filter((s) => s.completedAt) // Primary check: session must have a completion timestamp
       .sort((a, b) => {
         const dateA = new Date(a.completedAt!).getTime();
         const dateB = new Date(b.completedAt!).getTime();
