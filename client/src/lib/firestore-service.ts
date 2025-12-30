@@ -49,7 +49,7 @@ import {
   connectFirestoreEmulator,
   initializeFirestore,
   persistentLocalCache,
-  persistentSingleTabManager,
+  persistentMultipleTabManager,
 } from 'firebase/firestore';
 import { getFirebaseAuth, isFirebaseConfigured, initializeFirebase } from './firebase';
 import { logError } from './errors';
@@ -97,14 +97,33 @@ export async function initializeFirestoreService(): Promise<boolean> {
 
     // Initialize Firestore with settings for offline persistence
     // Using the new cache API instead of deprecated enableIndexedDbPersistence()
-    firestoreInstance = initializeFirestore(auth.app, {
-      ignoreUndefinedProperties: true,
-      // Enable persistent local cache with single tab manager
-      // This replaces the deprecated enableIndexedDbPersistence()
-      localCache: persistentLocalCache({
-        tabManager: persistentSingleTabManager(),
-      }),
-    });
+    try {
+      firestoreInstance = initializeFirestore(auth.app, {
+        ignoreUndefinedProperties: true,
+        // Enable persistent local cache with multiple tab manager
+        // This replaces the deprecated enableIndexedDbPersistence()
+        // and supports multiple tabs accessing the cache simultaneously
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
+      });
+      console.log('[Firestore] Offline persistence enabled with multi-tab support');
+    } catch (err) {
+      // Fallback: If multi-tab persistence fails, create instance without persistence
+      const error = err as { code?: string; message?: string };
+      if (error?.code === 'failed-precondition' || error?.message?.includes('persistence')) {
+        console.warn(
+          '[Firestore] Failed to enable persistence (may be due to browser limitations or multiple instances)',
+          error.message
+        );
+        // Initialize without persistence as fallback
+        firestoreInstance = initializeFirestore(auth.app, {
+          ignoreUndefinedProperties: true,
+        });
+      } else {
+        throw err;
+      }
+    }
 
     // Connect to emulator if enabled
     const useEmulator = import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true';
@@ -113,7 +132,7 @@ export async function initializeFirestoreService(): Promise<boolean> {
       connectFirestoreEmulator(firestoreInstance, 'localhost', 8080);
     }
 
-    console.log('[Firestore] Initialized successfully with persistent local cache');
+    console.log('[Firestore] Initialized successfully');
     return true;
   } catch (error) {
     logError('initializeFirestoreService', error);
