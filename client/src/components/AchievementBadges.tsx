@@ -6,6 +6,7 @@ import { LevelProgress } from '@/components/LevelProgress';
 import { Input } from '@/components/ui/input';
 import { queryKeys } from '@/lib/queryClient';
 import { useState, useMemo } from 'react';
+import type { Badge as BadgeType } from '@shared/schema';
 
 interface BadgeData {
   id: number;
@@ -100,32 +101,24 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
   });
 
   // Fetch all badges to show both earned and unearned
-  const { data: allBadges = [] } = useQuery<
-    Array<{
-      id: number;
-      name: string;
-      description: string;
-      icon: string;
-      category: string;
-      requirement: unknown;
-      color: string;
-      rarity: string;
-      points: number;
-    }>
-  >({
+  const { data: allBadges = [], isLoading: isLoadingAllBadges } = useQuery<BadgeType[]>({
     queryKey: queryKeys.badges.all(),
   });
 
   // Extract earned badges and game stats (safely handle loading state)
   const earnedBadges = useMemo(() => achievements?.badges || [], [achievements]);
-  const gameStats = achievements?.gameStats || {
-    totalPoints: 0,
-    currentStreak: 0,
-    longestStreak: 0,
-    totalBadgesEarned: 0,
-    level: 1,
-    nextLevelPoints: 100,
-  };
+  const gameStats = useMemo(
+    () =>
+      achievements?.gameStats || {
+        totalPoints: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        totalBadgesEarned: 0,
+        level: 1,
+        nextLevelPoints: 100,
+      },
+    [achievements]
+  );
 
   // Create a set of earned badge IDs for quick lookup
   const earnedBadgeIds = useMemo(() => new Set(earnedBadges.map((b) => b.badgeId)), [earnedBadges]);
@@ -171,7 +164,7 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
     );
   }, [filteredBadges]);
 
-  if (isLoading) {
+  if (isLoading || isLoadingAllBadges) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (
