@@ -134,7 +134,7 @@ export default function AchievementsPage() {
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="earned" className="flex items-center gap-2">
               <Trophy className="w-4 h-4" />
-              Earned Badges
+              All Badges
             </TabsTrigger>
             <TabsTrigger value="progress" className="flex items-center gap-2">
               <Target className="w-4 h-4" />

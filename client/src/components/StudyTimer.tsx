@@ -9,20 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Switch } from '@/components/ui/switch';
-import {
-  Play,
-  Pause,
-  RotateCcw,
-  Settings,
-  Clock,
-  Coffee,
-  Calendar,
-  Bell,
-  Volume2,
-  VolumeX,
-  ChevronDown,
-} from 'lucide-react';
+import { TimerSettingsDialog } from '@/components/TimerSettingsDialog';
+import { Play, Pause, RotateCcw, Settings, Clock, Coffee, Calendar } from 'lucide-react';
 import type { StudyTimerSession, StudyTimerSettings } from '@shared/schema';
 
 // StudyTimer uses a responsive layout (vertical on small screens, horizontal grid on large screens) - no layout props needed
@@ -111,6 +99,7 @@ export function StudyTimer() {
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
   const [pauseStartTime, setPauseStartTime] = useState<number | null>(null);
   const [totalPausedTime, setTotalPausedTime] = useState(0);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartTimeRef = useRef<Date | null>(null);
@@ -512,8 +501,8 @@ export function StudyTimer() {
                   <div
                     className={`text-2xl font-bold font-mono tabular-nums ${
                       sessionType === 'work'
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-green-600 dark:text-green-400'
+                        ? 'bg-blue-600 hover:bg-blue-700'
+                        : 'bg-green-600 hover:bg-green-700'
                     }`}
                   >
                     {formatTime(timeLeft).split(':')[0]}
