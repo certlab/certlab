@@ -110,6 +110,7 @@ export function StudyTimer() {
   const [sessionType, setSessionType] = useState<'work' | 'break' | 'long_break'>('work');
   const [activityLabel, setActivityLabel] = useState('');
   const [timeLeft, setTimeLeft] = useState(25 * 60); // Default 25 minutes in seconds
+  const [initialDuration, setInitialDuration] = useState(25 * 60); // Track initial duration for progress calculation
   const [workSessionsCompleted, setWorkSessionsCompleted] = useState(0);
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
   const [pauseStartTime, setPauseStartTime] = useState<number | null>(null);
@@ -228,7 +229,9 @@ export function StudyTimer() {
           : sessionType === 'break'
             ? (timerSettings.breakDuration ?? 5)
             : (timerSettings.longBreakDuration ?? 15);
-      setTimeLeft(duration * 60);
+      const durationInSeconds = duration * 60;
+      setTimeLeft(durationInSeconds);
+      setInitialDuration(durationInSeconds); // Set initial duration for progress calculation
     }
   }, [timerSettings, sessionType, isRunning]);
 
@@ -243,6 +246,9 @@ export function StudyTimer() {
       const pauseDuration = Math.floor((Date.now() - pauseStartTime) / 1000);
       setTotalPausedTime((prev) => prev + pauseDuration);
       setPauseStartTime(null);
+    } else if (!isPaused) {
+      // Starting fresh - set initial duration for progress calculation
+      setInitialDuration(timeLeft);
     }
 
     setIsRunning(true);
@@ -278,6 +284,7 @@ export function StudyTimer() {
     sessionType,
     activityLabel,
     saveSessionMutation,
+    timeLeft,
   ]);
 
   // Handle session completion
@@ -351,7 +358,9 @@ export function StudyTimer() {
 
       if (timerSettings && newCount % (timerSettings.sessionsUntilLongBreak ?? 4) === 0) {
         setSessionType('long_break');
-        setTimeLeft((timerSettings.longBreakDuration ?? 15) * 60);
+        const longBreakDuration = (timerSettings.longBreakDuration ?? 15) * 60;
+        setTimeLeft(longBreakDuration);
+        setInitialDuration(longBreakDuration); // Set initial duration for next session
 
         if (timerSettings.autoStartBreaks) {
           // Clear any existing timeout before setting new one
@@ -363,7 +372,9 @@ export function StudyTimer() {
       } else {
         setSessionType('break');
         if (timerSettings) {
-          setTimeLeft((timerSettings.breakDuration ?? 5) * 60);
+          const breakDuration = (timerSettings.breakDuration ?? 5) * 60;
+          setTimeLeft(breakDuration);
+          setInitialDuration(breakDuration); // Set initial duration for next session
         }
 
         if (timerSettings?.autoStartBreaks) {
@@ -377,7 +388,9 @@ export function StudyTimer() {
     } else {
       setSessionType('work');
       if (timerSettings) {
-        setTimeLeft((timerSettings.workDuration ?? 25) * 60);
+        const workDuration = (timerSettings.workDuration ?? 25) * 60;
+        setTimeLeft(workDuration);
+        setInitialDuration(workDuration); // Set initial duration for next session
       }
 
       if (timerSettings?.autoStartWork) {
@@ -454,14 +467,9 @@ export function StudyTimer() {
 
   // Calculate progress percentage
   const getProgress = (): number => {
-    if (!timerSettings) return 0;
-    const totalDuration =
-      sessionType === 'work'
-        ? (timerSettings.workDuration ?? 25) * 60
-        : sessionType === 'break'
-          ? (timerSettings.breakDuration ?? 5) * 60
-          : (timerSettings.longBreakDuration ?? 15) * 60;
-    return ((totalDuration - timeLeft) / totalDuration) * 100;
+    // Use initialDuration instead of timerSettings to handle manual duration changes
+    if (initialDuration === 0) return 0;
+    return ((initialDuration - timeLeft) / initialDuration) * 100;
   };
 
   // Pause timer
@@ -493,7 +501,9 @@ export function StudyTimer() {
           : sessionType === 'break'
             ? (timerSettings.breakDuration ?? 5)
             : (timerSettings.longBreakDuration ?? 15);
-      setTimeLeft(duration * 60);
+      const durationInSeconds = duration * 60;
+      setTimeLeft(durationInSeconds);
+      setInitialDuration(durationInSeconds); // Reset initial duration
     }
 
     // Mark current session as incomplete if exists
@@ -521,7 +531,9 @@ export function StudyTimer() {
 
     const minutes = parseInt(manualDuration, 10);
     if (!isNaN(minutes) && minutes > 0 && minutes <= 999) {
-      setTimeLeft(minutes * 60);
+      const durationInSeconds = minutes * 60;
+      setTimeLeft(durationInSeconds);
+      setInitialDuration(durationInSeconds); // Update initial duration for progress calculation
       setIsEditingDuration(false);
       setManualDuration('');
     } else {
