@@ -101,7 +101,11 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
   });
 
   // Fetch all badges to show both earned and unearned
-  const { data: allBadges = [], isLoading: isLoadingAllBadges } = useQuery<BadgeType[]>({
+  const {
+    data: allBadges = [],
+    isLoading: isLoadingAllBadges,
+    error: allBadgesError,
+  } = useQuery<BadgeType[]>({
     queryKey: queryKeys.badges.all(),
   });
 
@@ -179,7 +183,7 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
     );
   }
 
-  if (error || !achievements) {
+  if (error || allBadgesError || !achievements) {
     return (
       <Card>
         <CardContent className="pt-6">
