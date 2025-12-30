@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-provider';
@@ -13,6 +13,7 @@ import { CertificationSelectionDialog } from '@/components/CertificationSelectio
 import { StudyTimer } from '@/components/StudyTimer';
 import { studyMaterials } from '@/data/study-materials';
 import { calculateLevelFromPoints, calculatePointsForLevel } from '@/lib/level-utils';
+import { POINTS_CONFIG } from '@/lib/achievement-service';
 import { PlayCircle, Trophy, Target, History, FileText, ArrowRight, Flame } from 'lucide-react';
 import type { UserStats, Quiz, Category } from '@shared/schema';
 
@@ -311,11 +312,11 @@ export default function Dashboard() {
   const dailyStreakBadge = badges.find((b) => b.badge?.name === 'Daily Streak');
 
   // Calculate daily experience for learning velocity chart
-  const calculateDailyExperience = (): number[] => {
+  const dailyExperience = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Initialize array for last 7 days (Mon-Sun)
+    // Initialize array for current week (Mon-Sun)
     const dailyXP: number[] = [0, 0, 0, 0, 0, 0, 0];
 
     // Get the day of week offset (0 = Sunday, 1 = Monday, etc.)
@@ -325,14 +326,6 @@ export default function Dashboard() {
     // Calculate Monday of current week
     const monday = new Date(today);
     monday.setDate(today.getDate() - daysToMonday);
-
-    // Points configuration matching achievement-service.ts
-    const POINTS_CONFIG = {
-      QUIZ_COMPLETION: 10,
-      CORRECT_ANSWER: 5,
-      PASSING_BONUS: 25,
-      PERFECT_SCORE_BONUS: 50,
-    };
 
     // Calculate points for each completed quiz
     const completedQuizzes = recentQuizzes.filter((q) => q.completedAt && q.score !== null);
@@ -372,9 +365,7 @@ export default function Dashboard() {
     });
 
     return dailyXP;
-  };
-
-  const dailyExperience = calculateDailyExperience();
+  }, [recentQuizzes]);
 
   // Calculate max value for scaling the chart
   const maxDailyXP = Math.max(...dailyExperience, 1); // At least 1 to avoid division by zero
@@ -427,7 +418,6 @@ export default function Dashboard() {
                           key={i}
                           className="flex-1 bg-primary/60 rounded-t relative group"
                           style={{ height: `${height}%`, minHeight: height > 0 ? '2px' : '0' }}
-                          title={`${dailyExperience[i]} XP`}
                         >
                           {/* Tooltip showing actual XP value on hover */}
                           <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Quiz } from '@shared/schema';
+import { POINTS_CONFIG } from '@/lib/achievement-service';
 
 /**
  * Test suite for dashboard learning velocity calculation
@@ -24,16 +25,17 @@ describe('Dashboard Learning Velocity Calculation', () => {
     isPassing: score >= 85,
     completedAt,
     startedAt: new Date(),
-    createdAt: new Date(),
+    mode: 'study',
+    questionCount: totalQuestions,
+    timeLimit: null,
+    answers: null,
+    isAdaptive: false,
+    adaptiveMetrics: null,
+    difficultyLevel: null,
+    difficultyFilter: null,
+    missedTopics: null,
+    subcategoryIds: null,
   });
-
-  // Points configuration matching dashboard.tsx and achievement-service.ts
-  const POINTS_CONFIG = {
-    QUIZ_COMPLETION: 10,
-    CORRECT_ANSWER: 5,
-    PASSING_BONUS: 25,
-    PERFECT_SCORE_BONUS: 50,
-  };
 
   // Function to calculate points for a quiz (matching dashboard logic)
   const calculateQuizPoints = (quiz: Quiz): number => {
