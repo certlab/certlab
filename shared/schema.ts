@@ -801,12 +801,13 @@ export type MarketplacePurchase = {
   purchasedAt: Date;
 };
 
-// Study Timer Sessions table for Pomodoro technique
+// Study Timer Sessions table for generic activity tracking
 export const studyTimerSessions = pgTable('study_timer_sessions', {
   id: serial('id').primaryKey(),
   userId: varchar('user_id').notNull(),
   tenantId: integer('tenant_id').notNull().default(1),
   sessionType: text('session_type').notNull(), // "work", "break", "long_break"
+  activityLabel: text('activity_label'), // User-defined activity label (e.g., "Work Session", "Meditation", "Exercise")
   duration: integer('duration').notNull(), // in minutes
   startedAt: timestamp('started_at').defaultNow(),
   completedAt: timestamp('completed_at'),

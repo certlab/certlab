@@ -2337,6 +2337,7 @@ class FirestoreStorage implements IClientStorage {
         userId: session.userId,
         tenantId: session.tenantId || 1,
         sessionType: session.sessionType || 'work',
+        activityLabel: session.activityLabel || null,
         duration: session.duration || 25,
         startedAt: session.startedAt || new Date(),
         completedAt: session.completedAt || null,

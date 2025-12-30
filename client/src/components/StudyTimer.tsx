@@ -10,7 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { TimerSettingsDialog } from '@/components/TimerSettingsDialog';
+import { ActivityTimeline } from '@/components/ActivityTimeline';
 import {
   Play,
   Pause,
@@ -107,6 +109,7 @@ export function StudyTimer() {
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [sessionType, setSessionType] = useState<'work' | 'break' | 'long_break'>('work');
+  const [activityLabel, setActivityLabel] = useState('Work Session');
   const [timeLeft, setTimeLeft] = useState(25 * 60); // Default 25 minutes in seconds
   const [workSessionsCompleted, setWorkSessionsCompleted] = useState(0);
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
@@ -261,11 +264,20 @@ export function StudyTimer() {
 
       saveSessionMutation.mutate({
         sessionType,
+        activityLabel: sessionType === 'work' ? activityLabel : null,
         duration: configuredDuration ?? 0,
         startedAt: sessionStartTimeRef.current,
       });
     }
-  }, [isPaused, pauseStartTime, currentSessionId, timerSettings, sessionType, saveSessionMutation]);
+  }, [
+    isPaused,
+    pauseStartTime,
+    currentSessionId,
+    timerSettings,
+    sessionType,
+    activityLabel,
+    saveSessionMutation,
+  ]);
 
   // Handle session completion
   const handleSessionComplete = useCallback(() => {
@@ -519,267 +531,256 @@ export function StudyTimer() {
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Main Timer Card - Compact with Improved Styling */}
+        {/* Main Timer Card - Left Side */}
         <Card className="lg:col-span-2 shadow-md">
           <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              {/* Left: Timer Display with Mini Progress Ring */}
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <CircularProgress value={getProgress()} size={80} strokeWidth={4}>
-                    <div
-                      className={`text-2xl font-bold font-mono tabular-nums ${
-                        sessionType === 'work'
-                          ? 'text-blue-600 dark:text-blue-400'
-                          : 'text-green-600 dark:text-green-400'
-                      }`}
-                    >
-                      {formatTime(timeLeft).split(':')[0]}
-                    </div>
-                  </CircularProgress>
+            <div className="flex flex-col gap-4">
+              {/* Timer Display and Controls Row */}
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                {/* Left: Timer Display with Mini Progress Ring */}
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <CircularProgress value={getProgress()} size={80} strokeWidth={4}>
+                      <div
+                        className={`text-2xl font-bold font-mono tabular-nums ${
+                          sessionType === 'work'
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-green-600 dark:text-green-400'
+                        }`}
+                      >
+                        {formatTime(timeLeft).split(':')[0]}
+                      </div>
+                    </CircularProgress>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">
+                      {sessionType === 'work' && activityLabel
+                        ? activityLabel
+                        : sessionType === 'work'
+                          ? 'Work Session'
+                          : sessionType === 'break'
+                            ? 'Short Break'
+                            : 'Long Break'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{formatTime(timeLeft)}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">
-                    {sessionType === 'work'
-                      ? 'Work Session'
-                      : sessionType === 'break'
-                        ? 'Short Break'
-                        : 'Long Break'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{formatTime(timeLeft)}</p>
+
+                {/* Right: Controls */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    {!isRunning && !isPaused ? (
+                      <Button
+                        size="sm"
+                        onClick={handleStart}
+                        className={
+                          sessionType === 'work'
+                            ? 'bg-blue-600 hover:bg-blue-700'
+                            : 'bg-green-600 hover:bg-green-700'
+                        }
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Start
+                      </Button>
+                    ) : isPaused ? (
+                      <Button
+                        size="sm"
+                        onClick={handleStart}
+                        className={
+                          sessionType === 'work'
+                            ? 'bg-blue-600 hover:bg-blue-700'
+                            : 'bg-green-600 hover:bg-green-700'
+                        }
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Resume
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="outline" onClick={handlePause}>
+                        <Pause className="h-4 w-4 mr-1" />
+                        Pause
+                      </Button>
+                    )}
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleReset}
+                      disabled={!isRunning && !isPaused}
+                      aria-label="Reset timer"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Session Type Selector - Compact Segmented Control */}
+                  <ToggleGroup
+                    type="single"
+                    value={sessionType}
+                    onValueChange={(value) => {
+                      if (value && !isRunning && !isPaused) {
+                        setSessionType(value as 'work' | 'break' | 'long_break');
+                      }
+                    }}
+                    className={`inline-flex rounded-md p-0.5 ${
+                      sessionType === 'work'
+                        ? 'bg-blue-100 dark:bg-blue-950'
+                        : 'bg-green-100 dark:bg-green-950'
+                    }`}
+                  >
+                    <ToggleGroupItem
+                      value="work"
+                      disabled={isRunning || isPaused}
+                      className="h-7 text-xs px-2 text-blue-700 dark:text-blue-200 data-[state=on]:bg-blue-600 data-[state=on]:text-white"
+                    >
+                      Work
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="break"
+                      disabled={isRunning || isPaused}
+                      className="h-7 text-xs px-2 text-green-700 dark:text-green-200 data-[state=on]:bg-green-600 data-[state=on]:text-white"
+                    >
+                      Short
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="long_break"
+                      disabled={isRunning || isPaused}
+                      className="h-7 text-xs px-2 text-green-700 dark:text-green-200 data-[state=on]:bg-green-600 data-[state=on]:text-white"
+                    >
+                      Long
+                    </ToggleGroupItem>
+                  </ToggleGroup>
                 </div>
               </div>
 
-              {/* Right: Controls */}
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  {!isRunning && !isPaused ? (
-                    <Button
-                      size="sm"
-                      onClick={handleStart}
-                      className={
-                        sessionType === 'work'
-                          ? 'bg-blue-600 hover:bg-blue-700'
-                          : 'bg-green-600 hover:bg-green-700'
-                      }
-                    >
-                      <Play className="h-4 w-4 mr-1" />
-                      Start
-                    </Button>
-                  ) : isPaused ? (
-                    <Button
-                      size="sm"
-                      onClick={handleStart}
-                      className={
-                        sessionType === 'work'
-                          ? 'bg-blue-600 hover:bg-blue-700'
-                          : 'bg-green-600 hover:bg-green-700'
-                      }
-                    >
-                      <Play className="h-4 w-4 mr-1" />
-                      Resume
-                    </Button>
-                  ) : (
-                    <Button size="sm" variant="outline" onClick={handlePause}>
-                      <Pause className="h-4 w-4 mr-1" />
-                      Pause
-                    </Button>
-                  )}
-
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleReset}
-                    disabled={!isRunning && !isPaused}
-                    aria-label="Reset timer"
+              {/* Activity Label Input - Only shown for work sessions */}
+              {sessionType === 'work' && (
+                <div className="space-y-2">
+                  <label
+                    htmlFor="activity-label"
+                    className="text-xs font-medium text-muted-foreground"
                   >
-                    <RotateCcw className="h-4 w-4" />
-                  </Button>
+                    Activity Label
+                  </label>
+                  <Input
+                    id="activity-label"
+                    type="text"
+                    placeholder="e.g., Work Session, Meditation, Exercise"
+                    value={activityLabel}
+                    onChange={(e) => setActivityLabel(e.target.value)}
+                    disabled={isRunning || isPaused}
+                    className="h-8 text-sm"
+                  />
                 </div>
+              )}
 
-                {/* Session Type Selector - Compact Segmented Control */}
-                <ToggleGroup
-                  type="single"
-                  value={sessionType}
-                  onValueChange={(value) => {
-                    if (value && !isRunning && !isPaused) {
-                      setSessionType(value as 'work' | 'break' | 'long_break');
-                    }
-                  }}
-                  className={`inline-flex rounded-md p-0.5 ${
-                    sessionType === 'work'
-                      ? 'bg-blue-100 dark:bg-blue-950'
-                      : 'bg-green-100 dark:bg-green-950'
-                  }`}
-                >
-                  <ToggleGroupItem
-                    value="work"
-                    disabled={isRunning || isPaused}
-                    className="h-7 text-xs px-2 text-blue-700 dark:text-blue-200 data-[state=on]:bg-blue-600 data-[state=on]:text-white"
-                  >
-                    Work
-                  </ToggleGroupItem>
-                  <ToggleGroupItem
-                    value="break"
-                    disabled={isRunning || isPaused}
-                    className="h-7 text-xs px-2 text-green-700 dark:text-green-200 data-[state=on]:bg-green-600 data-[state=on]:text-white"
-                  >
-                    Short
-                  </ToggleGroupItem>
-                  <ToggleGroupItem
-                    value="long_break"
-                    disabled={isRunning || isPaused}
-                    className="h-7 text-xs px-2 text-green-700 dark:text-green-200 data-[state=on]:bg-green-600 data-[state=on]:text-white"
-                  >
-                    Long
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
+              {/* Status Messages */}
+              {isPaused && (
+                <div className="text-center text-xs text-muted-foreground">
+                  Timer paused - click Resume to continue
+                </div>
+              )}
+              {!isRunning && !isPaused && (
+                <div className="text-center text-xs text-muted-foreground">
+                  Click Start to begin your {sessionType === 'work' ? 'activity' : 'break'} session
+                </div>
+              )}
             </div>
-
-            {/* Status Messages */}
-            {isPaused && (
-              <div className="text-center text-xs text-muted-foreground mt-3">
-                Timer paused - click Resume to continue
-              </div>
-            )}
-            {!isRunning && !isPaused && (
-              <div className="text-center text-xs text-muted-foreground mt-3">
-                Click Start to begin your {sessionType === 'work' ? 'work' : 'break'} session
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        {/* Today's Progress - Compact with Visual Improvements */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Calendar className="h-4 w-4" />
-              Today's Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-muted-foreground">Study Time</span>
-                <span className="text-xl font-bold">{todayMinutes}m</span>
+        {/* Activity Timeline - Right Side */}
+        <ActivityTimeline sessions={todaySessions} />
+      </div>
+
+      {/* Quick Settings - Compact - Full Width with Improved Design */}
+      <Card className="mt-4">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Settings className="h-4 w-4" />
+            Quick Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div
+              className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => setIsSettingsDialogOpen(true)}
+            >
+              <div className="flex items-center gap-1 mb-1">
+                <Clock className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Work</span>
               </div>
-              <Progress value={todayGoalProgress} className="h-2" />
-              <p className="text-xs text-muted-foreground mt-1">
-                Goal: {timerSettings?.dailyGoalMinutes || 120}m
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Sessions</span>
-              <span className="text-base font-semibold">{completedSessionsToday.length}</span>
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">This Round</span>
-                <span className="text-xs font-medium">
-                  {workSessionsCompleted} / {timerSettings?.sessionsUntilLongBreak || 4}
+              <div className="flex items-center gap-1">
+                <span className="text-base font-semibold">
+                  {timerSettings?.workDuration || 25}m
                 </span>
+                <ChevronDown className="h-3 w-3 text-muted-foreground" />
               </div>
-              <PomodoroPips
-                completed={workSessionsCompleted}
-                total={timerSettings?.sessionsUntilLongBreak || 4}
+            </div>
+            <div
+              className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => setIsSettingsDialogOpen(true)}
+            >
+              <div className="flex items-center gap-1 mb-1">
+                <Coffee className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Break</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-base font-semibold">
+                  {timerSettings?.breakDuration || 5}m
+                </span>
+                <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              </div>
+            </div>
+            <div
+              className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => setIsSettingsDialogOpen(true)}
+            >
+              <div className="flex items-center gap-1 mb-1">
+                <Coffee className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Long Break</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-base font-semibold">
+                  {timerSettings?.longBreakDuration || 15}m
+                </span>
+                <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              </div>
+            </div>
+            <div className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg">
+              <div className="flex items-center gap-1 mb-1">
+                <Bell className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Notifications</span>
+              </div>
+              <Switch
+                checked={timerSettings?.enableNotifications ?? false}
+                onCheckedChange={(checked) =>
+                  updateSettingsMutation.mutate({ enableNotifications: checked })
+                }
+                className="scale-75"
               />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Settings - Compact - Full Width with Improved Design */}
-        <Card className="lg:col-span-3">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Settings className="h-4 w-4" />
-              Quick Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              <div
-                className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => setIsSettingsDialogOpen(true)}
-              >
-                <div className="flex items-center gap-1 mb-1">
-                  <Clock className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Work</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-base font-semibold">
-                    {timerSettings?.workDuration || 25}m
-                  </span>
-                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                </div>
+            <div className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg">
+              <div className="flex items-center gap-1 mb-1">
+                {timerSettings?.enableSound ? (
+                  <Volume2 className="h-3 w-3 text-muted-foreground" />
+                ) : (
+                  <VolumeX className="h-3 w-3 text-muted-foreground" />
+                )}
+                <span className="text-xs text-muted-foreground">Sound</span>
               </div>
-              <div
-                className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => setIsSettingsDialogOpen(true)}
-              >
-                <div className="flex items-center gap-1 mb-1">
-                  <Coffee className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Break</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-base font-semibold">
-                    {timerSettings?.breakDuration || 5}m
-                  </span>
-                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                </div>
-              </div>
-              <div
-                className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => setIsSettingsDialogOpen(true)}
-              >
-                <div className="flex items-center gap-1 mb-1">
-                  <Coffee className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Long Break</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-base font-semibold">
-                    {timerSettings?.longBreakDuration || 15}m
-                  </span>
-                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                </div>
-              </div>
-              <div className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-1 mb-1">
-                  <Bell className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Notifications</span>
-                </div>
-                <Switch
-                  checked={timerSettings?.enableNotifications ?? false}
-                  onCheckedChange={(checked) =>
-                    updateSettingsMutation.mutate({ enableNotifications: checked })
-                  }
-                  className="scale-75"
-                />
-              </div>
-              <div className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-1 mb-1">
-                  {timerSettings?.enableSound ? (
-                    <Volume2 className="h-3 w-3 text-muted-foreground" />
-                  ) : (
-                    <VolumeX className="h-3 w-3 text-muted-foreground" />
-                  )}
-                  <span className="text-xs text-muted-foreground">Sound</span>
-                </div>
-                <Switch
-                  checked={timerSettings?.enableSound ?? false}
-                  onCheckedChange={(checked) =>
-                    updateSettingsMutation.mutate({ enableSound: checked })
-                  }
-                  className="scale-75"
-                />
-              </div>
+              <Switch
+                checked={timerSettings?.enableSound ?? false}
+                onCheckedChange={(checked) =>
+                  updateSettingsMutation.mutate({ enableSound: checked })
+                }
+                className="scale-75"
+              />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <TimerSettingsDialog
         open={isSettingsDialogOpen}
