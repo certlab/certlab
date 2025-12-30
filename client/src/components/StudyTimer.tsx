@@ -97,7 +97,7 @@ function PomodoroPips({ completed, total }: { completed: number; total: number }
   );
 }
 
-export function StudyTimer({ compact = false }: StudyTimerProps) {
+export function StudyTimer({ compact = true }: StudyTimerProps) {
   const { user } = useAuth();
   const { toast } = useToast();
 
