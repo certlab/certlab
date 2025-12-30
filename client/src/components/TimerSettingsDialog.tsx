@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-provider';
 import { queryClient, queryKeys } from '@/lib/queryClient';
@@ -46,7 +46,7 @@ export function TimerSettingsDialog({
   const [enableNotifications, setEnableNotifications] = useState(true);
   const [enableSound, setEnableSound] = useState(true);
 
-  // Initialize state when dialog opens or settings change
+  // Initialize state when settings change
   useEffect(() => {
     if (currentSettings) {
       setWorkDuration(currentSettings.workDuration ?? 25);
@@ -55,7 +55,7 @@ export function TimerSettingsDialog({
       setEnableNotifications(currentSettings.enableNotifications ?? true);
       setEnableSound(currentSettings.enableSound ?? true);
     }
-  }, [currentSettings, open]);
+  }, [currentSettings]);
 
   // Save settings mutation
   const saveSettingsMutation = useMutation({
@@ -95,8 +95,8 @@ export function TimerSettingsDialog({
     saveSettingsMutation.mutate();
   };
 
-  // Generate duration options (1-60 minutes)
-  const durationOptions = Array.from({ length: 60 }, (_, i) => i + 1);
+  // Memoize duration options to avoid creating array on every render
+  const durationOptions = useMemo(() => Array.from({ length: 60 }, (_, i) => i + 1), []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -127,7 +127,7 @@ export function TimerSettingsDialog({
                 </div>
                 <Select
                   value={workDuration.toString()}
-                  onValueChange={(value) => setWorkDuration(parseInt(value))}
+                  onValueChange={(value) => setWorkDuration(parseInt(value, 10))}
                 >
                   <SelectTrigger id="work-duration" className="w-[100px]">
                     <SelectValue />
@@ -152,7 +152,7 @@ export function TimerSettingsDialog({
                 </div>
                 <Select
                   value={breakDuration.toString()}
-                  onValueChange={(value) => setBreakDuration(parseInt(value))}
+                  onValueChange={(value) => setBreakDuration(parseInt(value, 10))}
                 >
                   <SelectTrigger id="break-duration" className="w-[100px]">
                     <SelectValue />
@@ -177,7 +177,7 @@ export function TimerSettingsDialog({
                 </div>
                 <Select
                   value={longBreakDuration.toString()}
-                  onValueChange={(value) => setLongBreakDuration(parseInt(value))}
+                  onValueChange={(value) => setLongBreakDuration(parseInt(value, 10))}
                 >
                   <SelectTrigger id="long-break-duration" className="w-[100px]">
                     <SelectValue />
