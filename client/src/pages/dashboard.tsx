@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-provider';
@@ -13,6 +13,7 @@ import { CertificationSelectionDialog } from '@/components/CertificationSelectio
 import { StudyTimer } from '@/components/StudyTimer';
 import { studyMaterials } from '@/data/study-materials';
 import { calculateLevelFromPoints, calculatePointsForLevel } from '@/lib/level-utils';
+import { POINTS_CONFIG } from '@/lib/achievement-service';
 import { PlayCircle, Trophy, Target, History, FileText, ArrowRight, Flame } from 'lucide-react';
 import type { UserStats, Quiz, Category } from '@shared/schema';
 
@@ -310,6 +311,68 @@ export default function Dashboard() {
   const videoBuffBadge = badges.find((b) => b.badge?.name === 'Video Buff');
   const dailyStreakBadge = badges.find((b) => b.badge?.name === 'Daily Streak');
 
+  // Calculate daily experience for learning velocity chart
+  const dailyExperience = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Initialize array for current week (Mon-Sun)
+    const dailyXP: number[] = [0, 0, 0, 0, 0, 0, 0];
+
+    // Get the day of week offset (0 = Sunday, 1 = Monday, etc.)
+    const todayDayOfWeek = today.getDay();
+    const daysToMonday = todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1; // Convert Sunday=0 to Sunday=6
+
+    // Calculate Monday of current week
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - daysToMonday);
+
+    // Calculate points for each completed quiz
+    const completedQuizzes = recentQuizzes.filter((q) => q.completedAt && q.score !== null);
+
+    completedQuizzes.forEach((quiz) => {
+      const completedDate = new Date(quiz.completedAt!);
+      completedDate.setHours(0, 0, 0, 0);
+
+      // Only include quizzes from this week (Monday to Sunday)
+      if (completedDate >= monday && completedDate <= today) {
+        // Calculate day index (0 = Monday, 6 = Sunday)
+        const dayDiff = Math.floor(
+          (completedDate.getTime() - monday.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        if (dayDiff >= 0 && dayDiff < 7) {
+          // Calculate points for this quiz using same logic as achievement service
+          let points = POINTS_CONFIG.QUIZ_COMPLETION;
+
+          // Add points for correct answers
+          const correctAnswers = quiz.correctAnswers || 0;
+          points += correctAnswers * POINTS_CONFIG.CORRECT_ANSWER;
+
+          // Passing bonus
+          if (quiz.isPassing || (quiz.score && quiz.score >= 85)) {
+            points += POINTS_CONFIG.PASSING_BONUS;
+          }
+
+          // Perfect score bonus
+          if (quiz.score === 100) {
+            points += POINTS_CONFIG.PERFECT_SCORE_BONUS;
+          }
+
+          dailyXP[dayDiff] += points;
+        }
+      }
+    });
+
+    return dailyXP;
+  }, [recentQuizzes]);
+
+  // Calculate max value for scaling the chart
+  const maxDailyXP = Math.max(...dailyExperience, 1); // At least 1 to avoid division by zero
+
+  // Convert to percentages for display
+  const dailyXPPercentages = dailyExperience.map((xp) => (xp / maxDailyXP) * 100);
+
   return (
     <div className="min-h-screen bg-background">
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -332,12 +395,12 @@ export default function Dashboard() {
           <Card>
             <CardContent className="p-6">
               <div className="flex gap-4">
-                {/* Y-axis percentage scale */}
+                {/* Y-axis XP scale */}
                 <div className="flex flex-col justify-between text-xs text-muted-foreground h-24">
-                  <span>100%</span>
-                  <span>75%</span>
-                  <span>50%</span>
-                  <span>25%</span>
+                  <span>{Math.round(maxDailyXP)}</span>
+                  <span>{Math.round(maxDailyXP * 0.75)}</span>
+                  <span>{Math.round(maxDailyXP * 0.5)}</span>
+                  <span>{Math.round(maxDailyXP * 0.25)}</span>
                   <span>0</span>
                 </div>
                 <div className="flex-1">
@@ -350,12 +413,17 @@ export default function Dashboard() {
                       ))}
                     </div>
                     <div className="relative h-full flex items-end justify-between gap-2">
-                      {[20, 35, 45, 60, 70, 75, 80].map((height, i) => (
+                      {dailyXPPercentages.map((height, i) => (
                         <div
                           key={i}
-                          className="flex-1 bg-primary/60 rounded-t"
-                          style={{ height: `${height}%` }}
-                        />
+                          className="flex-1 bg-primary/60 rounded-t relative group"
+                          style={{ height: `${height}%`, minHeight: height > 0 ? '2px' : '0' }}
+                        >
+                          {/* Tooltip showing actual XP value on hover */}
+                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            {dailyExperience[i]} XP
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>

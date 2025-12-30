@@ -53,7 +53,7 @@ interface BadgeRequirement {
 /**
  * Points configuration for various activities
  */
-const POINTS_CONFIG = {
+export const POINTS_CONFIG = {
   /** Base points for completing any quiz */
   QUIZ_COMPLETION: 10,
   /** Bonus points per correct answer */

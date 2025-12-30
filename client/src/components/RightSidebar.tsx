@@ -6,7 +6,7 @@ import { themes } from '@/lib/theme-constants';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { cn, getInitials, getUserDisplayName } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -121,6 +121,9 @@ function UserPanel() {
       {/* User Header */}
       <div className="flex items-center gap-4 mb-6">
         <Avatar className="h-14 w-14 border-2 border-primary">
+          {currentUser.profileImageUrl && (
+            <AvatarImage src={currentUser.profileImageUrl} alt={getUserDisplayName(currentUser)} />
+          )}
           <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-white text-lg">
             {getInitials(currentUser.firstName, currentUser.lastName)}
           </AvatarFallback>

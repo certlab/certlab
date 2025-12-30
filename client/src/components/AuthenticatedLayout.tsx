@@ -4,7 +4,7 @@ import { Home, ShoppingBag, Shield, Timer } from 'lucide-react';
 import { getInitials, formatNotificationCount } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-provider';
 import { RightSidebarProvider, useRightSidebar } from '@/lib/right-sidebar-provider';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { RightSidebar } from '@/components/RightSidebar';
@@ -155,6 +155,12 @@ function AuthenticatedHeader() {
                 }
               >
                 <Avatar className="h-10 w-10">
+                  {currentUser?.profileImageUrl && (
+                    <AvatarImage
+                      src={currentUser.profileImageUrl}
+                      alt={currentUser.firstName || currentUser.email}
+                    />
+                  )}
                   <AvatarFallback className="bg-white text-foreground font-semibold text-sm border-2 border-border">
                     {currentUser ? getInitials(currentUser.firstName, currentUser.lastName) : '?'}
                   </AvatarFallback>

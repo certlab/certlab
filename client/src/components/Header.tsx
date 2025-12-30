@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { CloudSyncIndicator } from '@/components/CloudSyncIndicator';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatNotificationCount } from '@/lib/utils';
 import {
   NavigationMenu,
@@ -520,14 +521,17 @@ export default function Header() {
                   >
                     <div className="flex items-center space-x-2">
                       <div className="relative">
-                        <div
-                          className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center shadow-glow"
-                          aria-hidden="true"
-                        >
-                          <span className="text-primary-foreground text-sm font-semibold">
+                        <Avatar className="w-8 h-8 shadow-glow">
+                          {currentUser.profileImageUrl && (
+                            <AvatarImage
+                              src={currentUser.profileImageUrl}
+                              alt={getUserDisplayName(currentUser)}
+                            />
+                          )}
+                          <AvatarFallback className="gradient-primary text-primary-foreground text-sm font-semibold">
                             {getInitials(currentUser.firstName, currentUser.lastName)}
-                          </span>
-                        </div>
+                          </AvatarFallback>
+                        </Avatar>
                         {/* Red ring indicator for unread notifications */}
                         {unreadCount > 0 && (
                           <span
@@ -545,11 +549,17 @@ export default function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-64 p-2" align="end">
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5">
-                    <div className="w-12 h-12 gradient-primary rounded-full flex items-center justify-center shadow-glow">
-                      <span className="text-primary-foreground text-lg font-semibold">
+                    <Avatar className="w-12 h-12 shadow-glow">
+                      {currentUser.profileImageUrl && (
+                        <AvatarImage
+                          src={currentUser.profileImageUrl}
+                          alt={getUserDisplayName(currentUser)}
+                        />
+                      )}
+                      <AvatarFallback className="gradient-primary text-primary-foreground text-lg font-semibold">
                         {getInitials(currentUser.firstName, currentUser.lastName)}
-                      </span>
-                    </div>
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-semibold">{getUserDisplayName(currentUser)}</p>
                       <p className="text-xs text-muted-foreground">Certification Student</p>
