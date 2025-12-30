@@ -600,21 +600,21 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
                   <ToggleGroupItem
                     value="work"
                     disabled={isRunning || isPaused}
-                    className="h-7 text-xs px-2 data-[state=on]:bg-blue-600 data-[state=on]:text-white"
+                    className="h-7 text-xs px-2 text-blue-700 dark:text-blue-200 data-[state=on]:bg-blue-600 data-[state=on]:text-white"
                   >
                     Work
                   </ToggleGroupItem>
                   <ToggleGroupItem
                     value="break"
                     disabled={isRunning || isPaused}
-                    className="h-7 text-xs px-2 data-[state=on]:bg-green-600 data-[state=on]:text-white"
+                    className="h-7 text-xs px-2 text-green-700 dark:text-green-200 data-[state=on]:bg-green-600 data-[state=on]:text-white"
                   >
                     Short
                   </ToggleGroupItem>
                   <ToggleGroupItem
                     value="long_break"
                     disabled={isRunning || isPaused}
-                    className="h-7 text-xs px-2 data-[state=on]:bg-green-600 data-[state=on]:text-white"
+                    className="h-7 text-xs px-2 text-green-700 dark:text-green-200 data-[state=on]:bg-green-600 data-[state=on]:text-white"
                   >
                     Long
                   </ToggleGroupItem>
@@ -781,7 +781,7 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
               <ToggleGroupItem
                 value="work"
                 disabled={isRunning || isPaused}
-                className="data-[state=on]:bg-blue-600 data-[state=on]:text-white"
+                className="text-blue-700 dark:text-blue-200 data-[state=on]:bg-blue-600 data-[state=on]:text-white"
               >
                 <Clock className="h-4 w-4 mr-2" />
                 Work
@@ -789,7 +789,7 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
               <ToggleGroupItem
                 value="break"
                 disabled={isRunning || isPaused}
-                className="data-[state=on]:bg-green-600 data-[state=on]:text-white"
+                className="text-green-700 dark:text-green-200 data-[state=on]:bg-green-600 data-[state=on]:text-white"
               >
                 <Coffee className="h-4 w-4 mr-2" />
                 Short Break
@@ -797,7 +797,7 @@ export function StudyTimer({ compact = false }: StudyTimerProps) {
               <ToggleGroupItem
                 value="long_break"
                 disabled={isRunning || isPaused}
-                className="data-[state=on]:bg-green-600 data-[state=on]:text-white"
+                className="text-green-700 dark:text-green-200 data-[state=on]:bg-green-600 data-[state=on]:text-white"
               >
                 <Coffee className="h-4 w-4 mr-2" />
                 Long Break
