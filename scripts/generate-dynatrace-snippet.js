@@ -81,7 +81,6 @@ const snippet = `
   var dt = document.createElement('script');
   dt.type = 'text/javascript';
   dt.async = true;
-  dt.crossOrigin = 'anonymous';
   dt.src = '${config.beaconUrl}/jstag/${config.applicationId}';
   var s = document.getElementsByTagName('script')[0];
   s.parentNode.insertBefore(dt, s);
