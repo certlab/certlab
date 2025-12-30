@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { Home, ShoppingBag, Shield, Timer } from 'lucide-react';
+import { Home, ShoppingBag, Shield, Timer, Flame, Trophy } from 'lucide-react';
 import { getInitials, formatNotificationCount } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-provider';
 import { RightSidebarProvider, useRightSidebar } from '@/lib/right-sidebar-provider';
@@ -16,6 +16,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import MobileNavigationEnhanced from '@/components/MobileNavigationEnhanced';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import { Badge } from '@/components/ui/badge';
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -116,25 +117,71 @@ function AuthenticatedHeader() {
 
         {/* Right: User Section */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Level, XP, and Streak (Desktop only) */}
-          <div className="hidden xl:flex items-center gap-3 mr-2">
-            <div className="flex items-center gap-2 bg-accent/50 rounded-lg px-3 py-1.5">
-              <div className="text-xs font-semibold whitespace-nowrap">Level {level}</div>
-              <div className="w-24 h-2 bg-secondary/50 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300"
-                  style={{ width: `${xpProgress}%` }}
-                  role="progressbar"
-                  aria-valuenow={currentXP}
-                  aria-valuemin={0}
-                  aria-valuemax={xpGoal}
-                  aria-label="Experience progress"
-                ></div>
-              </div>
-              <div className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-                {dayStreak}d
-              </div>
-            </div>
+          {/* Level and Streak - Visually Enhanced (Desktop only) */}
+          <div className="hidden xl:flex items-center gap-2 mr-2">
+            {/* Level Badge */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  variant="secondary"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 hover:from-purple-500/20 hover:to-blue-500/20 transition-all cursor-help"
+                >
+                  <Trophy className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                  <span className="text-xs font-bold text-foreground">Level {level}</span>
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-xs">
+                  <p className="font-semibold">Level {level}</p>
+                  <p className="text-muted-foreground">
+                    {currentXP} / {xpGoal} XP
+                  </p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Streak Badge */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 border transition-all cursor-help',
+                    dayStreak === 0
+                      ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600'
+                      : dayStreak < 7
+                        ? 'bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-500/20 hover:from-orange-500/20 hover:to-red-500/20'
+                        : 'bg-gradient-to-r from-red-500/10 to-pink-500/10 border-red-500/20 hover:from-red-500/20 hover:to-pink-500/20'
+                  )}
+                >
+                  <Flame
+                    className={cn(
+                      'w-3.5 h-3.5',
+                      dayStreak === 0
+                        ? 'text-gray-400'
+                        : dayStreak < 7
+                          ? 'text-orange-500 dark:text-orange-400'
+                          : 'text-red-500 dark:text-red-400 animate-pulse'
+                    )}
+                  />
+                  <span className="text-xs font-bold text-foreground">{dayStreak}d</span>
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-xs">
+                  <p className="font-semibold">
+                    {dayStreak === 0 ? 'Start your streak!' : `${dayStreak} day streak`}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {dayStreak === 0
+                      ? 'Complete a quiz today'
+                      : dayStreak < 7
+                        ? 'Keep going!'
+                        : 'Amazing dedication!'}
+                  </p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
           </div>
 
           {/* User Avatar - with red ring indicator when notifications exist */}
