@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { Badge, Trophy, Star, Target, Flame, Award } from 'lucide-react';
+import { Badge, Trophy, Star, Target, Flame, Award, Search } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge as BadgeUI } from '@/components/ui/badge';
 import { LevelProgress } from '@/components/LevelProgress';
+import { Input } from '@/components/ui/input';
 import { queryKeys } from '@/lib/queryClient';
+import { useState, useMemo } from 'react';
 
 interface BadgeData {
   id: number;
@@ -86,6 +88,8 @@ const getCategoryIcon = (category: string) => {
 };
 
 export function AchievementBadges({ userId }: AchievementBadgesProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+
   const {
     data: achievements,
     isLoading,
@@ -94,6 +98,78 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
     queryKey: queryKeys.user.achievements(userId),
     enabled: !!userId,
   });
+
+  // Fetch all badges to show both earned and unearned
+  const { data: allBadges = [] } = useQuery<
+    Array<{
+      id: number;
+      name: string;
+      description: string;
+      icon: string;
+      category: string;
+      requirement: unknown;
+      color: string;
+      rarity: string;
+      points: number;
+    }>
+  >({
+    queryKey: queryKeys.badges.all(),
+  });
+
+  // Extract earned badges and game stats (safely handle loading state)
+  const earnedBadges = useMemo(() => achievements?.badges || [], [achievements]);
+  const gameStats = achievements?.gameStats || {
+    totalPoints: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    totalBadgesEarned: 0,
+    level: 1,
+    nextLevelPoints: 100,
+  };
+
+  // Create a set of earned badge IDs for quick lookup
+  const earnedBadgeIds = useMemo(() => new Set(earnedBadges.map((b) => b.badgeId)), [earnedBadges]);
+
+  // Create a map of earned badges with their metadata
+  const earnedBadgesMap = useMemo(
+    () => new Map(earnedBadges.map((b) => [b.badgeId, b])),
+    [earnedBadges]
+  );
+
+  // Combine all badges with their earned status
+  const allBadgesWithStatus = useMemo(() => {
+    return allBadges.map((badge) => ({
+      badge,
+      earned: earnedBadgeIds.has(badge.id),
+      earnedData: earnedBadgesMap.get(badge.id),
+    }));
+  }, [allBadges, earnedBadgeIds, earnedBadgesMap]);
+
+  // Filter badges based on search query
+  const filteredBadges = useMemo(() => {
+    if (!searchQuery.trim()) return allBadgesWithStatus;
+
+    const query = searchQuery.toLowerCase();
+    return allBadgesWithStatus.filter(
+      ({ badge }) =>
+        badge.name.toLowerCase().includes(query) ||
+        badge.description.toLowerCase().includes(query) ||
+        badge.category.toLowerCase().includes(query)
+    );
+  }, [allBadgesWithStatus, searchQuery]);
+
+  // Group filtered badges by category
+  const badgesByCategory = useMemo(() => {
+    return filteredBadges.reduce(
+      (acc, badgeWithStatus) => {
+        const category = badgeWithStatus.badge.category;
+        if (!acc[category]) acc[category] = [];
+        acc[category].push(badgeWithStatus);
+        return acc;
+      },
+      {} as Record<string, typeof filteredBadges>
+    );
+  }, [filteredBadges]);
 
   if (isLoading) {
     return (
@@ -122,21 +198,6 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
     );
   }
 
-  const { badges, gameStats } = achievements;
-
-  // Group badges by category
-  // Handle case where badges might be undefined during Firebase sign-in
-  const badgesByCategory = (badges || []).reduce(
-    (acc, badgeData) => {
-      const category = badgeData?.badge?.category;
-      if (!category) return acc; // Skip invalid badge data
-      if (!acc[category]) acc[category] = [];
-      acc[category].push(badgeData);
-      return acc;
-    },
-    {} as Record<string, BadgeData[]>
-  );
-
   return (
     <div className="space-y-6">
       {/* Level Progress Component */}
@@ -149,15 +210,31 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
         totalBadgesEarned={gameStats.totalBadgesEarned || 0}
       />
 
+      {/* Search Input */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search achievements by name, description, or category..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
       {/* Achievement Badges */}
       {Object.keys(badgesByCategory).length === 0 ? (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
               <Trophy className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 mb-2">No badges earned yet</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-2">
+                {searchQuery ? 'No achievements found' : 'No achievements available'}
+              </p>
               <p className="text-sm text-gray-400 dark:text-gray-500">
-                Complete learning sessions to unlock your first achievement!
+                {searchQuery
+                  ? 'Try a different search term'
+                  : 'Check back later for new achievements!'}
               </p>
             </div>
           </CardContent>
@@ -167,45 +244,73 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
           <div key={category}>
             <h3 className="text-lg font-semibold mb-3 capitalize flex items-center gap-2">
               {getCategoryIcon(category)}
-              {category} Badges
+              {category} Badges ({categoryBadges.filter((b) => b.earned).length}/
+              {categoryBadges.length} earned)
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {categoryBadges.map((badgeData) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+              {categoryBadges.map(({ badge, earned, earnedData }) => (
                 <Card
-                  key={badgeData.id}
-                  className={`transition-all duration-200 hover:shadow-lg ${getBadgeColor(badgeData.badge.color)}`}
+                  key={badge.id}
+                  className={`transition-all duration-200 hover:shadow-lg ${
+                    earned
+                      ? getBadgeColor(badge.color)
+                      : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700'
+                  }`}
                 >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <span className="text-2xl">{badgeData.badge.icon}</span>
-                        {badgeData.badge.name}
+                  <CardHeader className="pb-3 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      {/* Icon */}
+                      <div className={`text-5xl mb-2 ${earned ? '' : 'opacity-30 grayscale'}`}>
+                        {badge.icon}
+                      </div>
+                      {/* Badge Name */}
+                      <CardTitle
+                        className={`text-base font-semibold ${earned ? '' : 'text-gray-500 dark:text-gray-400'}`}
+                      >
+                        {badge.name}
                       </CardTitle>
-                      {!badgeData.isNotified && (
+                      {/* New Badge Indicator */}
+                      {earned && earnedData && !earnedData.isNotified && (
                         <BadgeUI variant="destructive" className="text-xs">
                           New!
                         </BadgeUI>
                       )}
                     </div>
-                    <CardDescription className="text-sm">
-                      {badgeData.badge.description}
+                    {/* Description */}
+                    <CardDescription
+                      className={`text-sm text-center mt-2 ${earned ? '' : 'text-gray-400 dark:text-gray-500'}`}
+                    >
+                      {badge.description}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex justify-between items-center text-sm">
-                      <span className={`font-medium ${getRarityColor(badgeData.badge.rarity)}`}>
-                        {badgeData.badge.rarity.toUpperCase()}
+                      <span
+                        className={`font-medium text-xs ${earned ? getRarityColor(badge.rarity) : 'text-gray-400 dark:text-gray-500'}`}
+                      >
+                        {badge.rarity.toUpperCase()}
                       </span>
-                      <div className="flex items-center gap-2">
-                        <Star className="w-3 h-3 text-yellow-500" />
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {badgeData.badge.points} pts
+                      <div className="flex items-center gap-1">
+                        <Star
+                          className={`w-3 h-3 ${earned ? 'text-yellow-500' : 'text-gray-400 dark:text-gray-500'}`}
+                        />
+                        <span
+                          className={`text-xs ${earned ? 'text-gray-600 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'}`}
+                        >
+                          {badge.points} pts
                         </span>
                       </div>
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                      Earned {new Date(badgeData.earnedAt).toLocaleDateString()}
-                    </div>
+                    {earned && earnedData && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                        Earned {new Date(earnedData.earnedAt).toLocaleDateString()}
+                      </div>
+                    )}
+                    {!earned && (
+                      <div className="text-xs text-gray-400 dark:text-gray-500 mt-2 text-center font-medium">
+                        Locked
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -214,7 +319,7 @@ export function AchievementBadges({ userId }: AchievementBadgesProps) {
         ))
       )}
 
-      {achievements.newBadges > 0 && (
+      {achievements?.newBadges && achievements.newBadges > 0 && (
         <Card className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-purple-200 dark:border-purple-700">
           <CardContent className="pt-4">
             <div className="text-center">
