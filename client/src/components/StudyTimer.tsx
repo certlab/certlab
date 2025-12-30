@@ -682,7 +682,13 @@ export function StudyTimer() {
               )}
               {!isRunning && !isPaused && (
                 <div className="text-center text-xs text-muted-foreground">
-                  Click Start to begin your {sessionType === 'work' ? 'activity' : 'break'} session
+                  Click Start to begin your{' '}
+                  {sessionType === 'work' && activityLabel
+                    ? activityLabel.toLowerCase()
+                    : sessionType === 'work'
+                      ? 'activity'
+                      : 'break'}{' '}
+                  session
                 </div>
               )}
             </div>
