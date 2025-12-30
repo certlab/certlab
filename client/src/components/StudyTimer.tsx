@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import type { StudyTimerSession, StudyTimerSettings } from '@shared/schema';
 
-// StudyTimer is now compact by design - no props needed
+// StudyTimer uses a responsive layout (vertical on small screens, horizontal grid on large screens) - no layout props needed
 
 // Circular progress ring component
 function CircularProgress({
@@ -498,7 +498,7 @@ export function StudyTimer() {
     );
   }
 
-  // Compact layout (by design)
+  // Responsive layout (by design)
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* Main Timer Card - Compact with Improved Styling */}
