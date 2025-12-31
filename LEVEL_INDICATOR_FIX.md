@@ -3,6 +3,8 @@
 ## Issue
 The level indicator at the top of the page (in `AuthenticatedLayout.tsx`) was showing "Level 1" regardless of actual user progress.
 
+![Issue Screenshot](https://github.com/user-attachments/assets/74c7ad02-2457-40a6-9cf3-86284a23faef)
+
 ## Root Cause
 The level was being calculated from `totalQuizzes` using the formula:
 ```typescript
@@ -12,14 +14,27 @@ const level = stats ? Math.floor((stats.totalQuizzes || 0) / 10) + 1 : 1;
 This formula was wrong because:
 1. It fetched `UserStats` data instead of `UserGameStats`
 2. It calculated level based on quiz count, not gamification points
-3. It ignored the actual `level` field maintained by the achievement service
+3. It ignored the actual gamification point system used throughout the app
+
+### Why This Was Wrong
+
+The app uses a **point-based gamification system** where:
+- Users earn points for completing quizzes correctly
+- Level is calculated from total points accumulated
+- Each level requires progressively more points to complete
+
+But the level indicator was using:
+- A simple quiz count formula
+- Every 10 quizzes = +1 level
+- Completely disconnected from the point system
 
 ## Solution Implemented
 
 ### Changes Made
 1. **Updated data source** - Changed from `UserStats` to `UserGameStats`
-2. **Used real level data** - Now uses `gameStats?.level || 1` directly
-3. **Fixed XP calculations** - Uses `calculatePointsForLevel` utility for accurate progress tracking
+2. **Recalculate level from points** - Uses `calculateLevelFromPoints(totalPoints)` 
+3. **Fixed XP calculations** - Uses `calculatePointsForLevel` utility for accurate progress
+4. **Defensive programming** - Follows same pattern as `LevelProgress` component
 
 ### Code Changes in `AuthenticatedLayout.tsx`
 
@@ -51,16 +66,27 @@ const { data: gameStats } = useQuery<UserGameStats | undefined>({
   enabled: !!currentUser?.id,
 });
 
-// Use real level from gamification system (based on totalPoints)
-const level = gameStats?.level || 1;
-
-// Calculate XP progress for current level using the same formula as LevelProgress component
-const currentLevelStartPoints = calculatePointsForLevel(level);
+// Calculate level from totalPoints using defensive programming pattern
+// This prevents display bugs if gameStats.level becomes out of sync
 const totalPoints = gameStats?.totalPoints || 0;
+const level = calculateLevelFromPoints(totalPoints);
+
+// Calculate XP progress for current level
+const currentLevelStartPoints = calculatePointsForLevel(level);
 const pointsInCurrentLevel = totalPoints - currentLevelStartPoints;
 const pointsNeededForLevel = level * 100;
 const xpProgress = (pointsInCurrentLevel / pointsNeededForLevel) * 100;
 ```
+
+### Why Recalculate Instead of Using gameStats.level?
+
+We use **defensive programming** by recalculating the level from `totalPoints` rather than trusting `gameStats.level`. This is the same pattern used in the `LevelProgress` component.
+
+**Benefits:**
+1. Prevents display bugs if `gameStats.level` is stale or out of sync
+2. Ensures UI always shows accurate level based on current points
+3. Handles race conditions during data updates
+4. Single source of truth (totalPoints) for level calculation
 
 ## Level System Explanation
 
