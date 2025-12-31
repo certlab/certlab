@@ -67,6 +67,15 @@ describe('firebase module', () => {
 
       expect(initializeApp).not.toHaveBeenCalled();
     });
+
+    it('does not call setPersistence when Firebase is not configured', async () => {
+      const { setPersistence } = await import('firebase/auth');
+      const { initializeFirebase } = await import('./firebase');
+
+      await initializeFirebase();
+
+      expect(setPersistence).not.toHaveBeenCalled();
+    });
   });
 
   describe('signInWithGoogle', () => {
