@@ -294,7 +294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Process daily login for gamification (non-blocking)
       // This runs in the background after user is loaded and UI is unblocked
       if (fbUser) {
-        (async () => {
+        void (async () => {
           try {
             const { gamificationService } = await import('./gamification-service');
             const user = await storage.getUser(fbUser.uid);
