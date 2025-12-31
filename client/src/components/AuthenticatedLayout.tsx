@@ -46,7 +46,7 @@ function AuthenticatedHeader() {
 
   // Get user game stats for level and XP (from the gamification system)
   const { data: gameStats } = useQuery<UserGameStats | undefined>({
-    queryKey: ['userGameStats', currentUser?.id],
+    queryKey: queryKeys.user.gameStats(currentUser?.id),
     queryFn: async () => {
       if (!currentUser?.id) return undefined;
       return await storage.getUserGameStats(currentUser.id);
@@ -68,7 +68,6 @@ function AuthenticatedHeader() {
   const currentLevelStartPoints = calculatePointsForLevel(level);
   const pointsInCurrentLevel = totalPoints - currentLevelStartPoints;
   const pointsNeededForLevel = level * 100;
-  const xpProgress = (pointsInCurrentLevel / pointsNeededForLevel) * 100;
 
   // For display: current XP and XP goal
   const currentXP = pointsInCurrentLevel;
