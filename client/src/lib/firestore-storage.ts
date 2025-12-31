@@ -714,10 +714,15 @@ class FirestoreStorage implements IClientStorage {
       const masteryScores = await this.getUserMasteryScores(userId, tenantId);
       const masteryScore = await this.calculateOverallMasteryScore(userId, tenantId);
 
+      // Get current streak from game stats
+      const gameStats = await this.getUserGameStats(userId);
+      const currentStreak = gameStats?.currentStreak || 0;
+
       return {
         totalQuizzes,
         averageScore,
-        studyStreak: 0, // TODO: Calculate from game stats
+        studyStreak: currentStreak,
+        currentStreak,
         certifications,
         passingRate,
         masteryScore,
@@ -728,6 +733,7 @@ class FirestoreStorage implements IClientStorage {
         totalQuizzes: 0,
         averageScore: 0,
         studyStreak: 0,
+        currentStreak: 0,
         certifications: 0,
         passingRate: 0,
         masteryScore: 0,
