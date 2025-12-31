@@ -52,7 +52,11 @@ function AddActivityDialog({
           <DialogDescription>Create a new activity type for your timer sessions.</DialogDescription>
         </DialogHeader>
         <div className="py-4">
+          <label htmlFor="new-activity-input" className="sr-only">
+            Activity name
+          </label>
           <Input
+            id="new-activity-input"
             placeholder="Activity name (e.g., Reading, Coding)"
             value={newActivity}
             onChange={(e) => setNewActivity(e.target.value)}
@@ -65,6 +69,7 @@ function AddActivityDialog({
             }}
             maxLength={30}
             autoFocus
+            aria-label="Activity name"
           />
         </div>
         <DialogFooter>
@@ -276,7 +281,6 @@ export function StudyTimer() {
       toast({
         title: 'Select an Activity',
         description: 'Please select an activity before starting the timer.',
-        variant: 'destructive',
       });
       return;
     }
@@ -373,9 +377,19 @@ export function StudyTimer() {
 
   // Handle add activity
   const handleAddActivity = (activity: string) => {
-    if (!activities.includes(activity)) {
+    // Case-insensitive duplicate check
+    const activityLower = activity.toLowerCase();
+    const isDuplicate = activities.some((a) => a.toLowerCase() === activityLower);
+
+    if (!isDuplicate) {
       setActivities([...activities, activity]);
       setSelectedActivity(activity);
+    } else {
+      toast({
+        title: 'Activity Already Exists',
+        description: 'This activity name is already in your list.',
+        variant: 'destructive',
+      });
     }
   };
 
