@@ -387,156 +387,159 @@ export default function Dashboard() {
           <StudyTimer />
         </div>
 
-        {/* Learning Velocity Section */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-foreground">Learning Velocity</h2>
-          </div>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex gap-4">
-                {/* Y-axis XP scale */}
-                <div className="flex flex-col justify-between text-xs text-muted-foreground h-24">
-                  <span>{Math.round(maxDailyXP)}</span>
-                  <span>{Math.round(maxDailyXP * 0.75)}</span>
-                  <span>{Math.round(maxDailyXP * 0.5)}</span>
-                  <span>{Math.round(maxDailyXP * 0.25)}</span>
-                  <span>0</span>
-                </div>
-                <div className="flex-1">
-                  {/* Simple chart representation */}
-                  <div className="relative h-24">
-                    {/* Horizontal grid lines to connect y-axis labels to bars */}
-                    <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <div key={index} className="border-t border-border/40" />
-                      ))}
+        {/* Achievements & Progress and Learning Velocity Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Achievements & Progress Section */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground">Achievements & Progress</h2>
+              <Button variant="ghost" size="sm" onClick={handleViewProgress} className="gap-2">
+                View All
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <Card>
+              <CardContent className="p-6 space-y-6">
+                {/* Level Progress Circle */}
+                <div className="flex flex-col items-center justify-center p-6 bg-muted/30 rounded-lg">
+                  <div className="relative w-32 h-32">
+                    <svg className="w-full h-full transform -rotate-90">
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="none"
+                        className="text-muted"
+                      />
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeDasharray={`${2 * Math.PI * 56}`}
+                        strokeDashoffset={`${2 * Math.PI * 56 * (1 - progressToNextLevel / 100)}`}
+                        className="text-primary transition-all duration-500"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <p className="text-xs text-muted-foreground">Level</p>
+                      <p className="text-3xl font-bold">{level}</p>
                     </div>
-                    <div className="relative h-full flex items-end justify-between gap-2">
-                      {dailyXPPercentages.map((height, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 bg-primary/60 rounded-t relative group"
-                          style={{ height: `${height}%`, minHeight: height > 0 ? '2px' : '0' }}
-                        >
-                          {/* Tooltip showing actual XP value on hover */}
-                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                            {dailyExperience[i]} XP
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-4">
+                    Current Level XP: {pointsInCurrentLevel}/{pointsNeededForLevel}
+                  </p>
+                </div>
+
+                {/* Achievement Badges */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Quiz Master */}
+                  <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center mb-2">
+                      <Trophy className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                    </div>
+                    <p className="text-xs font-semibold text-center mb-1">Quiz Master</p>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Complete 50 Quizzes - {quizMasterBadge?.badge?.points || 400} XP
+                    </p>
+                    {quizMasterBadge && (
+                      <Badge variant="secondary" className="mt-1 text-xs">
+                        Earned
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Video Buff */}
+                  <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-2">
+                      <PlayCircle className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <p className="text-xs font-semibold text-center mb-1">Video Buff</p>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Watch 100 Videos - {videoBuffBadge?.badge?.points || 300} XP
+                    </p>
+                    {videoBuffBadge && (
+                      <Badge variant="secondary" className="mt-1 text-xs">
+                        Earned
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Daily Streak */}
+                  <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center mb-2">
+                      <Flame className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <p className="text-xs font-semibold text-center mb-1">Daily Streak</p>
+                    <p className="text-xs text-muted-foreground text-center">
+                      7-Day Streak - {dailyStreakBadge?.badge?.points || 100} XP
+                    </p>
+                    {dailyStreakBadge && (
+                      <Badge variant="secondary" className="mt-1 text-xs">
+                        Earned
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Learning Velocity Section */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground">Learning Velocity</h2>
+            </div>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex gap-4">
+                  {/* Y-axis XP scale */}
+                  <div className="flex flex-col justify-between text-xs text-muted-foreground h-24">
+                    <span>{Math.round(maxDailyXP)}</span>
+                    <span>{Math.round(maxDailyXP * 0.75)}</span>
+                    <span>{Math.round(maxDailyXP * 0.5)}</span>
+                    <span>{Math.round(maxDailyXP * 0.25)}</span>
+                    <span>0</span>
+                  </div>
+                  <div className="flex-1">
+                    {/* Simple chart representation */}
+                    <div className="relative h-24">
+                      {/* Horizontal grid lines to connect y-axis labels to bars */}
+                      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                        {Array.from({ length: 5 }).map((_, index) => (
+                          <div key={index} className="border-t border-border/40" />
+                        ))}
+                      </div>
+                      <div className="relative h-full flex items-end justify-between gap-2">
+                        {dailyXPPercentages.map((height, i) => (
+                          <div
+                            key={i}
+                            className="flex-1 bg-primary/60 rounded-t relative group"
+                            style={{ height: `${height}%`, minHeight: height > 0 ? '2px' : '0' }}
+                          >
+                            {/* Tooltip showing actual XP value on hover */}
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                              {dailyExperience[i]} XP
+                            </div>
                           </div>
-                        </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label) => (
+                        <span key={label}>{label}</span>
                       ))}
                     </div>
                   </div>
-                  <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label) => (
-                      <span key={label}>{label}</span>
-                    ))}
-                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Achievements & Progress Section */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-foreground">Achievements & Progress</h2>
-            <Button variant="ghost" size="sm" onClick={handleViewProgress} className="gap-2">
-              View All
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+              </CardContent>
+            </Card>
           </div>
-          <Card>
-            <CardContent className="p-6 space-y-6">
-              {/* Level Progress Circle */}
-              <div className="flex flex-col items-center justify-center p-6 bg-muted/30 rounded-lg">
-                <div className="relative w-32 h-32">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      className="text-muted"
-                    />
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeDasharray={`${2 * Math.PI * 56}`}
-                      strokeDashoffset={`${2 * Math.PI * 56 * (1 - progressToNextLevel / 100)}`}
-                      className="text-primary transition-all duration-500"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <p className="text-xs text-muted-foreground">Level</p>
-                    <p className="text-3xl font-bold">{level}</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground mt-4">
-                  Current Level XP: {pointsInCurrentLevel}/{pointsNeededForLevel}
-                </p>
-              </div>
-
-              {/* Achievement Badges */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Quiz Master */}
-                <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center mb-2">
-                    <Trophy className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-                  </div>
-                  <p className="text-xs font-semibold text-center mb-1">Quiz Master</p>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Complete 50 Quizzes - {quizMasterBadge?.badge?.points || 400} XP
-                  </p>
-                  {quizMasterBadge && (
-                    <Badge variant="secondary" className="mt-1 text-xs">
-                      Earned
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Video Buff */}
-                <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-2">
-                    <PlayCircle className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <p className="text-xs font-semibold text-center mb-1">Video Buff</p>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Watch 100 Videos - {videoBuffBadge?.badge?.points || 300} XP
-                  </p>
-                  {videoBuffBadge && (
-                    <Badge variant="secondary" className="mt-1 text-xs">
-                      Earned
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Daily Streak */}
-                <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center mb-2">
-                    <Flame className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                  </div>
-                  <p className="text-xs font-semibold text-center mb-1">Daily Streak</p>
-                  <p className="text-xs text-muted-foreground text-center">
-                    7-Day Streak - {dailyStreakBadge?.badge?.points || 100} XP
-                  </p>
-                  {dailyStreakBadge && (
-                    <Badge variant="secondary" className="mt-1 text-xs">
-                      Earned
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Marketplace Recommendations Section */}
