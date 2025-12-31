@@ -1,236 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useRightSidebar } from '@/lib/right-sidebar-provider';
 import { useAuth } from '@/lib/auth-provider';
-import { useTheme } from '@/lib/theme-provider';
-import { themes } from '@/lib/theme-constants';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { cn, getInitials, getUserDisplayName } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { X, LogOut, User, Trophy, Bell, Settings, Check, Palette, Star } from 'lucide-react';
+import { X, Trophy, Bell, Star } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
 import { storage } from '@/lib/storage-factory';
 import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
-
-function SettingsPanel() {
-  const { theme, setTheme } = useTheme();
-
-  return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex aspect-square size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 text-white shadow-lg">
-          <Settings className="size-5" />
-        </div>
-        <div>
-          <h2 className="font-semibold">Settings</h2>
-          <p className="text-xs text-muted-foreground">Customize your experience</p>
-        </div>
-      </div>
-
-      <ScrollArea className="flex-1 -mx-4 px-4">
-        <div className="space-y-6">
-          {/* Theme Selection */}
-          <div>
-            <h3 className="text-sm font-medium mb-3">Theme</h3>
-            <div className="grid grid-cols-1 gap-2 p-0.5">
-              {themes.map((themeOption) => {
-                const Icon = themeOption.icon;
-                const isSelected = theme === themeOption.value;
-                return (
-                  <button
-                    key={themeOption.value}
-                    onClick={() => setTheme(themeOption.value)}
-                    className={cn(
-                      'flex items-center gap-3 p-3 rounded-xl text-left transition-all',
-                      'hover:bg-accent/50',
-                      isSelected && 'bg-accent ring-2 ring-primary'
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        'flex aspect-square size-8 items-center justify-center rounded-lg',
-                        isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                      )}
-                    >
-                      <Icon className="size-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{themeOption.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {themeOption.description}
-                      </p>
-                    </div>
-                    {isSelected && <Check className="size-4 text-primary flex-shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </ScrollArea>
-    </div>
-  );
-}
-
-function UserPanel() {
-  const navigate = useNavigate();
-  const { user: currentUser, logout } = useAuth();
-  const { closePanel, openPanel } = useRightSidebar();
-  const { toast } = useToast();
-  const { theme, setTheme } = useTheme();
-  const { unreadCount } = useUnreadNotifications();
-
-  const handleSignOut = async () => {
-    // Close panel and navigate to home page BEFORE logout to prevent 404 flash
-    // This ensures we're already on the landing page when auth state changes
-    // Note: auth-provider's logout() always clears user state (setUser(null))
-    // regardless of storage operation success, so user is always logged out
-    closePanel();
-    navigate('/');
-
-    try {
-      await logout();
-      toast({
-        title: 'Signed out successfully',
-        description: 'You have been logged out of your account.',
-      });
-    } catch (error) {
-      console.error('Error during sign out:', error);
-      toast({
-        title: 'Signed out with warnings',
-        description:
-          'You have been logged out locally, but there was a problem completing the sign out process.',
-      });
-    }
-  };
-
-  const handleNavigate = (path: string) => {
-    navigate(path);
-    closePanel();
-  };
-
-  if (!currentUser) return null;
-
-  return (
-    <div className="flex flex-col h-full">
-      {/* User Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Avatar className="h-14 w-14 border-2 border-primary">
-          {currentUser.profileImageUrl && (
-            <AvatarImage src={currentUser.profileImageUrl} alt={getUserDisplayName(currentUser)} />
-          )}
-          <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-white text-lg">
-            {getInitials(currentUser.firstName, currentUser.lastName)}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <h2 className="font-semibold">{getUserDisplayName(currentUser)}</h2>
-          <p className="text-sm text-muted-foreground">Student</p>
-        </div>
-      </div>
-
-      <ScrollArea className="flex-1 -mx-4 px-4">
-        <div className="space-y-6">
-          {/* User Actions */}
-          <div className="space-y-2">
-            <Button
-              variant="ghost"
-              className="w-full justify-start rounded-xl h-12"
-              onClick={() => handleNavigate('/app/profile')}
-            >
-              <User className="mr-3 h-5 w-5" />
-              My Profile
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start rounded-xl h-12 relative"
-              onClick={() => openPanel('notifications')}
-            >
-              <Bell className="mr-3 h-5 w-5" />
-              Notifications
-              {unreadCount > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="ml-auto h-5 px-2 text-xs"
-                  aria-label={`${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`}
-                >
-                  {unreadCount}
-                </Badge>
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start rounded-xl h-12"
-              onClick={() => handleNavigate('/app/achievements')}
-            >
-              <Trophy className="mr-3 h-5 w-5" />
-              Achievements
-            </Button>
-          </div>
-
-          <Separator />
-
-          {/* Theme Selection */}
-          <div>
-            <div className="flex items-center gap-2 mb-3 px-3">
-              <Palette className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-medium">Theme</h3>
-            </div>
-            <div className="grid grid-cols-1 gap-2 p-0.5">
-              {themes.map((themeOption) => {
-                const Icon = themeOption.icon;
-                const isSelected = theme === themeOption.value;
-                return (
-                  <button
-                    key={themeOption.value}
-                    onClick={() => setTheme(themeOption.value)}
-                    className={cn(
-                      'flex items-center gap-3 p-3 rounded-xl text-left transition-all',
-                      'hover:bg-accent/50',
-                      isSelected && 'bg-accent ring-2 ring-primary'
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        'flex aspect-square size-8 items-center justify-center rounded-lg',
-                        isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                      )}
-                    >
-                      <Icon className="size-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{themeOption.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {themeOption.description}
-                      </p>
-                    </div>
-                    {isSelected && <Check className="size-4 text-primary flex-shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </ScrollArea>
-
-      <Separator className="my-4" />
-
-      <Button
-        variant="ghost"
-        className="w-full justify-start rounded-xl h-12 text-destructive hover:text-destructive hover:bg-destructive/10"
-        onClick={handleSignOut}
-      >
-        <LogOut className="mr-3 h-5 w-5" />
-        Sign Out
-      </Button>
-    </div>
-  );
-}
 
 interface BadgeData {
   id: number;
@@ -432,15 +214,6 @@ function NotificationsPanel() {
       <Separator className="my-4" />
 
       <div className="space-y-2">
-        <Button
-          variant="ghost"
-          className="w-full justify-start rounded-xl h-12"
-          onClick={() => openPanel('user')}
-        >
-          <User className="mr-3 h-5 w-5" />
-          Back to Account
-        </Button>
-
         {unnotifiedBadges.length > 0 && (
           <Button
             variant="outline"
@@ -503,11 +276,7 @@ export function RightSidebar() {
       >
         {/* Close Button */}
         <div className="flex items-center justify-between p-4 border-b-2 border-border bg-muted/50">
-          <span className="text-sm font-semibold">
-            {activePanel === 'settings' && 'Settings'}
-            {activePanel === 'user' && 'Account'}
-            {activePanel === 'notifications' && 'Notifications'}
-          </span>
+          <span className="text-sm font-semibold">Notifications</span>
           <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl" onClick={closePanel}>
             <X className="h-4 w-4" />
             <span className="sr-only">Close panel</span>
@@ -516,8 +285,6 @@ export function RightSidebar() {
 
         {/* Panel Content */}
         <div className="flex-1 overflow-hidden p-4">
-          {activePanel === 'settings' && <SettingsPanel />}
-          {activePanel === 'user' && <UserPanel />}
           {activePanel === 'notifications' && <NotificationsPanel />}
         </div>
       </div>

@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-export type RightSidebarPanel = 'settings' | 'user' | 'notifications' | null;
+export type RightSidebarPanel = 'notifications' | null;
 
 type RightSidebarContextProps = {
   isOpen: boolean;
