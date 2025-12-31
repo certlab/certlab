@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import MobileNavigationEnhanced from '@/components/MobileNavigationEnhanced';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import { Badge } from '@/components/ui/badge';
+import { calculatePointsForLevel } from '@/lib/level-utils';
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -60,13 +61,17 @@ function AuthenticatedHeader() {
   // The level field is maintained by the achievement service when points are earned
   const level = gameStats?.level || 1;
 
-  // Calculate XP progress for current level
-  // Each level requires (level * 100) points to complete
-  const currentLevelPoints = level > 1 ? (level - 1) * level * 50 : 0; // Sum of points for all previous levels
+  // Calculate XP progress for current level using the same formula as LevelProgress component
+  // Each level N requires (N * 100) points to complete
+  const currentLevelStartPoints = calculatePointsForLevel(level);
   const totalPoints = gameStats?.totalPoints || 0;
-  const currentXP = totalPoints - currentLevelPoints;
-  const xpGoal = level * 100;
-  const xpProgress = (currentXP / xpGoal) * 100;
+  const pointsInCurrentLevel = totalPoints - currentLevelStartPoints;
+  const pointsNeededForLevel = level * 100;
+  const xpProgress = (pointsInCurrentLevel / pointsNeededForLevel) * 100;
+
+  // For display: current XP and XP goal
+  const currentXP = pointsInCurrentLevel;
+  const xpGoal = pointsNeededForLevel;
 
   // Calculate streak from game stats
   const dayStreak = gameStats?.currentStreak || 0;
