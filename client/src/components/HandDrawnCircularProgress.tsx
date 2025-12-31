@@ -40,6 +40,8 @@ export function HandDrawnCircularProgress({
     const radius = (size - strokeWidth * 2) / 2;
 
     // Simple seeded pseudo-random number generator
+    // Uses sine function to generate pseudo-random values
+    // Multiplier of 10000 ensures sufficient variation in the output
     const seededRandom = (seed: number): number => {
       const x = Math.sin(seed) * 10000;
       return x - Math.floor(x);
@@ -55,6 +57,8 @@ export function HandDrawnCircularProgress({
       for (let i = 0; i <= segments; i++) {
         const angle = startAngle + i * angleStep;
         // Use seeded pseudo-random for consistent jitter
+        // Seed calculation: base seed * 1000 + segment index * prime (13.37)
+        // This ensures each point has a unique but deterministic jitter value
         const seedValue = seed * 1000 + i * 13.37;
         const jitterAmount = 1.5;
         const jitterX = (seededRandom(seedValue) - 0.5) * jitterAmount;

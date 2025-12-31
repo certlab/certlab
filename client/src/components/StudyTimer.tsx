@@ -220,7 +220,7 @@ export function StudyTimer() {
         const newSession = await storage.createStudyTimerSession({
           userId: user.id,
           tenantId: 1,
-          sessionType: 'work',
+          sessionType: 'work', // All sessions are 'work' type; activity differentiation is via activityLabel
           duration,
           isCompleted: false,
           isPaused: false,
@@ -299,7 +299,7 @@ export function StudyTimer() {
     if (!currentSessionId) {
       const duration = Math.floor(timeLeft / 60);
       saveSessionMutation.mutate({
-        sessionType: 'work',
+        sessionType: 'work', // All sessions are 'work' type; activity differentiation is via activityLabel
         activityLabel: selectedActivity,
         duration,
         startedAt: sessionStartTimeRef.current,
