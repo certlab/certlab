@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import MobileNavigationEnhanced from '@/components/MobileNavigationEnhanced';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import { Badge } from '@/components/ui/badge';
-import { calculatePointsForLevel } from '@/lib/level-utils';
+import { calculateLevelFromPoints, calculatePointsForLevel } from '@/lib/level-utils';
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -57,14 +57,15 @@ function AuthenticatedHeader() {
   // Get unread notifications count using custom hook
   const { unreadCount } = useUnreadNotifications();
 
-  // Use real level from gamification system (based on totalPoints)
-  // The level field is maintained by the achievement service when points are earned
-  const level = gameStats?.level || 1;
+  // Calculate level from totalPoints using defensive programming pattern
+  // This prevents display bugs if gameStats.level becomes out of sync with totalPoints
+  // Same pattern used in LevelProgress component for consistency
+  const totalPoints = gameStats?.totalPoints || 0;
+  const level = calculateLevelFromPoints(totalPoints);
 
-  // Calculate XP progress for current level using the same formula as LevelProgress component
+  // Calculate XP progress for current level
   // Each level N requires (N * 100) points to complete
   const currentLevelStartPoints = calculatePointsForLevel(level);
-  const totalPoints = gameStats?.totalPoints || 0;
   const pointsInCurrentLevel = totalPoints - currentLevelStartPoints;
   const pointsNeededForLevel = level * 100;
   const xpProgress = (pointsInCurrentLevel / pointsNeededForLevel) * 100;
