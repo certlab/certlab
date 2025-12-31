@@ -14,6 +14,8 @@ vi.mock('firebase/auth', () => ({
   signInWithPopup: vi.fn(),
   signOut: vi.fn(),
   onAuthStateChanged: vi.fn(),
+  setPersistence: vi.fn(() => Promise.resolve()),
+  browserLocalPersistence: {},
 }));
 
 // Store original env values
@@ -53,7 +55,7 @@ describe('firebase module', () => {
   describe('initializeFirebase', () => {
     it('returns false when Firebase is not configured', async () => {
       const { initializeFirebase } = await import('./firebase');
-      const result = initializeFirebase();
+      const result = await initializeFirebase();
       expect(result).toBe(false);
     });
 
@@ -61,7 +63,7 @@ describe('firebase module', () => {
       const { initializeApp } = await import('firebase/app');
       const { initializeFirebase } = await import('./firebase');
 
-      initializeFirebase();
+      await initializeFirebase();
 
       expect(initializeApp).not.toHaveBeenCalled();
     });

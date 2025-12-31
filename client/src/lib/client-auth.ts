@@ -698,8 +698,8 @@ class ClientAuth {
    * Should be called early in the app lifecycle
    * @returns true if Firebase was successfully initialized
    */
-  initializeGoogleAuth(): boolean {
-    return initializeFirebase();
+  async initializeGoogleAuth(): Promise<boolean> {
+    return await initializeFirebase();
   }
 
   /**
