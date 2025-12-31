@@ -711,7 +711,7 @@ class ClientAuth {
   async signInWithGoogle(): Promise<AuthResponse> {
     try {
       // Initialize Firebase if not already done
-      if (!this.initializeGoogleAuth()) {
+      if (!(await this.initializeGoogleAuth())) {
         const authError = new AuthError(AuthErrorCode.LOGIN_FAILED);
         return {
           success: false,
