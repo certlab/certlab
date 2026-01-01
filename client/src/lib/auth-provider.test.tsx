@@ -213,4 +213,109 @@ describe('AuthProvider', () => {
       expect(contextRefs[i]).toBe(contextRefs[0]);
     }
   });
+
+  it('processes daily login asynchronously without blocking loading state', async () => {
+    // Mock gamification service
+    const mockProcessDailyLogin = vi.fn().mockResolvedValue({ shouldShowReward: false, day: 1 });
+    vi.doMock('./gamification-service', () => ({
+      gamificationService: {
+        processDailyLogin: mockProcessDailyLogin,
+      },
+    }));
+
+    // Mock Firebase auth state to simulate sign-in
+    const mockUser = {
+      uid: 'test-user-123',
+      email: 'test@example.com',
+      displayName: 'Test User',
+      photoURL: null,
+    };
+
+    const mockGetUser = vi.fn().mockResolvedValue({
+      id: 'test-user-123',
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      role: 'user',
+      tenantId: 1,
+    });
+
+    // Import mocked modules
+    const { storage } = await import('./storage-factory');
+    const { onFirebaseAuthStateChanged } = await import('./firebase');
+
+    // Update storage mock
+    (storage.getUser as ReturnType<typeof vi.fn>).mockImplementation(mockGetUser);
+
+    // Track when isLoading becomes false
+    let loadingBecameFalseAt: number | null = null;
+    let processDailyLoginCalledAt: number | null = null;
+
+    // Override the Firebase auth state callback to simulate sign-in
+    (onFirebaseAuthStateChanged as ReturnType<typeof vi.fn>).mockImplementation((callback) => {
+      setTimeout(() => {
+        callback(mockUser as any);
+      }, 0);
+      return () => {};
+    });
+
+    // Track processDailyLogin calls
+    mockProcessDailyLogin.mockImplementation(async () => {
+      processDailyLoginCalledAt = Date.now();
+      return { shouldShowReward: false, day: 1 };
+    });
+
+    function TestComponent() {
+      const { isLoading, user } = useAuth();
+
+      useEffect(() => {
+        if (!isLoading && user && loadingBecameFalseAt === null) {
+          loadingBecameFalseAt = Date.now();
+        }
+      }, [isLoading, user]);
+
+      return (
+        <div>
+          <span data-testid="loading">{String(isLoading)}</span>
+          <span data-testid="user">{user ? user.email : 'null'}</span>
+        </div>
+      );
+    }
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
+    // Wait for loading to become false and user to be set
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('loading')).toHaveTextContent('false');
+        expect(screen.getByTestId('user')).toHaveTextContent('test@example.com');
+      },
+      { timeout: 3000 }
+    );
+
+    // Verify isLoading became false
+    expect(loadingBecameFalseAt).not.toBeNull();
+
+    // Wait for processDailyLogin to be called (it's async and non-blocking)
+    await waitFor(
+      () => {
+        expect(mockProcessDailyLogin).toHaveBeenCalledWith('test-user-123', 1);
+      },
+      { timeout: 3000 }
+    );
+
+    // Verify processDailyLogin was called after isLoading became false
+    // This confirms it didn't block the UI
+    if (loadingBecameFalseAt && processDailyLoginCalledAt) {
+      expect(processDailyLoginCalledAt).toBeGreaterThanOrEqual(loadingBecameFalseAt);
+    }
+
+    // Verify processDailyLogin was called with correct parameters
+    expect(mockProcessDailyLogin).toHaveBeenCalledTimes(1);
+    expect(mockProcessDailyLogin).toHaveBeenCalledWith('test-user-123', 1);
+  });
 });

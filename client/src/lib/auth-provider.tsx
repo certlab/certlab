@@ -207,13 +207,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
-  const loadUser = useCallback(async () => {
+  const loadUser = useCallback(async (): Promise<User | null> => {
     try {
       // Firebase user is now the only source of authentication
       if (!firebaseUser) {
         setUser(null);
         cacheAuthState(false, null);
-        return;
+        return null;
       }
 
       // Get or create user from Firestore
@@ -239,14 +239,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(firestoreUser);
         cacheAuthState(true, firestoreUser);
         identifyUser(firestoreUser.id);
+        return firestoreUser;
       } else {
         setUser(null);
         cacheAuthState(false, null);
+        return null;
       }
     } catch (error) {
       logError('loadUser', error);
       setUser(null);
       cacheAuthState(false, null);
+      return null;
     }
   }, [firebaseUser]);
 
@@ -279,7 +282,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Trigger user load whenever Firebase auth state changes
-      await loadUser();
+      const loadedUser = await loadUser();
 
       // Mark auth as initialized after first load
       if (!authInitialized) {
@@ -293,14 +296,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Process daily login for gamification (non-blocking)
       // This runs in the background after user is loaded and UI is unblocked
-      if (fbUser) {
+      if (fbUser && loadedUser) {
         void (async () => {
           try {
             const { gamificationService } = await import('./gamification-service');
-            const user = await storage.getUser(fbUser.uid);
-            if (user) {
-              await gamificationService.processDailyLogin(fbUser.uid, user.tenantId);
-            }
+            await gamificationService.processDailyLogin(fbUser.uid, loadedUser.tenantId);
           } catch (error) {
             console.error('Failed to process daily login:', error);
           }
