@@ -63,23 +63,29 @@ const TIMER_EDIT_TIP = 'Click timer to edit duration';
 const MAX_ACTIVITIES_REACHED_MESSAGE = 'Maximum Activities Reached';
 
 // Helper function to validate activity name
-const validateActivityName = (name: string): string | null => {
+const validateActivityName = (
+  name: string
+): { isValid: boolean; title?: string; description?: string } => {
   const trimmedName = name.trim();
   if (!trimmedName) {
-    return 'Activity Name Required: Please enter a name for the activity.';
+    return {
+      isValid: false,
+      title: 'Activity Name Required',
+      description: 'Please enter a name for the activity.',
+    };
   }
-  return null;
+  return { isValid: true };
 };
 
 // Helper function to validate duration
 const validateDuration = (
   duration: string
-): { isValid: boolean; error: string | null; value: number } => {
+): { isValid: boolean; title?: string; description?: string; value?: number } => {
   if (!duration) {
     return {
       isValid: false,
-      error: 'Duration Required: Please enter a duration for the timer.',
-      value: 0,
+      title: 'Duration Required',
+      description: 'Please enter a duration for the timer.',
     };
   }
 
@@ -87,28 +93,28 @@ const validateDuration = (
   if (isNaN(durationValue)) {
     return {
       isValid: false,
-      error: 'Invalid Duration: Duration must be a valid number.',
-      value: 0,
+      title: 'Invalid Duration',
+      description: 'Duration must be a valid number.',
     };
   }
 
   if (durationValue < 1) {
     return {
       isValid: false,
-      error: 'Duration Too Short: Duration must be at least 1 minute.',
-      value: 0,
+      title: 'Duration Too Short',
+      description: 'Duration must be at least 1 minute.',
     };
   }
 
   if (durationValue > MAX_TIMER_MINUTES) {
     return {
       isValid: false,
-      error: `Duration Too Long: Duration cannot exceed ${MAX_TIMER_MINUTES} minutes (8 hours).`,
-      value: 0,
+      title: 'Duration Too Long',
+      description: `Duration cannot exceed ${MAX_TIMER_MINUTES} minutes (8 hours).`,
     };
   }
 
-  return { isValid: true, error: null, value: durationValue };
+  return { isValid: true, value: durationValue };
 };
 
 // Helper function to check for duplicate activity names (case-insensitive)
@@ -154,30 +160,28 @@ function EditActivityDialog({
 
   const handleSave = () => {
     // Validate activity name
-    const nameError = validateActivityName(activityLabel);
-    if (nameError) {
-      const [title, description] = nameError.split(': ');
+    const nameValidation = validateActivityName(activityLabel);
+    if (!nameValidation.isValid) {
       toast({
-        title,
-        description,
+        title: nameValidation.title,
+        description: nameValidation.description,
         variant: 'destructive',
       });
       return;
     }
 
     // Validate duration
-    const { isValid, error, value } = validateDuration(duration);
-    if (!isValid) {
-      const [title, description] = error!.split(': ');
+    const durationValidation = validateDuration(duration);
+    if (!durationValidation.isValid) {
       toast({
-        title,
-        description,
+        title: durationValidation.title,
+        description: durationValidation.description,
         variant: 'destructive',
       });
       return;
     }
 
-    onSave(initialLabel, activityLabel.trim(), value);
+    onSave(initialLabel, activityLabel.trim(), durationValidation.value!);
     onOpenChange(false);
   };
 
@@ -262,30 +266,28 @@ function AddActivityDialog({
 
   const handleAdd = () => {
     // Validate activity name
-    const nameError = validateActivityName(newActivity);
-    if (nameError) {
-      const [title, description] = nameError.split(': ');
+    const nameValidation = validateActivityName(newActivity);
+    if (!nameValidation.isValid) {
       toast({
-        title,
-        description,
+        title: nameValidation.title,
+        description: nameValidation.description,
         variant: 'destructive',
       });
       return;
     }
 
     // Validate duration
-    const { isValid, error, value } = validateDuration(duration);
-    if (!isValid) {
-      const [title, description] = error!.split(': ');
+    const durationValidation = validateDuration(duration);
+    if (!durationValidation.isValid) {
       toast({
-        title,
-        description,
+        title: durationValidation.title,
+        description: durationValidation.description,
         variant: 'destructive',
       });
       return;
     }
 
-    onAdd(newActivity.trim(), value);
+    onAdd(newActivity.trim(), durationValidation.value!);
     setNewActivity('');
     setDuration('25');
     onOpenChange(false);
