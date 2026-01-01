@@ -98,52 +98,53 @@ describe('Dashboard Learning Velocity Calculation', () => {
   });
 
   it('should calculate daily experience correctly for multiple quizzes', () => {
-    // Use a fixed "today" date in the middle of the week (Thursday)
-    const today = new Date('2025-01-02T12:00:00'); // Thursday, Jan 2, 2025
+    // Use a fixed "today" date (January 10, 2025)
+    const today = new Date('2025-01-10T12:00:00');
     today.setHours(0, 0, 0, 0);
 
-    // Get Monday of current week
-    const todayDayOfWeek = today.getDay();
-    const daysToMonday = todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - daysToMonday);
+    // Calculate start date (9 days ago = January 1, 2025)
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 9);
 
-    // Create quizzes for Monday and Wednesday (both before "today")
-    const mondayQuiz = createMockQuiz(new Date(monday), 5, 10, 50);
-    const wednesday = new Date(monday);
-    wednesday.setDate(monday.getDate() + 2);
-    const wednesdayQuiz = createMockQuiz(wednesday, 10, 10, 100);
+    // Create quizzes for January 1 and January 5 (both within last 10 days)
+    const jan1Quiz = createMockQuiz(new Date(startDate), 5, 10, 50);
+    const jan5 = new Date(startDate);
+    jan5.setDate(startDate.getDate() + 4);
+    const jan5Quiz = createMockQuiz(jan5, 10, 10, 100);
 
-    const quizzes = [mondayQuiz, wednesdayQuiz];
+    const quizzes = [jan1Quiz, jan5Quiz];
 
-    // Calculate expected daily XP
-    const dailyXP = [0, 0, 0, 0, 0, 0, 0];
+    // Calculate expected daily XP (10 days)
+    const dailyXP = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     quizzes.forEach((quiz) => {
       const completedDate = new Date(quiz.completedAt!);
       completedDate.setHours(0, 0, 0, 0);
 
-      if (completedDate >= monday && completedDate <= today) {
+      if (completedDate >= startDate && completedDate <= today) {
         const dayDiff = Math.floor(
-          (completedDate.getTime() - monday.getTime()) / (1000 * 60 * 60 * 24)
+          (completedDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
         );
 
-        if (dayDiff >= 0 && dayDiff < 7) {
+        if (dayDiff >= 0 && dayDiff < 10) {
           dailyXP[dayDiff] += calculateQuizPoints(quiz);
         }
       }
     });
 
-    // Monday (index 0) should have 35 points
+    // January 1 (index 0) should have 35 points
     expect(dailyXP[0]).toBe(35);
-    // Wednesday (index 2) should have 135 points
-    expect(dailyXP[2]).toBe(135);
+    // January 5 (index 4) should have 135 points
+    expect(dailyXP[4]).toBe(135);
     // Other days should be 0
     expect(dailyXP[1]).toBe(0);
+    expect(dailyXP[2]).toBe(0);
     expect(dailyXP[3]).toBe(0);
-    expect(dailyXP[4]).toBe(0);
     expect(dailyXP[5]).toBe(0);
     expect(dailyXP[6]).toBe(0);
+    expect(dailyXP[7]).toBe(0);
+    expect(dailyXP[8]).toBe(0);
+    expect(dailyXP[9]).toBe(0);
   });
 
   it('should calculate max XP correctly', () => {
@@ -154,7 +155,7 @@ describe('Dashboard Learning Velocity Calculation', () => {
   });
 
   it('should handle empty quiz array', () => {
-    const dailyExperience = [0, 0, 0, 0, 0, 0, 0];
+    const dailyExperience = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     const maxDailyXP = Math.max(...dailyExperience, 1);
 
     // Should default to 1 to avoid division by zero
@@ -162,7 +163,7 @@ describe('Dashboard Learning Velocity Calculation', () => {
   });
 
   it('should convert to percentages correctly', () => {
-    const dailyExperience = [50, 100, 75, 0, 25, 0, 100];
+    const dailyExperience = [50, 100, 75, 0, 25, 0, 100, 80, 60, 90];
     const maxDailyXP = Math.max(...dailyExperience, 1);
     const percentages = dailyExperience.map((xp) => (xp / maxDailyXP) * 100);
 
@@ -173,5 +174,8 @@ describe('Dashboard Learning Velocity Calculation', () => {
     expect(percentages[4]).toBe(25);
     expect(percentages[5]).toBe(0);
     expect(percentages[6]).toBe(100);
+    expect(percentages[7]).toBe(80);
+    expect(percentages[8]).toBe(60);
+    expect(percentages[9]).toBe(90);
   });
 });

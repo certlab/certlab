@@ -316,16 +316,12 @@ export default function Dashboard() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Initialize array for current week (Mon-Sun)
-    const dailyXP: number[] = [0, 0, 0, 0, 0, 0, 0];
+    // Initialize array for last 10 days (index 0 = 9 days ago, index 9 = today)
+    const dailyXP: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-    // Get the day of week offset (0 = Sunday, 1 = Monday, etc.)
-    const todayDayOfWeek = today.getDay();
-    const daysToMonday = todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1; // Convert Sunday=0 to Sunday=6
-
-    // Calculate Monday of current week
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - daysToMonday);
+    // Calculate start date (9 days ago)
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 9);
 
     // Calculate points for each completed quiz
     const completedQuizzes = recentQuizzes.filter((q) => q.completedAt && q.score !== null);
@@ -334,14 +330,14 @@ export default function Dashboard() {
       const completedDate = new Date(quiz.completedAt!);
       completedDate.setHours(0, 0, 0, 0);
 
-      // Only include quizzes from this week (Monday to Sunday)
-      if (completedDate >= monday && completedDate <= today) {
-        // Calculate day index (0 = Monday, 6 = Sunday)
+      // Only include quizzes from the last 10 days (startDate to today)
+      if (completedDate >= startDate && completedDate <= today) {
+        // Calculate day index (0 = 9 days ago, 9 = today)
         const dayDiff = Math.floor(
-          (completedDate.getTime() - monday.getTime()) / (1000 * 60 * 60 * 24)
+          (completedDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
         );
 
-        if (dayDiff >= 0 && dayDiff < 7) {
+        if (dayDiff >= 0 && dayDiff < 10) {
           // Calculate points for this quiz using same logic as achievement service
           let points = POINTS_CONFIG.QUIZ_COMPLETION;
 
@@ -372,6 +368,24 @@ export default function Dashboard() {
 
   // Convert to percentages for display
   const dailyXPPercentages = dailyExperience.map((xp) => (xp / maxDailyXP) * 100);
+
+  // Generate labels for the last 10 days
+  const dayLabels = useMemo(() => {
+    const today = new Date();
+    const labels: string[] = [];
+
+    for (let i = 9; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+
+      // Format as "M/D" (e.g., "1/2", "12/31")
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      labels.push(`${month}/${day}`);
+    }
+
+    return labels;
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -493,7 +507,9 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 {dailyExperience.every((xp) => xp === 0) ? (
                   <div className="text-center py-12">
-                    <p className="text-sm text-muted-foreground mb-2">No activity this week</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      No activity in the last 10 days
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       Complete quizzes to see your learning velocity chart
                     </p>
@@ -533,8 +549,8 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label) => (
-                          <span key={label}>{label}</span>
+                        {dayLabels.map((label, index) => (
+                          <span key={index}>{label}</span>
                         ))}
                       </div>
                     </div>
