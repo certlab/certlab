@@ -124,9 +124,13 @@ const isDuplicateActivity = (
   excludeLabel?: string
 ): boolean => {
   const newLabelLower = newLabel.toLowerCase();
-  return activities.some(
-    (a) => a.label.toLowerCase() === newLabelLower && a.label !== excludeLabel
-  );
+  const excludeLower = excludeLabel?.toLowerCase();
+  return activities.some((a) => {
+    const labelLower = a.label.toLowerCase();
+    return (
+      labelLower === newLabelLower && (excludeLower === undefined || labelLower !== excludeLower)
+    );
+  });
 };
 
 // Edit activity dialog component

@@ -410,7 +410,6 @@ describe('StudyTimer - Component Integration Tests', () => {
   });
 
   it('should show edit and delete options for custom activities', async () => {
-    const user = userEvent.setup();
     // Mock settings with custom activities
     vi.mocked(storageFactory.storage.getStudyTimerSettings).mockResolvedValue({
       id: 1,
