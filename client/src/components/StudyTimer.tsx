@@ -38,6 +38,7 @@ const MAX_TIMER_MINUTES = 480;
 
 // Status messages
 const TIMER_EDIT_TIP = 'Click timer to edit duration';
+const MAX_ACTIVITIES_REACHED_MESSAGE = 'Maximum Activities Reached';
 
 // Add activity dialog component
 function AddActivityDialog({
@@ -392,7 +393,7 @@ export function StudyTimer() {
     // Check if we've reached the maximum number of activities
     if (activities.length >= MAX_ACTIVITIES) {
       toast({
-        title: 'Maximum Activities Reached',
+        title: MAX_ACTIVITIES_REACHED_MESSAGE,
         description: `You can only have up to ${MAX_ACTIVITIES} activity labels.`,
         variant: 'destructive',
       });
