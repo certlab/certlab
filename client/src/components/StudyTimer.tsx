@@ -149,12 +149,8 @@ function EditActivityDialog({
     }
   }, [open, initialLabel, initialDuration]);
 
-  // Validate duration input
-  const isDurationValid = () => {
-    if (!duration) return false;
-    const durationValue = parseInt(duration, 10);
-    return !isNaN(durationValue) && durationValue > 0 && durationValue <= MAX_TIMER_MINUTES;
-  };
+  // Validate duration input using helper function
+  const isDurationValid = () => validateDuration(duration).isValid;
 
   const handleSave = () => {
     // Validate activity name
@@ -261,12 +257,8 @@ function AddActivityDialog({
   const [newActivity, setNewActivity] = useState('');
   const [duration, setDuration] = useState('25');
 
-  // Validate duration input
-  const isDurationValid = () => {
-    if (!duration) return false;
-    const durationValue = parseInt(duration, 10);
-    return !isNaN(durationValue) && durationValue > 0 && durationValue <= MAX_TIMER_MINUTES;
-  };
+  // Validate duration input using helper function
+  const isDurationValid = () => validateDuration(duration).isValid;
 
   const handleAdd = () => {
     // Validate activity name
