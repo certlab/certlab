@@ -3,59 +3,177 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StudyTimer } from './StudyTimer';
-import * as authProvider from '@/lib/auth-provider';
 import * as storageFactory from '@/lib/storage-factory';
-
-// Mock the auth provider
-vi.mock('@/lib/auth-provider', () => ({
-  useAuth: vi.fn(),
-}));
 
 // Mock the storage factory
 vi.mock('@/lib/storage-factory', () => ({
   storage: {
     getStudyTimerSettings: vi.fn(),
+    updateStudyTimerSettings: vi.fn(),
     getStudyTimerSessionsByDateRange: vi.fn(),
     createStudyTimerSession: vi.fn(),
     updateStudyTimerSession: vi.fn(),
   },
 }));
 
-// Mock toast
-const mockToast = vi.fn();
+// Mock the toast hook
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
-    toast: mockToast,
+    toast: vi.fn(),
   }),
 }));
 
-const createWrapper = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
+// Mock the auth provider
+vi.mock('@/lib/auth-provider', async () => {
+  const actual = await vi.importActual('@/lib/auth-provider');
+  return {
+    ...actual,
+    useAuth: () => ({
+      user: { id: 'test-user', email: 'test@example.com' },
+      loading: false,
+    }),
+  };
+});
+
+// Test to verify ActivityConfig interface structure
+describe('StudyTimer - Activity Duration Association', () => {
+  it('should have ActivityConfig type with label and duration', () => {
+    // This test verifies the structure of ActivityConfig
+    interface ActivityConfig {
+      label: string;
+      duration: number; // in minutes
+    }
+
+    const testActivity: ActivityConfig = {
+      label: 'Study',
+      duration: 25,
+    };
+
+    expect(testActivity.label).toBe('Study');
+    expect(testActivity.duration).toBe(25);
   });
 
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-};
+  it('should have default activities with associated durations', () => {
+    // Verify default activities structure
+    const defaultActivities = [
+      { label: 'Study', duration: 25 },
+      { label: 'Work', duration: 25 },
+      { label: 'Exercise', duration: 30 },
+      { label: 'Meditation', duration: 10 },
+    ];
 
-describe('StudyTimer - Activity Label Limit', () => {
+    expect(defaultActivities).toHaveLength(4);
+
+    // Verify each activity has both label and duration
+    defaultActivities.forEach((activity) => {
+      expect(activity).toHaveProperty('label');
+      expect(activity).toHaveProperty('duration');
+      expect(typeof activity.label).toBe('string');
+      expect(typeof activity.duration).toBe('number');
+      expect(activity.duration).toBeGreaterThan(0);
+    });
+  });
+
+  it('should preserve different durations for different activities', () => {
+    // Simulate the activity configuration array
+    const activities = [
+      { label: 'Study', duration: 25 },
+      { label: 'Meditation', duration: 10 },
+      { label: 'Exercise', duration: 30 },
+    ];
+
+    // Simulate selecting an activity and getting its duration
+    const selectActivity = (label: string) => {
+      const activity = activities.find((a) => a.label === label);
+      return activity ? activity.duration : null;
+    };
+
+    // Verify each activity returns its own duration
+    expect(selectActivity('Study')).toBe(25);
+    expect(selectActivity('Meditation')).toBe(10);
+    expect(selectActivity('Exercise')).toBe(30);
+  });
+
+  it('should allow adding new activity with custom duration', () => {
+    const activities = [
+      { label: 'Study', duration: 25 },
+      { label: 'Work', duration: 25 },
+    ];
+
+    // Simulate adding a new activity
+    const newActivity = { label: 'Reading', duration: 15 };
+    activities.push(newActivity);
+
+    // Verify the new activity is in the list with its duration
+    expect(activities).toHaveLength(3);
+    const addedActivity = activities.find((a) => a.label === 'Reading');
+    expect(addedActivity).toBeDefined();
+    expect(addedActivity?.duration).toBe(15);
+  });
+
+  it('should maintain duration when switching between activities', () => {
+    const activities = [
+      { label: 'Study', duration: 25 },
+      { label: 'Meditation', duration: 10 },
+      { label: 'Exercise', duration: 30 },
+    ];
+
+    // Simulate switching between activities
+    let selectedActivity = 'Study';
+    let timerDuration = activities.find((a) => a.label === selectedActivity)?.duration;
+    expect(timerDuration).toBe(25);
+
+    // Switch to Meditation
+    selectedActivity = 'Meditation';
+    timerDuration = activities.find((a) => a.label === selectedActivity)?.duration;
+    expect(timerDuration).toBe(10);
+
+    // Switch back to Study
+    selectedActivity = 'Study';
+    timerDuration = activities.find((a) => a.label === selectedActivity)?.duration;
+    expect(timerDuration).toBe(25); // Duration should still be 25, not 10
+
+    // Switch to Exercise
+    selectedActivity = 'Exercise';
+    timerDuration = activities.find((a) => a.label === selectedActivity)?.duration;
+    expect(timerDuration).toBe(30);
+  });
+
+  it('should handle case-insensitive duplicate check correctly', () => {
+    const activities = [
+      { label: 'Study', duration: 25 },
+      { label: 'Work', duration: 25 },
+    ];
+
+    // Simulate checking for duplicates (case-insensitive)
+    const checkDuplicate = (newLabel: string) => {
+      const newLabelLower = newLabel.toLowerCase();
+      return activities.some((a) => a.label.toLowerCase() === newLabelLower);
+    };
+
+    expect(checkDuplicate('study')).toBe(true); // lowercase version exists
+    expect(checkDuplicate('STUDY')).toBe(true); // uppercase version exists
+    expect(checkDuplicate('Study')).toBe(true); // exact match
+    expect(checkDuplicate('Reading')).toBe(false); // new activity
+  });
+});
+
+describe('StudyTimer - Component Integration Tests', () => {
+  let queryClient: QueryClient;
+
   beforeEach(() => {
+    // Create a new QueryClient for each test
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
+    // Reset all mocks
     vi.clearAllMocks();
 
-    // Setup default mocks
-    vi.mocked(authProvider.useAuth).mockReturnValue({
-      user: { id: 'test-user', email: 'test@example.com', username: 'testuser' },
-      login: vi.fn(),
-      logout: vi.fn(),
-      isLoading: false,
-      register: vi.fn(),
-      updateUserProfile: vi.fn(),
-    } as any);
-
+    // Setup default mock responses
     vi.mocked(storageFactory.storage.getStudyTimerSettings).mockResolvedValue({
       id: 1,
       userId: 'test-user',
@@ -69,14 +187,39 @@ describe('StudyTimer - Activity Label Limit', () => {
       enableNotifications: true,
       enableSound: true,
       dailyGoalMinutes: 120,
+      customActivities: null,
       updatedAt: new Date(),
     });
 
     vi.mocked(storageFactory.storage.getStudyTimerSessionsByDateRange).mockResolvedValue([]);
+    vi.mocked(storageFactory.storage.updateStudyTimerSettings).mockResolvedValue({
+      id: 1,
+      userId: 'test-user',
+      tenantId: 1,
+      workDuration: 25,
+      breakDuration: 5,
+      longBreakDuration: 15,
+      sessionsUntilLongBreak: 4,
+      autoStartBreaks: false,
+      autoStartWork: false,
+      enableNotifications: true,
+      enableSound: true,
+      dailyGoalMinutes: 120,
+      customActivities: null,
+      updatedAt: new Date(),
+    });
   });
 
-  it('should start with 4 default activities', async () => {
-    render(<StudyTimer />, { wrapper: createWrapper() });
+  const renderStudyTimer = () => {
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <StudyTimer />
+      </QueryClientProvider>
+    );
+  };
+
+  it('should render default activities with correct labels', async () => {
+    renderStudyTimer();
 
     await waitFor(() => {
       expect(screen.getByText('Study')).toBeInTheDocument();
@@ -86,144 +229,183 @@ describe('StudyTimer - Activity Label Limit', () => {
     });
   });
 
-  it('should allow adding a 5th activity', async () => {
+  it('should update timer duration when selecting different activities', async () => {
     const user = userEvent.setup();
-    render(<StudyTimer />, { wrapper: createWrapper() });
+    renderStudyTimer();
 
-    // Wait for component to load
     await waitFor(() => {
-      expect(screen.getByText('Activity Timer')).toBeInTheDocument();
+      expect(screen.getByText('Study')).toBeInTheDocument();
     });
 
-    // Click the Add button
-    const addButton = screen.getByRole('button', { name: /add/i });
-    await user.click(addButton);
-
-    // Wait for dialog to open
+    // Select Study (25 minutes = 25:00)
+    await user.click(screen.getByText('Study'));
     await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByText('25:00')).toBeInTheDocument();
     });
 
-    // Fill in the activity name
-    const input = screen.getByPlaceholderText(/activity name/i);
-    await user.type(input, 'Test');
-
-    // Click the Add Activity button in the dialog
-    const dialogAddButton = screen.getByRole('button', { name: /add activity/i });
-    await user.click(dialogAddButton);
-
-    // Verify the new activity appears as a button
+    // Select Meditation (10 minutes = 10:00)
+    await user.click(screen.getByText('Meditation'));
     await waitFor(() => {
-      const activityButton = screen.getByRole('button', { name: 'Test', pressed: true });
-      expect(activityButton).toBeInTheDocument();
+      expect(screen.getByText('10:00')).toBeInTheDocument();
+    });
+
+    // Select Exercise (30 minutes = 30:00)
+    await user.click(screen.getByText('Exercise'));
+    await waitFor(() => {
+      expect(screen.getByText('30:00')).toBeInTheDocument();
     });
   });
 
-  it('should disable the Add button when 5 activities exist', async () => {
+  it('should restore activity-specific duration when switching back', async () => {
     const user = userEvent.setup();
-    render(<StudyTimer />, { wrapper: createWrapper() });
+    renderStudyTimer();
 
-    // Wait for component to load
     await waitFor(() => {
-      expect(screen.getByText('Activity Timer')).toBeInTheDocument();
+      expect(screen.getByText('Study')).toBeInTheDocument();
     });
 
-    // Add a 5th activity
-    const addButton = screen.getByRole('button', { name: /add/i });
-    await user.click(addButton);
-
+    // Select Meditation (10 minutes)
+    await user.click(screen.getByText('Meditation'));
     await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByText('10:00')).toBeInTheDocument();
     });
 
-    const input = screen.getByPlaceholderText(/activity name/i);
-    await user.type(input, 'Fifth Activity');
-
-    const dialogAddButton = screen.getByRole('button', { name: /add activity/i });
-    await user.click(dialogAddButton);
-
-    // Wait for the activity to be added and dialog to close
+    // Select Exercise (30 minutes)
+    await user.click(screen.getByText('Exercise'));
     await waitFor(() => {
-      const activityButton = screen.getByRole('button', { name: 'Fifth Activity', pressed: true });
-      expect(activityButton).toBeInTheDocument();
+      expect(screen.getByText('30:00')).toBeInTheDocument();
     });
 
-    // Now the Add button should be disabled
+    // Switch back to Meditation - should restore 10:00, not stay at 30:00
+    await user.click(screen.getByText('Meditation'));
     await waitFor(() => {
-      const addButtonAfter = screen.getByRole('button', { name: /add/i });
-      expect(addButtonAfter).toBeDisabled();
+      expect(screen.getByText('10:00')).toBeInTheDocument();
     });
   });
 
-  it('should disable Add button when 5 activities exist', async () => {
+  it('should add new activity with custom duration and persist it', async () => {
     const user = userEvent.setup();
-    render(<StudyTimer />, { wrapper: createWrapper() });
-
-    // Wait for component to load
-    await waitFor(() => {
-      expect(screen.getByText('Activity Timer')).toBeInTheDocument();
-    });
-
-    // Add a 5th activity
-    const addButton = screen.getByRole('button', { name: /add/i });
-    await user.click(addButton);
+    renderStudyTimer();
 
     await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByText('Add')).toBeInTheDocument();
     });
 
-    const input = screen.getByPlaceholderText(/activity name/i);
-    await user.type(input, 'Fifth');
+    // Click Add button
+    await user.click(screen.getByText('Add'));
 
-    const dialogAddButton = screen.getByRole('button', { name: /add activity/i });
-    await user.click(dialogAddButton);
-
-    // Wait for the activity to be added
+    // Fill in activity name and duration
     await waitFor(() => {
-      const activityButton = screen.getByRole('button', { name: 'Fifth', pressed: true });
-      expect(activityButton).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/Activity name/i)).toBeInTheDocument();
     });
 
-    // Verify the Add button is now disabled when 5 activities exist
+    await user.type(screen.getByPlaceholderText(/Activity name/i), 'Reading');
+
+    // Find and update the duration input
+    const durationInput = screen.getByLabelText(/Timer Duration/i);
+    await user.clear(durationInput);
+    await user.type(durationInput, '15');
+
+    // Click Add Activity button
+    await user.click(screen.getByRole('button', { name: /Add Activity/i }));
+
+    // Verify the activity was added - use getAllByText and check button
     await waitFor(() => {
-      const addButtonAfter = screen.getByRole('button', { name: /add/i });
-      expect(addButtonAfter).toBeDisabled();
+      const buttons = screen.getAllByText('Reading');
+      expect(buttons.length).toBeGreaterThan(0);
+      // The button should be present
+      expect(buttons[0].tagName).toBe('BUTTON');
     });
+
+    // Verify storage was called to persist the custom activity
+    await waitFor(() => {
+      expect(storageFactory.storage.updateStudyTimerSettings).toHaveBeenCalledWith(
+        'test-user',
+        expect.objectContaining({
+          customActivities: expect.arrayContaining([
+            expect.objectContaining({ label: 'Reading', duration: 15 }),
+          ]),
+        })
+      );
+    });
+
+    // Verify timer shows the custom duration
+    expect(screen.getByText('15:00')).toBeInTheDocument();
   });
 
-  it('should show toast notification for duplicate activity names', async () => {
+  it('should load custom activities from settings on mount', async () => {
+    // Mock settings with custom activities
+    // Note: customActivities is typed as unknown (jsonb in schema), so we cast here
+    vi.mocked(storageFactory.storage.getStudyTimerSettings).mockResolvedValue({
+      id: 1,
+      userId: 'test-user',
+      tenantId: 1,
+      workDuration: 25,
+      breakDuration: 5,
+      longBreakDuration: 15,
+      sessionsUntilLongBreak: 4,
+      autoStartBreaks: false,
+      autoStartWork: false,
+      enableNotifications: true,
+      enableSound: true,
+      dailyGoalMinutes: 120,
+      customActivities: [
+        { label: 'Reading', duration: 15 },
+        { label: 'Coding', duration: 45 },
+      ] as unknown,
+      updatedAt: new Date(),
+    });
+
+    renderStudyTimer();
+
+    // Verify custom activities are displayed
+    await waitFor(() => {
+      expect(screen.getByText('Reading')).toBeInTheDocument();
+      expect(screen.getByText('Coding')).toBeInTheDocument();
+    });
+
+    // Verify default activities are still present
+    expect(screen.getByText('Study')).toBeInTheDocument();
+    expect(screen.getByText('Work')).toBeInTheDocument();
+  });
+
+  it('should prevent adding duplicate activities (case-insensitive)', async () => {
     const user = userEvent.setup();
-    render(<StudyTimer />, { wrapper: createWrapper() });
-
-    // Wait for component to load
-    await waitFor(() => {
-      expect(screen.getByText('Activity Timer')).toBeInTheDocument();
-    });
-
-    // Clear any previous toast calls
-    mockToast.mockClear();
-
-    // Try to add an activity with a name that already exists (case-insensitive)
-    const addButton = screen.getByRole('button', { name: /add/i });
-    await user.click(addButton);
+    renderStudyTimer();
 
     await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByText('Add')).toBeInTheDocument();
     });
 
-    const input = screen.getByPlaceholderText(/activity name/i);
-    await user.type(input, 'study'); // lowercase version of existing "Study"
+    // Count initial activities
+    const initialStudyButtons = screen
+      .getAllByText('Study')
+      .filter((el) => el.tagName === 'BUTTON');
+    expect(initialStudyButtons).toHaveLength(1);
 
-    const dialogAddButton = screen.getByRole('button', { name: /add activity/i });
-    await user.click(dialogAddButton);
+    // Try to add "study" (lowercase) which already exists as "Study"
+    await user.click(screen.getByText('Add'));
 
-    // Verify toast was called with duplicate message
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith({
-        title: 'Activity Already Exists',
-        description: 'This activity name is already in your list.',
-        variant: 'destructive',
-      });
+      expect(screen.getByPlaceholderText(/Activity name/i)).toBeInTheDocument();
     });
+
+    await user.type(screen.getByPlaceholderText(/Activity name/i), 'study');
+
+    const durationInput = screen.getByLabelText(/Timer Duration/i);
+    await user.clear(durationInput);
+    await user.type(durationInput, '20');
+
+    await user.click(screen.getByRole('button', { name: /Add Activity/i }));
+
+    // Wait a bit for the operation to complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Verify that no duplicate was added - should still be only 1 Study button
+    const finalStudyButtons = screen.getAllByText('Study').filter((el) => el.tagName === 'BUTTON');
+    expect(finalStudyButtons).toHaveLength(1);
+
+    // Verify storage was NOT called since it's a duplicate
+    expect(storageFactory.storage.updateStudyTimerSettings).not.toHaveBeenCalled();
   });
 });

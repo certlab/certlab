@@ -22,8 +22,19 @@ import { ActivityTimeline } from '@/components/ActivityTimeline';
 import { Plus } from 'lucide-react';
 import type { StudyTimerSession, StudyTimerSettings } from '@shared/schema';
 
-// Default activities
-const DEFAULT_ACTIVITIES = ['Study', 'Work', 'Exercise', 'Meditation'];
+// Activity configuration type
+interface ActivityConfig {
+  label: string;
+  duration: number; // in minutes
+}
+
+// Default activities with durations
+const DEFAULT_ACTIVITIES: ActivityConfig[] = [
+  { label: 'Study', duration: 25 },
+  { label: 'Work', duration: 25 },
+  { label: 'Exercise', duration: 30 },
+  { label: 'Meditation', duration: 10 },
+];
 
 // Maximum number of activity labels allowed
 const MAX_ACTIVITIES = 5;
@@ -185,7 +196,7 @@ export function StudyTimer() {
   // Timer state
   const [isRunning, setIsRunning] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<string>('');
-  const [activities, setActivities] = useState<string[]>(DEFAULT_ACTIVITIES);
+  const [activities, setActivities] = useState<ActivityConfig[]>(DEFAULT_ACTIVITIES);
   const [timeLeft, setTimeLeft] = useState(25 * 60); // Default 25 minutes in seconds
   const [initialDuration, setInitialDuration] = useState(25 * 60);
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
@@ -210,6 +221,7 @@ export function StudyTimer() {
     enableNotifications: true,
     enableSound: true,
     dailyGoalMinutes: 120,
+    customActivities: null,
     updatedAt: new Date(),
   });
 
@@ -223,6 +235,36 @@ export function StudyTimer() {
     },
     enabled: !!user?.id,
   });
+
+  // Load custom activities from settings
+  useEffect(() => {
+    if (timerSettings?.customActivities) {
+      try {
+        // Validate and parse stored custom activities
+        const customActivities = timerSettings.customActivities;
+        if (
+          Array.isArray(customActivities) &&
+          customActivities.every(
+            (a) =>
+              typeof a === 'object' &&
+              a !== null &&
+              typeof a.label === 'string' &&
+              typeof a.duration === 'number'
+          )
+        ) {
+          // Merge default activities with custom activities (custom activities override defaults)
+          const defaultLabels = DEFAULT_ACTIVITIES.map((a) => a.label);
+          const customOnly = (customActivities as ActivityConfig[]).filter(
+            (a) => !defaultLabels.includes(a.label)
+          );
+          const mergedActivities = [...DEFAULT_ACTIVITIES, ...customOnly];
+          setActivities(mergedActivities);
+        }
+      } catch (error) {
+        console.error('Failed to load custom activities:', error);
+      }
+    }
+  }, [timerSettings]);
 
   // Get today's sessions for stats
   const { data: todaySessions = [] } = useQuery({
@@ -263,6 +305,26 @@ export function StudyTimer() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.studyTimer.todaySessions(user?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.studyTimer.stats(user?.id) });
+    },
+  });
+
+  // Save custom activities mutation
+  const saveActivitiesMutation = useMutation({
+    mutationFn: async (activitiesToSave: ActivityConfig[]) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      // Filter out default activities - only save custom ones
+      const defaultLabels = DEFAULT_ACTIVITIES.map((a) => a.label);
+      const customOnly = activitiesToSave.filter((a) => !defaultLabels.includes(a.label));
+
+      // Cast to unknown as the schema uses jsonb type which is typed as unknown
+      // The validation happens when loading the data back (see useEffect above)
+      await storage.updateStudyTimerSettings(user.id, {
+        customActivities: customOnly as unknown,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.studyTimer.settings(user?.id) });
     },
   });
 
@@ -338,8 +400,16 @@ export function StudyTimer() {
     setCurrentSessionId(null);
     sessionStartTimeRef.current = null;
 
-    // Reset timer to initial duration
-    if (timerSettings) {
+    // Reset timer to the selected activity's configured duration
+    if (selectedActivity) {
+      const activityConfig = activities.find((a) => a.label === selectedActivity);
+      if (activityConfig) {
+        const durationInSeconds = activityConfig.duration * 60;
+        setTimeLeft(durationInSeconds);
+        setInitialDuration(durationInSeconds);
+      }
+    } else if (timerSettings) {
+      // Fallback to default work duration if no activity is selected
       const duration = timerSettings.workDuration ?? 25;
       const durationInSeconds = duration * 60;
       setTimeLeft(durationInSeconds);
@@ -352,7 +422,15 @@ export function StudyTimer() {
         description: `Great job on your ${selectedActivity} session!`,
       });
     }
-  }, [currentSessionId, saveSessionMutation, timeLeft, timerSettings, selectedActivity, toast]);
+  }, [
+    currentSessionId,
+    saveSessionMutation,
+    timeLeft,
+    timerSettings,
+    selectedActivity,
+    activities,
+    toast,
+  ]);
 
   // Handle session completion
   const handleSessionComplete = useCallback(() => {
@@ -386,6 +464,13 @@ export function StudyTimer() {
   const handleActivitySelect = (activity: string) => {
     if (!isRunning) {
       setSelectedActivity(activity);
+      // Set timer to the activity's configured duration
+      const activityConfig = activities.find((a) => a.label === activity);
+      if (activityConfig) {
+        const durationInSeconds = activityConfig.duration * 60;
+        setTimeLeft(durationInSeconds);
+        setInitialDuration(durationInSeconds);
+      }
     }
   };
 
@@ -403,15 +488,20 @@ export function StudyTimer() {
 
     // Case-insensitive duplicate check
     const activityLower = activity.toLowerCase();
-    const isDuplicate = activities.some((a) => a.toLowerCase() === activityLower);
+    const isDuplicate = activities.some((a) => a.label.toLowerCase() === activityLower);
 
     if (!isDuplicate) {
-      setActivities([...activities, activity]);
+      const newActivityConfig: ActivityConfig = { label: activity, duration };
+      const updatedActivities = [...activities, newActivityConfig];
+      setActivities(updatedActivities);
       setSelectedActivity(activity);
       // Set the timer to the specified duration
       const durationInSeconds = duration * 60;
       setTimeLeft(durationInSeconds);
       setInitialDuration(durationInSeconds);
+
+      // Save to storage
+      saveActivitiesMutation.mutate(updatedActivities);
     } else {
       toast({
         title: 'Activity Already Exists',
@@ -483,10 +573,10 @@ export function StudyTimer() {
       <div className="flex flex-wrap gap-3">
         {activities.map((activity) => (
           <ActivityButton
-            key={activity}
-            label={activity}
-            isSelected={selectedActivity === activity}
-            onClick={() => handleActivitySelect(activity)}
+            key={activity.label}
+            label={activity.label}
+            isSelected={selectedActivity === activity.label}
+            onClick={() => handleActivitySelect(activity.label)}
             disabled={isRunning}
           />
         ))}
