@@ -384,7 +384,7 @@ export default function Dashboard() {
         {/* Achievements & Progress and Learning Velocity Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Achievements & Progress Section */}
-          <div>
+          <div className="flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground">Achievements & Progress</h2>
               <Button variant="ghost" size="sm" onClick={handleViewProgress} className="gap-2">
@@ -392,7 +392,7 @@ export default function Dashboard() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
-            <Card>
+            <Card className="flex-1">
               <CardContent className="p-6 space-y-6">
                 {/* Level Progress Circle */}
                 <div className="flex flex-col items-center justify-center p-6 bg-muted/30 rounded-lg">
@@ -485,32 +485,34 @@ export default function Dashboard() {
           </div>
 
           {/* Learning Velocity Section */}
-          <div>
+          <div className="flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground">Learning Velocity</h2>
             </div>
-            <Card>
-              <CardContent className="p-6">
+            <Card className="flex-1">
+              <CardContent className="p-6 h-full flex flex-col">
                 {dailyExperience.every((xp) => xp === 0) ? (
-                  <div className="text-center py-12">
-                    <p className="text-sm text-muted-foreground mb-2">No activity this week</p>
-                    <p className="text-xs text-muted-foreground">
-                      Complete quizzes to see your learning velocity chart
-                    </p>
+                  <div className="flex-1 flex items-center justify-center text-center">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">No activity this week</p>
+                      <p className="text-xs text-muted-foreground">
+                        Complete quizzes to see your learning velocity chart
+                      </p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 flex-1">
                     {/* Y-axis XP scale */}
-                    <div className="flex flex-col justify-between text-xs text-muted-foreground h-24">
+                    <div className="flex flex-col justify-between text-xs text-muted-foreground">
                       <span>{Math.round(maxDailyXP)}</span>
                       <span>{Math.round(maxDailyXP * 0.75)}</span>
                       <span>{Math.round(maxDailyXP * 0.5)}</span>
                       <span>{Math.round(maxDailyXP * 0.25)}</span>
                       <span>0</span>
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 flex flex-col">
                       {/* Simple chart representation */}
-                      <div className="relative h-24">
+                      <div className="relative flex-1">
                         {/* Horizontal grid lines to connect y-axis labels to bars */}
                         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
                           {Array.from({ length: 5 }).map((_, index) => (
