@@ -24,6 +24,9 @@ import type { StudyTimerSession, StudyTimerSettings } from '@shared/schema';
 // Default activities
 const DEFAULT_ACTIVITIES = ['Study', 'Work', 'Exercise', 'Meditation'];
 
+// Maximum number of activity labels allowed
+const MAX_ACTIVITIES = 5;
+
 // Timer input dimensions for editing mode
 const TIMER_INPUT_DIMENSIONS = 'w-[200px] h-[80px]';
 
@@ -386,6 +389,16 @@ export function StudyTimer() {
 
   // Handle add activity
   const handleAddActivity = (activity: string, duration: number) => {
+    // Check if we've reached the maximum number of activities
+    if (activities.length >= MAX_ACTIVITIES) {
+      toast({
+        title: 'Maximum Activities Reached',
+        description: `You can only have up to ${MAX_ACTIVITIES} activity labels.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // Case-insensitive duplicate check
     const activityLower = activity.toLowerCase();
     const isDuplicate = activities.some((a) => a.toLowerCase() === activityLower);
@@ -478,8 +491,13 @@ export function StudyTimer() {
         <Button
           variant="outline"
           onClick={() => setIsAddActivityDialogOpen(true)}
-          disabled={isRunning}
+          disabled={isRunning || activities.length >= MAX_ACTIVITIES}
           className="px-6 py-6 text-base border-2 border-dashed"
+          title={
+            activities.length >= MAX_ACTIVITIES
+              ? `Maximum of ${MAX_ACTIVITIES} activities allowed`
+              : 'Add new activity'
+          }
         >
           <Plus className="h-5 w-5 mr-2" />
           Add
