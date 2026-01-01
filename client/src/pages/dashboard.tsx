@@ -503,7 +503,7 @@ export default function Dashboard() {
                 ) : (
                   <div className="flex gap-4 flex-1">
                     {/* Y-axis XP scale */}
-                    <div className="flex flex-col justify-between text-xs text-muted-foreground">
+                    <div className="flex flex-col justify-between h-full text-xs text-muted-foreground">
                       <span>{Math.round(maxDailyXP)}</span>
                       <span>{Math.round(maxDailyXP * 0.75)}</span>
                       <span>{Math.round(maxDailyXP * 0.5)}</span>
