@@ -445,7 +445,7 @@ export function StudyTimer() {
           variant="outline"
           onClick={() => setIsAddActivityDialogOpen(true)}
           disabled={isRunning}
-          className="px-6 py-6 text-base rounded-xl border-2 border-dashed hover:bg-accent hover:text-accent-foreground shadow-sm hover:shadow-md"
+          className="px-6 py-6 text-base border-2 border-dashed"
         >
           <Plus className="h-5 w-5 mr-2" />
           Add
