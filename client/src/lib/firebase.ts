@@ -30,6 +30,8 @@ import {
   updateProfile,
   sendPasswordResetEmail,
   sendEmailVerification,
+  setPersistence,
+  browserLocalPersistence,
   type Auth,
   type User as FirebaseUser,
   type UserCredential,
@@ -65,7 +67,7 @@ let googleProvider: GoogleAuthProvider | null = null;
  * Initialize Firebase if configured
  * Returns true if Firebase was successfully initialized
  */
-export function initializeFirebase(): boolean {
+export async function initializeFirebase(): Promise<boolean> {
   if (!isFirebaseConfigured()) {
     return false;
   }
@@ -83,6 +85,17 @@ export function initializeFirebase(): boolean {
   // Add additional scopes if needed
   googleProvider.addScope('email');
   googleProvider.addScope('profile');
+
+  // Configure persistent login - users will remain signed in across browser sessions
+  // This must be set before any sign-in operations
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    console.log('[Firebase] Persistence configured: users will remain signed in across sessions');
+  } catch (error) {
+    console.error('[Firebase] Failed to set persistence:', error);
+    // Don't fail initialization if persistence setup fails
+    // The app will still work, just without persistent sessions
+  }
 
   return true;
 }

@@ -23,7 +23,8 @@ import { RightSidebar } from '@/components/RightSidebar';
 import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
-import type { UserStats } from '@shared/schema';
+import { storage } from '@/lib/storage-factory';
+import type { UserGameStats } from '@shared/schema';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import MobileNavigationEnhanced from '@/components/MobileNavigationEnhanced';
@@ -43,6 +44,7 @@ import {
 import { useTheme } from '@/lib/theme-provider';
 import { themes } from '@/lib/theme-constants';
 import { useToast } from '@/hooks/use-toast';
+import { calculateLevelFromPoints, calculatePointsForLevel } from '@/lib/level-utils';
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -70,25 +72,37 @@ function AuthenticatedHeader() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Get user stats for level and XP
-  const { data: stats } = useQuery<UserStats>({
-    queryKey: queryKeys.user.stats(currentUser?.id),
+  // Get user game stats for level and XP (from the gamification system)
+  const { data: gameStats } = useQuery<UserGameStats | undefined>({
+    queryKey: queryKeys.user.gameStats(currentUser?.id),
+    queryFn: async () => {
+      if (!currentUser?.id) return undefined;
+      return await storage.getUserGameStats(currentUser.id);
+    },
     enabled: !!currentUser?.id,
   });
 
   // Get unread notifications count using custom hook
   const { unreadCount } = useUnreadNotifications();
 
-  // Calculate level and XP based on total quizzes and average score
-  const level = stats ? Math.floor((stats.totalQuizzes || 0) / 10) + 1 : 1;
-  const currentXP = stats
-    ? ((stats.totalQuizzes || 0) % 10) * 250 + Math.floor((stats.averageScore || 0) * 5)
-    : 0;
-  const xpGoal = level * 1000;
-  const xpProgress = (currentXP / xpGoal) * 100;
+  // Calculate level from totalPoints using defensive programming pattern
+  // This prevents display bugs if gameStats.level becomes out of sync with totalPoints
+  // Same pattern used in LevelProgress component for consistency
+  const totalPoints = gameStats?.totalPoints || 0;
+  const level = calculateLevelFromPoints(totalPoints);
 
-  // Calculate streak
-  const dayStreak = stats?.currentStreak || 0;
+  // Calculate XP progress for current level
+  // Each level N requires (N * 100) points to complete
+  const currentLevelStartPoints = calculatePointsForLevel(level);
+  const pointsInCurrentLevel = totalPoints - currentLevelStartPoints;
+  const pointsNeededForLevel = level * 100;
+
+  // For display: current XP and XP goal
+  const currentXP = pointsInCurrentLevel;
+  const xpGoal = pointsNeededForLevel;
+
+  // Calculate streak from game stats
+  const dayStreak = gameStats?.currentStreak || 0;
 
   const isAdmin = currentUser?.role === 'admin';
   const navigationItems = getNavigationItems(isAdmin);

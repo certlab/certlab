@@ -698,8 +698,8 @@ class ClientAuth {
    * Should be called early in the app lifecycle
    * @returns true if Firebase was successfully initialized
    */
-  initializeGoogleAuth(): boolean {
-    return initializeFirebase();
+  async initializeGoogleAuth(): Promise<boolean> {
+    return await initializeFirebase();
   }
 
   /**
@@ -711,7 +711,7 @@ class ClientAuth {
   async signInWithGoogle(): Promise<AuthResponse> {
     try {
       // Initialize Firebase if not already done
-      if (!this.initializeGoogleAuth()) {
+      if (!(await this.initializeGoogleAuth())) {
         const authError = new AuthError(AuthErrorCode.LOGIN_FAILED);
         return {
           success: false,

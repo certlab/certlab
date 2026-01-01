@@ -19,15 +19,16 @@ This guide walks you through setting up Firebase for CertLab's cloud storage and
 ## Overview
 
 Firebase provides the production infrastructure for CertLab:
-- **Authentication**: Google Sign-In and email/password authentication
+- **Authentication**: Google Sign-In and email/password authentication with persistent login
 - **Cloud Firestore**: Cloud storage for multi-device sync with offline support
 - **Hosting**: Static site hosting via Firebase Hosting
 
 **Current Status**: 
-- ✅ Firebase Authentication fully implemented
+- ✅ Firebase Authentication fully implemented with persistent login
 - ✅ Firestore storage fully integrated
 - ✅ Offline persistence with IndexedDB cache
 - ✅ Firebase Hosting configured for deployment
+- ✅ Persistent login configured - users remain signed in across browser sessions
 
 **Development Mode**: IndexedDB fallback is available for local development when Firebase credentials are not configured. This allows developers to work on features without requiring Firebase setup.
 
@@ -76,6 +77,27 @@ Firebase provides the production infrastructure for CertLab:
    - For local development: `localhost` (already added by default)
    - For production: Add your Firebase Hosting domain (e.g., `your-project.web.app`)
    - For custom domain: Add your custom domain
+
+### Persistent Login Configuration
+
+CertLab is configured with Firebase Auth persistent login using `browserLocalPersistence`. This means:
+
+- **Users remain signed in** across browser sessions and page refreshes
+- **Authentication state persists** even after closing the browser
+- **No re-authentication required** unless the user explicitly logs out or the session expires
+
+The persistence is configured automatically during Firebase initialization in `client/src/lib/firebase.ts`. No additional configuration is required.
+
+**How it works:**
+1. When a user signs in, Firebase stores their authentication state in the browser's local storage
+2. When the app loads, Firebase automatically checks for an existing authentication state
+3. If a valid session exists, the user is automatically signed in
+4. The auth state listener (`onAuthStateChanged`) detects the signed-in state and loads the user data
+
+**Session Expiration:**
+- Firebase Auth tokens are valid for 1 hour
+- Tokens are automatically refreshed in the background
+- Users remain signed in indefinitely unless they log out or clear browser data
 
 ## Step 3: Set Up Cloud Firestore
 
@@ -295,6 +317,18 @@ Firebase automatically backs up Firestore data. For additional safety:
 1. Ensure Firebase SDK is installed: `npm install`
 2. Check for TypeScript errors: `npm run check`
 3. Verify all imports are correct
+
+### Issue: Users not staying logged in
+
+**Solution**:
+1. Check browser console for Firebase Auth errors
+2. Verify that cookies and local storage are enabled in the browser
+3. Check that the user isn't in incognito/private browsing mode (some browsers clear storage on exit)
+4. Verify Firebase Auth persistence is configured (should see "[Firebase] Persistence configured" log on initialization)
+5. Check for browser extensions that might be clearing storage
+6. Ensure the user isn't manually clearing browser data
+
+**Note**: Persistent login uses browser local storage. If a user clears their browser data or is in private browsing mode, they will need to sign in again.
 
 ## Security Best Practices
 

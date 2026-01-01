@@ -179,7 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Initialize Firebase before storage
-        const initialized = initializeFirebase();
+        const initialized = await initializeFirebase();
         if (!initialized) {
           const error = new Error('Failed to initialize Firebase');
           setInitError(error);

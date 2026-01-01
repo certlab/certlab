@@ -56,6 +56,7 @@ export interface UserStatsResult {
   totalQuizzes: number;
   averageScore: number;
   studyStreak: number;
+  currentStreak: number;
   certifications: number;
   passingRate: number;
   masteryScore: number;

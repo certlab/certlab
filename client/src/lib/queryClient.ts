@@ -163,6 +163,7 @@ export const queryKeys = {
     tokenBalance: (userId: string | undefined) =>
       ['/api', 'user', userId, 'token-balance'] as const,
     studyPlan: (userId: string | undefined) => ['/api', 'user', userId, 'study-plan'] as const,
+    gameStats: (userId: string | undefined) => ['/api', 'user', userId, 'game-stats'] as const,
     // Performance analytics queries
     performanceOverTime: (userId: string | undefined, days?: number) =>
       ['/api', 'user', userId, 'performance-over-time', days] as const,

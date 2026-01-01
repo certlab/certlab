@@ -8,12 +8,16 @@ vi.mock('firebase/app', () => ({
 
 vi.mock('firebase/auth', () => ({
   getAuth: vi.fn(() => ({ currentUser: null })),
-  GoogleAuthProvider: vi.fn(() => ({
-    addScope: vi.fn(),
-  })),
+  GoogleAuthProvider: vi.fn(function () {
+    return {
+      addScope: vi.fn(),
+    };
+  }),
   signInWithPopup: vi.fn(),
   signOut: vi.fn(),
   onAuthStateChanged: vi.fn(),
+  setPersistence: vi.fn(() => Promise.resolve()),
+  browserLocalPersistence: {},
 }));
 
 // Store original env values
@@ -53,7 +57,7 @@ describe('firebase module', () => {
   describe('initializeFirebase', () => {
     it('returns false when Firebase is not configured', async () => {
       const { initializeFirebase } = await import('./firebase');
-      const result = initializeFirebase();
+      const result = await initializeFirebase();
       expect(result).toBe(false);
     });
 
@@ -61,9 +65,45 @@ describe('firebase module', () => {
       const { initializeApp } = await import('firebase/app');
       const { initializeFirebase } = await import('./firebase');
 
-      initializeFirebase();
+      await initializeFirebase();
 
       expect(initializeApp).not.toHaveBeenCalled();
+    });
+
+    it('does not call setPersistence when Firebase is not configured', async () => {
+      const { setPersistence } = await import('firebase/auth');
+      const { initializeFirebase } = await import('./firebase');
+
+      await initializeFirebase();
+
+      expect(setPersistence).not.toHaveBeenCalled();
+    });
+
+    it('calls setPersistence with browserLocalPersistence when Firebase is configured', async () => {
+      // Mock environment variables
+      vi.stubEnv('VITE_FIREBASE_API_KEY', 'test-api-key');
+      vi.stubEnv('VITE_FIREBASE_AUTH_DOMAIN', 'test-project.firebaseapp.com');
+      vi.stubEnv('VITE_FIREBASE_PROJECT_ID', 'test-project');
+
+      // Clear module cache to pick up new env vars
+      vi.resetModules();
+
+      const { setPersistence, browserLocalPersistence } = await import('firebase/auth');
+      const { initializeApp, getApps } = await import('firebase/app');
+
+      // Mock getApps to return empty array so initialization happens
+      vi.mocked(getApps).mockReturnValue([]);
+
+      const { initializeFirebase } = await import('./firebase');
+
+      const result = await initializeFirebase();
+
+      expect(result).toBe(true);
+      expect(initializeApp).toHaveBeenCalled();
+      expect(setPersistence).toHaveBeenCalledWith(expect.anything(), browserLocalPersistence);
+
+      // Clean up env mocks
+      vi.unstubAllEnvs();
     });
   });
 
