@@ -378,12 +378,6 @@ export default function Dashboard() {
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Activity Timer Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-foreground">Activity Timer</h2>
-            <p className="text-xs text-muted-foreground">
-              Track work, study, exercise, meditation, or any activity with custom labels.
-            </p>
-          </div>
           <StudyTimer />
         </div>
 
@@ -497,46 +491,55 @@ export default function Dashboard() {
             </div>
             <Card>
               <CardContent className="p-6">
-                <div className="flex gap-4">
-                  {/* Y-axis XP scale */}
-                  <div className="flex flex-col justify-between text-xs text-muted-foreground h-24">
-                    <span>{Math.round(maxDailyXP)}</span>
-                    <span>{Math.round(maxDailyXP * 0.75)}</span>
-                    <span>{Math.round(maxDailyXP * 0.5)}</span>
-                    <span>{Math.round(maxDailyXP * 0.25)}</span>
-                    <span>0</span>
+                {dailyExperience.every((xp) => xp === 0) ? (
+                  <div className="text-center py-12">
+                    <p className="text-sm text-muted-foreground mb-2">No activity this week</p>
+                    <p className="text-xs text-muted-foreground">
+                      Complete quizzes to see your learning velocity chart
+                    </p>
                   </div>
-                  <div className="flex-1">
-                    {/* Simple chart representation */}
-                    <div className="relative h-24">
-                      {/* Horizontal grid lines to connect y-axis labels to bars */}
-                      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                        {Array.from({ length: 5 }).map((_, index) => (
-                          <div key={index} className="border-t border-border/40" />
-                        ))}
-                      </div>
-                      <div className="relative h-full flex items-end justify-between gap-2">
-                        {dailyXPPercentages.map((height, i) => (
-                          <div
-                            key={i}
-                            className="flex-1 bg-primary/60 rounded-t relative group"
-                            style={{ height: `${height}%`, minHeight: height > 0 ? '2px' : '0' }}
-                          >
-                            {/* Tooltip showing actual XP value on hover */}
-                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                              {dailyExperience[i]} XP
+                ) : (
+                  <div className="flex gap-4">
+                    {/* Y-axis XP scale */}
+                    <div className="flex flex-col justify-between text-xs text-muted-foreground h-24">
+                      <span>{Math.round(maxDailyXP)}</span>
+                      <span>{Math.round(maxDailyXP * 0.75)}</span>
+                      <span>{Math.round(maxDailyXP * 0.5)}</span>
+                      <span>{Math.round(maxDailyXP * 0.25)}</span>
+                      <span>0</span>
+                    </div>
+                    <div className="flex-1">
+                      {/* Simple chart representation */}
+                      <div className="relative h-24">
+                        {/* Horizontal grid lines to connect y-axis labels to bars */}
+                        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                          {Array.from({ length: 5 }).map((_, index) => (
+                            <div key={index} className="border-t border-border/40" />
+                          ))}
+                        </div>
+                        <div className="relative h-full flex items-end justify-between gap-2">
+                          {dailyXPPercentages.map((height, i) => (
+                            <div
+                              key={i}
+                              className="flex-1 bg-primary/60 rounded-t relative group"
+                              style={{ height: `${height}%`, minHeight: height > 0 ? '2px' : '0' }}
+                            >
+                              {/* Tooltip showing actual XP value on hover */}
+                              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                {dailyExperience[i]} XP
+                              </div>
                             </div>
-                          </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label) => (
+                          <span key={label}>{label}</span>
                         ))}
                       </div>
                     </div>
-                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label) => (
-                        <span key={label}>{label}</span>
-                      ))}
-                    </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -579,7 +582,7 @@ export default function Dashboard() {
                     <PlayCircle className="w-12 h-12 text-white" />
                   )}
                 </div>
-                <CardContent className="p-4">
+                <CardContent className="p-3">
                   <Badge variant="secondary" className="mb-2 text-xs">
                     {material.type === 'PDF' ? 'PDF Guide' : 'Video Course'}
                   </Badge>
