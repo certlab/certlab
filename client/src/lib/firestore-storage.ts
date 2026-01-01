@@ -2315,6 +2315,7 @@ class FirestoreStorage implements IClientStorage {
         enableNotifications: settings.enableNotifications ?? existing?.enableNotifications ?? true,
         enableSound: settings.enableSound ?? existing?.enableSound ?? true,
         dailyGoalMinutes: settings.dailyGoalMinutes ?? existing?.dailyGoalMinutes ?? 120,
+        customActivities: settings.customActivities ?? existing?.customActivities ?? null,
         updatedAt: new Date(),
       };
 
