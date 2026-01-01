@@ -27,6 +27,15 @@ const DEFAULT_ACTIVITIES = ['Study', 'Work', 'Exercise', 'Meditation'];
 // Timer input dimensions for editing mode
 const TIMER_INPUT_DIMENSIONS = 'w-[200px] h-[80px]';
 
+// Timer input full class name
+const TIMER_INPUT_CLASS = `text-6xl font-bold font-mono tabular-nums text-center border-0 bg-transparent ${TIMER_INPUT_DIMENSIONS} px-0`;
+
+// Maximum timer duration in minutes (8 hours)
+const MAX_TIMER_MINUTES = 480;
+
+// Status messages
+const TIMER_EDIT_TIP = 'Click timer to edit duration';
+
 // Add activity dialog component
 function AddActivityDialog({
   open,
@@ -109,8 +118,8 @@ function SettingsDialog({
 
   const handleSave = () => {
     const durationValue = parseInt(duration, 10);
-    // Max 480 minutes (8 hours) to keep timer durations reasonable
-    if (!isNaN(durationValue) && durationValue > 0 && durationValue <= 480) {
+    // Max 8 hours to keep timer durations reasonable
+    if (!isNaN(durationValue) && durationValue > 0 && durationValue <= MAX_TIMER_MINUTES) {
       onSave(durationValue);
       onOpenChange(false);
     }
@@ -135,7 +144,7 @@ function SettingsDialog({
               id="duration"
               type="number"
               min="1"
-              max="480"
+              max={MAX_TIMER_MINUTES}
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
               placeholder="25"
@@ -420,12 +429,12 @@ export function StudyTimer() {
     if (parts.length === 2) {
       const minutes = parseInt(parts[0], 10);
       const seconds = parseInt(parts[1], 10);
-      // Max 480 minutes (8 hours) to keep timer durations reasonable
+      // Max 8 hours to keep timer durations reasonable
       if (
         !isNaN(minutes) &&
         !isNaN(seconds) &&
         minutes >= 0 &&
-        minutes <= 480 &&
+        minutes <= MAX_TIMER_MINUTES &&
         seconds >= 0 &&
         seconds < 60
       ) {
@@ -513,7 +522,7 @@ export function StudyTimer() {
                   onChange={(e) => setEditTimeValue(e.target.value)}
                   onBlur={handleTimeBlur}
                   onKeyDown={handleTimeKeyDown}
-                  className={`text-6xl font-bold font-mono tabular-nums text-center border-0 bg-transparent ${TIMER_INPUT_DIMENSIONS} px-0`}
+                  className={TIMER_INPUT_CLASS}
                   autoFocus
                   placeholder="MM:SS"
                 />
@@ -563,15 +572,11 @@ export function StudyTimer() {
             {!selectedActivity && !isRunning && (
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">Select an activity above to begin</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Tip: Click timer to edit duration
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Tip: {TIMER_EDIT_TIP}</p>
               </div>
             )}
             {selectedActivity && !isRunning && (
-              <p className="text-sm text-muted-foreground text-center">
-                Click timer to edit duration
-              </p>
+              <p className="text-sm text-muted-foreground text-center">{TIMER_EDIT_TIP}</p>
             )}
             {isRunning && (
               <p className="text-sm text-muted-foreground text-center">
