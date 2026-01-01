@@ -833,6 +833,7 @@ export const studyTimerSettings = pgTable('study_timer_settings', {
   enableNotifications: boolean('enable_notifications').default(true),
   enableSound: boolean('enable_sound').default(true),
   dailyGoalMinutes: integer('daily_goal_minutes').default(120), // 2 hours default
+  customActivities: jsonb('custom_activities'), // Array of {label: string, duration: number} for user-defined activities
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 

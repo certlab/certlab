@@ -216,6 +216,7 @@ export function StudyTimer() {
     enableNotifications: true,
     enableSound: true,
     dailyGoalMinutes: 120,
+    customActivities: null,
     updatedAt: new Date(),
   });
 
@@ -229,6 +230,25 @@ export function StudyTimer() {
     },
     enabled: !!user?.id,
   });
+
+  // Load custom activities from settings
+  useEffect(() => {
+    if (timerSettings?.customActivities) {
+      try {
+        // Parse stored custom activities
+        const customActivities = timerSettings.customActivities as unknown as ActivityConfig[];
+        if (Array.isArray(customActivities)) {
+          // Merge default activities with custom activities (custom activities override defaults)
+          const defaultLabels = DEFAULT_ACTIVITIES.map((a) => a.label);
+          const customOnly = customActivities.filter((a) => !defaultLabels.includes(a.label));
+          const mergedActivities = [...DEFAULT_ACTIVITIES, ...customOnly];
+          setActivities(mergedActivities);
+        }
+      } catch (error) {
+        console.error('Failed to load custom activities:', error);
+      }
+    }
+  }, [timerSettings]);
 
   // Get today's sessions for stats
   const { data: todaySessions = [] } = useQuery({
@@ -269,6 +289,24 @@ export function StudyTimer() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.studyTimer.todaySessions(user?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.studyTimer.stats(user?.id) });
+    },
+  });
+
+  // Save custom activities mutation
+  const saveActivitiesMutation = useMutation({
+    mutationFn: async (activitiesToSave: ActivityConfig[]) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      // Filter out default activities - only save custom ones
+      const defaultLabels = DEFAULT_ACTIVITIES.map((a) => a.label);
+      const customOnly = activitiesToSave.filter((a) => !defaultLabels.includes(a.label));
+
+      await storage.updateStudyTimerSettings(user.id, {
+        customActivities: customOnly as any,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.studyTimer.settings(user?.id) });
     },
   });
 
@@ -426,12 +464,16 @@ export function StudyTimer() {
 
     if (!isDuplicate) {
       const newActivityConfig: ActivityConfig = { label: activity, duration };
-      setActivities([...activities, newActivityConfig]);
+      const updatedActivities = [...activities, newActivityConfig];
+      setActivities(updatedActivities);
       setSelectedActivity(activity);
       // Set the timer to the specified duration
       const durationInSeconds = duration * 60;
       setTimeLeft(durationInSeconds);
       setInitialDuration(durationInSeconds);
+
+      // Save to storage
+      saveActivitiesMutation.mutate(updatedActivities);
     } else {
       toast({
         title: 'Activity Already Exists',
