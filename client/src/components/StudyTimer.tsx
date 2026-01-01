@@ -18,7 +18,7 @@ import {
 import { ActivityButton } from '@/components/ActivityButton';
 import { HandDrawnCircularProgress } from '@/components/HandDrawnCircularProgress';
 import { ActivityTimeline } from '@/components/ActivityTimeline';
-import { Settings, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { StudyTimerSession, StudyTimerSettings } from '@shared/schema';
 
 // Default activities
@@ -44,14 +44,22 @@ function AddActivityDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (activity: string) => void;
+  onAdd: (activity: string, duration: number) => void;
 }) {
   const [newActivity, setNewActivity] = useState('');
+  const [duration, setDuration] = useState('25');
 
   const handleAdd = () => {
-    if (newActivity.trim()) {
-      onAdd(newActivity.trim());
+    const durationValue = parseInt(duration, 10);
+    if (
+      newActivity.trim() &&
+      !isNaN(durationValue) &&
+      durationValue > 0 &&
+      durationValue <= MAX_TIMER_MINUTES
+    ) {
+      onAdd(newActivity.trim(), durationValue);
       setNewActivity('');
+      setDuration('25');
       onOpenChange(false);
     }
   };
@@ -63,25 +71,41 @@ function AddActivityDialog({
           <DialogTitle>Add Activity</DialogTitle>
           <DialogDescription>Create a new activity type for your timer sessions.</DialogDescription>
         </DialogHeader>
-        <div className="py-4">
-          <label htmlFor="new-activity-input" className="sr-only">
-            Activity name
-          </label>
-          <Input
-            id="new-activity-input"
-            placeholder="Activity name (e.g., Reading, Coding)"
-            value={newActivity}
-            onChange={(e) => setNewActivity(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleAdd();
-              } else if (e.key === 'Escape') {
-                onOpenChange(false);
-              }
-            }}
-            maxLength={30}
-            autoFocus
-          />
+        <div className="py-4 space-y-4">
+          <div>
+            <label htmlFor="new-activity-input" className="sr-only">
+              Activity name
+            </label>
+            <Input
+              id="new-activity-input"
+              placeholder="Activity name (e.g., Reading, Coding)"
+              value={newActivity}
+              onChange={(e) => setNewActivity(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleAdd();
+                } else if (e.key === 'Escape') {
+                  onOpenChange(false);
+                }
+              }}
+              maxLength={30}
+              autoFocus
+            />
+          </div>
+          <div>
+            <label htmlFor="duration-input" className="text-sm font-medium">
+              Default Duration (minutes)
+            </label>
+            <Input
+              id="duration-input"
+              type="number"
+              min="1"
+              max={MAX_TIMER_MINUTES}
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              placeholder="25"
+            />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -97,70 +121,7 @@ function AddActivityDialog({
 }
 
 // Settings dialog component
-function SettingsDialog({
-  open,
-  onOpenChange,
-  settings,
-  onSave,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  settings: StudyTimerSettings | null | undefined;
-  onSave: (duration: number) => void;
-}) {
-  const [duration, setDuration] = useState('25');
-
-  useEffect(() => {
-    if (settings) {
-      setDuration((settings.workDuration ?? 25).toString());
-    }
-  }, [settings]);
-
-  const handleSave = () => {
-    const durationValue = parseInt(duration, 10);
-    // Max 8 hours to keep timer durations reasonable
-    if (!isNaN(durationValue) && durationValue > 0 && durationValue <= MAX_TIMER_MINUTES) {
-      onSave(durationValue);
-      onOpenChange(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Timer Settings
-          </DialogTitle>
-          <DialogDescription>Set the default duration for your timer sessions.</DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
-          <div className="space-y-2">
-            <label htmlFor="duration" className="text-sm font-medium">
-              Default Duration (minutes)
-            </label>
-            <Input
-              id="duration"
-              type="number"
-              min="1"
-              max={MAX_TIMER_MINUTES}
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              placeholder="25"
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>Save</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+// REMOVED: This component is no longer needed
 
 export function StudyTimer() {
   const { user } = useAuth();
@@ -174,7 +135,6 @@ export function StudyTimer() {
   const [initialDuration, setInitialDuration] = useState(25 * 60);
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
   const [isAddActivityDialogOpen, setIsAddActivityDialogOpen] = useState(false);
-  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [isEditingTime, setIsEditingTime] = useState(false);
   const [editTimeValue, setEditTimeValue] = useState('');
 
@@ -248,21 +208,6 @@ export function StudyTimer() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.studyTimer.todaySessions(user?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.studyTimer.stats(user?.id) });
-    },
-  });
-
-  // Update settings mutation
-  const updateSettingsMutation = useMutation({
-    mutationFn: async (duration: number) => {
-      if (!user?.id) throw new Error('Not authenticated');
-      return await storage.updateStudyTimerSettings(user.id, { workDuration: duration });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.studyTimer.settings(user?.id) });
-      toast({
-        title: 'Settings Updated',
-        description: 'Your timer duration has been saved.',
-      });
     },
   });
 
@@ -390,7 +335,7 @@ export function StudyTimer() {
   };
 
   // Handle add activity
-  const handleAddActivity = (activity: string) => {
+  const handleAddActivity = (activity: string, duration: number) => {
     // Case-insensitive duplicate check
     const activityLower = activity.toLowerCase();
     const isDuplicate = activities.some((a) => a.toLowerCase() === activityLower);
@@ -398,6 +343,10 @@ export function StudyTimer() {
     if (!isDuplicate) {
       setActivities([...activities, activity]);
       setSelectedActivity(activity);
+      // Set the timer to the specified duration
+      const durationInSeconds = duration * 60;
+      setTimeLeft(durationInSeconds);
+      setInitialDuration(durationInSeconds);
     } else {
       toast({
         title: 'Activity Already Exists',
@@ -405,14 +354,6 @@ export function StudyTimer() {
         variant: 'destructive',
       });
     }
-  };
-
-  // Handle save settings
-  const handleSaveSettings = (duration: number) => {
-    updateSettingsMutation.mutate(duration);
-    const durationInSeconds = duration * 60;
-    setTimeLeft(durationInSeconds);
-    setInitialDuration(durationInSeconds);
   };
 
   // Handle time editing
@@ -468,18 +409,9 @@ export function StudyTimer() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Settings */}
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Timer</h1>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setIsSettingsDialogOpen(true)}
-          className="h-8 w-8 p-0"
-          aria-label="Open timer settings"
-        >
-          <Settings className="h-5 w-5" />
-        </Button>
+        <h1 className="text-2xl font-bold">Activity Timer</h1>
       </div>
 
       {/* Activity Buttons */}
@@ -595,12 +527,6 @@ export function StudyTimer() {
         open={isAddActivityDialogOpen}
         onOpenChange={setIsAddActivityDialogOpen}
         onAdd={handleAddActivity}
-      />
-      <SettingsDialog
-        open={isSettingsDialogOpen}
-        onOpenChange={setIsSettingsDialogOpen}
-        settings={timerSettings}
-        onSave={handleSaveSettings}
       />
     </div>
   );
