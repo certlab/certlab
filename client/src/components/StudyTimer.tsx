@@ -46,22 +46,75 @@ function AddActivityDialog({
   onOpenChange: (open: boolean) => void;
   onAdd: (activity: string, duration: number) => void;
 }) {
+  const { toast } = useToast();
   const [newActivity, setNewActivity] = useState('');
   const [duration, setDuration] = useState('25');
 
-  const handleAdd = () => {
+  // Validate duration input
+  const isDurationValid = () => {
+    if (!duration) return false;
     const durationValue = parseInt(duration, 10);
-    if (
-      newActivity.trim() &&
-      !isNaN(durationValue) &&
-      durationValue > 0 &&
-      durationValue <= MAX_TIMER_MINUTES
-    ) {
-      onAdd(newActivity.trim(), durationValue);
-      setNewActivity('');
-      setDuration('25');
-      onOpenChange(false);
+    return !isNaN(durationValue) && durationValue > 0 && durationValue <= MAX_TIMER_MINUTES;
+  };
+
+  const handleAdd = () => {
+    const activityName = newActivity.trim();
+    if (!activityName) {
+      toast({
+        title: 'Activity Name Required',
+        description: 'Please enter a name for the activity.',
+        variant: 'destructive',
+      });
+      return;
     }
+
+    if (!duration) {
+      toast({
+        title: 'Duration Required',
+        description: 'Please enter a duration for the timer.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const durationValue = parseInt(duration, 10);
+    if (isNaN(durationValue)) {
+      toast({
+        title: 'Invalid Duration',
+        description: 'Duration must be a valid number.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (durationValue < 1) {
+      toast({
+        title: 'Duration Too Short',
+        description: 'Duration must be at least 1 minute.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (durationValue > MAX_TIMER_MINUTES) {
+      toast({
+        title: 'Duration Too Long',
+        description: `Duration cannot exceed ${MAX_TIMER_MINUTES} minutes (8 hours).`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    onAdd(activityName, durationValue);
+    setNewActivity('');
+    setDuration('25');
+    onOpenChange(false);
+  };
+
+  const handleCancel = () => {
+    setNewActivity('');
+    setDuration('25');
+    onOpenChange(false);
   };
 
   return (
@@ -85,7 +138,7 @@ function AddActivityDialog({
                 if (e.key === 'Enter') {
                   handleAdd();
                 } else if (e.key === 'Escape') {
-                  onOpenChange(false);
+                  handleCancel();
                 }
               }}
               maxLength={30}
@@ -94,7 +147,7 @@ function AddActivityDialog({
           </div>
           <div>
             <label htmlFor="duration-input" className="text-sm font-medium">
-              Default Duration (minutes)
+              Timer Duration (minutes)
             </label>
             <Input
               id="duration-input"
@@ -108,10 +161,10 @@ function AddActivityDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={handleAdd} disabled={!newActivity.trim()}>
+          <Button onClick={handleAdd} disabled={!newActivity.trim() || !isDurationValid()}>
             Add Activity
           </Button>
         </DialogFooter>
@@ -119,9 +172,6 @@ function AddActivityDialog({
     </Dialog>
   );
 }
-
-// Settings dialog component
-// REMOVED: This component is no longer needed
 
 export function StudyTimer() {
   const { user } = useAuth();
