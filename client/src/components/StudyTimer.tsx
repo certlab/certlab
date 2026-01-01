@@ -162,6 +162,8 @@ export function StudyTimer() {
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
   const [isAddActivityDialogOpen, setIsAddActivityDialogOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const [isEditingTime, setIsEditingTime] = useState(false);
+  const [editTimeValue, setEditTimeValue] = useState('');
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartTimeRef = useRef<Date | null>(null);
@@ -400,6 +402,47 @@ export function StudyTimer() {
     setInitialDuration(durationInSeconds);
   };
 
+  // Handle time editing
+  const handleTimeClick = () => {
+    if (!isRunning) {
+      setIsEditingTime(true);
+      setEditTimeValue(formatTime(timeLeft));
+    }
+  };
+
+  const handleTimeBlur = () => {
+    // Parse the time format MM:SS
+    const parts = editTimeValue.split(':');
+    if (parts.length === 2) {
+      const minutes = parseInt(parts[0], 10);
+      const seconds = parseInt(parts[1], 10);
+      if (
+        !isNaN(minutes) &&
+        !isNaN(seconds) &&
+        minutes >= 0 &&
+        minutes <= 999 &&
+        seconds >= 0 &&
+        seconds < 60
+      ) {
+        const totalSeconds = minutes * 60 + seconds;
+        if (totalSeconds > 0) {
+          setTimeLeft(totalSeconds);
+          setInitialDuration(totalSeconds);
+        }
+      }
+    }
+    setIsEditingTime(false);
+  };
+
+  const handleTimeKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleTimeBlur();
+    } else if (e.key === 'Escape') {
+      setIsEditingTime(false);
+      setEditTimeValue(formatTime(timeLeft));
+    }
+  };
+
   if (isLoadingSettings) {
     return (
       <div className="animate-pulse">
@@ -413,12 +456,7 @@ export function StudyTimer() {
     <div className="space-y-6">
       {/* Header with Settings */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Activity Timer</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Track work, study, exercise, meditation, or any activity with custom labels.
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold">Timer</h1>
         <Button
           size="sm"
           variant="ghost"
@@ -464,9 +502,33 @@ export function StudyTimer() {
           <CardContent className="flex flex-col items-center gap-6 pb-8">
             {/* Circular Timer */}
             <HandDrawnCircularProgress value={getProgress()} size={280} strokeWidth={12}>
-              <div className="text-6xl font-bold font-mono tabular-nums">
-                {formatTime(timeLeft)}
-              </div>
+              {isEditingTime ? (
+                <Input
+                  value={editTimeValue}
+                  onChange={(e) => setEditTimeValue(e.target.value)}
+                  onBlur={handleTimeBlur}
+                  onKeyDown={handleTimeKeyDown}
+                  className="text-6xl font-bold font-mono tabular-nums text-center border-0 bg-transparent w-[200px] h-[80px] px-0"
+                  autoFocus
+                  placeholder="MM:SS"
+                />
+              ) : (
+                <div
+                  className="text-6xl font-bold font-mono tabular-nums cursor-pointer hover:text-primary transition-colors"
+                  onClick={handleTimeClick}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleTimeClick();
+                    }
+                  }}
+                  title={!isRunning ? 'Click to edit time' : 'Timer is running'}
+                >
+                  {formatTime(timeLeft)}
+                </div>
+              )}
             </HandDrawnCircularProgress>
 
             {/* Controls */}
@@ -495,7 +557,12 @@ export function StudyTimer() {
             {/* Status Message */}
             {!selectedActivity && !isRunning && (
               <p className="text-sm text-muted-foreground text-center">
-                Select an activity above to begin
+                Select an activity above to begin. Click timer to edit duration.
+              </p>
+            )}
+            {selectedActivity && !isRunning && (
+              <p className="text-sm text-muted-foreground text-center">
+                Click timer to edit duration
               </p>
             )}
             {isRunning && (
