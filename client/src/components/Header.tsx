@@ -658,15 +658,6 @@ export default function Header() {
                     <Trophy className="w-4 h-4 mr-3 text-primary" />
                     <span className="font-medium">My Achievements</span>
                   </DropdownMenuItem>
-                  {unreadCount === 0 && (
-                    <DropdownMenuItem
-                      onClick={() => navigate('/app/achievements')}
-                      className="cursor-pointer rounded-md py-2.5 px-3"
-                    >
-                      <Bell className="w-4 h-4 mr-3 text-primary" />
-                      <span className="font-medium">Notifications</span>
-                    </DropdownMenuItem>
-                  )}
 
                   <DropdownMenuSeparator className="my-2" />
 
