@@ -385,7 +385,7 @@ export default function Dashboard() {
     }
 
     return labels;
-  }, []);
+  }, [dailyExperience]);
 
   return (
     <div className="min-h-screen bg-background">
