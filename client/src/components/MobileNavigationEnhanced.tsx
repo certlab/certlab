@@ -68,6 +68,12 @@ export default function MobileNavigationEnhanced() {
       badge: 'NEW',
     },
     {
+      id: 'quiz-builder',
+      label: 'Quiz Builder',
+      icon: <Edit className="w-5 h-5" />,
+      href: '/app/quiz-builder',
+    },
+    {
       id: 'practice-tests',
       label: 'Practice Tests',
       icon: <FileText className="w-5 h-5" />,
