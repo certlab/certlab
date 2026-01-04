@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/lib/theme-provider';
-import { themes } from '@/lib/theme-constants';
+import { themes, type ThemeOption } from '@/lib/theme-constants';
 import { Check } from 'lucide-react';
 
 interface ThemeDialogProps {
@@ -19,8 +19,8 @@ export function ThemeDialog({ children }: ThemeDialogProps) {
   const [open, setOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
-  const handleThemeSelect = (themeValue: string) => {
-    setTheme(themeValue as any);
+  const handleThemeSelect = (themeValue: ThemeOption['value']) => {
+    setTheme(themeValue);
     setOpen(false);
   };
 
