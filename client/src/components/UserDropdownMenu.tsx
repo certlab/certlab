@@ -1,7 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { useTheme } from '@/lib/theme-provider';
-import { themes } from '@/lib/theme-constants';
 import { useAuth } from '@/lib/auth-provider';
 import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,12 +11,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, Bell, Trophy, Palette, LogOut, Check } from 'lucide-react';
+import { ThemeDialog } from '@/components/ThemeDialog';
+import { User, Bell, Trophy, Palette, LogOut } from 'lucide-react';
 import { formatNotificationCount, getInitials, getUserDisplayName } from '@/lib/utils';
 import type { UserGameStats } from '@shared/schema';
 
@@ -37,7 +32,6 @@ export function UserDropdownMenu({
 }: UserDropdownMenuProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { theme, setTheme } = useTheme();
   const { logout } = useAuth();
 
   const handleSignOut = async () => {
@@ -171,45 +165,15 @@ export function UserDropdownMenu({
         <DropdownMenuSeparator className="my-2" />
 
         {/* Theme Selection */}
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger className="cursor-pointer rounded-md py-2.5 px-3">
+        <ThemeDialog>
+          <DropdownMenuItem
+            onSelect={(e) => e.preventDefault()}
+            className="cursor-pointer rounded-md py-2.5 px-3"
+          >
             <Palette className="w-4 h-4 mr-3 text-primary" />
             <span className="font-medium">Theme</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="w-56">
-            <DropdownMenuLabel className="text-xs text-muted-foreground px-2 py-1.5">
-              Choose your theme
-            </DropdownMenuLabel>
-            {themes.map((themeOption) => {
-              const Icon = themeOption.icon;
-              const isSelected = theme === themeOption.value;
-              return (
-                <DropdownMenuItem
-                  key={themeOption.value}
-                  onClick={() => setTheme(themeOption.value)}
-                  className="cursor-pointer rounded-md py-2.5 px-3"
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <div
-                      className={`flex aspect-square size-6 items-center justify-center rounded-lg ${
-                        isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                      }`}
-                    >
-                      <Icon className="size-3.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{themeOption.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {themeOption.description}
-                      </p>
-                    </div>
-                    {isSelected && <Check className="size-4 text-primary flex-shrink-0" />}
-                  </div>
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
+          </DropdownMenuItem>
+        </ThemeDialog>
 
         <DropdownMenuSeparator className="my-2" />
 
