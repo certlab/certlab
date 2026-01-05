@@ -48,6 +48,7 @@ import {
   Palette,
   Check,
   LogOut,
+  PlusCircle,
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme-provider';
 import { themes } from '@/lib/theme-constants';

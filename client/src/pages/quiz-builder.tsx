@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-provider';
 import { storage } from '@/lib/storage-factory';
-import { queryClient, queryKeys } from '@/lib/queryClient';
+import { setUserDocument } from '@/lib/firestore-service';
+import { queryKeys } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
-  Play,
   Save,
   Eye,
   Settings,
@@ -110,7 +110,6 @@ export default function QuizBuilder() {
 
   // UI State
   const [activeTab, setActiveTab] = useState('config');
-  const [previewMode, setPreviewMode] = useState(false);
   const [currentPreviewQuestion, setCurrentPreviewQuestion] = useState(0);
 
   // Fetch categories
@@ -144,17 +143,17 @@ export default function QuizBuilder() {
         subcategoryIds: selectedSubcategories,
         customQuestions,
         questionCount: customQuestions.length,
-        timeLimit: timeLimit === '0' ? null : parseInt(timeLimit),
-        passingScore: parseInt(passingScore),
-        maxAttempts: maxAttempts === '0' ? null : parseInt(maxAttempts),
-        difficultyLevel: parseInt(difficultyLevel),
+        timeLimit: timeLimit === '0' ? null : parseInt(timeLimit, 10),
+        passingScore: parseInt(passingScore, 10),
+        maxAttempts: maxAttempts === '0' ? null : parseInt(maxAttempts, 10),
+        difficultyLevel: parseInt(difficultyLevel, 10),
         isPublished: !isDraft,
         isDraft,
       };
 
       // Store in Firestore as a user document
       const id = Date.now();
-      await storage.storage.setUserDocument(user.id, 'quizTemplates', id.toString(), {
+      await setUserDocument(user.id, 'quizTemplates', id.toString(), {
         ...template,
         id,
         createdAt: new Date(),
@@ -274,6 +273,17 @@ export default function QuizBuilder() {
       return;
     }
 
+    // Validate that the correct answer exists in valid options
+    const correctAnswerExists = validOptions.some((opt) => opt.id === correctAnswer);
+    if (!correctAnswerExists) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select a valid correct answer',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const question: CustomQuestion = {
       id: editingQuestion?.id || crypto.randomUUID(),
       text: questionText,
@@ -281,7 +291,7 @@ export default function QuizBuilder() {
       options: validOptions,
       correctAnswer,
       explanation,
-      difficultyLevel: parseInt(questionDifficulty),
+      difficultyLevel: parseInt(questionDifficulty, 10),
       tags: questionTags
         .split(',')
         .map((t) => t.trim())
@@ -328,7 +338,16 @@ export default function QuizBuilder() {
   };
 
   const deleteQuestion = (questionId: string) => {
+    const questionIndex = customQuestions.findIndex((q) => q.id === questionId);
     setCustomQuestions(customQuestions.filter((q) => q.id !== questionId));
+
+    // Adjust preview index if needed to keep it within bounds
+    if (questionIndex <= currentPreviewQuestion && currentPreviewQuestion > 0) {
+      setCurrentPreviewQuestion(currentPreviewQuestion - 1);
+    } else if (customQuestions.length - 1 === 0) {
+      setCurrentPreviewQuestion(0);
+    }
+
     toast({
       title: 'Question Deleted',
       description: 'The question has been removed from the quiz',
@@ -353,6 +372,15 @@ export default function QuizBuilder() {
       });
       return;
     }
+
+    // If removing the correct answer, reset it to the first remaining option
+    if (correctAnswer === id) {
+      const remainingOptions = questionOptions.filter((opt) => opt.id !== id);
+      if (remainingOptions.length > 0) {
+        setCorrectAnswer(remainingOptions[0].id);
+      }
+    }
+
     setQuestionOptions(questionOptions.filter((opt) => opt.id !== id));
   };
 
