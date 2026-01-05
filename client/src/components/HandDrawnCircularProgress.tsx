@@ -51,8 +51,13 @@ export function HandDrawnCircularProgress({
     const drawHandDrawnCircle = (startAngle: number, endAngle: number, seed: number) => {
       const segments = 100;
       const angleStep = (endAngle - startAngle) / segments;
+      const isFullCircle = Math.abs(endAngle - startAngle - Math.PI * 2) < 0.01;
 
       ctx.beginPath();
+
+      // Store first point coordinates for closing full circles
+      let firstX = 0;
+      let firstY = 0;
 
       for (let i = 0; i <= segments; i++) {
         const angle = startAngle + i * angleStep;
@@ -69,9 +74,16 @@ export function HandDrawnCircularProgress({
 
         if (i === 0) {
           ctx.moveTo(x, y);
+          firstX = x;
+          firstY = y;
         } else {
           ctx.lineTo(x, y);
         }
+      }
+
+      // Close the path for full circles to eliminate the gap
+      if (isFullCircle) {
+        ctx.lineTo(firstX, firstY);
       }
 
       ctx.stroke();
