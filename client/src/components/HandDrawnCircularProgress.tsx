@@ -52,14 +52,10 @@ export function HandDrawnCircularProgress({
       const segments = 100;
       const angleStep = (endAngle - startAngle) / segments;
       // Tolerance for detecting a full circle (2π radians)
-      const FULL_CIRCLE_TOLERANCE = 0.01;
+      const FULL_CIRCLE_TOLERANCE = 0.001;
       const isFullCircle = Math.abs(endAngle - startAngle - Math.PI * 2) < FULL_CIRCLE_TOLERANCE;
 
       ctx.beginPath();
-
-      // Store first point coordinates for closing full circles
-      let startPointX = 0;
-      let startPointY = 0;
 
       for (let i = 0; i <= segments; i++) {
         const angle = startAngle + i * angleStep;
@@ -76,16 +72,17 @@ export function HandDrawnCircularProgress({
 
         if (i === 0) {
           ctx.moveTo(x, y);
-          startPointX = x;
-          startPointY = y;
         } else {
           ctx.lineTo(x, y);
         }
       }
 
       // Close the path for full circles to eliminate the gap
+      // Calculate the first point without jitter for perfect closure
       if (isFullCircle) {
-        ctx.lineTo(startPointX, startPointY);
+        const firstX = centerX + radius * Math.cos(startAngle);
+        const firstY = centerY + radius * Math.sin(startAngle);
+        ctx.lineTo(firstX, firstY);
       }
 
       ctx.stroke();
