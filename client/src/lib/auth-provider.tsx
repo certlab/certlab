@@ -233,6 +233,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Reload from Firestore
         firestoreUser = await storage.getUser(firebaseUser.uid);
+      } else {
+        // User exists - sync profile image URL if it has changed in Firebase
+        // This ensures that when users update their Google profile photo, it's reflected in the app
+        if (firebaseUser.photoURL !== firestoreUser.profileImageUrl) {
+          await storage.updateUser(firebaseUser.uid, {
+            profileImageUrl: firebaseUser.photoURL,
+          });
+          // Reload user to get updated profile image URL
+          firestoreUser = await storage.getUser(firebaseUser.uid);
+        }
       }
 
       if (firestoreUser) {
