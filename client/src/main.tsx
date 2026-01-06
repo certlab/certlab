@@ -68,27 +68,86 @@ try {
 
   const instructions = document.createElement('div');
   instructions.style.cssText = 'margin-bottom: 1.5rem;';
-  instructions.innerHTML = `
-    <p style="font-weight: 600; margin-bottom: 0.5rem; color: #111827;">Dynatrace observability is required for this application to run.</p>
-    <p style="font-size: 0.875rem; margin-bottom: 1rem; color: #4b5563;">To fix this issue, follow these steps:</p>
-    <ol style="list-style: decimal; margin-left: 1.5rem; font-size: 0.875rem; color: #4b5563; line-height: 1.5;">
-      <li>Sign up for Dynatrace at <a href="https://www.dynatrace.com/trial" style="color: #2563eb; text-decoration: underline;">https://www.dynatrace.com/trial</a> (free trial available)</li>
-      <li>Create a web application in your Dynatrace environment</li>
-      <li>Navigate to: Applications & Microservices → Web applications → Your app</li>
-      <li>Click "..." → Edit → Setup → Instrumentation code</li>
-      <li>Copy the complete src URL from the &lt;script&gt; tag</li>
-      <li>Set the <code style="background: #f3f4f6; padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-family: monospace;">VITE_DYNATRACE_SCRIPT_URL</code> environment variable</li>
-      <li>Rebuild and redeploy the application</li>
-    </ol>
-  `;
+
+  const mainText = document.createElement('p');
+  mainText.style.cssText = 'font-weight: 600; margin-bottom: 0.5rem; color: #111827;';
+  mainText.textContent = 'Dynatrace observability is required for this application to run.';
+
+  const subText = document.createElement('p');
+  subText.style.cssText = 'font-size: 0.875rem; margin-bottom: 1rem; color: #4b5563;';
+  subText.textContent = 'To fix this issue, follow these steps:';
+
+  const list = document.createElement('ol');
+  list.style.cssText =
+    'list-style: decimal; margin-left: 1.5rem; font-size: 0.875rem; color: #4b5563; line-height: 1.5;';
+
+  const steps = [
+    {
+      text: 'Sign up for Dynatrace at ',
+      link: { text: 'https://www.dynatrace.com/trial', href: 'https://www.dynatrace.com/trial' },
+      suffix: ' (free trial available)',
+    },
+    { text: 'Create a web application in your Dynatrace environment' },
+    { text: 'Navigate to: Applications & Microservices → Web applications → Your app' },
+    { text: 'Click "..." → Edit → Setup → Instrumentation code' },
+    { text: 'Copy the complete src URL from the <script> tag' },
+    { text: 'Set the ', code: 'VITE_DYNATRACE_SCRIPT_URL', suffix: ' environment variable' },
+    { text: 'Rebuild and redeploy the application' },
+  ];
+
+  steps.forEach((step) => {
+    const li = document.createElement('li');
+    li.style.cssText = 'margin-bottom: 0.25rem;';
+
+    if (step.link) {
+      li.textContent = step.text;
+      const link = document.createElement('a');
+      link.href = step.link.href;
+      link.textContent = step.link.text;
+      link.style.cssText = 'color: #2563eb; text-decoration: underline;';
+      li.appendChild(link);
+      if (step.suffix) {
+        li.appendChild(document.createTextNode(step.suffix));
+      }
+    } else if (step.code) {
+      li.textContent = step.text;
+      const code = document.createElement('code');
+      code.textContent = step.code;
+      code.style.cssText =
+        'background: #f3f4f6; padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-family: monospace;';
+      li.appendChild(code);
+      if (step.suffix) {
+        li.appendChild(document.createTextNode(step.suffix));
+      }
+    } else {
+      li.textContent = step.text;
+    }
+
+    list.appendChild(li);
+  });
+
+  instructions.appendChild(mainText);
+  instructions.appendChild(subText);
+  instructions.appendChild(list);
 
   const footer = document.createElement('div');
   footer.style.cssText =
     'font-size: 0.75rem; color: #6b7280; padding-top: 1rem; border-top: 1px solid #e5e7eb;';
-  footer.innerHTML = `
-    <p>For detailed setup instructions, see <code style="background: #f3f4f6; padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-family: monospace;">docs/setup/dynatrace.md</code></p>
-    <p style="margin-top: 0.5rem;">Contact your system administrator if you need assistance.</p>
-  `;
+
+  const footerText1 = document.createElement('p');
+  footerText1.textContent = 'For detailed setup instructions, see ';
+  const footerCode = document.createElement('code');
+  footerCode.textContent = 'docs/setup/dynatrace.md';
+  footerCode.style.cssText =
+    'background: #f3f4f6; padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-family: monospace;';
+  footerText1.appendChild(footerCode);
+
+  const footerText2 = document.createElement('p');
+  footerText2.style.cssText = 'margin-top: 0.5rem;';
+  footerText2.textContent = 'Contact your system administrator if you need assistance.';
+
+  footer.appendChild(footerText1);
+  footer.appendChild(footerText2);
 
   card.appendChild(header);
   card.appendChild(errorBox);
