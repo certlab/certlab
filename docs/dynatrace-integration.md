@@ -49,6 +49,7 @@ Dynatrace Real User Monitoring (RUM) is **REQUIRED** and fully integrated into C
 # 2. Click "..." > Edit > Setup > Instrumentation code
 # 3. Copy the src URL from the <script> tag
 #    Example: https://js-cdn.dynatrace.com/jstag/176fb25782e/bf44908ztj/f8fcbfc83426566d_complete.js
+# For detailed instructions, see docs/setup/dynatrace.md
 ```
 
 ### 3. Configure Environment Variables (REQUIRED)

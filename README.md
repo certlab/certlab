@@ -103,12 +103,22 @@ npm test
 
 ### First Time Setup
 
+**Option 1: Quick Start (Local Development)**
+1. Install dependencies: `npm install`
+2. Set development bypass: Add `VITE_DYNATRACE_DEV_SKIP=true` to `.env.local`
+3. Start dev server: `npm run dev`
+4. The app will run without Dynatrace for initial testing
+5. Complete Firebase and Dynatrace setup before deploying
+
+**Option 2: Full Setup (Recommended)**
 1. Complete Firebase setup (see [Firebase Setup](#-firebase-setup-required))
 2. Complete Dynatrace setup (see [Dynatrace Setup](#-dynatrace-setup-required))
 3. Open the app in your browser
 4. Click "Sign in with Google"
 5. Initial sample data (categories, questions, badges) will be automatically seeded
 6. Select your certification goals and start learning!
+
+**⚠️ Important**: The `VITE_DYNATRACE_DEV_SKIP` flag is ONLY for local development. Deployments to production, staging, or via CI/CD will fail without proper Dynatrace configuration.
 
 ### Firebase Setup (Required)
 

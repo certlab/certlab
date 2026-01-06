@@ -73,8 +73,19 @@ export function getDynatraceConfig(): DynatraceConfig {
   const enabledEnv = import.meta.env.VITE_ENABLE_DYNATRACE;
   const explicitlyDisabled = enabledEnv === 'false';
   const devMode = String(import.meta.env.VITE_DYNATRACE_DEV_MODE || 'false') === 'true';
+  const devSkip = import.meta.env.VITE_DYNATRACE_DEV_SKIP;
+  const isDevelopment = import.meta.env.DEV;
   const appName = import.meta.env.VITE_DYNATRACE_APP_NAME || 'CertLab';
   const actionPrefix = import.meta.env.VITE_DYNATRACE_ACTION_PREFIX;
+
+  // Development bypass: allow skipping in local development for initial setup
+  if (isDevelopment && devSkip === 'true') {
+    throw new Error(
+      'Dynatrace is not configured (bypassed for local development with VITE_DYNATRACE_DEV_SKIP=true). ' +
+        'This bypass is only for initial local setup. Configure Dynatrace before deploying. ' +
+        'See docs/setup/dynatrace.md for setup instructions.'
+    );
+  }
 
   // Check if explicitly disabled
   if (explicitlyDisabled) {
@@ -90,6 +101,7 @@ export function getDynatraceConfig(): DynatraceConfig {
     throw new Error(
       'Dynatrace configuration is missing or invalid. ' +
         'VITE_DYNATRACE_SCRIPT_URL must be set to an HTTPS URL from Dynatrace. ' +
+        'For local development, you can temporarily set VITE_DYNATRACE_DEV_SKIP=true. ' +
         'See docs/setup/dynatrace.md for setup instructions.'
     );
   }

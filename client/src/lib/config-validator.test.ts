@@ -22,21 +22,23 @@ describe('validateRequiredConfiguration', () => {
   });
 
   it('should require Dynatrace configuration in all environments', () => {
-    // Dynatrace is now mandatory, so validation should fail without it
+    // Dynatrace is now mandatory in all environments, so validation should fail without it
     const result = validateRequiredConfiguration();
 
     // In test mode without Dynatrace configured, should report errors
-    // The actual validation depends on environment variables being set in the test environment
     expect(result.errors).toBeDefined();
     expect(Array.isArray(result.errors)).toBe(true);
 
-    // Check that if there are errors, they include Dynatrace-related messages
+    // Since Dynatrace is mandatory, if there are errors, they must include Dynatrace errors
+    // (unless Firebase is also missing in which case we'll have Firebase errors too)
     if (result.errors.length > 0) {
       const hasDynatraceError = result.errors.some((error) =>
         error.toLowerCase().includes('dynatrace')
       );
-      // Either we have Firebase errors only (in dev mode), or we have Dynatrace errors
-      expect(hasDynatraceError || result.errors.some((e) => e.includes('Firebase'))).toBe(true);
+
+      // We should always have Dynatrace errors when Dynatrace is not configured
+      // This verifies that the mandatory requirement is being enforced
+      expect(hasDynatraceError).toBe(true);
     }
   });
 });

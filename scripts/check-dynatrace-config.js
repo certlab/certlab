@@ -40,27 +40,33 @@ function maskValue(value) {
  * Validate Dynatrace script URL format
  */
 function validateScriptUrl(url) {
+  const errors = [];
+  const warnings = [];
+  
   // Must be HTTPS
   if (!url.startsWith('https://')) {
-    return 'Must start with https://';
+    return { error: 'Must start with https://', warnings: [] };
   }
   
   // Must be from Dynatrace domain
-  const dynatracePattern = /^https:\/\/(js-cdn\.dynatrace\.com|[a-zA-Z0-9.-]+\.(?:live\.)?dynatrace\.com)\//;
+  // Using a more restrictive pattern that prevents invalid hostnames (e.g., ending with hyphen)
+  const dynatracePattern = /^https:\/\/(js-cdn\.dynatrace\.com|(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+(?:live\.)?dynatrace\.com)\//;
   if (!dynatracePattern.test(url)) {
-    return 'Must be from Dynatrace domain (js-cdn.dynatrace.com or *.dynatrace.com)';
+    return { error: 'Must be from Dynatrace domain (js-cdn.dynatrace.com or *.dynatrace.com)', warnings: [] };
   }
   
   // Informational check: typical URLs contain /jstag/ but this is not enforced
   if (!url.includes('/jstag/')) {
-    console.log('   ℹ️  Note: URL does not contain /jstag/ path (most Dynatrace RUM URLs do)');
+    warnings.push('URL does not contain /jstag/ path (most Dynatrace RUM URLs do)');
   }
   
-  return null; // Valid
+  return { error: null, warnings }; // Valid
 }
 
 // Check required variables
 console.log('\n📋 Required Variables:\n');
+const allWarnings = [];
+
 requiredVars.forEach(varName => {
   const value = process.env[varName];
   if (!value || value.trim() === '') {
@@ -71,14 +77,26 @@ requiredVars.forEach(varName => {
     
     // Validate script URL format
     if (varName === 'VITE_DYNATRACE_SCRIPT_URL') {
-      const validationError = validateScriptUrl(value);
-      if (validationError) {
-        console.log(`   ❌ ERROR: ${validationError}`);
+      const validation = validateScriptUrl(value);
+      if (validation.error) {
+        console.log(`   ❌ ERROR: ${validation.error}`);
         hasErrors = true;
+      }
+      // Collect warnings to display after all checks
+      if (validation.warnings && validation.warnings.length > 0) {
+        allWarnings.push(...validation.warnings.map(w => `VITE_DYNATRACE_SCRIPT_URL: ${w}`));
       }
     }
   }
 });
+
+// Display warnings after all validation checks
+if (allWarnings.length > 0) {
+  console.log('\n⚠️  Warnings:\n');
+  allWarnings.forEach(warning => {
+    console.log(`   ℹ️  ${warning}`);
+  });
+}
 
 // Check optional enable flag
 console.log('\n🚩 Feature Flags:\n');

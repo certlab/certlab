@@ -90,7 +90,7 @@ try {
     { text: 'Create a web application in your Dynatrace environment' },
     { text: 'Navigate to: Applications & Microservices → Web applications → Your app' },
     { text: 'Click "..." → Edit → Setup → Instrumentation code' },
-    { text: 'Copy the complete src URL from the <script> tag' },
+    { text: 'Copy the complete src URL from the script tag' },
     { text: 'Set the ', code: 'VITE_DYNATRACE_SCRIPT_URL', suffix: ' environment variable' },
     { text: 'Rebuild and redeploy the application' },
   ];
@@ -157,7 +157,10 @@ try {
 
   document.body.innerHTML = ''; // Clear body
   document.body.appendChild(container);
-  throw error; // Prevent app from rendering
+
+  // Re-throw to prevent any further execution
+  throw error;
 }
 
+// Only reached if Dynatrace initialization succeeds
 createRoot(document.getElementById('root')!).render(<App />);
