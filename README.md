@@ -34,7 +34,11 @@ CertLab is a modern, cloud-based certification study platform. Study for certifi
 
 ## 🚀 Quick Start
 
-**Prerequisites**: Firebase project is required. See [Firebase Setup](#-firebase-setup-required) below.
+**Prerequisites**: 
+- Firebase project (required for authentication and storage)
+- Dynatrace account (required for monitoring and error detection)
+
+See setup instructions below.
 
 ```bash
 # Clone the repository
@@ -44,9 +48,9 @@ cd certlab
 # Install dependencies
 npm install
 
-# Configure Firebase (required)
+# Configure Firebase and Dynatrace (both required)
 cp .env.example .env.local
-# Edit .env.local and add your Firebase credentials
+# Edit .env.local and add your Firebase credentials and Dynatrace script URL
 
 # Start development server
 npm run dev
@@ -61,6 +65,7 @@ Open http://localhost:5000 and sign in with Google to get started!
 - **Node.js**: v20.x or higher
 - **npm**: v10.x or higher
 - **Firebase Project**: Required for authentication and storage (see [Firebase Setup](#-firebase-setup-required))
+- **Dynatrace Account**: Required for monitoring and error detection (see [Dynatrace Setup](#-dynatrace-setup-required))
 
 ### Development Setup
 
@@ -99,10 +104,11 @@ npm test
 ### First Time Setup
 
 1. Complete Firebase setup (see [Firebase Setup](#-firebase-setup-required))
-2. Open the app in your browser
-3. Click "Sign in with Google"
-4. Initial sample data (categories, questions, badges) will be automatically seeded
-5. Select your certification goals and start learning!
+2. Complete Dynatrace setup (see [Dynatrace Setup](#-dynatrace-setup-required))
+3. Open the app in your browser
+4. Click "Sign in with Google"
+5. Initial sample data (categories, questions, badges) will be automatically seeded
+6. Select your certification goals and start learning!
 
 ### Firebase Setup (Required)
 
@@ -160,19 +166,43 @@ Firebase is required for authentication (Google Sign-In) and cloud storage (Fire
 
 For detailed instructions, see [docs/setup/firebase.md](docs/setup/firebase.md).
 
-### Dynatrace Observability (Optional)
+### Dynatrace Setup (Required)
 
-For production monitoring and analytics, configure Dynatrace:
+Dynatrace observability is required for proper monitoring and error detection:
 
-1. **Create Dynatrace Account**: Sign up at [dynatrace.com/trial](https://www.dynatrace.com/trial)
-2. **Configure Environment**: Add Dynatrace credentials to `.env` (see `.env.example`)
-3. **Deploy Monitoring**: Dynatrace automatically begins collecting metrics after deployment
-4. **Set Up Dashboards**: Configure monitoring dashboards and alerts
+1. **Create Dynatrace Account**: 
+   - Sign up at [dynatrace.com/trial](https://www.dynatrace.com/trial) (free 15-day trial available)
 
-See [docs/setup/dynatrace.md](docs/setup/dynatrace.md) for detailed instructions.
+2. **Create Web Application**:
+   - Navigate to Applications & Microservices > Web applications
+   - Create a new web application or select existing
+   - Give it a name (e.g., "CertLab")
 
-**Benefits**:
-- Real user monitoring (RUM) for actual user experience tracking
+3. **Get RUM Script URL**:
+   - Click "..." > Edit > Setup > Instrumentation code
+   - Copy the complete `src` URL from the `<script>` tag
+   - Example: `https://js-cdn.dynatrace.com/jstag/abc123/xyz789/script.js`
+
+4. **Configure Environment**:
+   ```bash
+   # Add to .env.local
+   VITE_DYNATRACE_SCRIPT_URL=https://js-cdn.dynatrace.com/jstag/YOUR_ENV/YOUR_APP/script.js
+   ```
+
+5. **Verify Configuration**:
+   ```bash
+   npm run check:dynatrace
+   ```
+
+6. **Deploy and Monitor**:
+   - Build and deploy the application
+   - Dynatrace will automatically begin collecting metrics
+   - Access dashboards in your Dynatrace environment
+
+For detailed instructions, see [docs/setup/dynatrace.md](docs/setup/dynatrace.md).
+
+**Monitoring Capabilities**:
+- Real user monitoring (RUM) for user experience tracking
 - Performance metrics and bottleneck identification
 - JavaScript error tracking and debugging
 - User journey analytics and conversion funnels

@@ -3,7 +3,7 @@
  *
  * Displays a blocking error page when required configuration is missing.
  * Firebase is now mandatory for authentication via Google Sign-In and Firestore storage.
- * Dynatrace is optional but recommended for production monitoring.
+ * Dynatrace is REQUIRED for proper monitoring and error detection.
  */
 
 import { AlertCircle } from 'lucide-react';
@@ -23,7 +23,8 @@ export function ConfigurationError({ errors }: ConfigurationErrorProps) {
           <AlertDescription className="mt-4">
             <p className="mb-4">
               The application requires Firebase for Google Sign-In authentication and Firestore
-              cloud storage. Please configure Firebase to continue.
+              cloud storage, plus Dynatrace for monitoring and error detection. Please configure
+              both services to continue.
             </p>
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-4">
               <p className="font-semibold mb-2">Missing Configuration:</p>
@@ -47,11 +48,16 @@ export function ConfigurationError({ errors }: ConfigurationErrorProps) {
                   Set environment variables: VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN,
                   VITE_FIREBASE_PROJECT_ID
                 </li>
+                <li>Sign up for Dynatrace at https://www.dynatrace.com/trial</li>
+                <li>
+                  Get the Dynatrace RUM script URL from your application settings and set
+                  VITE_DYNATRACE_SCRIPT_URL
+                </li>
                 <li>Rebuild and redeploy the application</li>
               </ol>
               <p className="mt-4 text-xs">
-                Note: Dynatrace (VITE_DYNATRACE_SCRIPT_URL) is optional but recommended for
-                production monitoring.
+                For detailed setup instructions, see docs/setup/dynatrace.md and Firebase setup
+                documentation.
               </p>
             </div>
           </AlertDescription>

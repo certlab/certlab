@@ -4,7 +4,7 @@ This document provides a quick reference for the Dynatrace observability integra
 
 ## 🎯 What Was Implemented
 
-Dynatrace Real User Monitoring (RUM) has been fully integrated into CertLab to provide comprehensive observability and analytics for the client-side application.
+Dynatrace Real User Monitoring (RUM) is **REQUIRED** and fully integrated into CertLab to provide comprehensive observability and error detection for the client-side application.
 
 ## 📁 Files Added/Modified
 
@@ -51,7 +51,7 @@ Dynatrace Real User Monitoring (RUM) has been fully integrated into CertLab to p
 #    Example: https://js-cdn.dynatrace.com/jstag/176fb25782e/bf44908ztj/f8fcbfc83426566d_complete.js
 ```
 
-### 3. Configure Environment Variables
+### 3. Configure Environment Variables (REQUIRED)
 
 ```bash
 # Copy .env.example to .env
@@ -61,7 +61,16 @@ cp .env.example .env
 VITE_DYNATRACE_SCRIPT_URL=https://js-cdn.dynatrace.com/jstag/YOUR_ENV/YOUR_APP/YOUR_SCRIPT.js
 ```
 
-### 4. Build and Deploy
+**Important**: Dynatrace is now mandatory. The application will not start without proper configuration.
+
+### 4. Validate Configuration
+
+```bash
+# Verify Dynatrace configuration
+npm run check:dynatrace
+```
+
+### 5. Build and Deploy
 
 ```bash
 # Build with Dynatrace enabled
@@ -71,9 +80,9 @@ npm run build
 npm run deploy:firebase
 ```
 
-**Note**: The Dynatrace RUM script is automatically injected during the build process. Simply set the `VITE_DYNATRACE_SCRIPT_URL` environment variable, and the script will be loaded automatically!
+**Note**: The Dynatrace RUM script is automatically injected during the build process. The application **requires** the `VITE_DYNATRACE_SCRIPT_URL` environment variable to be set. Deployments will fail without proper Dynatrace configuration.
 
-### 5. Verify Integration
+### 6. Verify Integration
 
 1. Open your deployed application
 2. Open browser DevTools → Network tab

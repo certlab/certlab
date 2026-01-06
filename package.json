@@ -33,6 +33,7 @@
     "preview": "vite preview",
     "check": "tsc",
     "check:firebase": "node scripts/check-firebase-config.js",
+    "check:dynatrace": "node scripts/check-dynatrace-config.js",
     "lint": "eslint client/src shared",
     "lint:fix": "eslint client/src shared --fix",
     "format": "prettier --write \"client/src/**/*.{ts,tsx}\" \"shared/**/*.{ts,tsx}\"",
