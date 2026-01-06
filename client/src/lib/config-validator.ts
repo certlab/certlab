@@ -50,12 +50,27 @@ function validateFirebaseConfig(): string[] {
  * Validate Dynatrace configuration
  * Uses script URL method for configuration
  * Dynatrace is REQUIRED in all environments for proper monitoring
+ *
+ * For local development only: Set VITE_DYNATRACE_DEV_SKIP=true to bypass requirement
+ * This should NEVER be used in production or CI/CD pipelines
  */
 function validateDynatraceConfig(): string[] {
   const errors: string[] = [];
 
   const scriptUrl = import.meta.env.VITE_DYNATRACE_SCRIPT_URL;
   const enabledEnv = import.meta.env.VITE_ENABLE_DYNATRACE;
+  const devSkip = import.meta.env.VITE_DYNATRACE_DEV_SKIP;
+  const isDevelopment = import.meta.env.DEV;
+
+  // Development bypass: allow skipping Dynatrace for local development only
+  // This helps developers get started without having to set up Dynatrace first
+  if (isDevelopment && devSkip === 'true') {
+    console.warn(
+      '[Config Validator] Dynatrace requirement bypassed for local development (VITE_DYNATRACE_DEV_SKIP=true)',
+      '\nThis is ONLY for initial local setup. Remove this flag and configure Dynatrace before deploying.'
+    );
+    return errors; // Skip validation in dev mode with explicit bypass
+  }
 
   // Check if explicitly disabled
   if (enabledEnv === 'false') {
