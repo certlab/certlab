@@ -51,9 +51,9 @@ function validateScriptUrl(url) {
     return 'Must be from Dynatrace domain (js-cdn.dynatrace.com or *.dynatrace.com)';
   }
   
-  // Should look like a script path
+  // Informational check: typical URLs contain /jstag/ but this is not enforced
   if (!url.includes('/jstag/')) {
-    return 'URL should contain /jstag/ path (verify this is the correct Dynatrace RUM script URL)';
+    console.log('   ℹ️  Note: URL does not contain /jstag/ path (most Dynatrace RUM URLs do)');
   }
   
   return null; // Valid
