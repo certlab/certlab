@@ -14,6 +14,8 @@ export default defineConfig({
     },
   },
   root: path.resolve(import.meta.dirname, 'client'),
+  // Load .env files from the project root, not from the 'client' directory
+  envDir: path.resolve(import.meta.dirname),
   // Base path for deployment
   // Firebase Hosting uses root path by default
   // Set VITE_BASE_PATH environment variable to override if needed

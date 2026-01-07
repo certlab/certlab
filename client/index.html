@@ -59,7 +59,9 @@
       // Check if script URL was set (Vite leaves placeholder unchanged if not set)
       // Use a marker that won't be replaced
       var PLACEHOLDER = '%' + 'VITE_DYNATRACE_SCRIPT_URL' + '%';
+      var ENABLED_PLACEHOLDER = '%' + 'VITE_ENABLE_DYNATRACE' + '%';
       var isConfigured = scriptUrl !== PLACEHOLDER && scriptUrl.indexOf('https://') === 0;
+      // Only disable if explicitly set to 'false' (not if placeholder remains or empty)
       var isExplicitlyDisabled = enabled === 'false';
       
       if (isConfigured && !isExplicitlyDisabled) {
