@@ -399,6 +399,11 @@
 }
 
 @layer utilities {
+  /* Activity button responsive font sizing */
+  .text-activity-responsive {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+  }
+  
   /* Clean glass effects without borders */
   .glass {
     background: rgba(255, 255, 255, 0.9);

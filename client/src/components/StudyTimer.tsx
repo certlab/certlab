@@ -850,8 +850,7 @@ export function StudyTimer() {
                 variant="outline"
                 onClick={() => setIsAddActivityDialogOpen(true)}
                 disabled={isRunning || activities.length >= MAX_ACTIVITIES}
-                className="px-6 py-6 border-2 border-dashed w-full"
-                style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}
+                className="px-6 py-6 border-2 border-dashed w-full text-activity-responsive"
               >
                 <Plus className="h-5 w-5 mr-2" />
                 Add
