@@ -38,6 +38,33 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
+      - name: Check Dynatrace Secret Exists
+        run: |
+          if [ -z "$VITE_DYNATRACE_SCRIPT_URL" ]; then
+            echo "::error::❌ VITE_DYNATRACE_SCRIPT_URL repository secret is not configured"
+            echo ""
+            echo "Dynatrace observability is REQUIRED for deployment."
+            echo ""
+            echo "To fix this issue:"
+            echo "1. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            echo "2. Click 'New repository secret'"
+            echo "3. Name: VITE_DYNATRACE_SCRIPT_URL"
+            echo "4. Value: Your Dynatrace RUM script URL (https://js-cdn.dynatrace.com/jstag/...)"
+            echo ""
+            echo "To get your Dynatrace script URL:"
+            echo "  a. Sign up at https://www.dynatrace.com/trial (free trial available)"
+            echo "  b. Create a web application in your Dynatrace environment"
+            echo "  c. Go to: Applications & Microservices > Web applications > Your app"
+            echo "  d. Click '...' > Edit > Setup > Instrumentation code"
+            echo "  e. Copy the complete src URL from the <script> tag"
+            echo ""
+            echo "📚 For detailed setup: docs/setup/dynatrace.md"
+            exit 1
+          fi
+          echo "✅ Dynatrace secret is configured"
+        env:
+          VITE_DYNATRACE_SCRIPT_URL: ${{ secrets.VITE_DYNATRACE_SCRIPT_URL }}
+
       - name: Validate Dynatrace Config
         run: npm run check:dynatrace
         env:

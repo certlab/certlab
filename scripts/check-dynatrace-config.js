@@ -115,6 +115,10 @@ if (enableFlag === 'false') {
 console.log('\n' + '━'.repeat(60));
 console.log('\n📊 Summary:\n');
 
+// Detect CI/CD environment
+const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+const repoInfo = process.env.GITHUB_REPOSITORY || 'your-repo';
+
 if (hasErrors) {
   console.log('❌ DYNATRACE CONFIGURATION FAILED');
   console.log('\nDynatrace observability is REQUIRED for deployment.');
@@ -129,9 +133,17 @@ if (hasErrors) {
   console.log('      Example: https://js-cdn.dynatrace.com/jstag/abc123/xyz789/script.js\n');
   console.log('2. Set the environment variable:');
   console.log('   - For local development: Add to .env file');
-  console.log('   - For GitHub Actions: Add as repository secret');
+  if (isCI) {
+    console.log('   - For GitHub Actions: Add as repository secret at:');
+    console.log(`     https://github.com/${repoInfo}/settings/secrets/actions`);
+  } else {
+    console.log('   - For GitHub Actions: Add as repository secret');
+  }
   console.log('   - Variable name: VITE_DYNATRACE_SCRIPT_URL\n');
   console.log('3. Ensure VITE_ENABLE_DYNATRACE is not set to "false"\n');
+  if (isCI) {
+    console.log('⚠️  Running in CI/CD environment - deployment will be blocked until this is fixed.\n');
+  }
   console.log('📚 For detailed setup instructions, see docs/setup/dynatrace.md\n');
   process.exit(1);
 } else {

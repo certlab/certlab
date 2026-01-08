@@ -335,10 +335,25 @@ CertLab is configured for automatic deployment to Firebase Hosting:
 
 1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
 2. Set up Firebase Hosting in your project
-3. Add the following secrets to your GitHub repository:
+3. Set up Dynatrace (see [Dynatrace Setup](#-dynatrace-setup-required))
+4. Add the following secrets to your GitHub repository (`Settings` > `Secrets and variables` > `Actions` > `New repository secret`):
+   
+   **Firebase Secrets (Required):**
    - `FIREBASE_SERVICE_ACCOUNT`: Service account JSON from Firebase Console
    - `FIREBASE_PROJECT_ID`: Your Firebase project ID
-4. Push to `main` branch - automatic deployment via GitHub Actions
+   - `VITE_FIREBASE_API_KEY`: Firebase API key
+   - `VITE_FIREBASE_AUTH_DOMAIN`: Firebase auth domain
+   - `VITE_FIREBASE_PROJECT_ID`: Firebase project ID
+   - `VITE_FIREBASE_STORAGE_BUCKET`: Firebase storage bucket
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID`: Firebase messaging sender ID
+   - `VITE_FIREBASE_APP_ID`: Firebase app ID
+   
+   **Dynatrace Secrets (Required):**
+   - `VITE_DYNATRACE_SCRIPT_URL`: Your Dynatrace RUM script URL from the Dynatrace console
+   
+5. Push to `main` branch - automatic deployment via GitHub Actions
+
+**⚠️ Important**: The pipeline will **fail** if the `VITE_DYNATRACE_SCRIPT_URL` secret is not configured. This is by design to ensure proper monitoring is enabled before deployment.
 
 **Manual Deployment:**
 
