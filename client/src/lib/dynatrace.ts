@@ -4,7 +4,7 @@
  * This module provides Dynatrace observability for the CertLab application.
  * It handles initialization, custom action tracking, and error reporting.
  *
- * REQUIRED: Dynatrace is mandatory for proper monitoring and error detection.
+ * OPTIONAL: Dynatrace is recommended for monitoring but not required for app functionality.
  *
  * Features:
  * - Automatic page load and route change tracking
@@ -15,7 +15,7 @@
  *
  * Setup:
  * 1. Configure environment variables in .env (see .env.example)
- * 2. Call initializeDynatrace() at application startup - will throw if not configured
+ * 2. Call initializeDynatrace() at application startup - will gracefully handle missing configuration
  * 3. Use trackAction() for custom event tracking
  *
  * See docs/setup/dynatrace.md for detailed configuration instructions.
@@ -65,45 +65,31 @@ declare global {
 
 /**
  * Get Dynatrace configuration from environment variables
- * @throws {Error} If configuration is missing or invalid (Dynatrace is required)
+ * @returns DynatraceConfig if configured, null if not configured or disabled
  */
-export function getDynatraceConfig(): DynatraceConfig {
+export function getDynatraceConfig(): DynatraceConfig | null {
   const scriptUrl = import.meta.env.VITE_DYNATRACE_SCRIPT_URL;
   // Parse boolean environment variables (they come as strings)
   const enabledEnv = import.meta.env.VITE_ENABLE_DYNATRACE;
   const explicitlyDisabled = enabledEnv === 'false';
   const devMode = String(import.meta.env.VITE_DYNATRACE_DEV_MODE || 'false') === 'true';
-  const devSkip = import.meta.env.VITE_DYNATRACE_DEV_SKIP;
-  const isDevelopment = import.meta.env.DEV;
   const appName = import.meta.env.VITE_DYNATRACE_APP_NAME || 'CertLab';
   const actionPrefix = import.meta.env.VITE_DYNATRACE_ACTION_PREFIX;
 
-  // Development bypass: allow skipping in local development for initial setup
-  if (isDevelopment && devSkip === 'true') {
-    throw new Error(
-      'Dynatrace is not configured (bypassed for local development with VITE_DYNATRACE_DEV_SKIP=true). ' +
-        'This bypass is only for initial local setup. Configure Dynatrace before deploying. ' +
-        'See docs/setup/dynatrace.md for setup instructions.'
-    );
-  }
-
   // Check if explicitly disabled
   if (explicitlyDisabled) {
-    throw new Error(
-      'Dynatrace monitoring is required but VITE_ENABLE_DYNATRACE is set to false. ' +
-        'Remove this setting or set it to true.'
-    );
+    console.log('[Dynatrace] Explicitly disabled via VITE_ENABLE_DYNATRACE=false');
+    return null;
   }
 
-  // Validate required configuration
+  // Validate configuration
   const hasValidConfig = typeof scriptUrl === 'string' && scriptUrl.startsWith('https://');
   if (!hasValidConfig) {
-    throw new Error(
-      'Dynatrace configuration is missing or invalid. ' +
-        'VITE_DYNATRACE_SCRIPT_URL must be set to an HTTPS URL from Dynatrace. ' +
-        'For local development, you can temporarily set VITE_DYNATRACE_DEV_SKIP=true. ' +
+    console.warn(
+      '[Dynatrace] Not configured. Set VITE_DYNATRACE_SCRIPT_URL to enable monitoring. ' +
         'See docs/setup/dynatrace.md for setup instructions.'
     );
+    return null;
   }
 
   return {
@@ -128,20 +114,26 @@ export function isDynatraceAvailable(): boolean {
  * This should be called once at application startup, before any user interactions.
  * The Dynatrace script must be loaded via index.html for this to work.
  *
- * @throws {Error} If Dynatrace configuration is missing or initialization fails
- * @returns true if initialization successful
+ * @returns true if initialization successful, false if Dynatrace is not available or configured
  */
 export function initializeDynatrace(): boolean {
-  const config = getDynatraceConfig(); // Will throw if config is missing
+  const config = getDynatraceConfig();
 
-  // Wait for dtrum to be available (it's loaded via script tag in index.html)
+  // Not configured or disabled - silently skip
+  if (!config) {
+    return false;
+  }
+
+  // Check if dtrum is available (it's loaded via script tag in index.html)
   if (!isDynatraceAvailable()) {
-    throw new Error(
-      'Dynatrace dtrum API is not available. ' +
+    console.warn(
+      '[Dynatrace] dtrum API is not available. ' +
         'Ensure the Dynatrace script is properly loaded in index.html. ' +
         'The script should be loaded from: ' +
-        config.scriptUrl
+        config.scriptUrl +
+        '\nMonitoring will be disabled for this session.'
     );
+    return false;
   }
 
   try {
@@ -157,9 +149,8 @@ export function initializeDynatrace(): boolean {
     return true;
   } catch (error) {
     console.error('[Dynatrace] Initialization failed:', error);
-    throw new Error(
-      `Dynatrace initialization failed: ${error instanceof Error ? error.message : String(error)}`
-    );
+    console.warn('[Dynatrace] Monitoring will be disabled for this session');
+    return false;
   }
 }
 
@@ -182,7 +173,7 @@ export function initializeDynatrace(): boolean {
  */
 export function trackAction(actionName: string, actionType: string = 'custom'): number {
   if (!isDynatraceAvailable()) {
-    console.warn('[Dynatrace] dtrum API not available - cannot track action:', actionName);
+    // Silently skip if Dynatrace is not available
     return -1;
   }
 

@@ -38,14 +38,15 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
-      - name: Check Dynatrace Secret Exists
+      - name: Check Dynatrace Configuration
         run: |
-          if [ -z "$VITE_DYNATRACE_SCRIPT_URL" ]; then
-            echo "::error::❌ VITE_DYNATRACE_SCRIPT_URL repository secret is not configured"
+          echo "ℹ️  Checking Dynatrace configuration (informational)..."
+          if [ -n "$VITE_DYNATRACE_SCRIPT_URL" ]; then
+            echo "✅ Dynatrace script URL is configured"
+          else
+            echo "⚠️  Dynatrace is not configured - monitoring will be disabled"
             echo ""
-            echo "Dynatrace observability is REQUIRED for deployment."
-            echo ""
-            echo "To fix this issue:"
+            echo "To enable Dynatrace monitoring:"
             echo "1. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
             echo "2. Click 'New repository secret'"
             echo "3. Name: VITE_DYNATRACE_SCRIPT_URL"
@@ -59,9 +60,9 @@ jobs:
             echo "  e. Copy the complete src URL from the <script> tag"
             echo ""
             echo "📚 For detailed setup: docs/setup/dynatrace.md"
-            exit 1
+            echo ""
+            echo "⚠️  Deployment will proceed without Dynatrace monitoring"
           fi
-          echo "✅ Dynatrace secret is configured"
         env:
           VITE_DYNATRACE_SCRIPT_URL: ${{ secrets.VITE_DYNATRACE_SCRIPT_URL }}
 
