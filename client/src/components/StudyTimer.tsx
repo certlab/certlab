@@ -827,7 +827,7 @@ export function StudyTimer() {
       </div>
 
       {/* Activity Buttons */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 justify-start items-center">
         {activities.map((activity) => {
           const isDefault = DEFAULT_ACTIVITIES.some((a) => a.label === activity.label);
           return (
@@ -850,7 +850,8 @@ export function StudyTimer() {
                 variant="outline"
                 onClick={() => setIsAddActivityDialogOpen(true)}
                 disabled={isRunning || activities.length >= MAX_ACTIVITIES}
-                className="px-6 py-6 text-base border-2 border-dashed"
+                className="px-6 py-6 border-2 border-dashed"
+                style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}
               >
                 <Plus className="h-5 w-5 mr-2" />
                 Add
