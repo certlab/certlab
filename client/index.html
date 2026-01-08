@@ -36,7 +36,7 @@
     
     <!-- Dynatrace RUM Monitoring -->
     <!-- 
-      Dynatrace Real User Monitoring (RUM) integration.
+      Dynatrace Real User Monitoring (RUM) integration (optional).
       This script loads asynchronously to avoid blocking page rendering.
       
       Configuration is injected at build time from environment variables:
@@ -48,7 +48,8 @@
       2. Click "..." > Edit > Setup > Instrumentation code
       3. Copy the src URL from the script tag (e.g., https://js-cdn.dynatrace.com/jstag/...)
       
-      For detailed setup instructions, see DYNATRACE_SETUP.md
+      The application will function normally without Dynatrace configuration.
+      For detailed setup instructions, see docs/setup/dynatrace.md
     -->
     <script type="text/javascript">
     (function() {
