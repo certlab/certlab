@@ -4,7 +4,7 @@
  * Validates that required configuration is present.
  * Firebase is now mandatory for all deployments (development and production).
  * Google Sign-In via Firebase is the only authentication method.
- * Dynatrace is REQUIRED for proper monitoring and error detection in all environments.
+ * Dynatrace is RECOMMENDED for proper monitoring and error detection but optional.
  */
 
 /**
@@ -47,61 +47,45 @@ function validateFirebaseConfig(): string[] {
 }
 
 /**
- * Validate Dynatrace configuration
+ * Validate Dynatrace configuration (informational)
  * Uses script URL method for configuration
- * Dynatrace is REQUIRED in all environments for proper monitoring
- *
- * For local development only: Set VITE_DYNATRACE_DEV_SKIP=true to bypass requirement
- * This should NEVER be used in production or CI/CD pipelines
+ * Dynatrace is RECOMMENDED but optional - warnings will be logged if not configured
  */
 function validateDynatraceConfig(): string[] {
   const errors: string[] = [];
 
   const scriptUrl = import.meta.env.VITE_DYNATRACE_SCRIPT_URL;
   const enabledEnv = import.meta.env.VITE_ENABLE_DYNATRACE;
-  const devSkip = import.meta.env.VITE_DYNATRACE_DEV_SKIP;
-  const isDevelopment = import.meta.env.DEV;
-
-  // Development bypass: allow skipping Dynatrace for local development only
-  // This helps developers get started without having to set up Dynatrace first
-  if (isDevelopment && devSkip === 'true') {
-    console.warn(
-      '[Config Validator] Dynatrace requirement bypassed for local development (VITE_DYNATRACE_DEV_SKIP=true)',
-      '\nThis is ONLY for initial local setup. Remove this flag and configure Dynatrace before deploying.'
-    );
-    return errors; // Skip validation in dev mode with explicit bypass
-  }
 
   // Check if explicitly disabled
   if (enabledEnv === 'false') {
-    errors.push('Dynatrace is required but VITE_ENABLE_DYNATRACE is set to false');
-    return errors;
+    console.warn(
+      '[Config Validator] Dynatrace is explicitly disabled (VITE_ENABLE_DYNATRACE=false)'
+    );
+    return errors; // Not an error, just disabled
   }
 
   // Check if script URL is configured
   const hasScriptUrl =
     typeof scriptUrl === 'string' && scriptUrl !== '' && scriptUrl.startsWith('https://');
 
-  // If not configured, report error
+  // If not configured, log warning but don't treat as error
   if (!hasScriptUrl) {
-    if (!scriptUrl || scriptUrl === '') {
-      errors.push(
-        'Dynatrace configuration is missing. Set VITE_DYNATRACE_SCRIPT_URL to enable monitoring'
-      );
-    } else {
-      // scriptUrl exists but doesn't start with https://
-      errors.push('VITE_DYNATRACE_SCRIPT_URL must be an HTTPS URL from Dynatrace');
-    }
+    console.warn(
+      '[Config Validator] Dynatrace is not configured. Monitoring will be disabled.',
+      '\nSet VITE_DYNATRACE_SCRIPT_URL to enable monitoring.',
+      '\nSee docs/setup/dynatrace.md for setup instructions.'
+    );
   }
 
-  return errors;
+  return errors; // Never return errors for Dynatrace - it's optional
 }
 
 /**
  * Validate all required configuration
  *
  * Firebase is now mandatory for all modes (development and production).
- * Dynatrace is REQUIRED for proper monitoring and error detection.
+ * Dynatrace is RECOMMENDED but optional for monitoring and error detection.
  *
  * @returns Validation result with any errors found
  */
@@ -113,9 +97,8 @@ export function validateRequiredConfiguration(): ConfigValidationResult {
   const firebaseErrors = validateFirebaseConfig();
   errors.push(...firebaseErrors);
 
-  // Validate Dynatrace (now mandatory in all environments)
-  const dynatraceErrors = validateDynatraceConfig();
-  errors.push(...dynatraceErrors);
+  // Validate Dynatrace (informational - warnings only, no errors)
+  validateDynatraceConfig();
 
   const isValid = errors.length === 0;
 
