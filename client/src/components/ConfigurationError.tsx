@@ -3,7 +3,7 @@
  *
  * Displays a blocking error page when required configuration is missing.
  * Firebase is now mandatory for authentication via Google Sign-In and Firestore storage.
- * Dynatrace is REQUIRED for proper monitoring and error detection.
+ * Dynatrace is RECOMMENDED for proper monitoring and error detection but optional.
  */
 
 import { AlertCircle } from 'lucide-react';
@@ -23,8 +23,8 @@ export function ConfigurationError({ errors }: ConfigurationErrorProps) {
           <AlertDescription className="mt-4">
             <p className="mb-4">
               The application requires Firebase for Google Sign-In authentication and Firestore
-              cloud storage, plus Dynatrace for monitoring and error detection. Please configure
-              both services to continue.
+              cloud storage. Please configure Firebase to continue. Dynatrace monitoring is
+              recommended but optional.
             </p>
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-4">
               <p className="font-semibold mb-2">Missing Configuration:</p>

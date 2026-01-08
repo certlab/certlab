@@ -36,7 +36,7 @@ CertLab is a modern, cloud-based certification study platform. Study for certifi
 
 **Prerequisites**: 
 - Firebase project (required for authentication and storage)
-- Dynatrace account (required for monitoring and error detection)
+- Dynatrace account (recommended for monitoring and error detection)
 
 See setup instructions below.
 
@@ -48,9 +48,9 @@ cd certlab
 # Install dependencies
 npm install
 
-# Configure Firebase and Dynatrace (both required)
+# Configure Firebase (required) and Dynatrace (recommended)
 cp .env.example .env.local
-# Edit .env.local and add your Firebase credentials and Dynatrace script URL
+# Edit .env.local and add your Firebase credentials and Dynatrace script URL (optional)
 
 # Start development server
 npm run dev
@@ -65,7 +65,7 @@ Open http://localhost:5000 and sign in with Google to get started!
 - **Node.js**: v20.x or higher
 - **npm**: v10.x or higher
 - **Firebase Project**: Required for authentication and storage (see [Firebase Setup](#-firebase-setup-required))
-- **Dynatrace Account**: Required for monitoring and error detection (see [Dynatrace Setup](#-dynatrace-setup-required))
+- **Dynatrace Account**: Recommended for monitoring and error detection (see [Dynatrace Setup](#-dynatrace-setup-recommended))
 
 ### Development Setup
 
@@ -112,7 +112,7 @@ npm test
 
 **Option 2: Full Setup (Recommended)**
 1. Complete Firebase setup (see [Firebase Setup](#-firebase-setup-required))
-2. Complete Dynatrace setup (see [Dynatrace Setup](#-dynatrace-setup-required))
+2. Complete Dynatrace setup (see [Dynatrace Setup](#-dynatrace-setup-recommended)) for monitoring
 3. Open the app in your browser
 4. Click "Sign in with Google"
 5. Initial sample data (categories, questions, badges) will be automatically seeded
@@ -176,9 +176,9 @@ Firebase is required for authentication (Google Sign-In) and cloud storage (Fire
 
 For detailed instructions, see [docs/setup/firebase.md](docs/setup/firebase.md).
 
-### Dynatrace Setup (Required)
+### Dynatrace Setup (Recommended)
 
-Dynatrace observability is required for proper monitoring and error detection:
+Dynatrace observability is recommended for proper monitoring and error detection:
 
 1. **Create Dynatrace Account**: 
    - Sign up at [dynatrace.com/trial](https://www.dynatrace.com/trial) (free 15-day trial available)
@@ -335,7 +335,7 @@ CertLab is configured for automatic deployment to Firebase Hosting:
 
 1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
 2. Set up Firebase Hosting in your project
-3. Set up Dynatrace (see [Dynatrace Setup](#-dynatrace-setup-required))
+3. Set up Dynatrace (see [Dynatrace Setup](#-dynatrace-setup-recommended)) for monitoring (optional)
 4. Add the following secrets to your GitHub repository (`Settings` > `Secrets and variables` > `Actions` > `New repository secret`):
    
    **Firebase Secrets (Required):**
@@ -348,12 +348,12 @@ CertLab is configured for automatic deployment to Firebase Hosting:
    - `VITE_FIREBASE_MESSAGING_SENDER_ID`: Firebase messaging sender ID
    - `VITE_FIREBASE_APP_ID`: Firebase app ID
    
-   **Dynatrace Secrets (Required):**
-   - `VITE_DYNATRACE_SCRIPT_URL`: Your Dynatrace RUM script URL from the Dynatrace console
+   **Dynatrace Secrets (Recommended):**
+   - `VITE_DYNATRACE_SCRIPT_URL`: Your Dynatrace RUM script URL from the Dynatrace console (optional but recommended)
    
 5. Push to `main` branch - automatic deployment via GitHub Actions
 
-**⚠️ Important**: The pipeline will **fail** if the `VITE_DYNATRACE_SCRIPT_URL` secret is not configured. This is by design to ensure proper monitoring is enabled before deployment.
+**Note**: The application will run without Dynatrace, but monitoring and error detection will be disabled. It is recommended to configure Dynatrace for production deployments.
 
 **Manual Deployment:**
 
