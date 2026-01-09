@@ -44,6 +44,14 @@ import {
   orderBy,
 } from './firestore-service';
 import { logError } from './errors';
+import { sanitizeInput, sanitizeArray } from './sanitize';
+import {
+  insertQuestionSchema,
+  insertCategorySchema,
+  insertSubcategorySchema,
+  insertLectureSchema,
+  insertStudyNoteSchema,
+} from '@shared/schema';
 import type {
   Tenant,
   User,
@@ -306,12 +314,36 @@ class FirestoreStorage implements IClientStorage {
 
   async createCategory(category: Partial<Category>): Promise<Category> {
     try {
+      // Sanitize inputs
+      const sanitizedName = sanitizeInput(category.name || '', 200);
+      const sanitizedDescription = category.description
+        ? sanitizeInput(category.description, 2000)
+        : null;
+      const sanitizedIcon = category.icon ? sanitizeInput(category.icon, 100) : null;
+
+      // Validate with Zod schema
+      const validationData = {
+        tenantId: category.tenantId || 1,
+        name: sanitizedName,
+        description: sanitizedDescription,
+        icon: sanitizedIcon,
+      };
+
+      const validationResult = insertCategorySchema.safeParse(validationData);
+      if (!validationResult.success) {
+        const errors = validationResult.error.errors
+          .map((e) => `${e.path.join('.')}: ${e.message}`)
+          .join('; ');
+        throw new Error(`Category validation failed: ${errors}`);
+      }
+
       const id = Date.now();
       const newCategory: Category = {
         id,
-        name: category.name || '',
-        description: category.description || null,
+        name: sanitizedName,
+        description: sanitizedDescription,
         tenantId: category.tenantId || 1,
+        icon: sanitizedIcon,
         createdAt: new Date(),
         ...category,
       } as Category;
@@ -464,18 +496,51 @@ class FirestoreStorage implements IClientStorage {
 
   async createQuestion(question: Partial<Question>): Promise<Question> {
     try {
+      // Sanitize inputs
+      const sanitizedText = sanitizeInput(question.text || '', 2000);
+      const sanitizedExplanation = question.explanation
+        ? sanitizeInput(question.explanation, 5000)
+        : null;
+      const sanitizedOptions =
+        question.options?.map((opt) => ({
+          ...opt,
+          text: sanitizeInput(opt.text, 1000),
+        })) || [];
+      const sanitizedTags = question.tags ? sanitizeArray(question.tags, 50) : [];
+
+      // Validate with Zod schema
+      const validationData = {
+        tenantId: question.tenantId || 1,
+        categoryId: question.categoryId,
+        subcategoryId: question.subcategoryId,
+        text: sanitizedText,
+        options: sanitizedOptions,
+        correctAnswer: question.correctAnswer,
+        explanation: sanitizedExplanation,
+        difficultyLevel: question.difficultyLevel,
+        tags: sanitizedTags.length > 0 ? sanitizedTags : null,
+      };
+
+      const validationResult = insertQuestionSchema.safeParse(validationData);
+      if (!validationResult.success) {
+        const errors = validationResult.error.errors
+          .map((e) => `${e.path.join('.')}: ${e.message}`)
+          .join('; ');
+        throw new Error(`Question validation failed: ${errors}`);
+      }
+
       const id = Date.now();
       const newQuestion: Question = {
         id,
-        text: question.text || '',
-        options: question.options || [],
+        text: sanitizedText,
+        options: sanitizedOptions,
         correctAnswer: question.correctAnswer || 0,
-        explanation: question.explanation || null,
+        explanation: sanitizedExplanation,
         categoryId: question.categoryId || 0,
         subcategoryId: question.subcategoryId || null,
         difficultyLevel: question.difficultyLevel || 1,
         tenantId: question.tenantId || 1,
-        tags: question.tags || [],
+        tags: sanitizedTags.length > 0 ? sanitizedTags : [],
         ...question,
       } as Question;
 
