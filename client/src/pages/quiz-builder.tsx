@@ -6,6 +6,7 @@ import { storage } from '@/lib/storage-factory';
 import { setUserDocument } from '@/lib/firestore-service';
 import { queryKeys } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { sanitizeInput, sanitizeArray } from '@/lib/sanitize';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -133,16 +134,46 @@ export default function QuizBuilder() {
     mutationFn: async (isDraft: boolean) => {
       if (!user?.id) throw new Error('Not authenticated');
 
+      // Sanitize all text inputs
+      const sanitizedTitle = sanitizeInput(title || 'Untitled Quiz', 200);
+      const sanitizedDescription = sanitizeInput(description, 2000);
+      const sanitizedInstructions = sanitizeInput(instructions, 5000);
+
+      // Validate minimum requirements
+      if (!sanitizedTitle || sanitizedTitle.length < 1) {
+        throw new Error('Quiz title is required');
+      }
+
+      if (selectedCategories.length === 0) {
+        throw new Error('At least one category must be selected');
+      }
+
+      if (customQuestions.length === 0) {
+        throw new Error('At least one question must be added to the quiz');
+      }
+
+      // Sanitize all custom questions
+      const sanitizedQuestions = customQuestions.map((q) => ({
+        ...q,
+        text: sanitizeInput(q.text, 2000),
+        options: q.options.map((opt) => ({
+          ...opt,
+          text: sanitizeInput(opt.text, 1000),
+        })),
+        explanation: sanitizeInput(q.explanation, 5000),
+        tags: sanitizeArray(q.tags, 50),
+      }));
+
       const template: QuizTemplate = {
         userId: user.id,
         tenantId: user.tenantId || 1,
-        title: title || 'Untitled Quiz',
-        description,
-        instructions,
+        title: sanitizedTitle,
+        description: sanitizedDescription,
+        instructions: sanitizedInstructions,
         categoryIds: selectedCategories,
         subcategoryIds: selectedSubcategories,
-        customQuestions,
-        questionCount: customQuestions.length,
+        customQuestions: sanitizedQuestions,
+        questionCount: sanitizedQuestions.length,
         timeLimit: timeLimit === '0' ? null : parseInt(timeLimit, 10),
         passingScore: parseInt(passingScore, 10),
         maxAttempts: maxAttempts === '0' ? null : parseInt(maxAttempts, 10),
@@ -246,10 +277,39 @@ export default function QuizBuilder() {
 
   // Add/Update question
   const saveQuestion = () => {
-    if (!questionText.trim()) {
+    const trimmedText = questionText.trim();
+
+    if (!trimmedText) {
       toast({
         title: 'Validation Error',
-        description: 'Please enter a question',
+        description: 'Question text is required.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (trimmedText.length < 10) {
+      toast({
+        title: 'Validation Error',
+        description: 'Question text must be at least 10 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (trimmedText.length > 2000) {
+      toast({
+        title: 'Validation Error',
+        description: 'Question text must be 2000 characters or less.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (explanation.length > 5000) {
+      toast({
+        title: 'Validation Error',
+        description: 'Explanation must be 5000 characters or less.',
         variant: 'destructive',
       });
       return;
@@ -267,7 +327,16 @@ export default function QuizBuilder() {
     if (validOptions.length < 2) {
       toast({
         title: 'Validation Error',
-        description: 'Please provide at least 2 options',
+        description: 'At least 2 answer options are required.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (validOptions.length > 10) {
+      toast({
+        title: 'Validation Error',
+        description: 'Maximum 10 answer options allowed.',
         variant: 'destructive',
       });
       return;
@@ -278,24 +347,35 @@ export default function QuizBuilder() {
     if (!correctAnswerExists) {
       toast({
         title: 'Validation Error',
-        description: 'Please select a valid correct answer',
+        description: 'Please select a valid correct answer.',
         variant: 'destructive',
       });
       return;
     }
 
+    // Sanitize all inputs before saving
+    const sanitizedText = sanitizeInput(questionText, 2000);
+    const sanitizedExplanation = sanitizeInput(explanation, 5000);
+    const sanitizedTags = sanitizeArray(
+      questionTags.split(',').map((t) => t.trim()),
+      50
+    );
+
+    // Sanitize options
+    const sanitizedValidOptions = validOptions.map((opt) => ({
+      ...opt,
+      text: sanitizeInput(opt.text, 1000),
+    }));
+
     const question: CustomQuestion = {
       id: editingQuestion?.id || crypto.randomUUID(),
-      text: questionText,
+      text: sanitizedText,
       type: questionType,
-      options: validOptions,
+      options: sanitizedValidOptions,
       correctAnswer,
-      explanation,
+      explanation: sanitizedExplanation,
       difficultyLevel: parseInt(questionDifficulty, 10),
-      tags: questionTags
-        .split(',')
-        .map((t) => t.trim())
-        .filter((t) => t),
+      tags: sanitizedTags,
     };
 
     if (editingQuestion) {
