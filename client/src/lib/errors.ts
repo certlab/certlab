@@ -39,7 +39,9 @@ const SENSITIVE_FIELD_PATTERNS = [
   /token/i,
   /secret/i,
   /api[_-]?key/i,
-  /auth/i,
+  /^auth$/i,
+  /auth[_-]?token/i,
+  /authorization/i,
   /credential/i,
   /ssn/i,
   /credit[_-]?card/i,
@@ -64,7 +66,14 @@ export function sanitizeContext(
 
     if (isSensitive) {
       sanitized[key] = '[REDACTED]';
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    } else if (Array.isArray(value)) {
+      // Recursively sanitize arrays
+      sanitized[key] = value.map((item) =>
+        typeof item === 'object' && item !== null
+          ? sanitizeContext(item as Record<string, unknown>)
+          : item
+      );
+    } else if (typeof value === 'object' && value !== null) {
       // Recursively sanitize nested objects
       sanitized[key] = sanitizeContext(value as Record<string, unknown>);
     } else {
@@ -476,14 +485,10 @@ export function getUserFriendlyMessage(error: unknown): string {
       return 'Network error. Please check your internet connection and try again.';
     }
 
-    // For other errors, use the category-based message
+    // For other errors, use the category-based message (without action)
     const category = categorizeError(error);
     const categoryInfo = CATEGORY_ERROR_MESSAGES[category];
 
-    // Return message with action guidance
-    if (categoryInfo.action) {
-      return `${categoryInfo.message} ${categoryInfo.action}.`;
-    }
     return categoryInfo.message;
   }
 
@@ -515,8 +520,10 @@ export function getErrorInfo(error: unknown): {
     action = categoryInfo.action;
     retryable = error.retryable;
   } else if (error instanceof AuthError) {
-    title = getErrorTitle(error.code, 'Authentication Error');
+    const categoryInfo = CATEGORY_ERROR_MESSAGES[ErrorCategory.AUTH];
+    title = categoryInfo.title;
     message = error.message;
+    action = categoryInfo.action;
     retryable = error.retryable;
   } else if (error instanceof Error) {
     const category = categorizeError(error);

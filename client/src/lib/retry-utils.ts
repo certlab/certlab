@@ -68,16 +68,6 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Retry state for tracking retry attempts
- */
-export interface RetryState {
-  attempt: number;
-  isRetrying: boolean;
-  lastError: unknown | null;
-  nextRetryDelay: number | null;
-}
-
-/**
  * Execute a function with automatic retry logic
  *
  * @param fn - Async function to execute with retries
@@ -101,7 +91,7 @@ export async function withRetry<T>(
   options: RetryOptions = {}
 ): Promise<T> {
   const config = { ...DEFAULT_RETRY_OPTIONS, ...options };
-  let lastError: unknown;
+  let lastError: unknown = new Error('Retry failed without executing function');
 
   for (let attempt = 0; attempt < config.maxAttempts; attempt++) {
     try {
@@ -144,7 +134,8 @@ export async function withRetry<T>(
     }
   }
 
-  // This should never be reached, but TypeScript needs it
+  // This should never be reached due to the throw inside the loop,
+  // but TypeScript needs it for type safety
   throw lastError;
 }
 

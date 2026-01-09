@@ -73,6 +73,48 @@ describe('sanitizeContext', () => {
   it('should handle empty context', () => {
     expect(sanitizeContext({})).toEqual({});
   });
+
+  it('should sanitize arrays with sensitive data', () => {
+    const context = {
+      tokens: ['token1', 'token2'],
+      users: [
+        { email: 'user1@example.com', password: 'secret1' },
+        { email: 'user2@example.com', password: 'secret2' },
+      ],
+      ids: [1, 2, 3],
+    };
+
+    const sanitized = sanitizeContext(context);
+
+    expect(sanitized).toEqual({
+      tokens: '[REDACTED]',
+      users: [
+        { email: 'user1@example.com', password: '[REDACTED]' },
+        { email: 'user2@example.com', password: '[REDACTED]' },
+      ],
+      ids: [1, 2, 3],
+    });
+  });
+
+  it('should not over-redact fields containing "auth" substring', () => {
+    const context = {
+      author: 'John Doe',
+      authorId: 123,
+      auth: 'sensitive',
+      authToken: 'secret',
+      authorization: 'Bearer token',
+    };
+
+    const sanitized = sanitizeContext(context);
+
+    expect(sanitized).toEqual({
+      author: 'John Doe',
+      authorId: 123,
+      auth: '[REDACTED]',
+      authToken: '[REDACTED]',
+      authorization: '[REDACTED]',
+    });
+  });
 });
 
 describe('Error Classes', () => {

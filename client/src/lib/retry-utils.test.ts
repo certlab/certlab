@@ -197,6 +197,9 @@ describe('isRetryableError', () => {
   });
 
   it('should identify storage errors as not retryable', () => {
+    // By default, isRetryableError only treats network-category errors as retryable.
+    // Storage errors (like quota exceeded) are non-retryable unless wrapped with
+    // storage-specific retry logic via createStorageRetryOptions.
     expect(isRetryableError(new StorageError('Quota exceeded'))).toBe(false);
   });
 
