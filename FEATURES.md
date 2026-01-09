@@ -122,6 +122,8 @@ CertLab uses cloud-first storage with offline support:
     - Audio descriptions
     - Alt text for visual content
     - Screen reader support
+  - Example materials available in `/client/src/data/example-materials.ts`
+  - Complete documentation in `/docs/MULTIPLE_CONTENT_TYPES.md`
   
 - **Study Notes**
   - Personal note-taking system
@@ -129,6 +131,8 @@ CertLab uses cloud-first storage with offline support:
   - Rich text editing
   - Search functionality
   - Export capability
+
+**Reference**: See [Multiple Content Types Documentation](docs/MULTIPLE_CONTENT_TYPES.md) for detailed information and examples.
 
 ### Learning Modes
 
