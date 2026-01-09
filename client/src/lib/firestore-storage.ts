@@ -45,13 +45,7 @@ import {
 } from './firestore-service';
 import { logError } from './errors';
 import { sanitizeInput, sanitizeArray } from './sanitize';
-import {
-  insertQuestionSchema,
-  insertCategorySchema,
-  insertSubcategorySchema,
-  insertLectureSchema,
-  insertStudyNoteSchema,
-} from '@shared/schema';
+import { insertQuestionSchema, insertCategorySchema } from '@shared/schema';
 import type {
   Tenant,
   User,
@@ -339,13 +333,13 @@ class FirestoreStorage implements IClientStorage {
 
       const id = Date.now();
       const newCategory: Category = {
+        ...category,
         id,
         name: sanitizedName,
         description: sanitizedDescription,
         tenantId: category.tenantId || 1,
         icon: sanitizedIcon,
         createdAt: new Date(),
-        ...category,
       } as Category;
 
       await setSharedDocument('categories', id.toString(), newCategory);
@@ -531,6 +525,7 @@ class FirestoreStorage implements IClientStorage {
 
       const id = Date.now();
       const newQuestion: Question = {
+        ...question,
         id,
         text: sanitizedText,
         options: sanitizedOptions,
@@ -541,7 +536,6 @@ class FirestoreStorage implements IClientStorage {
         difficultyLevel: question.difficultyLevel || 1,
         tenantId: question.tenantId || 1,
         tags: sanitizedTags.length > 0 ? sanitizedTags : [],
-        ...question,
       } as Question;
 
       await setSharedDocument('questions', id.toString(), newQuestion);

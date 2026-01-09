@@ -460,8 +460,7 @@ export const insertQuestionSchema = createInsertSchema(questions)
     text: z
       .string()
       .min(10, 'Question text must be at least 10 characters')
-      .max(2000, 'Question text must be 2000 characters or less')
-      .trim(),
+      .max(2000, 'Question text must be 2000 characters or less'),
     // Override the options field with proper Zod validation
     options: questionOptionsSchema,
     correctAnswer: z.number().int().min(0, 'Correct answer must be a valid option index'),
@@ -492,11 +491,14 @@ export const insertQuestionSchema = createInsertSchema(questions)
       .max(10, 'Maximum 10 reference links allowed')
       .optional(),
     videoUrl: z
-      .string()
-      .url('Video URL must be a valid URL')
-      .max(500, 'Video URL must be 500 characters or less')
-      .optional()
-      .or(z.literal('')),
+      .union([
+        z
+          .string()
+          .url('Video URL must be a valid URL')
+          .max(500, 'Video URL must be 500 characters or less'),
+        z.literal(''),
+      ])
+      .optional(),
     communityExplanations: z
       .array(communityExplanationSchema)
       .max(50, 'Maximum 50 community explanations allowed')

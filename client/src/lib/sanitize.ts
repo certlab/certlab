@@ -27,14 +27,15 @@ export function escapeHtml(text: string): string {
 }
 
 /**
- * Sanitizes user input by escaping HTML and trimming whitespace.
+ * Sanitizes user input by trimming whitespace, truncating, and escaping HTML.
  * Use this for all user-submitted text before storage or display.
  *
- * Note: HTML escaping is applied before truncation to prevent breaking
- * escaped entities. For example, "&lt;" (4 chars) won't be cut mid-entity.
+ * Note: Truncation happens before HTML escaping to avoid creating incomplete
+ * HTML entities at the truncation boundary. For example, truncating at position
+ * 1998 before escaping prevents "&lt;" from being split into "&lt".
  *
  * @param input - The user input to sanitize
- * @param maxLength - Optional maximum length (truncates after escaping)
+ * @param maxLength - Optional maximum length (truncates before escaping)
  * @returns Sanitized text safe for storage and display
  *
  * @example
@@ -49,13 +50,13 @@ export function sanitizeInput(input: string, maxLength?: number): string {
   // Trim whitespace first
   let sanitized = input.trim();
 
-  // Escape HTML to prevent XSS (before truncation)
-  sanitized = escapeHtml(sanitized);
-
-  // Truncate if needed (after escaping to avoid breaking HTML entities)
+  // Truncate if needed (before escaping to avoid breaking HTML entities)
   if (maxLength && sanitized.length > maxLength) {
     sanitized = sanitized.substring(0, maxLength);
   }
+
+  // Escape HTML to prevent XSS (after truncation)
+  sanitized = escapeHtml(sanitized);
 
   return sanitized;
 }

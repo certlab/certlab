@@ -2,7 +2,7 @@
  * Tests for HTML sanitization and input validation utilities
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { escapeHtml, sanitizeInput, sanitizeArray, safeMarkdownToHtml } from './sanitize';
 
 describe('escapeHtml', () => {
@@ -44,6 +44,22 @@ describe('sanitizeInput', () => {
   it('should enforce maximum length', () => {
     const longText = 'a'.repeat(200);
     expect(sanitizeInput(longText, 100)).toBe('a'.repeat(100));
+  });
+
+  it('should handle HTML entity truncation edge case', () => {
+    // Test that truncation before escaping prevents breaking HTML entities
+    // Create a string that will produce an entity near the boundary
+    const input = 'a'.repeat(97) + '<b>';
+    // With maxLength 100, it should truncate to 'aaa...(97 a's)...<b>' then escape to 'aaa...(97 a's)...&lt;b&gt;'
+    const result = sanitizeInput(input, 100);
+    // After truncation at 100 chars, we have 100 chars of the original string
+    // Then escaping converts '<b>' to '&lt;b&gt;'
+    expect(result).toBe('a'.repeat(97) + '&lt;b&gt;');
+
+    // Verify no broken entities - the key is that we truncate BEFORE escaping
+    // so we never create incomplete HTML entities
+    expect(result).not.toMatch(/&[a-z]*$/); // No incomplete entity at end
+    expect(result).not.toMatch(/^[a-z]*;/); // No incomplete entity at start
   });
 
   it('should handle empty strings', () => {
