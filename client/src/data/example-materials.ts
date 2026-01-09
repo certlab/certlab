@@ -8,6 +8,9 @@
  * - Interactive Content
  * - Code Examples
  *
+ * IMPORTANT: URLs in these examples are PLACEHOLDERS and should be replaced
+ * with actual educational content URLs before use in production.
+ *
  * Use this as reference when creating new learning materials
  */
 
@@ -91,7 +94,7 @@ Topics Covered:
 - Hash Functions (SHA-256, MD5)
 - Digital Signatures and Certificates
 - Key Exchange Protocols`,
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', // Example URL
+    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', // PLACEHOLDER: Replace with actual educational content URL
     videoProvider: 'youtube',
     videoDuration: 1800, // 30 minutes
     thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
@@ -116,10 +119,10 @@ Topics Covered:
     contentType: 'pdf',
     content:
       'Security Architecture and Engineering - This chapter covers fundamental security architecture principles, secure design patterns, and security models.',
-    pdfUrl: 'https://example.com/cissp-chapter3.pdf', // Example URL
+    pdfUrl: 'https://example.com/cissp-chapter3.pdf', // PLACEHOLDER: Replace with actual PDF URL
     pdfPages: 45,
     fileSize: 5242880, // 5 MB
-    thumbnailUrl: 'https://example.com/cissp-chapter3-preview.jpg',
+    thumbnailUrl: 'https://example.com/cissp-chapter3-preview.jpg', // PLACEHOLDER: Replace with actual thumbnail URL
     categoryId: 1,
     subcategoryId: 2,
     difficultyLevel: 4,
@@ -150,7 +153,7 @@ Success Criteria:
 - Passwords are properly salted and hashed
 - Implementation uses bcrypt with proper cost factor
 - No plain text passwords are stored`,
-    interactiveUrl: 'https://codepen.io/example/pen/secure-auth', // Example URL
+    interactiveUrl: 'https://codepen.io/example/pen/secure-auth', // PLACEHOLDER: Replace with actual CodePen or interactive content URL
     interactiveType: 'code',
     categoryId: 1,
     subcategoryId: 4,
@@ -481,7 +484,7 @@ In this lecture, we'll explore network security fundamentals. We'll cover:
    - 802.1X authentication
    - Port security
    - MAC filtering`,
-    videoUrl: 'https://vimeo.com/123456789', // Example URL
+    videoUrl: 'https://vimeo.com/123456789', // PLACEHOLDER: Replace with actual Vimeo video URL
     videoProvider: 'vimeo',
     videoDuration: 2700, // 45 minutes
     categoryId: 1,
@@ -519,7 +522,7 @@ Topics Covered:
 - Security controls
 - Access control models
 - Cryptography basics`,
-    interactiveUrl: 'https://example.com/quiz/security-principles', // Example URL
+    interactiveUrl: 'https://example.com/quiz/security-principles', // PLACEHOLDER: Replace with actual interactive quiz URL
     interactiveType: 'quiz',
     categoryId: 1,
     subcategoryId: 1,

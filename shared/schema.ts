@@ -536,6 +536,7 @@ export const insertLectureSchema = createInsertSchema(lectures)
       .max(50000, 'Code content must be 50000 characters or less')
       .optional()
       .nullable(),
+    hasCodeHighlighting: z.boolean().default(false),
     thumbnailUrl: z
       .string()
       .url('Thumbnail URL must be valid')
@@ -558,6 +559,67 @@ export const insertLectureSchema = createInsertSchema(lectures)
       })
       .optional()
       .nullable(),
+  })
+  .superRefine((data, ctx) => {
+    const contentType = (data as any).contentType;
+
+    // Validate video-specific required fields
+    if (contentType === 'video') {
+      if (!data.videoUrl) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Video URL is required when content type is video',
+          path: ['videoUrl'],
+        });
+      }
+      if (!data.videoProvider) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Video provider is required when content type is video',
+          path: ['videoProvider'],
+        });
+      }
+    }
+
+    // Validate PDF-specific required fields
+    if (contentType === 'pdf') {
+      if (!data.pdfUrl) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'PDF URL is required when content type is pdf',
+          path: ['pdfUrl'],
+        });
+      }
+    }
+
+    // Validate interactive-specific required fields
+    if (contentType === 'interactive') {
+      if (!data.interactiveUrl) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Interactive URL is required when content type is interactive',
+          path: ['interactiveUrl'],
+        });
+      }
+    }
+
+    // Validate code-specific required fields
+    if (contentType === 'code') {
+      if (!data.codeLanguage) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Code language is required when content type is code',
+          path: ['codeLanguage'],
+        });
+      }
+      if (!data.codeContent) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Code content is required when content type is code',
+          path: ['codeContent'],
+        });
+      }
+    }
   });
 
 export const insertStudyNoteSchema = createInsertSchema(studyNotes)

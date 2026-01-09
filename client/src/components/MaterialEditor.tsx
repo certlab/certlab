@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FileText, Video, FileType, Code, Play, Plus, Save, X, Upload } from 'lucide-react';
+import { FileText, Video, FileType, Code, Play, Plus, Save, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Lecture } from '@shared/schema';
 
@@ -143,7 +143,22 @@ export function MaterialEditor({
       await onSave(formData);
     } catch (error) {
       console.error('Error saving material:', error);
-      setErrors({ general: 'Failed to save material. Please try again.' });
+
+      // Provide more specific error messages
+      let errorMessage = 'Failed to save material. Please try again.';
+
+      if (error instanceof Error) {
+        if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.includes('validation') || error.message.includes('invalid')) {
+          errorMessage = 'Validation error. Please check your input and try again.';
+        } else if (error.message.includes('permission') || error.message.includes('unauthorized')) {
+          errorMessage = 'Permission denied. Please check your access rights.';
+        }
+      }
+
+      setErrors({ general: errorMessage });
+      // TODO: Add toast notification for better UX
     } finally {
       setIsSaving(false);
     }
@@ -227,10 +242,16 @@ export function MaterialEditor({
                 id="videoDuration"
                 type="number"
                 value={formData.videoDuration || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, videoDuration: parseInt(e.target.value) || 0 })
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const num = Number(value);
+                  setFormData({
+                    ...formData,
+                    videoDuration: value === '' ? null : isNaN(num) ? 0 : Math.floor(num),
+                  });
+                }}
                 placeholder="0"
+                min="0"
               />
             </div>
 
@@ -329,10 +350,16 @@ export function MaterialEditor({
                 id="pdfPages"
                 type="number"
                 value={formData.pdfPages || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, pdfPages: parseInt(e.target.value) || 0 })
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const num = Number(value);
+                  setFormData({
+                    ...formData,
+                    pdfPages: value === '' ? null : isNaN(num) ? 0 : Math.floor(num),
+                  });
+                }}
                 placeholder="0"
+                min="0"
               />
             </div>
 
@@ -342,10 +369,16 @@ export function MaterialEditor({
                 id="fileSize"
                 type="number"
                 value={formData.fileSize || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, fileSize: parseInt(e.target.value) || 0 })
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const num = Number(value);
+                  setFormData({
+                    ...formData,
+                    fileSize: value === '' ? null : isNaN(num) ? 0 : Math.floor(num),
+                  });
+                }}
                 placeholder="0"
+                min="0"
               />
             </div>
 
@@ -527,7 +560,32 @@ export function MaterialEditor({
                   type="button"
                   variant={formData.contentType === option.value ? 'default' : 'outline'}
                   className="flex flex-col items-center gap-2 h-auto py-3"
-                  onClick={() => setFormData({ ...formData, contentType: option.value as any })}
+                  onClick={() => {
+                    const newContentType = option.value as any;
+                    // Clear type-specific fields when content type changes
+                    const clearedData = { ...formData, contentType: newContentType };
+
+                    if (newContentType !== 'video') {
+                      clearedData.videoUrl = null;
+                      clearedData.videoProvider = null;
+                      clearedData.videoDuration = null;
+                    }
+                    if (newContentType !== 'pdf') {
+                      clearedData.pdfUrl = null;
+                      clearedData.pdfPages = null;
+                    }
+                    if (newContentType !== 'interactive') {
+                      clearedData.interactiveUrl = null;
+                      clearedData.interactiveType = null;
+                    }
+                    if (newContentType !== 'code') {
+                      clearedData.codeLanguage = null;
+                      clearedData.codeContent = null;
+                      clearedData.hasCodeHighlighting = false;
+                    }
+
+                    setFormData(clearedData);
+                  }}
                 >
                   <Icon className="h-5 w-5" />
                   <span className="text-xs">{option.label}</span>

@@ -12,9 +12,6 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
-  Maximize2,
-  Volume2,
-  VolumeX,
   Subtitles,
 } from 'lucide-react';
 import type { Lecture } from '@shared/schema';
@@ -89,13 +86,13 @@ export function ContentRenderer({ lecture, className = '' }: ContentRendererProp
 
           // Handle bold text
           if (line.includes('**')) {
-            const boldText = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            const segments = line.split('**');
             return (
-              <p
-                key={index}
-                className="mb-3 text-gray-700 dark:text-gray-300"
-                dangerouslySetInnerHTML={{ __html: boldText }}
-              />
+              <p key={index} className="mb-3 text-gray-700 dark:text-gray-300">
+                {segments.map((segment, i) =>
+                  i % 2 === 1 ? <strong key={i}>{segment}</strong> : segment
+                )}
+              </p>
             );
           }
 
@@ -147,22 +144,76 @@ export function ContentRenderer({ lecture, className = '' }: ContentRendererProp
     const getEmbedUrl = () => {
       if (!lecture.videoUrl) return null;
 
+      const rawUrl = lecture.videoUrl.trim();
+
       if (lecture.videoProvider === 'youtube') {
         // Extract video ID from various YouTube URL formats
-        const videoId = lecture.videoUrl.match(
-          /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/
-        )?.[1];
-        return videoId
-          ? `https://www.youtube.com/embed/${videoId}?rel=0${showCaptions ? '&cc_load_policy=1' : ''}`
-          : null;
+        const getYouTubeId = (url: string): string | null => {
+          try {
+            const parsed = new URL(url);
+            const hostname = parsed.hostname.replace(/^www\./, '');
+
+            // youtu.be/<id>
+            if (hostname === 'youtu.be') {
+              const id = parsed.pathname.split('/').filter(Boolean)[0];
+              if (id) return id;
+            }
+
+            // youtube.com or m.youtube.com
+            if (hostname === 'youtube.com' || hostname === 'm.youtube.com') {
+              // Standard watch URL: ?v=<id>
+              const vParam = parsed.searchParams.get('v');
+              if (vParam) return vParam;
+
+              // Paths like /embed/<id>, /v/<id>, /shorts/<id>
+              const segments = parsed.pathname.split('/').filter(Boolean);
+              if (segments.length >= 2 && ['embed', 'v', 'shorts'].includes(segments[0])) {
+                const id = segments[1];
+                if (id) return id;
+              }
+            }
+          } catch {
+            // If URL constructor fails, fall back to regex
+          }
+
+          // Fallback regex covering common YouTube URL patterns
+          const regex =
+            /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|v\/|shorts\/|watch\?v=|watch\?.+&v=))([A-Za-z0-9_-]{11})/;
+          const match = url.match(regex);
+          return match ? match[1] : null;
+        };
+
+        const videoId = getYouTubeId(rawUrl);
+
+        if (!videoId) {
+          console.warn('ContentRenderer: Unable to extract YouTube video ID from URL', {
+            url: rawUrl,
+            lectureId: lecture.id,
+          });
+          return null;
+        }
+
+        return `https://www.youtube.com/embed/${videoId}?rel=0${
+          showCaptions ? '&cc_load_policy=1' : ''
+        }`;
       } else if (lecture.videoProvider === 'vimeo') {
         // Extract video ID from Vimeo URL
-        const videoId = lecture.videoUrl.match(/vimeo\.com\/(\d+)/)?.[1];
-        return videoId ? `https://player.vimeo.com/video/${videoId}` : null;
+        const match = rawUrl.match(/vimeo\.com\/(\d+)/);
+        const videoId = match?.[1];
+
+        if (!videoId) {
+          console.warn('ContentRenderer: Unable to extract Vimeo video ID from URL', {
+            url: rawUrl,
+            lectureId: lecture.id,
+          });
+          return null;
+        }
+
+        return `https://player.vimeo.com/video/${videoId}`;
       }
 
-      // For uploaded videos, use URL directly
-      return lecture.videoUrl;
+      // For uploaded or other provider videos, use URL directly
+      return rawUrl;
     };
 
     const embedUrl = getEmbedUrl();
@@ -360,7 +411,7 @@ export function ContentRenderer({ lecture, className = '' }: ContentRendererProp
               src={lecture.interactiveUrl}
               className="w-full h-[600px]"
               title={lecture.title}
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-scripts"
             />
           ) : (
             <div className="flex items-center justify-center h-[600px] text-gray-500">
@@ -420,8 +471,14 @@ export function ContentRenderer({ lecture, className = '' }: ContentRendererProp
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              navigator.clipboard.writeText(codeContent);
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(codeContent);
+                // TODO: Add toast notification for success feedback
+              } catch (error) {
+                console.error('Failed to copy code to clipboard:', error);
+                // TODO: Add toast notification for error feedback
+              }
             }}
           >
             <FileText className="h-4 w-4 mr-2" />
