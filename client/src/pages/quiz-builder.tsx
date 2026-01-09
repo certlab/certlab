@@ -53,6 +53,7 @@ interface QuizTemplate {
   tenantId: number;
   title: string;
   description: string;
+  tags?: string[]; // Multi-tag support
   instructions: string;
   categoryIds: number[];
   subcategoryIds: number[];
@@ -81,6 +82,7 @@ export default function QuizBuilder() {
   // Quiz Configuration State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [tags, setTags] = useState(''); // Comma-separated tags
   const [instructions, setInstructions] = useState(
     'Welcome! Read each question carefully and select the best answer.'
   );
@@ -164,11 +166,19 @@ export default function QuizBuilder() {
         tags: sanitizeArray(q.tags, 50),
       }));
 
+      // Parse and sanitize quiz-level tags
+      const quizTags = tags
+        .split(',')
+        .map((tag) => sanitizeInput(tag.trim(), 50))
+        .filter((tag) => tag.length > 0)
+        .slice(0, 50); // Max 50 tags
+
       const template: QuizTemplate = {
         userId: user.id,
         tenantId: user.tenantId || 1,
         title: sanitizedTitle,
         description: sanitizedDescription,
+        tags: quizTags.length > 0 ? quizTags : undefined,
         instructions: sanitizedInstructions,
         categoryIds: selectedCategories,
         subcategoryIds: selectedSubcategories,
@@ -591,6 +601,18 @@ export default function QuizBuilder() {
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
                   />
+                </div>
+                <div>
+                  <Label htmlFor="tags">Tags (comma-separated)</Label>
+                  <Input
+                    id="tags"
+                    placeholder="e.g., security, networking, cissp"
+                    value={tags}
+                    onChange={(e) => setTags(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Add tags to help categorize and search for this quiz
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="instructions">Instructions</Label>
