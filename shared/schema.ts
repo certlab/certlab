@@ -240,6 +240,8 @@ export const quizzes = pgTable('quizzes', {
   userId: varchar('user_id').notNull(),
   tenantId: integer('tenant_id').notNull().default(1), // Isolates quiz history per tenant
   title: text('title').notNull(),
+  description: text('description'), // Quiz description for search and display
+  tags: jsonb('tags').$type<string[]>(), // Multi-tag support for categorization and search
   categoryIds: jsonb('category_ids').notNull(), // Array of category IDs
   subcategoryIds: jsonb('subcategory_ids').notNull(), // Array of subcategory IDs
   questionIds: jsonb('question_ids'), // Array of specific question IDs for this quiz (for consistent scoring)
@@ -253,11 +255,16 @@ export const quizzes = pgTable('quizzes', {
   answers: jsonb('answers'), // Array of user answers
   isAdaptive: boolean('is_adaptive').default(false),
   adaptiveMetrics: jsonb('adaptive_metrics'), // Tracks wrong answer patterns
-  difficultyLevel: integer('difficulty_level').default(1), // 1-5 scale
+  difficultyLevel: integer('difficulty_level').default(1), // 1-5 scale (1=Easy, 5=Expert)
   difficultyFilter: jsonb('difficulty_filter'), // Array of difficulty levels to include
   isPassing: boolean('is_passing').default(false), // 85%+ threshold
   missedTopics: jsonb('missed_topics'), // Topics that need lecture generation
   mode: text('mode').notNull().default('study'), // "study", "quiz", or "challenge" mode
+  author: varchar('author'), // Author user ID (for user-created quizzes)
+  authorName: text('author_name'), // Author display name (cached for performance)
+  prerequisites: jsonb('prerequisites').$type<{ quizIds?: number[]; lectureIds?: number[] }>(), // Required materials/quizzes before taking this quiz
+  createdAt: timestamp('created_at').defaultNow(), // Creation timestamp
+  updatedAt: timestamp('updated_at').defaultNow(), // Last modification timestamp
 });
 
 // Micro-learning challenges table
@@ -333,11 +340,18 @@ export const lectures = pgTable('lectures', {
   tenantId: integer('tenant_id').notNull().default(1),
   quizId: integer('quiz_id'),
   title: text('title').notNull(),
+  description: text('description'), // Lecture description for search and display
   content: text('content').notNull(), // Generated lecture content
-  topics: jsonb('topics').notNull(), // Array of missed topic tags
+  topics: jsonb('topics').notNull(), // Array of missed topic tags (now aliased as tags for consistency)
+  tags: jsonb('tags').$type<string[]>(), // Multi-tag support for categorization and search (alias for topics for new lectures)
   categoryId: integer('category_id').notNull(),
   subcategoryId: integer('subcategory_id'),
+  difficultyLevel: integer('difficulty_level').default(1), // 1-5 scale (1=Easy, 5=Expert)
+  author: varchar('author'), // Author user ID (for user-created or AI-generated)
+  authorName: text('author_name'), // Author display name (cached for performance, e.g., "AI Tutor" or user name)
+  prerequisites: jsonb('prerequisites').$type<{ quizIds?: number[]; lectureIds?: number[] }>(), // Recommended prerequisites before reading
   createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at'), // Last modification timestamp
   isRead: boolean('is_read').default(false),
 });
 
@@ -412,6 +426,7 @@ export const insertLectureSchema = createInsertSchema(lectures)
   .omit({
     id: true,
     createdAt: true,
+    updatedAt: true,
   })
   .extend({
     title: z
@@ -419,6 +434,11 @@ export const insertLectureSchema = createInsertSchema(lectures)
       .min(1, 'Title is required')
       .max(500, 'Title must be 500 characters or less')
       .trim(),
+    description: z
+      .string()
+      .max(2000, 'Description must be 2000 characters or less')
+      .optional()
+      .nullable(),
     content: z
       .string()
       .min(10, 'Content must be at least 10 characters')
@@ -427,6 +447,29 @@ export const insertLectureSchema = createInsertSchema(lectures)
       .array(z.string().max(100, 'Each topic must be 100 characters or less'))
       .min(1, 'At least one topic is required')
       .max(50, 'Maximum 50 topics allowed'),
+    tags: z
+      .array(z.string().max(50, 'Each tag must be 50 characters or less'))
+      .max(50, 'Maximum 50 tags allowed')
+      .optional(),
+    difficultyLevel: z
+      .number()
+      .int()
+      .min(1, 'Difficulty must be between 1 and 5')
+      .max(5, 'Difficulty must be between 1 and 5')
+      .optional()
+      .nullable(),
+    authorName: z
+      .string()
+      .max(200, 'Author name must be 200 characters or less')
+      .optional()
+      .nullable(),
+    prerequisites: z
+      .object({
+        quizIds: z.array(z.number()).optional(),
+        lectureIds: z.array(z.number()).optional(),
+      })
+      .optional()
+      .nullable(),
   });
 
 export const insertStudyNoteSchema = createInsertSchema(studyNotes)
@@ -505,10 +548,48 @@ export const insertQuestionSchema = createInsertSchema(questions)
       .optional(),
   });
 
-export const insertQuizSchema = createInsertSchema(quizzes).omit({
-  id: true,
-  startedAt: true,
-});
+export const insertQuizSchema = createInsertSchema(quizzes)
+  .omit({
+    id: true,
+    startedAt: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    title: z
+      .string()
+      .min(1, 'Title is required')
+      .max(200, 'Title must be 200 characters or less')
+      .trim(),
+    description: z
+      .string()
+      .max(2000, 'Description must be 2000 characters or less')
+      .optional()
+      .nullable(),
+    tags: z
+      .array(z.string().max(50, 'Each tag must be 50 characters or less'))
+      .max(50, 'Maximum 50 tags allowed')
+      .optional(),
+    difficultyLevel: z
+      .number()
+      .int()
+      .min(1, 'Difficulty must be between 1 and 5')
+      .max(5, 'Difficulty must be between 1 and 5')
+      .optional()
+      .nullable(),
+    authorName: z
+      .string()
+      .max(200, 'Author name must be 200 characters or less')
+      .optional()
+      .nullable(),
+    prerequisites: z
+      .object({
+        quizIds: z.array(z.number()).optional(),
+        lectureIds: z.array(z.number()).optional(),
+      })
+      .optional()
+      .nullable(),
+  });
 
 export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
   id: true,

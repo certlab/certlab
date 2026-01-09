@@ -597,6 +597,8 @@ class FirestoreStorage implements IClientStorage {
         id,
         userId,
         title: quiz.title || 'Untitled Quiz',
+        description: quiz.description || null,
+        tags: quiz.tags || null,
         categoryIds: quiz.categoryIds || [],
         subcategoryIds: quiz.subcategoryIds || [],
         questionIds: quiz.questionIds || [],
@@ -609,6 +611,12 @@ class FirestoreStorage implements IClientStorage {
         startedAt: new Date(),
         tenantId: quiz.tenantId || 1,
         mode: quiz.mode || 'study',
+        difficultyLevel: quiz.difficultyLevel || 1,
+        author: quiz.author || userId,
+        authorName: quiz.authorName || null,
+        prerequisites: quiz.prerequisites || null,
+        createdAt: new Date(),
+        updatedAt: null,
         ...quiz,
       } as Quiz;
 
@@ -649,7 +657,13 @@ class FirestoreStorage implements IClientStorage {
       const userId = this.currentUserId;
       if (!userId) throw new Error('User ID required');
 
-      await updateUserDocument(userId, 'quizzes', id.toString(), updates);
+      // Add updatedAt timestamp
+      const updatesWithTimestamp = {
+        ...updates,
+        updatedAt: new Date(),
+      };
+
+      await updateUserDocument(userId, 'quizzes', id.toString(), updatesWithTimestamp);
       const quiz = await this.getQuiz(id);
       if (!quiz) throw new Error('Quiz not found after update');
       return quiz;
@@ -823,12 +837,19 @@ class FirestoreStorage implements IClientStorage {
         tenantId: tenantId || 1,
         quizId,
         title,
+        description: null,
         content,
         topics,
+        tags: topics, // Alias topics as tags for consistency
         categoryId,
         subcategoryId: null,
+        difficultyLevel: 1,
+        author: userId,
+        authorName: 'AI Tutor', // Default for AI-generated lectures
+        prerequisites: null,
         isRead: false,
         createdAt: new Date(),
+        updatedAt: null,
       };
 
       await setUserDocument(userId, 'lectures', id.toString(), lecture);
@@ -860,6 +881,27 @@ class FirestoreStorage implements IClientStorage {
     } catch (error) {
       logError('getLecture', error, { id });
       return undefined;
+    }
+  }
+
+  async updateLecture(id: number, updates: Partial<Lecture>): Promise<Lecture> {
+    try {
+      const userId = this.currentUserId;
+      if (!userId) throw new Error('User ID required');
+
+      // Add updatedAt timestamp
+      const updatesWithTimestamp = {
+        ...updates,
+        updatedAt: new Date(),
+      };
+
+      await updateUserDocument(userId, 'lectures', id.toString(), updatesWithTimestamp);
+      const lecture = await this.getLecture(id);
+      if (!lecture) throw new Error('Lecture not found after update');
+      return lecture;
+    } catch (error) {
+      logError('updateLecture', error, { id, updates });
+      throw error;
     }
   }
 
