@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import {
   Select,
   SelectContent,
@@ -97,6 +98,7 @@ export default function QuizBuilder() {
   // Question Editor State
   const [editingQuestion, setEditingQuestion] = useState<CustomQuestion | null>(null);
   const [questionText, setQuestionText] = useState('');
+  const [useRichText, setUseRichText] = useState(false);
   const [questionType, setQuestionType] = useState<'multiple_choice' | 'true_false'>(
     'multiple_choice'
   );
@@ -878,14 +880,34 @@ export default function QuizBuilder() {
                 </div>
 
                 <div>
-                  <Label htmlFor="questionText">Question Text *</Label>
-                  <Textarea
-                    id="questionText"
-                    placeholder="Enter your question"
-                    value={questionText}
-                    onChange={(e) => setQuestionText(e.target.value)}
-                    rows={3}
-                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="questionText">Question Text *</Label>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="useRichText"
+                        checked={useRichText}
+                        onCheckedChange={(checked) => setUseRichText(checked as boolean)}
+                      />
+                      <Label htmlFor="useRichText" className="text-sm font-normal cursor-pointer">
+                        Use rich text editor
+                      </Label>
+                    </div>
+                  </div>
+                  {useRichText ? (
+                    <RichTextEditor
+                      content={questionText}
+                      onChange={setQuestionText}
+                      showPreview={true}
+                    />
+                  ) : (
+                    <Textarea
+                      id="questionText"
+                      placeholder="Enter your question"
+                      value={questionText}
+                      onChange={(e) => setQuestionText(e.target.value)}
+                      rows={3}
+                    />
+                  )}
                 </div>
 
                 {questionType === 'multiple_choice' ? (
@@ -958,13 +980,21 @@ export default function QuizBuilder() {
 
                 <div>
                   <Label htmlFor="explanation">Explanation</Label>
-                  <Textarea
-                    id="explanation"
-                    placeholder="Explain why this answer is correct"
-                    value={explanation}
-                    onChange={(e) => setExplanation(e.target.value)}
-                    rows={3}
-                  />
+                  {useRichText ? (
+                    <RichTextEditor
+                      content={explanation}
+                      onChange={setExplanation}
+                      showPreview={true}
+                    />
+                  ) : (
+                    <Textarea
+                      id="explanation"
+                      placeholder="Explain why this answer is correct"
+                      value={explanation}
+                      onChange={(e) => setExplanation(e.target.value)}
+                      rows={3}
+                    />
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
