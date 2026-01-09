@@ -179,7 +179,7 @@ export default function QuestionBankPage() {
       // Validate using Zod schema
       const validationResult = insertQuestionSchema.safeParse(questionData);
       if (!validationResult.success) {
-        const errors = validationResult.error.errors
+        const errors = validationResult.error.issues
           .map((e) => `${e.path.join('.')}: ${e.message}`)
           .join('; ');
         throw new Error(`Validation failed: ${errors}`);
@@ -255,7 +255,7 @@ export default function QuestionBankPage() {
       // Use full validation to ensure all required fields are valid
       const validationResult = insertQuestionSchema.safeParse(questionData);
       if (!validationResult.success) {
-        const errors = validationResult.error.errors
+        const errors = validationResult.error.issues
           .map((e) => `${e.path.join('.')}: ${e.message}`)
           .join('; ');
         throw new Error(`Validation failed: ${errors}`);

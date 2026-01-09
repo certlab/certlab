@@ -325,7 +325,7 @@ class FirestoreStorage implements IClientStorage {
 
       const validationResult = insertCategorySchema.safeParse(validationData);
       if (!validationResult.success) {
-        const errors = validationResult.error.errors
+        const errors = validationResult.error.issues
           .map((e) => `${e.path.join('.')}: ${e.message}`)
           .join('; ');
         throw new Error(`Category validation failed: ${errors}`);
@@ -500,7 +500,7 @@ class FirestoreStorage implements IClientStorage {
           ...opt,
           text: sanitizeInput(opt.text, 1000),
         })) || [];
-      const sanitizedTags = question.tags ? sanitizeArray(question.tags, 50) : [];
+      const sanitizedTags = question.tags ? sanitizeArray(question.tags as string[], 50) : [];
 
       // Validate with Zod schema
       const validationData = {
@@ -517,7 +517,7 @@ class FirestoreStorage implements IClientStorage {
 
       const validationResult = insertQuestionSchema.safeParse(validationData);
       if (!validationResult.success) {
-        const errors = validationResult.error.errors
+        const errors = validationResult.error.issues
           .map((e) => `${e.path.join('.')}: ${e.message}`)
           .join('; ');
         throw new Error(`Question validation failed: ${errors}`);
