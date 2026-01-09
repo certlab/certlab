@@ -373,37 +373,134 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
-export const insertCategorySchema = createInsertSchema(categories).omit({
-  id: true,
-});
+export const insertCategorySchema = createInsertSchema(categories)
+  .omit({
+    id: true,
+  })
+  .extend({
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .max(200, 'Name must be 200 characters or less')
+      .trim(),
+    description: z
+      .string()
+      .max(2000, 'Description must be 2000 characters or less')
+      .optional()
+      .nullable(),
+    icon: z.string().max(100, 'Icon must be 100 characters or less').optional().nullable(),
+  });
 
-export const insertSubcategorySchema = createInsertSchema(subcategories).omit({
-  id: true,
-});
+export const insertSubcategorySchema = createInsertSchema(subcategories)
+  .omit({
+    id: true,
+  })
+  .extend({
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .max(200, 'Name must be 200 characters or less')
+      .trim(),
+    description: z
+      .string()
+      .max(2000, 'Description must be 2000 characters or less')
+      .optional()
+      .nullable(),
+  });
 
-export const insertLectureSchema = createInsertSchema(lectures).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertLectureSchema = createInsertSchema(lectures)
+  .omit({
+    id: true,
+    createdAt: true,
+  })
+  .extend({
+    title: z
+      .string()
+      .min(1, 'Title is required')
+      .max(500, 'Title must be 500 characters or less')
+      .trim(),
+    content: z
+      .string()
+      .min(10, 'Content must be at least 10 characters')
+      .max(50000, 'Content must be 50000 characters or less'),
+    topics: z
+      .array(z.string().max(100, 'Each topic must be 100 characters or less'))
+      .min(1, 'At least one topic is required')
+      .max(50, 'Maximum 50 topics allowed'),
+  });
 
-export const insertStudyNoteSchema = createInsertSchema(studyNotes).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
+export const insertStudyNoteSchema = createInsertSchema(studyNotes)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    title: z
+      .string()
+      .min(1, 'Title is required')
+      .max(500, 'Title must be 500 characters or less')
+      .trim(),
+    content: z
+      .string()
+      .min(10, 'Content must be at least 10 characters')
+      .max(100000, 'Content must be 100000 characters or less'),
+    tags: z
+      .array(z.string().max(50, 'Each tag must be 50 characters or less'))
+      .max(50, 'Maximum 50 tags allowed')
+      .optional(),
+  });
 
 export const insertQuestionSchema = createInsertSchema(questions)
   .omit({
     id: true,
   })
   .extend({
+    // Enhanced validation with character limits to prevent abuse
+    text: z
+      .string()
+      .min(10, 'Question text must be at least 10 characters')
+      .max(2000, 'Question text must be 2000 characters or less')
+      .trim(),
     // Override the options field with proper Zod validation
     options: questionOptionsSchema,
+    correctAnswer: z.number().int().min(0, 'Correct answer must be a valid option index'),
+    explanation: z
+      .string()
+      .max(5000, 'Explanation must be 5000 characters or less')
+      .optional()
+      .nullable(),
+    difficultyLevel: z
+      .number()
+      .int()
+      .min(1, 'Difficulty must be between 1 and 5')
+      .max(5, 'Difficulty must be between 1 and 5')
+      .optional()
+      .nullable(),
+    tags: z
+      .array(z.string().max(50, 'Each tag must be 50 characters or less'))
+      .max(20, 'Maximum 20 tags allowed')
+      .optional()
+      .nullable(),
     // Add validation for V2 explanation fields
-    explanationSteps: z.array(z.string()).optional(),
-    referenceLinks: z.array(referenceLinkSchema).optional(),
-    videoUrl: z.string().url().optional().or(z.literal('')),
-    communityExplanations: z.array(communityExplanationSchema).optional(),
+    explanationSteps: z
+      .array(z.string().max(1000, 'Each explanation step must be 1000 characters or less'))
+      .max(10, 'Maximum 10 explanation steps allowed')
+      .optional(),
+    referenceLinks: z
+      .array(referenceLinkSchema)
+      .max(10, 'Maximum 10 reference links allowed')
+      .optional(),
+    videoUrl: z
+      .string()
+      .url('Video URL must be a valid URL')
+      .max(500, 'Video URL must be 500 characters or less')
+      .optional()
+      .or(z.literal('')),
+    communityExplanations: z
+      .array(communityExplanationSchema)
+      .max(50, 'Maximum 50 community explanations allowed')
+      .optional(),
   });
 
 export const insertQuizSchema = createInsertSchema(quizzes).omit({
@@ -500,12 +597,19 @@ export const upsertUserSchema = z.object({
   role: z.enum(['user', 'admin']).optional(),
 });
 
-// Quiz creation schema
+// Quiz creation schema with enhanced validation
 export const createQuizSchema = z.object({
-  title: z.string().min(1),
-  categoryIds: z.array(z.number()).min(1),
+  title: z
+    .string()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be 200 characters or less')
+    .trim(),
+  categoryIds: z.array(z.number()).min(1, 'At least one category is required'),
   subcategoryIds: z.array(z.number()).optional(),
-  questionCount: z.number().min(1).max(100),
+  questionCount: z
+    .number()
+    .min(1, 'At least 1 question is required')
+    .max(100, 'Maximum 100 questions allowed'),
   timeLimit: z.number().optional(),
   mode: z.enum(['study', 'quiz']).default('study'),
 });
@@ -689,22 +793,76 @@ export const practiceTestAttempts = pgTable('practice_test_attempts', {
 });
 
 // Insert schemas for study groups and practice tests
-export const insertStudyGroupSchema = createInsertSchema(studyGroups).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
+export const insertStudyGroupSchema = createInsertSchema(studyGroups)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .max(200, 'Name must be 200 characters or less')
+      .trim(),
+    description: z
+      .string()
+      .max(2000, 'Description must be 2000 characters or less')
+      .optional()
+      .nullable(),
+    categoryIds: z
+      .array(z.number())
+      .min(1, 'At least one category is required')
+      .max(10, 'Maximum 10 categories allowed'),
+    maxMembers: z
+      .number()
+      .int()
+      .min(2, 'Minimum 2 members')
+      .max(100, 'Maximum 100 members')
+      .optional()
+      .nullable(),
+  });
 
 export const insertStudyGroupMemberSchema = createInsertSchema(studyGroupMembers).omit({
   id: true,
   joinedAt: true,
 });
 
-export const insertPracticeTestSchema = createInsertSchema(practiceTests).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
+export const insertPracticeTestSchema = createInsertSchema(practiceTests)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .max(200, 'Name must be 200 characters or less')
+      .trim(),
+    description: z
+      .string()
+      .max(2000, 'Description must be 2000 characters or less')
+      .optional()
+      .nullable(),
+    categoryIds: z
+      .array(z.number())
+      .min(1, 'At least one category is required')
+      .max(10, 'Maximum 10 categories allowed'),
+    questionCount: z.number().int().min(5, 'Minimum 5 questions').max(500, 'Maximum 500 questions'),
+    timeLimit: z
+      .number()
+      .int()
+      .min(1, 'Minimum 1 minute')
+      .max(480, 'Maximum 480 minutes (8 hours)'),
+    passingScore: z
+      .number()
+      .int()
+      .min(0, 'Passing score must be 0-100')
+      .max(100, 'Passing score must be 0-100')
+      .optional()
+      .nullable(),
+  });
 
 export const insertPracticeTestAttemptSchema = createInsertSchema(practiceTestAttempts).omit({
   id: true,

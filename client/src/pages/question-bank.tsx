@@ -58,7 +58,9 @@ import { queryKeys, invalidateStaticData } from '@/lib/queryClient';
 import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { sanitizeInput, sanitizeArray } from '@/lib/sanitize';
 import type { Question, Category, Subcategory, QuestionOption } from '@shared/schema';
+import { insertQuestionSchema } from '@shared/schema';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -131,9 +133,16 @@ export default function QuestionBankPage() {
   // Create question mutation
   const createQuestionMutation = useMutation({
     mutationFn: async (data: QuestionFormData) => {
+      // Sanitize all text inputs to prevent XSS
+      const sanitizedText = sanitizeInput(data.text, 2000);
+      const sanitizedExplanation = data.explanation ? sanitizeInput(data.explanation, 5000) : null;
+
       // Map options first with original indices, then filter empty ones
       const optionsWithOriginalIndices = data.options
-        .map((text, index) => ({ id: index, text: text.trim() }))
+        .map((text, index) => ({
+          id: index,
+          text: sanitizeInput(text, 1000), // Sanitize each option
+        }))
         .filter((opt) => opt.text !== '');
 
       // Remap correctAnswer to match the filtered array index
@@ -148,22 +157,35 @@ export default function QuestionBankPage() {
         text: opt.text,
       }));
 
-      const tags = data.tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
+      // Sanitize and filter tags
+      const tags = sanitizeArray(
+        data.tags.split(',').map((t) => t.trim()),
+        50
+      ).filter(Boolean);
 
-      return await storage.createQuestion({
+      // Validate with Zod schema
+      const questionData = {
         tenantId: tenantId ?? 1,
         categoryId: data.categoryId,
         subcategoryId: data.subcategoryId,
-        text: data.text,
+        text: sanitizedText,
         options,
         correctAnswer: filteredCorrectAnswer >= 0 ? filteredCorrectAnswer : 0,
-        explanation: data.explanation || null,
+        explanation: sanitizedExplanation,
         difficultyLevel: data.difficultyLevel,
         tags: tags.length > 0 ? tags : null,
-      });
+      };
+
+      // Validate using Zod schema
+      const validationResult = insertQuestionSchema.safeParse(questionData);
+      if (!validationResult.success) {
+        const errors = validationResult.error.errors
+          .map((e) => `${e.path.join('.')}: ${e.message}`)
+          .join('; ');
+        throw new Error(`Validation failed: ${errors}`);
+      }
+
+      return await storage.createQuestion(questionData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.questions.byTenant(tenantId) });
@@ -187,9 +209,16 @@ export default function QuestionBankPage() {
   // Update question mutation
   const updateQuestionMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: QuestionFormData }) => {
+      // Sanitize all text inputs to prevent XSS
+      const sanitizedText = sanitizeInput(data.text, 2000);
+      const sanitizedExplanation = data.explanation ? sanitizeInput(data.explanation, 5000) : null;
+
       // Map options first with original indices, then filter empty ones
       const optionsWithOriginalIndices = data.options
-        .map((text, index) => ({ id: index, text: text.trim() }))
+        .map((text, index) => ({
+          id: index,
+          text: sanitizeInput(text, 1000), // Sanitize each option
+        }))
         .filter((opt) => opt.text !== '');
 
       // Remap correctAnswer to match the filtered array index
@@ -204,21 +233,35 @@ export default function QuestionBankPage() {
         text: opt.text,
       }));
 
-      const tags = data.tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
+      // Sanitize and filter tags
+      const tags = sanitizeArray(
+        data.tags.split(',').map((t) => t.trim()),
+        50
+      ).filter(Boolean);
 
-      return await storage.updateQuestion(id, {
+      // Validate with Zod schema
+      const questionData = {
         categoryId: data.categoryId,
         subcategoryId: data.subcategoryId,
-        text: data.text,
+        text: sanitizedText,
         options,
         correctAnswer: filteredCorrectAnswer >= 0 ? filteredCorrectAnswer : 0,
-        explanation: data.explanation || null,
+        explanation: sanitizedExplanation,
         difficultyLevel: data.difficultyLevel,
         tags: tags.length > 0 ? tags : null,
-      });
+        tenantId: tenantId ?? 1,
+      };
+
+      // Validate using Zod schema (partial validation for updates)
+      const validationResult = insertQuestionSchema.partial().safeParse(questionData);
+      if (!validationResult.success) {
+        const errors = validationResult.error.errors
+          .map((e) => `${e.path.join('.')}: ${e.message}`)
+          .join('; ');
+        throw new Error(`Validation failed: ${errors}`);
+      }
+
+      return await storage.updateQuestion(id, questionData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.questions.byTenant(tenantId) });
@@ -342,11 +385,31 @@ export default function QuestionBankPage() {
   };
 
   const handleFormSubmit = (isEdit: boolean) => {
-    // Validation
-    if (!formData.text.trim()) {
+    // Enhanced validation with detailed error messages
+    const trimmedText = formData.text.trim();
+
+    if (!trimmedText) {
       toast({
         title: 'Validation Error',
         description: 'Question text is required.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (trimmedText.length < 10) {
+      toast({
+        title: 'Validation Error',
+        description: 'Question text must be at least 10 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (trimmedText.length > 2000) {
+      toast({
+        title: 'Validation Error',
+        description: 'Question text must be 2000 characters or less.',
         variant: 'destructive',
       });
       return;
@@ -371,10 +434,30 @@ export default function QuestionBankPage() {
       return;
     }
 
-    if (formData.correctAnswer >= validOptions.length) {
+    if (validOptions.length > 10) {
       toast({
         title: 'Validation Error',
-        description: 'Please select a valid correct answer.',
+        description: 'Maximum 10 answer options allowed.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate that at least one option has content at the correct answer index
+    if (!formData.options[formData.correctAnswer]?.trim()) {
+      toast({
+        title: 'Validation Error',
+        description:
+          'The selected correct answer option is empty. Please fill it in or select a different correct answer.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (formData.explanation && formData.explanation.length > 5000) {
+      toast({
+        title: 'Validation Error',
+        description: 'Explanation must be 5000 characters or less.',
         variant: 'destructive',
       });
       return;
@@ -419,7 +502,12 @@ export default function QuestionBankPage() {
       aria-label={isEdit ? 'Edit question form' : 'Add question form'}
     >
       <div>
-        <Label htmlFor="text">Question Text *</Label>
+        <Label htmlFor="text">
+          Question Text *
+          <span className="text-xs text-muted-foreground ml-2">
+            ({formData.text.length}/2000 characters)
+          </span>
+        </Label>
         <Textarea
           id="text"
           placeholder="Enter your question..."
@@ -427,7 +515,14 @@ export default function QuestionBankPage() {
           onChange={(e) => setFormData({ ...formData, text: e.target.value })}
           rows={3}
           className="mt-1"
+          maxLength={2000}
+          aria-describedby="text-help"
         />
+        {formData.text.length < 10 && formData.text.length > 0 && (
+          <p id="text-help" className="text-xs text-yellow-600 mt-1">
+            Question must be at least 10 characters (currently {formData.text.length})
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -474,7 +569,12 @@ export default function QuestionBankPage() {
       </div>
 
       <div>
-        <Label id="options-label">Answer Options * (at least 2 required)</Label>
+        <Label id="options-label">
+          Answer Options * (at least 2 required, max 10)
+          <span className="text-xs text-muted-foreground ml-2">
+            (Select the correct answer with the radio button)
+          </span>
+        </Label>
         <RadioGroup
           value={formData.correctAnswer.toString()}
           onValueChange={(value) => setFormData({ ...formData, correctAnswer: parseInt(value) })}
@@ -491,17 +591,18 @@ export default function QuestionBankPage() {
               />
               <Input
                 id={`option-text-${index}`}
-                placeholder={`Option ${index + 1}`}
+                placeholder={`Option ${index + 1}${index < 2 ? ' (required)' : ' (optional)'}`}
                 value={formData.options[index]}
                 onChange={(e) => handleOptionChange(index, e.target.value)}
                 className="flex-1 min-w-0"
                 aria-label={`Option ${index + 1} text`}
+                maxLength={1000}
               />
             </div>
           ))}
         </RadioGroup>
         <p className="text-xs text-muted-foreground mt-1">
-          Select the radio button next to the correct answer
+          Fill in at least 2 options. Each option can be up to 1000 characters.
         </p>
       </div>
 
@@ -528,19 +629,30 @@ export default function QuestionBankPage() {
         </div>
 
         <div>
-          <Label htmlFor="tags">Tags (comma-separated)</Label>
+          <Label htmlFor="tags">
+            Tags (comma-separated)
+            <span className="text-xs text-muted-foreground ml-2">
+              (max 20 tags, 50 characters each)
+            </span>
+          </Label>
           <Input
             id="tags"
             placeholder="security, encryption, access"
             value={formData.tags}
             onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
             className="mt-1"
+            maxLength={1000}
           />
         </div>
       </div>
 
       <div>
-        <Label htmlFor="explanation">Explanation (optional)</Label>
+        <Label htmlFor="explanation">
+          Explanation (optional)
+          <span className="text-xs text-muted-foreground ml-2">
+            ({formData.explanation.length}/5000 characters)
+          </span>
+        </Label>
         <Textarea
           id="explanation"
           placeholder="Explain why this is the correct answer..."
@@ -548,6 +660,7 @@ export default function QuestionBankPage() {
           onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
           rows={2}
           className="mt-1"
+          maxLength={5000}
         />
       </div>
 

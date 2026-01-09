@@ -18,9 +18,60 @@
  * // Returns: '&lt;script&gt;alert("xss")&lt;/script&gt;'
  */
 export function escapeHtml(text: string): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+/**
+ * Sanitizes user input by escaping HTML and trimming whitespace.
+ * Use this for all user-submitted text before storage or display.
+ *
+ * @param input - The user input to sanitize
+ * @param maxLength - Optional maximum length (truncates if exceeded)
+ * @returns Sanitized text safe for storage and display
+ *
+ * @example
+ * sanitizeInput('<script>alert("xss")</script>', 100)
+ * // Returns: '&lt;script&gt;alert("xss")&lt;/script&gt;'
+ */
+export function sanitizeInput(input: string, maxLength?: number): string {
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+
+  let sanitized = input.trim();
+
+  // Truncate if needed
+  if (maxLength && sanitized.length > maxLength) {
+    sanitized = sanitized.substring(0, maxLength);
+  }
+
+  // Escape HTML to prevent XSS
+  return escapeHtml(sanitized);
+}
+
+/**
+ * Sanitizes an array of strings (e.g., tags, topics).
+ * Filters out empty strings and escapes HTML in each item.
+ *
+ * @param items - Array of strings to sanitize
+ * @param maxLength - Optional maximum length for each item
+ * @returns Sanitized array
+ *
+ * @example
+ * sanitizeArray(['<script>xss</script>', 'valid-tag', '  '], 50)
+ * // Returns: ['&lt;script&gt;xss&lt;/script&gt;', 'valid-tag']
+ */
+export function sanitizeArray(items: string[], maxLength?: number): string[] {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items.map((item) => sanitizeInput(item, maxLength)).filter((item) => item.length > 0);
 }
 
 /**
