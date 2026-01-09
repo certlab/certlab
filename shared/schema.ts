@@ -71,6 +71,44 @@ export type ReferenceLink = z.infer<typeof referenceLinkSchema>;
 export type CommunityExplanation = z.infer<typeof communityExplanationSchema>;
 
 /**
+ * Question type enumeration for different quiz formats.
+ * Supports: MCQ single/multi-select, True/False, Fill-in-Blank, Short Answer, Matching, Ordering
+ */
+export const questionTypeSchema = z.enum([
+  'multiple_choice_single', // Traditional MCQ with one correct answer
+  'multiple_choice_multiple', // MCQ with multiple correct answers
+  'true_false', // True/False question
+  'fill_in_blank', // Fill in the blank question
+  'short_answer', // Short answer requiring manual grading
+  'matching', // Match pairs of items
+  'ordering', // Order items in correct sequence
+]);
+
+export type QuestionType = z.infer<typeof questionTypeSchema>;
+
+/**
+ * Zod schema for a matching pair in matching questions.
+ */
+export const matchingPairSchema = z.object({
+  id: z.number().int().min(0),
+  left: z.string().min(1), // Left side item
+  right: z.string().min(1), // Right side item (correct match)
+});
+
+export type MatchingPair = z.infer<typeof matchingPairSchema>;
+
+/**
+ * Zod schema for ordering items.
+ */
+export const orderingItemSchema = z.object({
+  id: z.number().int().min(0),
+  text: z.string().min(1),
+  correctPosition: z.number().int().min(0), // The correct position in the sequence
+});
+
+export type OrderingItem = z.infer<typeof orderingItemSchema>;
+
+/**
  * Validates that a question's correctAnswer matches one of the option IDs.
  * @param options Array of question options
  * @param correctAnswer The ID of the correct answer
@@ -219,9 +257,15 @@ export const questions = pgTable('questions', {
   tenantId: integer('tenant_id').notNull(),
   categoryId: integer('category_id').notNull(),
   subcategoryId: integer('subcategory_id').notNull(),
+  questionType: text('question_type').notNull().default('multiple_choice_single'), // Type of question
   text: text('text').notNull(),
-  options: jsonb('options').$type<QuestionOption[]>().notNull(), // Array of option objects with id and text
-  correctAnswer: integer('correct_answer').notNull(),
+  options: jsonb('options').$type<QuestionOption[]>(), // Array of option objects (for MCQ/True-False)
+  correctAnswer: integer('correct_answer'), // Correct answer index (for MCQ/True-False, nullable for other types)
+  correctAnswers: jsonb('correct_answers').$type<number[]>(), // Multiple correct answers (for multiple choice multiple)
+  acceptedAnswers: jsonb('accepted_answers').$type<string[]>(), // Accepted text answers (for fill-in-blank)
+  matchingPairs: jsonb('matching_pairs').$type<MatchingPair[]>(), // Pairs for matching questions
+  orderingItems: jsonb('ordering_items').$type<OrderingItem[]>(), // Items for ordering questions
+  requiresManualGrading: boolean('requires_manual_grading').default(false), // Flag for short answer questions
   explanation: text('explanation'), // Legacy: Simple text explanation (V1)
   difficultyLevel: integer('difficulty_level').default(1), // 1-5 scale (1=Easy, 5=Expert)
   tags: jsonb('tags'), // Array of topic tags for lecture generation
@@ -561,7 +605,7 @@ export const insertLectureSchema = createInsertSchema(lectures)
       .nullable(),
   })
   .superRefine((data, ctx) => {
-    const contentType = (data as any).contentType;
+    const contentType = (data as { contentType?: string }).contentType;
 
     // Validate video-specific required fields
     if (contentType === 'video') {
@@ -654,9 +698,20 @@ export const insertQuestionSchema = createInsertSchema(questions)
       .string()
       .min(10, 'Question text must be at least 10 characters')
       .max(2000, 'Question text must be 2000 characters or less'),
-    // Override the options field with proper Zod validation
-    options: questionOptionsSchema,
-    correctAnswer: z.number().int().min(0, 'Correct answer must be a valid option index'),
+    questionType: questionTypeSchema.default('multiple_choice_single'),
+    // Override the options field with proper Zod validation (optional for non-MCQ types)
+    options: questionOptionsSchema.optional().nullable(),
+    correctAnswer: z
+      .number()
+      .int()
+      .min(0, 'Correct answer must be a valid option index')
+      .optional()
+      .nullable(),
+    correctAnswers: z.array(z.number().int().min(0)).optional().nullable(),
+    acceptedAnswers: z.array(z.string().min(1).max(500)).max(10).optional().nullable(),
+    matchingPairs: z.array(matchingPairSchema).min(2).max(10).optional().nullable(),
+    orderingItems: z.array(orderingItemSchema).min(2).max(10).optional().nullable(),
+    requiresManualGrading: z.boolean().default(false),
     explanation: z
       .string()
       .max(5000, 'Explanation must be 5000 characters or less')
@@ -696,6 +751,85 @@ export const insertQuestionSchema = createInsertSchema(questions)
       .array(communityExplanationSchema)
       .max(50, 'Maximum 50 community explanations allowed')
       .optional(),
+  })
+  .superRefine((data, ctx) => {
+    const questionType =
+      (data as { questionType?: string }).questionType || 'multiple_choice_single';
+
+    // Validate question type specific requirements
+    if (questionType === 'multiple_choice_single' || questionType === 'true_false') {
+      // MCQ Single and True/False require options and correctAnswer
+      if (!data.options || data.options.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Options are required for multiple choice and true/false questions',
+          path: ['options'],
+        });
+      }
+      if (data.correctAnswer === undefined || data.correctAnswer === null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Correct answer is required for multiple choice and true/false questions',
+          path: ['correctAnswer'],
+        });
+      }
+    }
+
+    if (questionType === 'multiple_choice_multiple') {
+      // MCQ Multiple requires options and correctAnswers (array)
+      if (!data.options || data.options.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Options are required for multiple choice questions',
+          path: ['options'],
+        });
+      }
+      if (!data.correctAnswers || data.correctAnswers.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'At least one correct answer is required for multiple select questions',
+          path: ['correctAnswers'],
+        });
+      }
+    }
+
+    if (questionType === 'fill_in_blank') {
+      // Fill in blank requires acceptedAnswers
+      if (!data.acceptedAnswers || data.acceptedAnswers.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'At least one accepted answer is required for fill-in-blank questions',
+          path: ['acceptedAnswers'],
+        });
+      }
+    }
+
+    if (questionType === 'matching') {
+      // Matching requires matchingPairs
+      if (!data.matchingPairs || data.matchingPairs.length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'At least 2 matching pairs are required for matching questions',
+          path: ['matchingPairs'],
+        });
+      }
+    }
+
+    if (questionType === 'ordering') {
+      // Ordering requires orderingItems
+      if (!data.orderingItems || data.orderingItems.length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'At least 2 items are required for ordering questions',
+          path: ['orderingItems'],
+        });
+      }
+    }
+
+    if (questionType === 'short_answer') {
+      // Short answer should be flagged for manual grading
+      // This is handled by the default value of requiresManualGrading
+    }
   });
 
 export const insertQuizSchema = createInsertSchema(quizzes)

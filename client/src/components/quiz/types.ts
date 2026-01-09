@@ -1,11 +1,19 @@
-import type { Question, Quiz } from "@shared/schema";
+import type { Question, Quiz } from '@shared/schema';
+
+// Union type for different answer formats
+export type QuizAnswer =
+  | number // Single choice (MCQ single, True/False)
+  | number[] // Multiple choice (MCQ multiple)
+  | string // Text answer (Fill-in-blank, Short answer)
+  | Record<number, number> // Matching pairs (left id -> right id)
+  | number[]; // Ordering (array of item ids in user's order)
 
 // Define quiz state shape
 export interface QuizState {
   currentQuestionIndex: number;
-  answers: Record<number, number>;
+  answers: Record<number, QuizAnswer>; // questionId -> answer
   flaggedQuestions: Set<number>;
-  selectedAnswer: number | undefined;
+  selectedAnswer: QuizAnswer | undefined;
   showFeedback: boolean;
   isCorrect: boolean;
   isReviewingFlagged: boolean;
@@ -15,8 +23,16 @@ export interface QuizState {
 
 // Define action types
 export type QuizAction =
-  | { type: 'SELECT_ANSWER'; payload: { questionId: number; answer: number; isCorrect: boolean; showFeedback: boolean } }
-  | { type: 'CHANGE_QUESTION'; payload: { index: number; savedAnswer?: number } }
+  | {
+      type: 'SELECT_ANSWER';
+      payload: {
+        questionId: number;
+        answer: QuizAnswer;
+        isCorrect: boolean;
+        showFeedback: boolean;
+      };
+    }
+  | { type: 'CHANGE_QUESTION'; payload: { index: number; savedAnswer?: QuizAnswer } }
   | { type: 'TOGGLE_FLAG'; payload: { questionId: number } }
   | { type: 'START_FLAGGED_REVIEW'; payload: { indices: number[] } }
   | { type: 'MOVE_TO_FLAGGED'; payload: { flaggedIndex: number; questionIndex: number } }
@@ -33,7 +49,7 @@ export const initialQuizState: QuizState = {
   isCorrect: false,
   isReviewingFlagged: false,
   currentFlaggedIndex: 0,
-  flaggedQuestionIndices: []
+  flaggedQuestionIndices: [],
 };
 
 // Re-export shared types for convenience

@@ -1,6 +1,11 @@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { EnhancedExplanation } from '@/components/EnhancedExplanation';
+import { FillInBlankQuestion } from './FillInBlankQuestion';
+import { ShortAnswerQuestion } from './ShortAnswerQuestion';
+import { MatchingQuestion } from './MatchingQuestion';
+import { OrderingQuestion } from './OrderingQuestion';
+import { MultipleChoiceMultiple } from './MultipleChoiceMultiple';
 import type { Question, QuizState } from './types';
 import type { Question as SchemaQuestion } from '@shared/schema';
 
@@ -11,6 +16,60 @@ interface QuestionDisplayProps {
 }
 
 export function QuestionDisplay({ question, state, onAnswerChange }: QuestionDisplayProps) {
+  const questionType = question.questionType || 'multiple_choice_single';
+
+  // Route to appropriate component based on question type
+  if (questionType === 'fill_in_blank') {
+    return (
+      <FillInBlankQuestion
+        question={question}
+        state={state}
+        onAnswerChange={(value: string) => onAnswerChange(value)}
+      />
+    );
+  }
+
+  if (questionType === 'short_answer') {
+    return (
+      <ShortAnswerQuestion
+        question={question}
+        state={state}
+        onAnswerChange={(value: string) => onAnswerChange(value)}
+      />
+    );
+  }
+
+  if (questionType === 'matching') {
+    return (
+      <MatchingQuestion
+        question={question}
+        state={state}
+        onAnswerChange={(value: Record<number, number>) => onAnswerChange(JSON.stringify(value))}
+      />
+    );
+  }
+
+  if (questionType === 'ordering') {
+    return (
+      <OrderingQuestion
+        question={question}
+        state={state}
+        onAnswerChange={(value: number[]) => onAnswerChange(JSON.stringify(value))}
+      />
+    );
+  }
+
+  if (questionType === 'multiple_choice_multiple') {
+    return (
+      <MultipleChoiceMultiple
+        question={question}
+        state={state}
+        onAnswerChange={(value: number[]) => onAnswerChange(JSON.stringify(value))}
+      />
+    );
+  }
+
+  // Default: Multiple Choice Single or True/False
   return (
     <div className="mb-4 sm:mb-6">
       <h3 className="text-base sm:text-lg font-medium text-foreground mb-3 sm:mb-4">
@@ -23,7 +82,7 @@ export function QuestionDisplay({ question, state, onAnswerChange }: QuestionDis
         onValueChange={onAnswerChange}
         className="space-y-3"
       >
-        {(question.options as any[]).map((option, index) => {
+        {(question.options as Array<{ id?: number; text: string }>)?.map((option, index) => {
           // Use option.id if available, otherwise use index
           const optionId = option.id !== undefined ? option.id : index;
           const isSelectedAnswer = state.selectedAnswer === optionId;
