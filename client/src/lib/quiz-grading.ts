@@ -78,20 +78,18 @@ export function gradeQuestion(
         Array.isArray(question.matchingPairs)
       ) {
         const userMatches = userAnswer as Record<number, number>;
-        const correctMatches: Record<number, string> = {};
-
-        // Build correct matches map
-        question.matchingPairs.forEach((pair) => {
-          correctMatches[pair.id] = pair.right;
-        });
 
         // Check if all matches are correct
         let allCorrect = true;
-        for (const [leftId, rightId] of Object.entries(userMatches)) {
-          const leftIdNum = Number(leftId);
-          const rightPair = question.matchingPairs.find((p) => p.id === rightId);
+        for (const [leftIdStr, rightId] of Object.entries(userMatches)) {
+          const leftId = Number(leftIdStr);
 
-          if (!rightPair || correctMatches[leftIdNum] !== rightPair.right) {
+          // Find the correct pair for this left ID
+          const correctPair = question.matchingPairs.find((p) => p.id === leftId);
+          // Find the selected right item
+          const selectedPair = question.matchingPairs.find((p) => p.id === rightId);
+
+          if (!correctPair || !selectedPair || correctPair.right !== selectedPair.right) {
             allCorrect = false;
             break;
           }

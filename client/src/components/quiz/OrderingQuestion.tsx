@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EnhancedExplanation } from '@/components/EnhancedExplanation';
 import { GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { deterministicShuffle } from '@/lib/shuffle-utils';
 import type { Question, QuizState } from './types';
 import type { Question as SchemaQuestion, OrderingItem } from '@shared/schema';
 
@@ -25,14 +26,8 @@ export function OrderingQuestion({ question, state, onAnswerChange }: OrderingQu
         .filter((item): item is OrderingItem => item !== undefined);
     }
 
-    // Otherwise, shuffle the items
-    const items = [...orderingItems];
-    const seed = question.id || 0;
-    for (let i = items.length - 1; i > 0; i--) {
-      const j = ((seed + i) * 997) % (i + 1);
-      [items[i], items[j]] = [items[j], items[i]];
-    }
-    return items;
+    // Otherwise, shuffle the items deterministically
+    return deterministicShuffle(orderingItems, question.id || 0);
   });
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);

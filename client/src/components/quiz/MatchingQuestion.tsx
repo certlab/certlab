@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EnhancedExplanation } from '@/components/EnhancedExplanation';
 import { X } from 'lucide-react';
+import { deterministicShuffle } from '@/lib/shuffle-utils';
 import type { Question, QuizState } from './types';
 import type { Question as SchemaQuestion, MatchingPair } from '@shared/schema';
 
@@ -26,14 +27,7 @@ export function MatchingQuestion({ question, state, onAnswerChange }: MatchingQu
 
   // Shuffle right side items for display (consistent shuffle based on question id)
   const [shuffledRightItems] = useState(() => {
-    const items = [...matchingPairs];
-    // Simple deterministic shuffle based on question id
-    const seed = question.id || 0;
-    for (let i = items.length - 1; i > 0; i--) {
-      const j = ((seed + i) * 997) % (i + 1);
-      [items[i], items[j]] = [items[j], items[i]];
-    }
-    return items;
+    return deterministicShuffle(matchingPairs, question.id || 0);
   });
 
   // Update parent when matches change
@@ -96,8 +90,11 @@ export function MatchingQuestion({ question, state, onAnswerChange }: MatchingQu
   }, [handleKeyDown]);
 
   const isCorrectMatch = (leftId: number, rightId: number) => {
-    const pair = matchingPairs.find((p) => p.id === leftId);
-    return pair && pair.right === shuffledRightItems.find((p) => p.id === rightId)?.right;
+    const leftPair = matchingPairs.find((p) => p.id === leftId);
+    const rightPair = matchingPairs.find((p) => p.id === rightId);
+
+    // Check if the right text of the left pair matches the right text of the selected right pair
+    return leftPair && rightPair && leftPair.right === rightPair.right;
   };
 
   return (
