@@ -29,13 +29,13 @@ export function ActivityButton({
   const showActions = !isDefault && (onEdit || onDelete);
 
   return (
-    <div className="relative flex w-full">
+    <div className="relative flex flex-shrink-0">
       <Button
         variant={isSelected ? 'default' : 'outline'}
         onClick={onClick}
         disabled={disabled}
         aria-pressed={isSelected}
-        className="px-6 py-6 font-normal w-full text-activity-responsive"
+        className="px-6 py-6 font-normal text-activity-responsive whitespace-nowrap"
       >
         {label}
       </Button>
