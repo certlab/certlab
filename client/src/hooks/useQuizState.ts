@@ -25,7 +25,8 @@ import { gamificationService } from '@/lib/gamification-service';
 import { triggerCelebration } from '@/components/Celebration';
 import { useToast } from '@/hooks/use-toast';
 import { quizReducer } from '@/components/quiz/quizReducer';
-import type { QuizState, Question, Quiz } from '@/components/quiz/types';
+import { gradeQuestion, parseAnswer } from '@/lib/quiz-grading';
+import type { QuizState, Question, Quiz, QuizAnswer } from '@/components/quiz/types';
 import { initialQuizState } from '@/components/quiz/types';
 
 /**
@@ -243,6 +244,7 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
    * Handles answer selection for the current question.
    * Once an answer is selected, it cannot be changed (locked in).
    * Immediately shows feedback on whether the answer was correct.
+   * Supports all question types via gradeQuestion utility.
    */
   const handleAnswerChange = useCallback(
     (value: string) => {
@@ -251,10 +253,14 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
         return;
       }
 
-      const answerValue = parseInt(value);
-
       if (currentQuestion) {
-        const correct = answerValue === currentQuestion.correctAnswer;
+        const questionType = currentQuestion.questionType || 'multiple_choice_single';
+
+        // Parse the answer based on question type
+        const answerValue = parseAnswer(value, questionType);
+
+        // Grade the answer
+        const { isCorrect } = gradeQuestion(currentQuestion, answerValue);
 
         // Batch all state updates in a single dispatch
         dispatch({
@@ -262,7 +268,7 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
           payload: {
             questionId: currentQuestion.id,
             answer: answerValue,
-            isCorrect: correct,
+            isCorrect,
             showFeedback: true,
           },
         });
