@@ -252,8 +252,8 @@ export default function QuestionBankPage() {
         tenantId: tenantId ?? 1,
       };
 
-      // Validate using Zod schema (partial validation for updates)
-      const validationResult = insertQuestionSchema.partial().safeParse(questionData);
+      // Use full validation to ensure all required fields are valid
+      const validationResult = insertQuestionSchema.safeParse(questionData);
       if (!validationResult.success) {
         const errors = validationResult.error.errors
           .map((e) => `${e.path.join('.')}: ${e.message}`)
