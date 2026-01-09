@@ -15,7 +15,7 @@ import { studyMaterials } from '@/data/study-materials';
 import { calculateLevelFromPoints, calculatePointsForLevel } from '@/lib/level-utils';
 import { POINTS_CONFIG } from '@/lib/achievement-service';
 import { PlayCircle, Trophy, Target, History, FileText, ArrowRight, Flame } from 'lucide-react';
-import type { UserStats, Quiz, Category } from '@shared/schema';
+import { MetadataDisplayCompact } from '@/components/MetadataDisplay';
 
 export default function Dashboard() {
   const { user: currentUser, refreshUser } = useAuth();
@@ -622,24 +622,36 @@ export default function Dashboard() {
                   {completedQuizzes.slice(0, 4).map((quiz) => (
                     <div
                       key={quiz.id}
-                      className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                      className="flex flex-col gap-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
                     >
-                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-blue-600">
-                        <Target className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">Completed Quiz "{quiz.title}"</p>
-                        {quiz.score && (
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-blue-600">
+                          <Target className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm">Completed Quiz "{quiz.title}"</p>
+                          {quiz.score && (
+                            <p className="text-xs text-muted-foreground">
+                              Score: {Math.round(quiz.score)}%
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
                           <p className="text-xs text-muted-foreground">
-                            Score: {Math.round(quiz.score)}%
+                            {formatTimeAgo(quiz.completedAt!)}
                           </p>
-                        )}
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">
-                          {formatTimeAgo(quiz.completedAt!)}
-                        </p>
-                      </div>
+                      {/* Display metadata */}
+                      {(quiz.tags || quiz.difficultyLevel || quiz.authorName) && (
+                        <div className="ml-14">
+                          <MetadataDisplayCompact
+                            tags={quiz.tags}
+                            difficultyLevel={quiz.difficultyLevel}
+                            authorName={quiz.authorName}
+                          />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
