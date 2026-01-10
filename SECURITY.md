@@ -32,6 +32,29 @@ The following vulnerabilities have been reviewed and documented:
   - Do not expose the development server to the public internet
   - The vulnerability will be automatically resolved when vite v5.x receives a patched esbuild version, or when the project upgrades to vite v7.x
 
+## Accessibility Security
+
+Accessibility features can introduce security considerations:
+
+### Screen Reader Support
+
+- **ARIA Labels**: While ARIA labels help screen readers, avoid including sensitive information in aria-labels that shouldn't be announced
+- **Status Messages**: Use `aria-live` regions appropriately to avoid information leakage
+
+### Keyboard Navigation
+
+- **Tab Order**: Ensure logical tab order doesn't expose sensitive form fields prematurely
+- **Focus Management**: Prevent focus from being trapped in a way that could be exploited
+
+### Best Practices
+
+1. Test accessibility features for potential security implications
+2. Ensure screen readers don't announce sensitive data inappropriately
+3. Validate that keyboard navigation doesn't bypass security controls
+4. Check that high contrast modes don't reveal hidden content
+
+For more on accessibility features, see [ACCESSIBILITY.md](ACCESSIBILITY.md).
+
 ## Security Best Practices
 
 When contributing to CertLab:
@@ -40,3 +63,5 @@ When contributing to CertLab:
 2. Keep dependencies up to date using `npm update` and `npm audit fix`
 3. Review Dependabot PRs promptly
 4. Run `npm audit` before creating pull requests that modify dependencies
+5. Test accessibility features for security implications
+6. Ensure ARIA labels don't expose sensitive information
