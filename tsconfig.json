@@ -1,6 +1,6 @@
 {
   "include": ["client/src/**/*", "shared/**/*"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
+  "exclude": ["node_modules", "build", "dist"],
   "compilerOptions": {
     "target": "es2018",
     "incremental": true,

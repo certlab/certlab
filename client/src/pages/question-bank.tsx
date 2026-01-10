@@ -371,7 +371,7 @@ export default function QuestionBankPage() {
       categoryId: question.categoryId,
       subcategoryId: question.subcategoryId,
       options: paddedOptions,
-      correctAnswer: question.correctAnswer,
+      correctAnswer: question.correctAnswer ?? 0,
       explanation: question.explanation || '',
       difficultyLevel: question.difficultyLevel || 1,
       tags: Array.isArray(question.tags) ? question.tags.join(', ') : '',
