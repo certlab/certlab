@@ -132,11 +132,13 @@ export default function PreviewQuizInterface({
 
   // Get current question based on state
   const currentQuestion = useMemo(() => {
+    if (processedQuestions.length === 0) return null;
+
     if (state.isReviewingFlagged) {
       const flaggedIndex = state.flaggedQuestionIndices[state.currentFlaggedIndex];
-      return processedQuestions[flaggedIndex];
+      return processedQuestions[flaggedIndex] || null;
     }
-    return processedQuestions[state.currentQuestionIndex];
+    return processedQuestions[state.currentQuestionIndex] || null;
   }, [state, processedQuestions]);
 
   // Calculate progress
@@ -485,87 +487,97 @@ export default function PreviewQuizInterface({
                 </div>
               )}
 
-              <QuestionDisplay
-                question={currentQuestion}
-                state={state}
-                onAnswerChange={handleAnswerChange}
-              />
-
-              <div className="flex flex-col sm:flex-row items-center gap-3 sm:justify-between pt-4 sm:pt-6 border-t border-border">
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Button
-                    variant="outline"
-                    onClick={handlePreviousQuestion}
-                    disabled={
-                      state.isReviewingFlagged
-                        ? state.currentFlaggedIndex === 0
-                        : state.currentQuestionIndex === 0
-                    }
-                    size="sm"
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <i className="fas fa-chevron-left mr-1 sm:mr-2" />
-                    <span className="hidden sm:inline">Previous</span>
-                    <span className="sm:hidden">Prev</span>
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    onClick={handleFlagQuestion}
-                    size="sm"
-                    className={`flex-1 sm:flex-initial ${
-                      state.flaggedQuestions.has(currentQuestion.id)
-                        ? 'bg-accent text-white hover:bg-accent/90'
-                        : ''
-                    }`}
-                  >
-                    <i className="fas fa-flag mr-1 sm:mr-2" />
-                    <span className="hidden sm:inline">
-                      {state.flaggedQuestions.has(currentQuestion.id)
-                        ? 'Unflag'
-                        : 'Flag for Review'}
-                    </span>
-                    <span className="sm:hidden">
-                      {state.flaggedQuestions.has(currentQuestion.id) ? 'Unflag' : 'Flag'}
-                    </span>
-                  </Button>
+              {!currentQuestion ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>No questions available</p>
                 </div>
+              ) : (
+                <>
+                  <QuestionDisplay
+                    question={currentQuestion}
+                    state={state}
+                    onAnswerChange={handleAnswerChange}
+                  />
 
-                <Button
-                  onClick={handleNextQuestion}
-                  disabled={isSubmitting}
-                  size="sm"
-                  className="w-full sm:w-auto bg-primary text-white hover:bg-primary/90"
-                >
-                  {state.isReviewingFlagged ? (
-                    state.currentFlaggedIndex === state.flaggedQuestionIndices.length - 1 ? (
-                      isSubmitting ? (
-                        'Submitting...'
+                  <div className="flex flex-col sm:flex-row items-center gap-3 sm:justify-between pt-4 sm:pt-6 border-t border-border">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <Button
+                        variant="outline"
+                        onClick={handlePreviousQuestion}
+                        disabled={
+                          state.isReviewingFlagged
+                            ? state.currentFlaggedIndex === 0
+                            : state.currentQuestionIndex === 0
+                        }
+                        size="sm"
+                        className="flex-1 sm:flex-initial"
+                      >
+                        <i className="fas fa-chevron-left mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">Previous</span>
+                        <span className="sm:hidden">Prev</span>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        onClick={handleFlagQuestion}
+                        size="sm"
+                        className={`flex-1 sm:flex-initial ${
+                          currentQuestion && state.flaggedQuestions.has(currentQuestion.id)
+                            ? 'bg-accent text-white hover:bg-accent/90'
+                            : ''
+                        }`}
+                      >
+                        <i className="fas fa-flag mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">
+                          {currentQuestion && state.flaggedQuestions.has(currentQuestion.id)
+                            ? 'Unflag'
+                            : 'Flag for Review'}
+                        </span>
+                        <span className="sm:hidden">
+                          {currentQuestion && state.flaggedQuestions.has(currentQuestion.id)
+                            ? 'Unflag'
+                            : 'Flag'}
+                        </span>
+                      </Button>
+                    </div>
+
+                    <Button
+                      onClick={handleNextQuestion}
+                      disabled={isSubmitting}
+                      size="sm"
+                      className="w-full sm:w-auto bg-primary text-white hover:bg-primary/90"
+                    >
+                      {state.isReviewingFlagged ? (
+                        state.currentFlaggedIndex === state.flaggedQuestionIndices.length - 1 ? (
+                          isSubmitting ? (
+                            'Submitting...'
+                          ) : (
+                            'Finish Review & Submit'
+                          )
+                        ) : (
+                          <>
+                            <span className="hidden sm:inline">Next Flagged</span>
+                            <span className="sm:hidden">Next</span>
+                            <i className="fas fa-chevron-right ml-1 sm:ml-2" />
+                          </>
+                        )
+                      ) : state.currentQuestionIndex === processedQuestions.length - 1 ? (
+                        isSubmitting ? (
+                          'Submitting...'
+                        ) : (
+                          'Submit Quiz'
+                        )
                       ) : (
-                        'Finish Review & Submit'
-                      )
-                    ) : (
-                      <>
-                        <span className="hidden sm:inline">Next Flagged</span>
-                        <span className="sm:hidden">Next</span>
-                        <i className="fas fa-chevron-right ml-1 sm:ml-2" />
-                      </>
-                    )
-                  ) : state.currentQuestionIndex === processedQuestions.length - 1 ? (
-                    isSubmitting ? (
-                      'Submitting...'
-                    ) : (
-                      'Submit Quiz'
-                    )
-                  ) : (
-                    <>
-                      <span className="hidden sm:inline">Next</span>
-                      <span className="sm:hidden">Next</span>
-                      <i className="fas fa-chevron-right ml-1 sm:ml-2" />
-                    </>
-                  )}
-                </Button>
-              </div>
+                        <>
+                          <span className="hidden sm:inline">Next</span>
+                          <span className="sm:hidden">Next</span>
+                          <i className="fas fa-chevron-right ml-1 sm:ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
