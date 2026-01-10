@@ -41,6 +41,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { QuizVersionHistory } from '@/components/QuizVersionHistory';
 import type { Category, Subcategory, Question, QuestionOption } from '@shared/schema';
 
 interface CustomQuestion {
@@ -240,13 +241,22 @@ export default function QuizBuilder() {
       };
 
       // Store in Firestore as a user document
-      const id = Date.now();
-      await setUserDocument(user.id, 'quizTemplates', id.toString(), {
+      const id = templateId ? parseInt(templateId, 10) : Date.now();
+      const templateData = {
         ...template,
         id,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      };
+
+      await setUserDocument(user.id, 'quizTemplates', id.toString(), templateData);
+
+      // Create version history entry
+      const changeDesc = templateId
+        ? `Updated quiz: ${isDraft ? 'saved as draft' : 'published'}`
+        : `Created quiz: ${isDraft ? 'saved as draft' : 'published'}`;
+
+      await storage.createQuizVersion(id, templateData, changeDesc);
 
       return { id, template };
     },
@@ -607,6 +617,12 @@ export default function QuizBuilder() {
             </div>
           </div>
           <div className="flex gap-2">
+            {templateId && (
+              <QuizVersionHistory
+                quizId={parseInt(templateId, 10)}
+                onRestore={() => window.location.reload()}
+              />
+            )}
             <Button
               variant="outline"
               onClick={handleSaveDraft}

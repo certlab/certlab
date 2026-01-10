@@ -397,5 +397,119 @@ export async function updateUserProfile(
   }
 }
 
+/**
+ * Get a document from a subcollection within a user document
+ * Path: /users/{userId}/{collectionName}/{documentId}/{subCollectionName}/{subDocumentId}
+ */
+export async function getUserSubcollectionDocument<T>(
+  userId: string,
+  collectionName: string,
+  documentId: string,
+  subCollectionName: string,
+  subDocumentId: string
+): Promise<T | null> {
+  try {
+    const db = getFirestoreInstance();
+    const docRef = doc(
+      db,
+      'users',
+      userId,
+      collectionName,
+      documentId,
+      subCollectionName,
+      subDocumentId
+    );
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as T;
+    }
+    return null;
+  } catch (error) {
+    logError('getUserSubcollectionDocument', error, {
+      userId,
+      collectionName,
+      documentId,
+      subCollectionName,
+      subDocumentId,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Get all documents from a subcollection within a user document
+ * Path: /users/{userId}/{collectionName}/{documentId}/{subCollectionName}
+ */
+export async function getUserSubcollectionDocuments<T>(
+  userId: string,
+  collectionName: string,
+  documentId: string,
+  subCollectionName: string,
+  constraints?: QueryConstraint[]
+): Promise<T[]> {
+  try {
+    const db = getFirestoreInstance();
+    const collectionRef = collection(
+      db,
+      'users',
+      userId,
+      collectionName,
+      documentId,
+      subCollectionName
+    );
+
+    const q =
+      constraints && constraints.length > 0 ? query(collectionRef, ...constraints) : collectionRef;
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as T);
+  } catch (error) {
+    logError('getUserSubcollectionDocuments', error, {
+      userId,
+      collectionName,
+      documentId,
+      subCollectionName,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Set a document in a subcollection within a user document
+ * Path: /users/{userId}/{collectionName}/{documentId}/{subCollectionName}/{subDocumentId}
+ */
+export async function setUserSubcollectionDocument<T extends DocumentData>(
+  userId: string,
+  collectionName: string,
+  documentId: string,
+  subCollectionName: string,
+  subDocumentId: string,
+  data: T
+): Promise<void> {
+  try {
+    const db = getFirestoreInstance();
+    const docRef = doc(
+      db,
+      'users',
+      userId,
+      collectionName,
+      documentId,
+      subCollectionName,
+      subDocumentId
+    );
+    await setDoc(docRef, data);
+  } catch (error) {
+    logError('setUserSubcollectionDocument', error, {
+      userId,
+      collectionName,
+      documentId,
+      subCollectionName,
+      subDocumentId,
+    });
+    throw error;
+  }
+}
+
 // Export Firestore utilities for use in other modules
 export { query, where, orderBy, limit, Timestamp, type QueryConstraint };

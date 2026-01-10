@@ -444,6 +444,38 @@ class StorageRouter implements IClientStorage {
   }
 
   // ==========================================
+  // Quiz Version History
+  // ==========================================
+
+  async createQuizVersion(quizId: number, quizData: any, changeDescription?: string): Promise<any> {
+    return this.executeStorageOperation(
+      (s) => (s as any).createQuizVersion(quizId, quizData, changeDescription),
+      'createQuizVersion'
+    );
+  }
+
+  async getQuizVersions(quizId: number): Promise<any[]> {
+    return this.executeStorageOperation(
+      (s) => (s as any).getQuizVersions(quizId),
+      'getQuizVersions'
+    );
+  }
+
+  async getQuizVersion(quizId: number, versionId: string): Promise<any | null> {
+    return this.executeStorageOperation(
+      (s) => (s as any).getQuizVersion(quizId, versionId),
+      'getQuizVersion'
+    );
+  }
+
+  async restoreQuizVersion(quizId: number, versionId: string): Promise<any> {
+    return this.executeStorageOperation(
+      (s) => (s as any).restoreQuizVersion(quizId, versionId),
+      'restoreQuizVersion'
+    );
+  }
+
+  // ==========================================
   // User Progress
   // ==========================================
 
