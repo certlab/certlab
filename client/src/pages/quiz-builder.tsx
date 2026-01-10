@@ -75,7 +75,7 @@ interface QuizTemplate {
   randomizeQuestions?: boolean;
   randomizeAnswers?: boolean;
   timeLimitPerQuestion?: number | null;
-  questionWeights?: Record<string, number>;
+  questionWeights?: Record<number, number>;
   feedbackMode?: 'instant' | 'delayed' | 'final';
   isAdvancedConfig?: boolean;
 }
@@ -110,7 +110,7 @@ export default function QuizBuilder() {
   const [randomizeAnswers, setRandomizeAnswers] = useState(false);
   const [timeLimitPerQuestion, setTimeLimitPerQuestion] = useState<string>('0');
   const [feedbackMode, setFeedbackMode] = useState<'instant' | 'delayed' | 'final'>('instant');
-  const [questionWeights, setQuestionWeights] = useState<Record<string, number>>({});
+  const [questionWeights, setQuestionWeights] = useState<Record<number, number>>({});
   const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
 
   // Question Editor State
@@ -951,6 +951,10 @@ export default function QuizBuilder() {
                         {customQuestions.length > 0 && (
                           <div className="mt-3 p-3 bg-muted/30 rounded-md space-y-2">
                             <p className="font-medium">Current Questions:</p>
+                            <p className="text-xs text-muted-foreground italic">
+                              Note: Weights are set by question position. Reordering questions will
+                              reorder weights accordingly.
+                            </p>
                             {customQuestions.map((q, index) => (
                               <div key={q.id} className="flex items-center justify-between text-xs">
                                 <span className="truncate flex-1">
@@ -960,10 +964,10 @@ export default function QuizBuilder() {
                                   type="number"
                                   min="1"
                                   max="10"
-                                  value={questionWeights[q.id] || 1}
+                                  value={questionWeights[index] || 1}
                                   onChange={(e) => {
                                     const weight = parseInt(e.target.value) || 1;
-                                    setQuestionWeights({ ...questionWeights, [q.id]: weight });
+                                    setQuestionWeights({ ...questionWeights, [index]: weight });
                                   }}
                                   className="w-16 ml-2 h-7"
                                   placeholder="1"
