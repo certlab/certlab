@@ -260,20 +260,52 @@ match /questions/{questionId} {
 
 ### Custom Claims (Alternative)
 
-For better performance at scale, consider using Firebase Auth custom claims instead of Firestore document checks:
+For better performance at scale, consider using Firebase Auth custom claims instead of Firestore document checks. Custom claims are included in the ID token and don't require an additional database read for each request.
+
+**Security Rule with Custom Claims:**
 
 ```javascript
-// Admin check with custom claims
+// Admin check with custom claims (strict equality)
 function isAdmin() {
-  return request.auth.token.admin == true;
+  return request.auth.token.admin === true;
 }
 ```
 
-Set custom claims with Admin SDK:
+**Setting Custom Claims with Admin SDK:**
 
 ```javascript
-admin.auth().setCustomUserClaims(uid, { admin: true });
+// grant-admin-claim.js
+const admin = require('firebase-admin');
+const serviceAccount = require('./path/to/serviceAccountKey.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+async function grantAdminClaim(userUid) {
+  try {
+    // Set custom claim
+    await admin.auth().setCustomUserClaims(userUid, { admin: true });
+    console.log(`Successfully granted admin claim to user: ${userUid}`);
+    
+    // Verify the claim was set
+    const user = await admin.auth().getUser(userUid);
+    console.log('Custom claims:', user.customClaims);
+  } catch (error) {
+    console.error('Error setting custom claim:', error);
+    throw error;
+  }
+}
+
+// Usage: Get user UID from Firebase Console or Auth SDK
+grantAdminClaim('user-uid-here');
 ```
+
+**Important Notes:**
+- Custom claims require the user to refresh their ID token (sign out/in)
+- Maximum custom claim payload size is 1000 bytes
+- Use custom claims for high-traffic apps to reduce Firestore reads
+- For smaller apps, the Firestore document approach is simpler
 
 ## Firebase Admin SDK Alternative
 

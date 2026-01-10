@@ -44,7 +44,7 @@ interface CategoryImportState {
 export default function DataImportPage() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = Boolean(user?.role === 'admin');
 
   const [cisspState, setCisspState] = useState<CategoryImportState>({
     isImporting: false,
