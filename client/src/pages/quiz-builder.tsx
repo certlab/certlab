@@ -699,8 +699,8 @@ export default function QuizBuilder() {
                     <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
-                        Unable to load categories. Please check your internet connection and ensure
-                        your database is properly configured. If the problem persists, contact your
+                        Unable to load categories. Please ensure your database is properly
+                        configured and accessible. If the problem persists, contact your
                         administrator.
                       </AlertDescription>
                     </Alert>
