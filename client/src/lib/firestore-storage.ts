@@ -702,23 +702,50 @@ class FirestoreStorage implements IClientStorage {
       // Import grading function dynamically to avoid circular dependency
       const { gradeQuestion } = await import('./quiz-grading');
 
+      // Calculate weighted score if question weights are configured
+      const hasWeights = quiz.questionWeights && Object.keys(quiz.questionWeights).length > 0;
+      let totalWeight = 0;
+      let earnedWeight = 0;
+
       for (const answer of answers) {
         const question = questions.find((q) => q.id === answer.questionId);
         if (question) {
           const { isCorrect } = gradeQuestion(question, answer.answer);
           if (isCorrect) {
             correctCount++;
+
+            // Add weighted score if weights are configured
+            if (hasWeights && quiz.questionWeights) {
+              const weight = quiz.questionWeights[answer.questionId] || 1;
+              earnedWeight += weight;
+            }
+          }
+
+          // Track total weight for this question
+          if (hasWeights && quiz.questionWeights) {
+            const weight = quiz.questionWeights[answer.questionId] || 1;
+            totalWeight += weight;
           }
         }
       }
 
-      const score = (correctCount / questions.length) * 100;
+      // Calculate final score - use weighted if configured, otherwise simple percentage
+      const score =
+        hasWeights && totalWeight > 0
+          ? (earnedWeight / totalWeight) * 100
+          : (correctCount / questions.length) * 100;
+
+      // Determine if passing based on passingScore threshold
+      const passingThreshold = quiz.passingScore || 70;
+      const isPassing = score >= passingThreshold;
+
       const updates: Partial<Quiz> = {
         answers: answers.map((a) => ({ questionId: a.questionId, selectedAnswer: a.answer })),
         score,
         correctAnswers: correctCount,
         totalQuestions: questions.length,
         completedAt: new Date(),
+        isPassing,
       };
 
       return await this.updateQuiz(quizId, updates);
