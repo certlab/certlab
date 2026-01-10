@@ -25,11 +25,10 @@ CertLab is a **cloud-first Single-Page Application (SPA)** designed for certific
 |--------|-------------|
 | **Type** | Single-Page Application (SPA) |
 | **Runtime** | Browser (Chrome, Firefox, Safari, Edge) |
-| **Storage** | Cloud Firestore with IndexedDB caching |
-| **Authentication** | Firebase Authentication (Google Sign-In) |
+| **Storage** | Cloud Firestore (mandatory) with automatic IndexedDB caching |
+| **Authentication** | Firebase Authentication (Google Sign-In, mandatory) |
 | **Hosting** | Firebase Hosting |
-| **Offline Support** | Offline-first with automatic sync |
-| **Development** | IndexedDB fallback for local development |
+| **Offline Support** | Offline-first with automatic sync via Firestore SDK |
 
 ## Architecture Diagram
 
@@ -62,25 +61,32 @@ CertLab is a **cloud-first Single-Page Application (SPA)** designed for certific
 │                                      │                                      │
 │  ┌───────────────────────────────────▼───────────────────────────────────┐ │
 │  │                          Storage Layer                                 │ │
-│  │  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────────┐   │ │
-│  │  │ client-storage  │───▶│   indexeddb.ts  │───▶│    IndexedDB     │   │ │
-│  │  │  (API Layer)    │    │ (DB Operations) │    │  (Browser Store) │   │ │
-│  │  └─────────────────┘    └─────────────────┘    └──────────────────┘   │ │
-│  └───────────────────────────────────────────────────────────────────────┘ │
+│  │  ┌─────────────────┐    ┌─────────────────┐                           │ │
+│  │  │ storage-factory │───▶│ firestore-      │──────┐                    │ │
+│  │  │  (API Layer)    │    │ storage.ts      │      │ HTTPS              │ │
+│  │  └─────────────────┘    └─────────────────┘      │                    │ │
+│  │                                                    │                    │ │
+│  │  ┌────────────────────────────────────────────────┘                    │ │
+│  │  │ IndexedDB Cache (Firestore SDK managed)                             │ │
+│  │  │ - Automatic offline persistence                                     │ │
+│  │  │ - Transparent sync when online                                      │ │
+│  │  └─────────────────────────────────────────────────────────────────────┘ │
 │                                      │                                      │
 │                                      │ Beacon (HTTPS)                       │
 │                                      ▼                                      │
 └─────────────────────────────────────────────────────────────────────────────┘
                                        │
                                        │
-                                       ▼
-                          ┌──────────────────────────┐
-                          │  Dynatrace Environment   │
-                          │  - Data Collection       │
-                          │  - Analytics             │
-                          │  - Alerting              │
-                          │  - Dashboards            │
-                          └──────────────────────────┘
+                          ┌────────────┴───────────────┐
+                          │                            │
+                          ▼                            ▼
+              ┌──────────────────────────┐  ┌──────────────────────────┐
+              │  Cloud Firestore         │  │  Dynatrace Environment   │
+              │  - User data             │  │  - Data Collection       │
+              │  - Shared content        │  │  - Analytics             │
+              │  - Security rules        │  │  - Alerting              │
+              │  - Automatic sync        │  │  - Dashboards            │
+              └──────────────────────────┘  └──────────────────────────┘
 ```
 
 ## Frontend Architecture
@@ -119,76 +125,83 @@ client/src/
 ├── test/                # Test setup and utilities
 │   └── setup.ts         # Vitest test configuration
 └── lib/                 # Core services
-    ├── client-storage.ts # Storage API
-    ├── indexeddb.ts      # IndexedDB service
+    ├── storage-factory.ts # Storage router
+    ├── firestore-storage.ts # Firestore implementation
+    ├── firestore-service.ts # Firestore operations
     ├── auth-provider.tsx # Auth context
     └── queryClient.ts    # Query configuration
 ```
 
 ## Data Layer
 
-### IndexedDB Stores
+### Firestore Collections
 
-All application data is stored in IndexedDB with the following stores:
+All application data is stored in Cloud Firestore with automatic offline caching:
 
-| Store | Purpose | Key Fields |
+**Shared Collections** (read: all authenticated users, write: admin only):
+| Collection | Purpose | Key Fields |
 |-------|---------|------------|
-| `users` | User accounts | id, email, passwordHash, tenantId |
-| `tenants` | Multi-tenant support | id, name, isActive |
-| `categories` | Certification categories | id, tenantId, name |
-| `subcategories` | Topic areas | id, tenantId, categoryId |
-| `questions` | Question bank | id, tenantId, text, options |
-| `quizzes` | Quiz attempts | id, userId, tenantId, score |
-| `userProgress` | Learning progress | userId, tenantId, categoryId |
-| `masteryScores` | Performance tracking | userId, tenantId, subcategoryId |
+| `categories` | Certification categories | id, name, description |
+| `subcategories` | Topic areas | id, categoryId, name |
+| `questions` | Question bank | id, text, options, correctAnswer |
 | `badges` | Achievement definitions | id, name, requirement |
-| `userBadges` | Earned badges | userId, tenantId, badgeId |
-| `userGameStats` | Gamification stats | userId, tenantId, points |
-| `lectures` | Study materials | id, userId, content |
-| `challenges` | Learning challenges | id, userId, type |
-| `challengeAttempts` | Challenge results | userId, tenantId, score |
-| `studyGroups` | Study groups | id, tenantId, name |
-| `studyGroupMembers` | Group membership | groupId, userId |
-| `practiceTests` | Practice exams | id, tenantId, name |
-| `practiceTestAttempts` | Test results | userId, tenantId, score |
-| `settings` | App settings | key, value |
+| `challenges` | Learning challenges | id, type, difficulty |
+| `studyGroups` | Study groups | id, name, createdBy |
+| `practiceTests` | Practice exams | id, name, questionCount |
+
+**Per-User Collections** (read/write: owner only):
+| Collection Path | Purpose | Key Fields |
+|-------|---------|------------|
+| `users/{userId}` | User profile | email, firstName, lastName, role |
+| `users/{userId}/quizzes/` | Quiz attempts | score, completedAt, answers |
+| `users/{userId}/progress/` | Learning progress | categoryId, masteryScore |
+| `users/{userId}/badges/` | Earned badges | badgeId, earnedAt |
+| `users/{userId}/gameStats/` | Gamification stats | points, level, streak |
+| `users/{userId}/lectures/` | Study materials | content, topics |
+| `users/{userId}/challengeAttempts/` | Challenge results | challengeId, score |
+| `users/{userId}/practiceTestAttempts/` | Test results | testId, score |
+
+**Note**: Firestore SDK automatically maintains an IndexedDB cache for offline access. This cache is managed entirely by the SDK and requires no application code.
 
 ### Data Flow
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
 │   UI Event   │────▶│ TanStack     │────▶│ Storage API  │
-│  (e.g. click)│     │ Query/Mutation│     │ (client-     │
-└──────────────┘     └──────────────┘     │  storage.ts) │
+│  (e.g. click)│     │ Query/Mutation│     │ (storage-    │
+└──────────────┘     └──────────────┘     │  factory.ts) │
                                           └──────┬───────┘
                                                  │
                                           ┌──────▼───────┐
-                                          │ IndexedDB    │
-                                          │ Service      │
-                                          │ (indexeddb.ts)│
+                                          │ Firestore    │
+                                          │ Storage      │
+                                          │ (firestore-  │
+                                          │  storage.ts) │
                                           └──────┬───────┘
                                                  │
-                                          ┌──────▼───────┐
-                                          │ Browser      │
-                                          │ IndexedDB    │
-                                          └──────────────┘
+                                    ┌────────────┴────────────┐
+                                    │                          │
+                             ┌──────▼───────┐         ┌──────▼───────┐
+                             │ Cloud        │◀────────│ IndexedDB    │
+                             │ Firestore    │  Sync   │ Cache        │
+                             │ (Google Cloud)│         │ (SDK managed)│
+                             └──────────────┘         └──────────────┘
 ```
 
 ### Storage API Pattern
 
-The `clientStorage` object provides a consistent API mimicking server-side patterns:
+The `storage` object provides a consistent API for all data operations:
 
 ```typescript
 // Example usage
-import { clientStorage } from '@/lib/client-storage';
+import { storage } from '@/lib/storage-factory';
 
-// Get all categories for current tenant
-const categories = await clientStorage.getCategoriesByTenant(tenantId);
+// Get all categories
+const categories = await storage.getCategories();
 
 // Create a new quiz
-const quiz = await clientStorage.createQuiz({
+const quiz = await storage.createQuiz({
   userId: user.id,
-  tenantId: user.tenantId,
   title: 'CISSP Practice',
   categoryIds: [1],
   subcategoryIds: [],
@@ -197,7 +210,7 @@ const quiz = await clientStorage.createQuiz({
 });
 
 // Export all data
-const jsonData = await clientStorage.exportData();
+const jsonData = await storage.exportData();
 ```
 
 ## Authentication
@@ -237,7 +250,7 @@ CertLab uses four complementary state management approaches, each suited for spe
 |----------|-------------|---------|
 | **useState** | Simple local state (toggles, inputs) | Modal visibility, form inputs |
 | **useReducer** | Complex local state with related updates | Quiz workflow (answers, navigation, flags) |
-| **TanStack Query** | Async data from IndexedDB | Fetching quizzes, categories, user data |
+| **TanStack Query** | Async data from Firestore | Fetching quizzes, categories, user data |
 | **React Context** | Global state shared across components | Authentication, theme |
 
 ### TanStack Query (React Query)
@@ -249,9 +262,9 @@ Used for all async data operations:
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: Infinity,          // Data never considered stale
+      staleTime: 30 * 1000,         // 30 seconds for user data
       refetchOnWindowFocus: false,  // No auto-refetch
-      retry: false,                 // IndexedDB operations don't need retries
+      retry: true,                  // Retry failed Firestore requests
     },
   },
 });
@@ -492,20 +505,13 @@ Test configuration is in `vitest.config.ts` with jsdom environment for React com
 
 ## Key Design Decisions
 
-### Why Client-Side Only?
+### Why Cloud-First with Firestore?
 
-1. **Privacy**: All data stays in the user's browser
-2. **Cost**: No server infrastructure needed
-3. **Offline**: Works completely offline
-4. **Simplicity**: No API complexity
-5. **Hosting**: Free hosting on Firebase Hosting
-
-### Why IndexedDB?
-
-1. **Capacity**: Stores large amounts of data (questions, history)
-2. **Persistence**: Survives browser restarts
-3. **Structured**: Supports indexes and queries
-4. **Async**: Non-blocking operations
+1. **Multi-Device Sync**: Access your data from any device
+2. **Scalability**: Google Cloud infrastructure handles growth
+3. **Security**: Industry-standard authentication and data isolation
+4. **Offline Support**: Automatic caching via Firestore SDK
+5. **Real-time**: Changes sync instantly across devices
 
 ### Why TanStack Query?
 
@@ -518,40 +524,40 @@ Test configuration is in `vitest.config.ts` with jsdom environment for React com
 
 | Benefit | Trade-off |
 |---------|-----------|
-| Privacy (local data) | No cross-device sync |
-| Free hosting | No server-side features |
-| Offline capable | Single-user per browser |
-| No backend | No real multi-user collaboration |
+| Multi-device sync | Requires Firebase setup |
+| Scalable infrastructure | Depends on Google Cloud |
+| Real-time sync | Needs internet connection for sync |
+| Managed authentication | Tied to Firebase ecosystem |
 
 ## Extending the Architecture
 
 ### Adding New Features
 
-1. **New Data Model**: Add to `shared/schema.ts` and `indexeddb.ts`
+1. **New Data Model**: Add to `shared/schema.ts` and update Firestore collections
 2. **New Page**: Create in `pages/`, add route to `App.tsx`
 3. **New Component**: Create in `components/`
 4. **New Hook**: Create in `hooks/`
 
-### Adding New IndexedDB Store
+### Adding New Firestore Collection
 
 ```typescript
-// In indexeddb.ts
-if (!db.objectStoreNames.contains('newStore')) {
-  const store = db.createObjectStore('newStore', { 
-    keyPath: 'id', 
-    autoIncrement: true 
-  });
-  store.createIndex('userId', 'userId');
+// In firestore-storage.ts
+async getNewCollectionItems(userId: string) {
+  const items = await getUserDocuments(userId, 'newCollection');
+  return items;
 }
 
-// In client-storage.ts
-async getNewStoreItems(userId: string) {
-  const db = await getDatabase();
-  const tx = db.transaction('newStore', 'readonly');
-  const index = tx.store.index('userId');
-  return await index.getAll(userId);
+async createNewCollectionItem(userId: string, data: any) {
+  const id = generateId();
+  await setUserDocument(userId, 'newCollection', id, {
+    ...data,
+    createdAt: new Date(),
+  });
+  return { id, ...data };
 }
 ```
+
+**Note**: Update `firestore.rules` to include security rules for new collections.
 
 ## Related Documentation
 
