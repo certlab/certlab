@@ -293,10 +293,10 @@ Sample certification questions can be imported by administrators:
 Navigate to Profile → Export Data, or use the API:
 
 ```javascript
-import { clientStorage } from './lib/client-storage';
+import { storage } from './lib/storage-factory';
 
 // Export to JSON
-const jsonData = await clientStorage.exportData();
+const jsonData = await storage.exportData();
 
 // Save to file
 const blob = new Blob([jsonData], { type: 'application/json' });
@@ -309,10 +309,10 @@ const url = URL.createObjectURL(blob);
 Use the Data Import page at `/app/data-import`, or:
 
 ```javascript
-import { clientStorage } from './lib/client-storage';
+import { storage } from './lib/storage-factory';
 
 // Import from JSON string
-await clientStorage.importData(jsonString);
+await storage.importData(jsonString);
 ```
 
 ### Multi-Tenancy
@@ -334,11 +334,9 @@ CertLab uses Firebase and Firestore for secure, cloud-based storage:
 - **Encryption**: TLS in transit, Google Cloud encryption at rest
 - **Privacy**: Your data is yours - not shared or sold
 - **Offline-First**: Works offline with automatic sync when online
-- **Local Caching**: Firestore SDK uses IndexedDB for offline persistence
+- **Local Caching**: Firestore SDK uses IndexedDB automatically for offline persistence
 
-### Development Mode
-- **Local Development**: IndexedDB fallback available when Firebase credentials are not configured
-- **Production Requirement**: Firebase/Firestore is mandatory for production deployments
+**Note**: Firebase/Firestore is mandatory for CertLab. The application requires a properly configured Firebase project to function.
 
 ## 🌐 Deployment
 

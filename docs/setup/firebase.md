@@ -2,7 +2,7 @@
 
 This guide walks you through setting up Firebase for CertLab's cloud storage and authentication.
 
-> **Note**: Firebase setup is **required for production deployment**. During local development, CertLab can fall back to IndexedDB if Firebase credentials are not configured.
+> **Note**: Firebase setup is **mandatory** for CertLab. The application requires a properly configured Firebase project to function in both development and production environments.
 
 ## Table of Contents
 
@@ -26,13 +26,11 @@ Firebase provides the production infrastructure for CertLab:
 **Current Status**: 
 - ✅ Firebase Authentication fully implemented with persistent login
 - ✅ Firestore storage fully integrated
-- ✅ Offline persistence with IndexedDB cache
+- ✅ Offline persistence with automatic IndexedDB caching via Firestore SDK
 - ✅ Firebase Hosting configured for deployment
 - ✅ Persistent login configured - users remain signed in across browser sessions
 
-**Development Mode**: IndexedDB fallback is available for local development when Firebase credentials are not configured. This allows developers to work on features without requiring Firebase setup.
-
-**Production Mode**: Firebase/Firestore is mandatory. The application will not function in production without proper Firebase configuration.
+**Note**: Firebase/Firestore is mandatory for all environments. The application will not function without proper Firebase configuration. Firestore SDK provides automatic offline support using IndexedDB caching - no separate fallback implementation is needed.
 
 ## Prerequisites
 
@@ -343,7 +341,7 @@ Firebase automatically backs up Firestore data. For additional safety:
 
 Firebase offers a generous free tier. To optimize costs:
 
-1. **Use caching**: IndexedDB caching reduces Firestore reads
+1. **Use caching**: Firestore SDK's automatic offline caching reduces read operations
 2. **Batch operations**: Group writes together when possible
 3. **Limit queries**: Use pagination for large result sets
 4. **Clean up old data**: Remove unused documents
@@ -356,7 +354,7 @@ Firebase Spark (free) tier includes:
 - **Authentication**: Unlimited
 - **Hosting**: 10 GB storage, 360 MB/day transfer
 
-Most users will stay within free tier limits. CertLab's IndexedDB caching significantly reduces Firestore operations.
+Most users will stay within free tier limits. Firestore SDK's automatic offline caching significantly reduces Firestore read operations.
 
 ## Need Help?
 

@@ -24,22 +24,20 @@
 
 ## Executive Summary
 
-CertLab uses a **cloud-first authentication system** with Firebase Authentication in production, and a local PBKDF2 fallback for development. User state is managed through **React Context** for global state and **TanStack Query** for async data operations. Route protection is implemented via a **ProtectedRoute Higher-Order Component (HOC)** that wraps authenticated routes.
+CertLab uses a **cloud-first authentication system** with Firebase Authentication and Firestore storage. User state is managed through **React Context** for global state and **TanStack Query** for async data operations. Route protection is implemented via a **ProtectedRoute Higher-Order Component (HOC)** that wraps authenticated routes.
 
-> **Production vs Development**: Firebase Authentication with Firestore storage is required for production deployments. During local development, the app can fall back to client-side PBKDF2 authentication with IndexedDB storage when Firebase credentials are not configured.
+> **Important**: Firebase Authentication with Firestore storage is mandatory for all deployments. The application will not function without proper Firebase configuration.
 
 ### Quick Reference
 
 | Concern | Technology/Pattern | Implementation |
 |---------|-------------------|----------------|
-| **Authentication (Production)** | Firebase Auth (Google Sign-In) | `firebase.ts`, `auth-provider.tsx` |
-| **Authentication (Development)** | Client-side PBKDF2 fallback | `client-auth.ts` (when Firebase not configured) |
-| **Storage (Production)** | Cloud Firestore with offline cache | `firestore-storage.ts`, `storage-factory.ts` |
-| **Storage (Development)** | IndexedDB fallback | `client-storage.ts` (when Firebase not configured) |
+| **Authentication** | Firebase Auth (Google Sign-In) | `firebase.ts`, `auth-provider.tsx` |
+| **Storage** | Cloud Firestore with offline cache | `firestore-storage.ts`, `storage-factory.ts` |
 | **Authorization** | Role-based + Tenant-based | `user.role`, `user.tenantId` |
 | **User State** | React Context + TanStack Query | `AuthProvider`, `useAuth()` hook |
 | **Route Protection** | Higher-Order Component | `<ProtectedRoute>` wrapper component |
-| **Session Management** | Firebase session + local cache | Session persistence via Firestore |
+| **Session Management** | Firebase session + Firestore | Session persistence via Firebase Auth and Firestore |
 
 ---
 
@@ -47,7 +45,7 @@ CertLab uses a **cloud-first authentication system** with Firebase Authenticatio
 
 As a cloud-first SPA with offline support, CertLab needed to establish:
 
-1. **Secure authentication** using Firebase in production with local fallback for development
+1. **Secure authentication** using Firebase
 2. **User state management** that works across the application
 3. **Route protection** to secure authenticated pages
 4. **Authorization** for role-based and tenant-based access control
@@ -56,9 +54,8 @@ As a cloud-first SPA with offline support, CertLab needed to establish:
 
 ### Requirements
 
-- ✅ Firebase Authentication for production (Google Sign-In)
-- ✅ Client-side authentication fallback for development (PBKDF2)
-- ✅ Cloud storage via Firestore with offline persistence
+- ✅ Firebase Authentication (Google Sign-In) - mandatory
+- ✅ Cloud storage via Firestore with automatic offline persistence
 - ✅ Role-based authorization (user, admin)
 - ✅ Multi-tenant data isolation
 - ✅ Session persistence across page refreshes
@@ -70,16 +67,14 @@ As a cloud-first SPA with offline support, CertLab needed to establish:
 
 ## Decision
 
-We have adopted a **cloud-first authentication and authorization architecture** with local fallback for development:
+We have adopted a **cloud-first authentication and authorization architecture**:
 
-1. **Firebase Authentication** for production (Google Sign-In, mandatory)
-2. **Client-side PBKDF2 authentication** as development fallback
-3. **Cloud Firestore** for production data storage with offline caching
-4. **IndexedDB** as development fallback storage
-5. **React Context** for global authentication state
-6. **TanStack Query** for async user data operations
-7. **Protected Route HOC** for route-level authorization
-8. **Role-based and tenant-based authorization** patterns
+1. **Firebase Authentication** (Google Sign-In, mandatory)
+2. **Cloud Firestore** for data storage with automatic offline caching via Firestore SDK
+3. **React Context** for global authentication state
+4. **TanStack Query** for async user data operations
+5. **Protected Route HOC** for route-level authorization
+6. **Role-based and tenant-based authorization** patterns
 
 ---
 
@@ -241,10 +236,10 @@ function MyComponent() {
 ```
 
 **State Initialization:**
-1. Load user from local storage (synchronous, fast)
+1. Load user from Firebase Auth state (synchronous check for cached state)
 2. Set `isLoading: false` immediately to prevent redirect flash
-3. Initialize Firebase in background (asynchronous)
-4. Sync with Firestore if cloud sync enabled
+3. Initialize Firebase in background if not already initialized
+4. Sync with Firestore for user profile data
 
 ### 3.2 Async User Data (TanStack Query)
 
@@ -306,7 +301,7 @@ dispatch({ type: 'TOGGLE_FLAG', payload: { questionId } });
 **Decision Matrix:**
 - **useState** → Simple, independent values (toggles, single inputs)
 - **useReducer** → Complex state with related updates (quiz workflow, multi-step forms)
-- **TanStack Query** → Async data from IndexedDB (all data fetching)
+- **TanStack Query** → Async data from Firestore (all data fetching)
 - **React Context** → Global state shared across many components (auth, theme)
 
 See [state-management.md](./state-management.md) for detailed guidance.
@@ -425,19 +420,9 @@ const handleLoginSuccess = () => {
 
 **Storage Location:**
 ```typescript
-// IndexedDB settings store
-{
-  key: 'currentUserId',
-  value: 'user-uuid-here'
-}
-
-{
-  key: 'sessionInfo',
-  value: JSON.stringify({
-    loginAt: 1702745600000,
-    isPasswordless: true
-  })
-}
+// Firebase Auth manages session state
+// User profile stored in Firestore: /users/{userId}
+// Session token stored in browser's localStorage by Firebase SDK
 ```
 
 ### 5.2 Session Timeout
@@ -475,16 +460,16 @@ async isSessionValid(): Promise<boolean> {
 ### 5.3 Session Validation on Page Load
 
 **Critical Path (Fast):**
-1. Load `currentUserId` from IndexedDB settings
-2. If exists, load user from IndexedDB users store
-3. Validate session timeout (passwordless check)
+1. Check Firebase Auth state from localStorage (cached by Firebase SDK)
+2. If exists, user is authenticated immediately
+3. Load user profile from Firestore (or cache)
 4. Update `AuthContext` with user
 5. Set `isLoading: false` ← **This happens FAST**
 
 **Background (Async):**
-1. Initialize Firebase SDK
-2. Check Firebase auth state
-3. Sync with Firestore if cloud enabled
+1. Verify Firebase Auth token is still valid
+2. Refresh user profile from Firestore if needed
+3. Update any cached data
 
 **Result:** Users see protected routes immediately on page refresh, no redirect flash.
 
@@ -957,20 +942,17 @@ export function TenantSwitcher() {
 - Clear separation of concerns (auth, storage, UI)
 
 ✅ **Architecture:**
-- Client-side only (no backend required)
-- Offline-first with IndexedDB
-- Optional cloud sync via Firebase
+- Cloud-first with Firestore
+- Offline support via Firestore SDK's automatic caching
 - Multi-tenant support built-in
 - Role-based authorization ready
 
 ### Negative
 
 ❌ **Limitations:**
-- No true server-side session validation
-- Password hashes visible in IndexedDB (client-side risk)
-- Single user per browser profile
+- No true server-side session validation (client-side Firebase Auth)
 - 24-hour timeout for passwordless/Google accounts
-- No built-in password reset (requires manual process)
+- No built-in password reset (requires Firebase email verification)
 
 ### Mitigations
 
