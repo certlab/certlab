@@ -827,7 +827,7 @@ export function StudyTimer() {
       </div>
 
       {/* Activity Buttons */}
-      <div className="flex gap-3 items-center justify-between overflow-x-auto">
+      <div className="flex gap-3 items-center overflow-x-auto" tabIndex={0}>
         {activities.map((activity) => {
           const isDefault = DEFAULT_ACTIVITIES.some((a) => a.label === activity.label);
           return (
