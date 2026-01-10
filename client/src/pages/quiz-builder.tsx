@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-provider';
 import { storage } from '@/lib/storage-factory';
 import { setUserDocument } from '@/lib/firestore-service';
@@ -89,6 +89,7 @@ export default function QuizBuilder() {
   const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Get template ID from query params if editing
   const searchParams = new URLSearchParams(location.search);
@@ -256,7 +257,7 @@ export default function QuizBuilder() {
         ? `Updated quiz: ${isDraft ? 'saved as draft' : 'published'}`
         : `Created quiz: ${isDraft ? 'saved as draft' : 'published'}`;
 
-      await storage.createQuizVersion(id, templateData, changeDesc);
+      await storage.createQuizVersion(id, templateData, changeDesc, 'quizTemplates');
 
       return { id, template };
     },
@@ -620,7 +621,21 @@ export default function QuizBuilder() {
             {templateId && (
               <QuizVersionHistory
                 quizId={parseInt(templateId, 10)}
-                onRestore={() => window.location.reload()}
+                collectionName="quizTemplates"
+                onRestore={() => {
+                  // Invalidate queries to refresh data without full page reload
+                  queryClient.invalidateQueries({
+                    queryKey: ['quizTemplate', parseInt(templateId, 10)],
+                  });
+                  queryClient.invalidateQueries({
+                    queryKey: ['quizVersions', parseInt(templateId, 10)],
+                  });
+                  // Optional: Show a toast notification
+                  toast({
+                    title: 'Quiz Restored',
+                    description: 'The quiz has been restored. Refresh the page to see all changes.',
+                  });
+                }}
               />
             )}
             <Button

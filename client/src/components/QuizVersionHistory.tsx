@@ -30,10 +30,15 @@ import { format } from 'date-fns';
 
 interface QuizVersionHistoryProps {
   quizId: number;
+  collectionName?: 'quizzes' | 'quizTemplates';
   onRestore?: () => void;
 }
 
-export function QuizVersionHistory({ quizId, onRestore }: QuizVersionHistoryProps) {
+export function QuizVersionHistory({
+  quizId,
+  collectionName = 'quizTemplates',
+  onRestore,
+}: QuizVersionHistoryProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<QuizVersion | null>(null);
   const [versionToRestore, setVersionToRestore] = useState<QuizVersion | null>(null);
@@ -46,9 +51,9 @@ export function QuizVersionHistory({ quizId, onRestore }: QuizVersionHistoryProp
     isLoading,
     isError,
   } = useQuery<QuizVersion[]>({
-    queryKey: ['quizVersions', quizId],
+    queryKey: ['quizVersions', quizId, collectionName],
     queryFn: async () => {
-      return await storage.getQuizVersions(quizId);
+      return await storage.getQuizVersions(quizId, collectionName);
     },
     enabled: isOpen,
   });
@@ -56,7 +61,7 @@ export function QuizVersionHistory({ quizId, onRestore }: QuizVersionHistoryProp
   // Restore mutation
   const restoreMutation = useMutation({
     mutationFn: async (versionId: string) => {
-      return await storage.restoreQuizVersion(quizId, versionId);
+      return await storage.restoreQuizVersion(quizId, versionId, collectionName);
     },
     onSuccess: () => {
       toast({
@@ -65,8 +70,9 @@ export function QuizVersionHistory({ quizId, onRestore }: QuizVersionHistoryProp
       });
 
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['quizVersions', quizId] });
+      queryClient.invalidateQueries({ queryKey: ['quizVersions', quizId, collectionName] });
       queryClient.invalidateQueries({ queryKey: ['quizTemplate', quizId] });
+      queryClient.invalidateQueries({ queryKey: ['quiz', quizId] });
 
       setIsOpen(false);
       setSelectedVersion(null);
@@ -186,7 +192,14 @@ export function QuizVersionHistory({ quizId, onRestore }: QuizVersionHistoryProp
                           </div>
                           <div className="flex items-center gap-1">
                             <User className="h-3.5 w-3.5" />
-                            <span>User ID: {version.createdBy.substring(0, 8)}...</span>
+                            <span>
+                              {version.authorName ||
+                                (version.createdBy && version.createdBy.length > 0
+                                  ? version.createdBy.length > 8
+                                    ? `User: ${version.createdBy.substring(0, 8)}...`
+                                    : `User: ${version.createdBy}`
+                                  : 'Unknown user')}
+                            </span>
                           </div>
                         </div>
 

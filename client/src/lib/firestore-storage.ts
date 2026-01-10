@@ -766,20 +766,30 @@ class FirestoreStorage implements IClientStorage {
   // ==========================================
 
   /**
-   * Create a new version snapshot of a quiz
+   * Create a new version snapshot of a quiz or quiz template
    * Stores the complete quiz state at this point in time
+   * @param quizId - The quiz or template ID
+   * @param quizData - The quiz data to snapshot
+   * @param changeDescription - Optional description of changes (max 500 chars)
+   * @param collectionName - Collection name ('quizzes' or 'quizTemplates')
    */
   async createQuizVersion(
     quizId: number,
     quizData: any,
-    changeDescription?: string
+    changeDescription?: string,
+    collectionName: 'quizzes' | 'quizTemplates' = 'quizTemplates'
   ): Promise<QuizVersion> {
     try {
       const userId = this.currentUserId;
       if (!userId) throw new Error('User ID required');
 
+      // Validate and truncate changeDescription to 500 characters
+      const validatedChangeDescription = changeDescription
+        ? changeDescription.substring(0, 500)
+        : undefined;
+
       // Get existing versions to determine version number
-      const existingVersions = await this.getQuizVersions(quizId);
+      const existingVersions = await this.getQuizVersions(quizId, collectionName);
       const versionNumber = existingVersions.length + 1;
 
       // Generate version ID (timestamp-based for natural ordering)
@@ -791,39 +801,39 @@ class FirestoreStorage implements IClientStorage {
         versionNumber,
         createdAt: new Date(),
         createdBy: userId,
-        changeDescription,
+        changeDescription: validatedChangeDescription,
 
-        // Snapshot all quiz data
-        title: quizData.title || '',
-        description: quizData.description || null,
-        tags: quizData.tags || null,
-        categoryIds: quizData.categoryIds || [],
-        subcategoryIds: quizData.subcategoryIds || [],
-        questionIds: quizData.questionIds || null,
-        questionCount: quizData.questionCount || 0,
-        timeLimit: quizData.timeLimit || null,
-        customQuestions: quizData.customQuestions || undefined,
-        difficultyLevel: quizData.difficultyLevel || null,
-        passingScore: quizData.passingScore || null,
-        maxAttempts: quizData.maxAttempts || null,
-        randomizeQuestions: quizData.randomizeQuestions || null,
-        randomizeAnswers: quizData.randomizeAnswers || null,
-        timeLimitPerQuestion: quizData.timeLimitPerQuestion || null,
-        questionWeights: quizData.questionWeights || null,
-        feedbackMode: quizData.feedbackMode || null,
-        instructions: quizData.instructions || undefined,
-        isPublished: quizData.isPublished || undefined,
-        isDraft: quizData.isDraft || undefined,
-        isAdvancedConfig: quizData.isAdvancedConfig || null,
-        author: quizData.author || null,
-        authorName: quizData.authorName || null,
-        prerequisites: quizData.prerequisites || null,
+        // Snapshot all quiz data using nullish coalescing to preserve falsy values
+        title: quizData.title ?? '',
+        description: quizData.description ?? null,
+        tags: quizData.tags ?? null,
+        categoryIds: quizData.categoryIds ?? [],
+        subcategoryIds: quizData.subcategoryIds ?? [],
+        questionIds: quizData.questionIds ?? null,
+        questionCount: quizData.questionCount ?? 0,
+        timeLimit: quizData.timeLimit ?? null,
+        customQuestions: quizData.customQuestions ?? undefined,
+        difficultyLevel: quizData.difficultyLevel ?? null,
+        passingScore: quizData.passingScore ?? null,
+        maxAttempts: quizData.maxAttempts ?? null,
+        randomizeQuestions: quizData.randomizeQuestions ?? null,
+        randomizeAnswers: quizData.randomizeAnswers ?? null,
+        timeLimitPerQuestion: quizData.timeLimitPerQuestion ?? null,
+        questionWeights: quizData.questionWeights ?? null,
+        feedbackMode: quizData.feedbackMode ?? null,
+        instructions: quizData.instructions ?? undefined,
+        isPublished: quizData.isPublished ?? undefined,
+        isDraft: quizData.isDraft ?? undefined,
+        isAdvancedConfig: quizData.isAdvancedConfig ?? null,
+        author: quizData.author ?? null,
+        authorName: quizData.authorName ?? null,
+        prerequisites: quizData.prerequisites ?? null,
       };
 
-      // Store in subcollection: /users/{userId}/quizzes/{quizId}/versions/{versionId}
+      // Store in subcollection: /users/{userId}/{collectionName}/{quizId}/versions/{versionId}
       await setUserSubcollectionDocument(
         userId,
-        'quizzes',
+        collectionName,
         quizId.toString(),
         'versions',
         versionId,
@@ -832,22 +842,27 @@ class FirestoreStorage implements IClientStorage {
 
       return convertTimestamps(version);
     } catch (error) {
-      logError('createQuizVersion', error, { quizId, changeDescription });
+      logError('createQuizVersion', error, { quizId, changeDescription, collectionName });
       throw error;
     }
   }
 
   /**
    * Get all versions for a quiz, ordered by creation date (newest first)
+   * @param quizId - The quiz or template ID
+   * @param collectionName - Collection name ('quizzes' or 'quizTemplates')
    */
-  async getQuizVersions(quizId: number): Promise<QuizVersion[]> {
+  async getQuizVersions(
+    quizId: number,
+    collectionName: 'quizzes' | 'quizTemplates' = 'quizTemplates'
+  ): Promise<QuizVersion[]> {
     try {
       const userId = this.currentUserId;
       if (!userId) return [];
 
       const versions = await getUserSubcollectionDocuments<QuizVersion>(
         userId,
-        'quizzes',
+        collectionName,
         quizId.toString(),
         'versions',
         [orderBy('createdAt', 'desc')]
@@ -855,22 +870,29 @@ class FirestoreStorage implements IClientStorage {
 
       return versions.map((v) => convertTimestamps<QuizVersion>(v));
     } catch (error) {
-      logError('getQuizVersions', error, { quizId });
+      logError('getQuizVersions', error, { quizId, collectionName });
       return [];
     }
   }
 
   /**
    * Get a specific version of a quiz
+   * @param quizId - The quiz or template ID
+   * @param versionId - The version ID to retrieve
+   * @param collectionName - Collection name ('quizzes' or 'quizTemplates')
    */
-  async getQuizVersion(quizId: number, versionId: string): Promise<QuizVersion | null> {
+  async getQuizVersion(
+    quizId: number,
+    versionId: string,
+    collectionName: 'quizzes' | 'quizTemplates' = 'quizTemplates'
+  ): Promise<QuizVersion | null> {
     try {
       const userId = this.currentUserId;
       if (!userId) return null;
 
       const version = await getUserSubcollectionDocument<QuizVersion>(
         userId,
-        'quizzes',
+        collectionName,
         quizId.toString(),
         'versions',
         versionId
@@ -878,7 +900,7 @@ class FirestoreStorage implements IClientStorage {
 
       return version ? convertTimestamps<QuizVersion>(version) : null;
     } catch (error) {
-      logError('getQuizVersion', error, { quizId, versionId });
+      logError('getQuizVersion', error, { quizId, versionId, collectionName });
       return null;
     }
   }
@@ -886,21 +908,29 @@ class FirestoreStorage implements IClientStorage {
   /**
    * Restore a quiz to a previous version
    * Creates a new version with the restored data (does not delete history)
+   * @param quizId - The quiz or template ID
+   * @param versionId - The version ID to restore
+   * @param collectionName - Collection name ('quizzes' or 'quizTemplates')
    */
-  async restoreQuizVersion(quizId: number, versionId: string): Promise<Quiz> {
+  async restoreQuizVersion(
+    quizId: number,
+    versionId: string,
+    collectionName: 'quizzes' | 'quizTemplates' = 'quizTemplates'
+  ): Promise<Quiz> {
     try {
       const userId = this.currentUserId;
       if (!userId) throw new Error('User ID required');
 
       // Get the version to restore
-      const version = await this.getQuizVersion(quizId, versionId);
+      const version = await this.getQuizVersion(quizId, versionId, collectionName);
       if (!version) throw new Error('Version not found');
 
-      // Get current quiz to preserve certain fields
-      const currentQuiz = await this.getQuiz(quizId);
-      if (!currentQuiz) throw new Error('Quiz not found');
+      // Get current quiz/template to preserve certain fields
+      const currentDoc = await getUserDocument<any>(userId, collectionName, quizId.toString());
+      if (!currentDoc)
+        throw new Error(`${collectionName === 'quizTemplates' ? 'Template' : 'Quiz'} not found`);
 
-      // Create restoration data (preserve runtime fields like answers, score, completedAt)
+      // Create restoration data including all template-specific fields
       const restorationData = {
         title: version.title,
         description: version.description,
@@ -922,21 +952,34 @@ class FirestoreStorage implements IClientStorage {
         author: version.author,
         authorName: version.authorName,
         prerequisites: version.prerequisites,
+        // Include template-specific fields
+        customQuestions: version.customQuestions,
+        instructions: version.instructions,
+        isPublished: version.isPublished,
+        isDraft: version.isDraft,
       };
 
-      // Update the quiz with restored data
-      const updatedQuiz = await this.updateQuiz(quizId, restorationData);
+      // Update the document with restored data
+      await updateUserDocument(userId, collectionName, quizId.toString(), {
+        ...restorationData,
+        updatedAt: new Date(),
+      });
+
+      // Get the updated document
+      const updatedDoc = await getUserDocument<Quiz>(userId, collectionName, quizId.toString());
+      if (!updatedDoc) throw new Error('Failed to retrieve updated document');
 
       // Create a new version documenting the restoration
       await this.createQuizVersion(
         quizId,
-        updatedQuiz,
-        `Restored from version ${version.versionNumber} (${versionId})`
+        updatedDoc,
+        `Restored from version ${version.versionNumber} (${versionId})`,
+        collectionName
       );
 
-      return updatedQuiz;
+      return convertTimestamps(updatedDoc);
     } catch (error) {
-      logError('restoreQuizVersion', error, { quizId, versionId });
+      logError('restoreQuizVersion', error, { quizId, versionId, collectionName });
       throw error;
     }
   }

@@ -452,31 +452,43 @@ class StorageRouter implements IClientStorage {
   async createQuizVersion(
     quizId: number,
     quizData: Partial<Quiz>,
-    changeDescription?: string
+    changeDescription?: string,
+    collectionName: 'quizzes' | 'quizTemplates' = 'quizTemplates'
   ): Promise<QuizVersion> {
     return this.executeStorageOperation(
-      (s) => (s as any).createQuizVersion(quizId, quizData, changeDescription),
+      (s) => (s as any).createQuizVersion(quizId, quizData, changeDescription, collectionName),
       'createQuizVersion'
     );
   }
 
-  async getQuizVersions(quizId: number): Promise<QuizVersion[]> {
+  async getQuizVersions(
+    quizId: number,
+    collectionName: 'quizzes' | 'quizTemplates' = 'quizTemplates'
+  ): Promise<QuizVersion[]> {
     return this.executeStorageOperation(
-      (s) => (s as any).getQuizVersions(quizId),
+      (s) => (s as any).getQuizVersions(quizId, collectionName),
       'getQuizVersions'
     );
   }
 
-  async getQuizVersion(quizId: number, versionId: string): Promise<QuizVersion | null> {
+  async getQuizVersion(
+    quizId: number,
+    versionId: string,
+    collectionName: 'quizzes' | 'quizTemplates' = 'quizTemplates'
+  ): Promise<QuizVersion | null> {
     return this.executeStorageOperation(
-      (s) => (s as any).getQuizVersion(quizId, versionId),
+      (s) => (s as any).getQuizVersion(quizId, versionId, collectionName),
       'getQuizVersion'
     );
   }
 
-  async restoreQuizVersion(quizId: number, versionId: string): Promise<Quiz> {
+  async restoreQuizVersion(
+    quizId: number,
+    versionId: string,
+    collectionName: 'quizzes' | 'quizTemplates' = 'quizTemplates'
+  ): Promise<Quiz> {
     return this.executeStorageOperation(
-      (s) => (s as any).restoreQuizVersion(quizId, versionId),
+      (s) => (s as any).restoreQuizVersion(quizId, versionId, collectionName),
       'restoreQuizVersion'
     );
   }

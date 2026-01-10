@@ -1481,7 +1481,7 @@ export interface QuizVersion {
   randomizeQuestions: boolean | null;
   randomizeAnswers: boolean | null;
   timeLimitPerQuestion: number | null;
-  questionWeights: Record<number, number> | null;
+  questionWeights: Record<string, number> | null; // Keys are strings (JavaScript object behavior)
   feedbackMode: string | null;
   instructions?: string; // For quiz templates
   isPublished?: boolean; // For quiz templates
