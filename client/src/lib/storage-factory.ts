@@ -47,6 +47,8 @@ import type {
   UserTitle,
   UserDailyReward,
   DailyReward,
+  Quiz,
+  QuizVersion,
 } from '@shared/schema';
 
 /**
@@ -447,28 +449,32 @@ class StorageRouter implements IClientStorage {
   // Quiz Version History
   // ==========================================
 
-  async createQuizVersion(quizId: number, quizData: any, changeDescription?: string): Promise<any> {
+  async createQuizVersion(
+    quizId: number,
+    quizData: Partial<Quiz>,
+    changeDescription?: string
+  ): Promise<QuizVersion> {
     return this.executeStorageOperation(
       (s) => (s as any).createQuizVersion(quizId, quizData, changeDescription),
       'createQuizVersion'
     );
   }
 
-  async getQuizVersions(quizId: number): Promise<any[]> {
+  async getQuizVersions(quizId: number): Promise<QuizVersion[]> {
     return this.executeStorageOperation(
       (s) => (s as any).getQuizVersions(quizId),
       'getQuizVersions'
     );
   }
 
-  async getQuizVersion(quizId: number, versionId: string): Promise<any | null> {
+  async getQuizVersion(quizId: number, versionId: string): Promise<QuizVersion | null> {
     return this.executeStorageOperation(
       (s) => (s as any).getQuizVersion(quizId, versionId),
       'getQuizVersion'
     );
   }
 
-  async restoreQuizVersion(quizId: number, versionId: string): Promise<any> {
+  async restoreQuizVersion(quizId: number, versionId: string): Promise<Quiz> {
     return this.executeStorageOperation(
       (s) => (s as any).restoreQuizVersion(quizId, versionId),
       'restoreQuizVersion'
