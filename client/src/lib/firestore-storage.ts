@@ -32,6 +32,9 @@ import {
   getUserDocuments,
   setUserDocument,
   updateUserDocument,
+  getUserSubcollectionDocument,
+  getUserSubcollectionDocuments,
+  setUserSubcollectionDocument,
   getSharedDocument,
   getSharedDocuments,
   setSharedDocument,
@@ -53,6 +56,7 @@ import type {
   Subcategory,
   Question,
   Quiz,
+  QuizVersion,
   UserProgress,
   MasteryScore,
   Badge,
@@ -753,6 +757,186 @@ class FirestoreStorage implements IClientStorage {
       return await this.updateQuiz(quizId, updates);
     } catch (error) {
       logError('submitQuiz', error, { quizId });
+      throw error;
+    }
+  }
+
+  // ==========================================
+  // Quiz Version History
+  // ==========================================
+
+  /**
+   * Create a new version snapshot of a quiz
+   * Stores the complete quiz state at this point in time
+   */
+  async createQuizVersion(
+    quizId: number,
+    quizData: any,
+    changeDescription?: string
+  ): Promise<QuizVersion> {
+    try {
+      const userId = this.currentUserId;
+      if (!userId) throw new Error('User ID required');
+
+      // Get existing versions to determine version number
+      const existingVersions = await this.getQuizVersions(quizId);
+      const versionNumber = existingVersions.length + 1;
+
+      // Generate version ID (timestamp-based for natural ordering)
+      const versionId = `${Date.now()}_v${versionNumber}`;
+
+      const version: QuizVersion = {
+        id: versionId,
+        quizId,
+        versionNumber,
+        createdAt: new Date(),
+        createdBy: userId,
+        changeDescription,
+
+        // Snapshot all quiz data
+        title: quizData.title || '',
+        description: quizData.description || null,
+        tags: quizData.tags || null,
+        categoryIds: quizData.categoryIds || [],
+        subcategoryIds: quizData.subcategoryIds || [],
+        questionIds: quizData.questionIds || null,
+        questionCount: quizData.questionCount || 0,
+        timeLimit: quizData.timeLimit || null,
+        customQuestions: quizData.customQuestions || undefined,
+        difficultyLevel: quizData.difficultyLevel || null,
+        passingScore: quizData.passingScore || null,
+        maxAttempts: quizData.maxAttempts || null,
+        randomizeQuestions: quizData.randomizeQuestions || null,
+        randomizeAnswers: quizData.randomizeAnswers || null,
+        timeLimitPerQuestion: quizData.timeLimitPerQuestion || null,
+        questionWeights: quizData.questionWeights || null,
+        feedbackMode: quizData.feedbackMode || null,
+        instructions: quizData.instructions || undefined,
+        isPublished: quizData.isPublished || undefined,
+        isDraft: quizData.isDraft || undefined,
+        isAdvancedConfig: quizData.isAdvancedConfig || null,
+        author: quizData.author || null,
+        authorName: quizData.authorName || null,
+        prerequisites: quizData.prerequisites || null,
+      };
+
+      // Store in subcollection: /users/{userId}/quizzes/{quizId}/versions/{versionId}
+      await setUserSubcollectionDocument(
+        userId,
+        'quizzes',
+        quizId.toString(),
+        'versions',
+        versionId,
+        version
+      );
+
+      return convertTimestamps(version);
+    } catch (error) {
+      logError('createQuizVersion', error, { quizId, changeDescription });
+      throw error;
+    }
+  }
+
+  /**
+   * Get all versions for a quiz, ordered by creation date (newest first)
+   */
+  async getQuizVersions(quizId: number): Promise<QuizVersion[]> {
+    try {
+      const userId = this.currentUserId;
+      if (!userId) return [];
+
+      const versions = await getUserSubcollectionDocuments<QuizVersion>(
+        userId,
+        'quizzes',
+        quizId.toString(),
+        'versions',
+        [orderBy('createdAt', 'desc')]
+      );
+
+      return versions.map((v) => convertTimestamps<QuizVersion>(v));
+    } catch (error) {
+      logError('getQuizVersions', error, { quizId });
+      return [];
+    }
+  }
+
+  /**
+   * Get a specific version of a quiz
+   */
+  async getQuizVersion(quizId: number, versionId: string): Promise<QuizVersion | null> {
+    try {
+      const userId = this.currentUserId;
+      if (!userId) return null;
+
+      const version = await getUserSubcollectionDocument<QuizVersion>(
+        userId,
+        'quizzes',
+        quizId.toString(),
+        'versions',
+        versionId
+      );
+
+      return version ? convertTimestamps<QuizVersion>(version) : null;
+    } catch (error) {
+      logError('getQuizVersion', error, { quizId, versionId });
+      return null;
+    }
+  }
+
+  /**
+   * Restore a quiz to a previous version
+   * Creates a new version with the restored data (does not delete history)
+   */
+  async restoreQuizVersion(quizId: number, versionId: string): Promise<Quiz> {
+    try {
+      const userId = this.currentUserId;
+      if (!userId) throw new Error('User ID required');
+
+      // Get the version to restore
+      const version = await this.getQuizVersion(quizId, versionId);
+      if (!version) throw new Error('Version not found');
+
+      // Get current quiz to preserve certain fields
+      const currentQuiz = await this.getQuiz(quizId);
+      if (!currentQuiz) throw new Error('Quiz not found');
+
+      // Create restoration data (preserve runtime fields like answers, score, completedAt)
+      const restorationData = {
+        title: version.title,
+        description: version.description,
+        tags: version.tags,
+        categoryIds: version.categoryIds,
+        subcategoryIds: version.subcategoryIds,
+        questionIds: version.questionIds,
+        questionCount: version.questionCount,
+        timeLimit: version.timeLimit,
+        difficultyLevel: version.difficultyLevel,
+        passingScore: version.passingScore,
+        maxAttempts: version.maxAttempts,
+        randomizeQuestions: version.randomizeQuestions,
+        randomizeAnswers: version.randomizeAnswers,
+        timeLimitPerQuestion: version.timeLimitPerQuestion,
+        questionWeights: version.questionWeights,
+        feedbackMode: version.feedbackMode,
+        isAdvancedConfig: version.isAdvancedConfig,
+        author: version.author,
+        authorName: version.authorName,
+        prerequisites: version.prerequisites,
+      };
+
+      // Update the quiz with restored data
+      const updatedQuiz = await this.updateQuiz(quizId, restorationData);
+
+      // Create a new version documenting the restoration
+      await this.createQuizVersion(
+        quizId,
+        updatedQuiz,
+        `Restored from version ${version.versionNumber} (${versionId})`
+      );
+
+      return updatedQuiz;
+    } catch (error) {
+      logError('restoreQuizVersion', error, { quizId, versionId });
       throw error;
     }
   }

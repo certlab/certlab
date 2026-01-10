@@ -1448,3 +1448,95 @@ export type InsertUserDailyReward = z.infer<typeof insertUserDailyRewardSchema>;
 export type UserDailyReward = typeof userDailyRewards.$inferSelect;
 export type InsertUserTitle = z.infer<typeof insertUserTitleSchema>;
 export type UserTitle = typeof userTitles.$inferSelect;
+
+// ============================================================================
+// Quiz Version History
+// ============================================================================
+
+/**
+ * QuizVersion - Immutable snapshot of quiz state at a point in time
+ * Stored in Firestore at: /users/{userId}/quizzes/{quizId}/versions/{versionId}
+ */
+export interface QuizVersion {
+  id: string; // Unique version ID (timestamp-based)
+  quizId: number; // Parent quiz ID
+  versionNumber: number; // Sequential version number (1, 2, 3...)
+  createdAt: Date; // When this version was created
+  createdBy: string; // User ID who created this version
+  changeDescription?: string; // Optional description of changes
+
+  // Full quiz snapshot at this version
+  title: string;
+  description: string | null;
+  tags: string[] | null;
+  categoryIds: number[];
+  subcategoryIds: number[];
+  questionIds: any[] | null;
+  questionCount: number;
+  timeLimit: number | null;
+  customQuestions?: any[]; // For quiz templates
+  difficultyLevel: number | null;
+  passingScore: number | null;
+  maxAttempts: number | null;
+  randomizeQuestions: boolean | null;
+  randomizeAnswers: boolean | null;
+  timeLimitPerQuestion: number | null;
+  questionWeights: Record<number, number> | null;
+  feedbackMode: string | null;
+  instructions?: string; // For quiz templates
+  isPublished?: boolean; // For quiz templates
+  isDraft?: boolean; // For quiz templates
+  isAdvancedConfig: boolean | null;
+
+  // Metadata
+  author: string | null;
+  authorName: string | null;
+  prerequisites: { quizIds?: number[]; lectureIds?: number[] } | null;
+}
+
+/**
+ * Zod schema for validating quiz versions
+ */
+export const quizVersionSchema = z.object({
+  id: z.string(),
+  quizId: z.number(),
+  versionNumber: z.number().int().positive(),
+  createdAt: z.date(),
+  createdBy: z.string(),
+  changeDescription: z.string().max(500).optional(),
+
+  // Quiz data fields
+  title: z.string(),
+  description: z.string().nullable(),
+  tags: z.array(z.string()).nullable(),
+  categoryIds: z.array(z.number()),
+  subcategoryIds: z.array(z.number()),
+  questionIds: z.any().nullable(),
+  questionCount: z.number(),
+  timeLimit: z.number().nullable(),
+  customQuestions: z.array(z.any()).optional(),
+  difficultyLevel: z.number().nullable(),
+  passingScore: z.number().nullable(),
+  maxAttempts: z.number().nullable(),
+  randomizeQuestions: z.boolean().nullable(),
+  randomizeAnswers: z.boolean().nullable(),
+  timeLimitPerQuestion: z.number().nullable(),
+  questionWeights: z.record(z.string(), z.number()).nullable(),
+  feedbackMode: z.string().nullable(),
+  instructions: z.string().optional(),
+  isPublished: z.boolean().optional(),
+  isDraft: z.boolean().optional(),
+  isAdvancedConfig: z.boolean().nullable(),
+
+  // Metadata
+  author: z.string().nullable(),
+  authorName: z.string().nullable(),
+  prerequisites: z
+    .object({
+      quizIds: z.array(z.number()).optional(),
+      lectureIds: z.array(z.number()).optional(),
+    })
+    .nullable(),
+});
+
+export type InsertQuizVersion = z.infer<typeof quizVersionSchema>;
