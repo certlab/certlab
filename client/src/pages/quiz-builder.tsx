@@ -141,6 +141,7 @@ export default function QuizBuilder() {
   const [activeTab, setActiveTab] = useState('config');
   const [currentPreviewQuestion, setCurrentPreviewQuestion] = useState(0);
   const [showRealisticPreview, setShowRealisticPreview] = useState(false);
+  const [previewKey, setPreviewKey] = useState(0); // Key for forcing preview remount
 
   // Fetch categories
   const {
@@ -667,9 +668,13 @@ export default function QuizBuilder() {
   if (showRealisticPreview) {
     return (
       <PreviewQuizInterface
+        key={previewKey} // Force remount when key changes to reset all state
         quiz={createPreviewQuiz()}
         questions={createPreviewQuestions()}
-        onClose={() => setShowRealisticPreview(false)}
+        onClose={() => {
+          setShowRealisticPreview(false);
+          setPreviewKey(previewKey + 1); // Increment key for next preview
+        }}
       />
     );
   }

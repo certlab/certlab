@@ -169,10 +169,48 @@ export default function PreviewQuizInterface({
     };
   }, [timeRemaining, previewResults]);
 
+  // Auto-submit when timer reaches zero - will be referenced after handleSubmitQuiz is defined
+  const submitQuizRef = useRef<() => void>(() => {});
+
+  // Submit quiz and calculate preview results
+  const handleSubmitQuiz = useCallback(() => {
+    if (isSubmitting || previewResults) return;
+
+    setIsSubmitting(true);
+
+    // Calculate score based on answers
+    let correctCount = 0;
+    processedQuestions.forEach((question) => {
+      const answer = state.answers[question.id];
+      if (answer !== undefined) {
+        const isCorrect = gradeQuestion(question, answer);
+        if (isCorrect) {
+          correctCount++;
+        }
+      }
+    });
+
+    const totalQuestions = processedQuestions.length;
+    const score = Math.round((correctCount / totalQuestions) * 100);
+
+    setPreviewResults({
+      score,
+      correctAnswers: correctCount,
+      totalQuestions,
+    });
+
+    setIsSubmitting(false);
+  }, [state.answers, processedQuestions, isSubmitting, previewResults]);
+
+  // Set the ref for auto-submit
+  useEffect(() => {
+    submitQuizRef.current = handleSubmitQuiz;
+  }, [handleSubmitQuiz]);
+
   // Auto-submit when timer reaches zero
   useEffect(() => {
     if (timeRemaining === 0 && !previewResults) {
-      handleSubmitQuiz();
+      submitQuizRef.current();
     }
   }, [timeRemaining, previewResults]);
 
@@ -280,36 +318,6 @@ export default function PreviewQuizInterface({
     },
     [state.answers, processedQuestions, previewResults]
   );
-
-  // Submit quiz and calculate preview results
-  const handleSubmitQuiz = useCallback(() => {
-    if (isSubmitting || previewResults) return;
-
-    setIsSubmitting(true);
-
-    // Calculate score based on answers
-    let correctCount = 0;
-    processedQuestions.forEach((question) => {
-      const answer = state.answers[question.id];
-      if (answer !== undefined) {
-        const isCorrect = gradeQuestion(question, answer);
-        if (isCorrect) {
-          correctCount++;
-        }
-      }
-    });
-
-    const totalQuestions = processedQuestions.length;
-    const score = Math.round((correctCount / totalQuestions) * 100);
-
-    setPreviewResults({
-      score,
-      correctAnswers: correctCount,
-      totalQuestions,
-    });
-
-    setIsSubmitting(false);
-  }, [state.answers, processedQuestions, isSubmitting, previewResults]);
 
   // Swipe gesture support
   const swipeRef = useSwipe(
@@ -438,7 +446,7 @@ export default function PreviewQuizInterface({
                 <Button variant="outline" onClick={onClose}>
                   Exit Preview
                 </Button>
-                <Button onClick={() => window.location.reload()}>Try Again</Button>
+                <Button onClick={onClose}>Try Again</Button>
               </div>
             </div>
           </Card>
