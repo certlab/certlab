@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-provider';
 import { storage } from '@/lib/storage-factory';
@@ -713,9 +713,9 @@ export default function QuizBuilder() {
                       <AlertDescription>
                         No categories available. Categories need to be imported before you can
                         create quizzes. Visit the{' '}
-                        <a href="/app/data-import" className="underline font-medium">
+                        <Link to="/app/data-import" className="underline font-medium">
                           Data Import page
-                        </a>{' '}
+                        </Link>{' '}
                         to import CISSP or CISM question banks, which include categories.
                       </AlertDescription>
                     </Alert>
