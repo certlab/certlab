@@ -1521,6 +1521,8 @@ export const quizVersionSchema = z.object({
   randomizeQuestions: z.boolean().nullable(),
   randomizeAnswers: z.boolean().nullable(),
   timeLimitPerQuestion: z.number().nullable(),
+  // Note: Zod requires string keys for records, but JavaScript object keys are always strings
+  // This matches the runtime behavior where numeric keys become strings
   questionWeights: z.record(z.string(), z.number()).nullable(),
   feedbackMode: z.string().nullable(),
   instructions: z.string().optional(),
