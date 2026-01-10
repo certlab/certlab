@@ -42,7 +42,8 @@ import {
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { QuizVersionHistory } from '@/components/QuizVersionHistory';
-import type { Category, Subcategory, Question, QuestionOption } from '@shared/schema';
+import PreviewQuizInterface from '@/components/PreviewQuizInterface';
+import type { Category, Subcategory, Question, QuestionOption, Quiz } from '@shared/schema';
 
 interface CustomQuestion {
   id: string;
@@ -139,6 +140,7 @@ export default function QuizBuilder() {
   // UI State
   const [activeTab, setActiveTab] = useState('config');
   const [currentPreviewQuestion, setCurrentPreviewQuestion] = useState(0);
+  const [showRealisticPreview, setShowRealisticPreview] = useState(false);
 
   // Fetch categories
   const {
@@ -601,6 +603,76 @@ export default function QuizBuilder() {
       saveTemplateMutation.mutate(false);
     }
   };
+
+  // Create preview quiz and questions from current builder state
+  const createPreviewQuiz = (): Quiz => {
+    return {
+      id: 0, // Preview ID
+      userId: user?.id || '',
+      tenantId: user?.tenantId || 1,
+      title: title || 'Untitled Quiz',
+      description: description || null,
+      categoryIds: selectedCategories,
+      subcategoryIds: selectedSubcategories,
+      questionIds: null,
+      questionCount: customQuestions.length,
+      timeLimit: timeLimit === '0' ? null : parseInt(timeLimit, 10),
+      mode: 'quiz',
+      passingScore: parseInt(passingScore, 10),
+      maxAttempts: maxAttempts === '0' ? null : parseInt(maxAttempts, 10),
+      difficultyLevel: parseInt(difficultyLevel, 10),
+      randomizeQuestions,
+      randomizeAnswers,
+      timeLimitPerQuestion:
+        timeLimitPerQuestion === '0' ? null : parseInt(timeLimitPerQuestion, 10),
+      feedbackMode,
+      questionWeights: Object.keys(questionWeights).length > 0 ? questionWeights : null,
+      isAdvancedConfig: showAdvancedConfig,
+      createdAt: new Date(),
+    };
+  };
+
+  const createPreviewQuestions = (): Question[] => {
+    return customQuestions.map((q, index) => ({
+      id: index,
+      tenantId: user?.tenantId || 1,
+      categoryId: selectedCategories[0] || 0,
+      subcategoryId: selectedSubcategories[0] || null,
+      text: q.text,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      correctAnswers: q.type === 'multiple_choice' ? [q.correctAnswer] : undefined,
+      explanation: q.explanation || null,
+      difficultyLevel: q.difficultyLevel,
+      tags: q.tags,
+      questionType: q.type === 'true_false' ? 'true_false' : 'multiple_choice_single',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+  };
+
+  const handleLaunchPreview = () => {
+    if (customQuestions.length === 0) {
+      toast({
+        title: 'No Questions',
+        description: 'Please add at least one question before previewing the quiz.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setShowRealisticPreview(true);
+  };
+
+  // Show preview interface if active
+  if (showRealisticPreview) {
+    return (
+      <PreviewQuizInterface
+        quiz={createPreviewQuiz()}
+        questions={createPreviewQuestions()}
+        onClose={() => setShowRealisticPreview(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -1403,6 +1475,35 @@ export default function QuizBuilder() {
 
           {/* Preview Tab */}
           <TabsContent value="preview" className="space-y-4">
+            {/* Realistic Preview Button */}
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                      🎯 Try Realistic Preview Mode
+                    </h3>
+                    <p className="text-sm text-blue-800 dark:text-blue-200 mb-1">
+                      Experience your quiz exactly as students will see it - with working timer,
+                      navigation, interactions, and scoring simulation.
+                    </p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                      💡 Your progress won't be saved - this is just a preview!
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleLaunchPreview}
+                    disabled={customQuestions.length === 0}
+                    className="ml-4 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Launch Preview
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Static Preview */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
