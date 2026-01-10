@@ -59,7 +59,7 @@ describe('ContributionHeatmap', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Ensure Firebase is properly configured/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Local browser storage \(IndexedDB\) is used only for caching/i)
+      screen.getByText(/Firestore SDK automatically caches data for offline viewing/i)
     ).toBeInTheDocument();
   });
 
