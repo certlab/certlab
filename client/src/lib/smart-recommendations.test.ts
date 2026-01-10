@@ -15,6 +15,42 @@ import type {
   Question,
 } from '@shared/schema';
 
+// Helper function to create a complete Quiz object with all required properties
+function createMockQuiz(overrides: Partial<Quiz> = {}): Quiz {
+  return {
+    id: 1,
+    userId: 'user1',
+    tenantId: 1,
+    title: 'Mock Quiz',
+    description: null,
+    tags: null,
+    categoryIds: [1],
+    subcategoryIds: [1],
+    questionIds: null,
+    questionCount: 10,
+    timeLimit: null,
+    startedAt: new Date('2025-01-01'),
+    completedAt: new Date('2025-01-01'),
+    score: 90,
+    correctAnswers: 9,
+    totalQuestions: 10,
+    answers: null,
+    isAdaptive: false,
+    adaptiveMetrics: null,
+    difficultyLevel: 1,
+    difficultyFilter: null,
+    isPassing: true,
+    missedTopics: null,
+    mode: 'study',
+    author: null,
+    authorName: null,
+    prerequisites: null,
+    createdAt: new Date('2025-01-01'),
+    updatedAt: null,
+    ...overrides,
+  };
+}
+
 // Mock data
 const mockCategories: Category[] = [
   { id: 1, tenantId: 1, name: 'CISSP', description: 'CISSP Certification', icon: 'shield' },
@@ -38,30 +74,12 @@ describe('Smart Recommendations Engine', () => {
 
     it('should calculate readiness score correctly with quiz data', () => {
       const quizzes: Quiz[] = [
-        {
+        createMockQuiz({
           id: 1,
-          userId: 'user1',
-          tenantId: 1,
           title: 'CISSP Practice',
-          categoryIds: [1],
-          subcategoryIds: [1],
-          questionIds: null,
-          questionCount: 10,
-          timeLimit: null,
-          startedAt: new Date('2025-01-01'),
-          completedAt: new Date('2025-01-01'),
           score: 90,
           correctAnswers: 9,
-          totalQuestions: 10,
-          answers: null,
-          isAdaptive: false,
-          adaptiveMetrics: null,
-          difficultyLevel: 1,
-          difficultyFilter: null,
-          isPassing: true,
-          missedTopics: null,
-          mode: 'study',
-        },
+        }),
       ];
 
       const masteryScores: MasteryScore[] = [
@@ -148,30 +166,17 @@ describe('Smart Recommendations Engine', () => {
     });
 
     it('should calculate estimated days to ready', () => {
-      const quizzes: Quiz[] = Array.from({ length: 10 }, (_, i) => ({
-        id: i + 1,
-        userId: 'user1',
-        tenantId: 1,
-        title: `Quiz ${i + 1}`,
-        categoryIds: [1],
-        subcategoryIds: [1],
-        questionIds: null,
-        questionCount: 10,
-        timeLimit: null,
-        startedAt: new Date(Date.now() - (10 - i) * 24 * 60 * 60 * 1000),
-        completedAt: new Date(Date.now() - (10 - i) * 24 * 60 * 60 * 1000),
-        score: 70 + i * 2,
-        correctAnswers: 7 + i,
-        totalQuestions: 10,
-        answers: null,
-        isAdaptive: false,
-        adaptiveMetrics: null,
-        difficultyLevel: 1,
-        difficultyFilter: null,
-        isPassing: i >= 5,
-        missedTopics: null,
-        mode: 'study',
-      }));
+      const quizzes: Quiz[] = Array.from({ length: 10 }, (_, i) =>
+        createMockQuiz({
+          id: i + 1,
+          title: `Quiz ${i + 1}`,
+          startedAt: new Date(Date.now() - (10 - i) * 24 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - (10 - i) * 24 * 60 * 60 * 1000),
+          score: 70 + i * 2,
+          correctAnswers: 7 + i,
+          isPassing: i >= 5,
+        })
+      );
 
       const result = calculateReadinessScore(quizzes, [], mockCategories, mockSubcategories, []);
 
@@ -182,30 +187,13 @@ describe('Smart Recommendations Engine', () => {
   describe('generateStudyRecommendations', () => {
     it('should generate recommendations for weak areas', () => {
       const quizzes: Quiz[] = [
-        {
+        createMockQuiz({
           id: 1,
-          userId: 'user1',
-          tenantId: 1,
           title: 'CISSP Practice',
-          categoryIds: [1],
-          subcategoryIds: [1],
-          questionIds: null,
-          questionCount: 10,
-          timeLimit: null,
-          startedAt: new Date('2025-01-01'),
-          completedAt: new Date('2025-01-01'),
           score: 60,
           correctAnswers: 6,
-          totalQuestions: 10,
-          answers: null,
-          isAdaptive: false,
-          adaptiveMetrics: null,
-          difficultyLevel: 1,
-          difficultyFilter: null,
           isPassing: false,
-          missedTopics: null,
-          mode: 'study',
-        },
+        }),
       ];
 
       const masteryScores: MasteryScore[] = [
@@ -237,30 +225,15 @@ describe('Smart Recommendations Engine', () => {
     });
 
     it('should recommend difficulty increase for high performers', () => {
-      const quizzes: Quiz[] = Array.from({ length: 5 }, (_, i) => ({
-        id: i + 1,
-        userId: 'user1',
-        tenantId: 1,
-        title: `Quiz ${i + 1}`,
-        categoryIds: [1],
-        subcategoryIds: [1],
-        questionIds: null,
-        questionCount: 10,
-        timeLimit: null,
-        startedAt: new Date(),
-        completedAt: new Date(),
-        score: 90,
-        correctAnswers: 9,
-        totalQuestions: 10,
-        answers: null,
-        isAdaptive: false,
-        adaptiveMetrics: null,
-        difficultyLevel: 1,
-        difficultyFilter: null,
-        isPassing: true,
-        missedTopics: null,
-        mode: 'study',
-      }));
+      const quizzes: Quiz[] = Array.from({ length: 5 }, (_, i) =>
+        createMockQuiz({
+          id: i + 1,
+          title: `Quiz ${i + 1}`,
+          score: 90,
+          correctAnswers: 9,
+          isPassing: true,
+        })
+      );
 
       const recommendations = generateStudyRecommendations(
         quizzes,
@@ -278,30 +251,15 @@ describe('Smart Recommendations Engine', () => {
     });
 
     it('should recommend difficulty decrease for low performers', () => {
-      const quizzes: Quiz[] = Array.from({ length: 5 }, (_, i) => ({
-        id: i + 1,
-        userId: 'user1',
-        tenantId: 1,
-        title: `Quiz ${i + 1}`,
-        categoryIds: [1],
-        subcategoryIds: [1],
-        questionIds: null,
-        questionCount: 10,
-        timeLimit: null,
-        startedAt: new Date(),
-        completedAt: new Date(),
-        score: 50,
-        correctAnswers: 5,
-        totalQuestions: 10,
-        answers: null,
-        isAdaptive: false,
-        adaptiveMetrics: null,
-        difficultyLevel: 1,
-        difficultyFilter: null,
-        isPassing: false,
-        missedTopics: null,
-        mode: 'study',
-      }));
+      const quizzes: Quiz[] = Array.from({ length: 5 }, (_, i) =>
+        createMockQuiz({
+          id: i + 1,
+          title: `Quiz ${i + 1}`,
+          score: 50,
+          correctAnswers: 5,
+          isPassing: false,
+        })
+      );
 
       const recommendations = generateStudyRecommendations(
         quizzes,
@@ -347,30 +305,13 @@ describe('Smart Recommendations Engine', () => {
 
     it('should sort recommendations by priority and confidence', () => {
       const quizzes: Quiz[] = [
-        {
+        createMockQuiz({
           id: 1,
-          userId: 'user1',
-          tenantId: 1,
           title: 'Quiz',
-          categoryIds: [1],
-          subcategoryIds: [1],
-          questionIds: null,
-          questionCount: 10,
-          timeLimit: null,
-          startedAt: new Date(),
-          completedAt: new Date(),
           score: 70,
           correctAnswers: 7,
-          totalQuestions: 10,
-          answers: null,
-          isAdaptive: false,
-          adaptiveMetrics: null,
-          difficultyLevel: 1,
-          difficultyFilter: null,
           isPassing: false,
-          missedTopics: null,
-          mode: 'study',
-        },
+        }),
       ];
 
       const masteryScores: MasteryScore[] = [
@@ -414,54 +355,24 @@ describe('Smart Recommendations Engine', () => {
 
     it('should analyze performance by hour', () => {
       const quizzes: Quiz[] = [
-        {
+        createMockQuiz({
           id: 1,
-          userId: 'user1',
-          tenantId: 1,
           title: 'Morning Quiz',
-          categoryIds: [1],
-          subcategoryIds: [1],
-          questionIds: null,
-          questionCount: 10,
-          timeLimit: null,
           startedAt: new Date('2025-01-01T09:00:00'),
           completedAt: new Date('2025-01-01T09:30:00'),
           score: 90,
           correctAnswers: 9,
-          totalQuestions: 10,
-          answers: null,
-          isAdaptive: false,
-          adaptiveMetrics: null,
-          difficultyLevel: 1,
-          difficultyFilter: null,
           isPassing: true,
-          missedTopics: null,
-          mode: 'study',
-        },
-        {
+        }),
+        createMockQuiz({
           id: 2,
-          userId: 'user1',
-          tenantId: 1,
           title: 'Afternoon Quiz',
-          categoryIds: [1],
-          subcategoryIds: [1],
-          questionIds: null,
-          questionCount: 10,
-          timeLimit: null,
           startedAt: new Date('2025-01-01T15:00:00'),
           completedAt: new Date('2025-01-01T15:30:00'),
           score: 70,
           correctAnswers: 7,
-          totalQuestions: 10,
-          answers: null,
-          isAdaptive: false,
-          adaptiveMetrics: null,
-          difficultyLevel: 1,
-          difficultyFilter: null,
           isPassing: false,
-          missedTopics: null,
-          mode: 'study',
-        },
+        }),
       ];
 
       const result = analyzeTimeOfDayPerformance(quizzes);
@@ -473,78 +384,33 @@ describe('Smart Recommendations Engine', () => {
 
     it('should mark optimal study times', () => {
       const quizzes: Quiz[] = [
-        {
+        createMockQuiz({
           id: 1,
-          userId: 'user1',
-          tenantId: 1,
           title: 'Quiz 1',
-          categoryIds: [1],
-          subcategoryIds: [1],
-          questionIds: null,
-          questionCount: 10,
-          timeLimit: null,
           startedAt: new Date('2025-01-01T09:00:00'),
           completedAt: new Date('2025-01-01T09:30:00'),
           score: 95,
           correctAnswers: 9,
-          totalQuestions: 10,
-          answers: null,
-          isAdaptive: false,
-          adaptiveMetrics: null,
-          difficultyLevel: 1,
-          difficultyFilter: null,
           isPassing: true,
-          missedTopics: null,
-          mode: 'study',
-        },
-        {
+        }),
+        createMockQuiz({
           id: 2,
-          userId: 'user1',
-          tenantId: 1,
           title: 'Quiz 2',
-          categoryIds: [1],
-          subcategoryIds: [1],
-          questionIds: null,
-          questionCount: 10,
-          timeLimit: null,
           startedAt: new Date('2025-01-02T09:00:00'),
           completedAt: new Date('2025-01-02T09:30:00'),
           score: 90,
           correctAnswers: 9,
-          totalQuestions: 10,
-          answers: null,
-          isAdaptive: false,
-          adaptiveMetrics: null,
-          difficultyLevel: 1,
-          difficultyFilter: null,
           isPassing: true,
-          missedTopics: null,
-          mode: 'study',
-        },
-        {
+        }),
+        createMockQuiz({
           id: 3,
-          userId: 'user1',
-          tenantId: 1,
           title: 'Quiz 3',
-          categoryIds: [1],
-          subcategoryIds: [1],
-          questionIds: null,
-          questionCount: 10,
-          timeLimit: null,
           startedAt: new Date('2025-01-01T15:00:00'),
           completedAt: new Date('2025-01-01T15:30:00'),
           score: 70,
           correctAnswers: 7,
-          totalQuestions: 10,
-          answers: null,
-          isAdaptive: false,
-          adaptiveMetrics: null,
-          difficultyLevel: 1,
-          difficultyFilter: null,
           isPassing: false,
-          missedTopics: null,
-          mode: 'study',
-        },
+        }),
       ];
 
       const result = analyzeTimeOfDayPerformance(quizzes);
@@ -566,30 +432,17 @@ describe('Smart Recommendations Engine', () => {
     });
 
     it('should calculate questions per day correctly', () => {
-      const quizzes: Quiz[] = Array.from({ length: 5 }, (_, i) => ({
-        id: i + 1,
-        userId: 'user1',
-        tenantId: 1,
-        title: `Quiz ${i + 1}`,
-        categoryIds: [1],
-        subcategoryIds: [1],
-        questionIds: null,
-        questionCount: 10,
-        timeLimit: null,
-        startedAt: new Date(Date.now() - (4 - i) * 24 * 60 * 60 * 1000),
-        completedAt: new Date(Date.now() - (4 - i) * 24 * 60 * 60 * 1000),
-        score: 80,
-        correctAnswers: 8,
-        totalQuestions: 10,
-        answers: null,
-        isAdaptive: false,
-        adaptiveMetrics: null,
-        difficultyLevel: 1,
-        difficultyFilter: null,
-        isPassing: true,
-        missedTopics: null,
-        mode: 'study',
-      }));
+      const quizzes: Quiz[] = Array.from({ length: 5 }, (_, i) =>
+        createMockQuiz({
+          id: i + 1,
+          title: `Quiz ${i + 1}`,
+          startedAt: new Date(Date.now() - (4 - i) * 24 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - (4 - i) * 24 * 60 * 60 * 1000),
+          score: 80,
+          correctAnswers: 8,
+          isPassing: true,
+        })
+      );
 
       const result = calculateLearningVelocity(quizzes);
 
@@ -598,30 +451,17 @@ describe('Smart Recommendations Engine', () => {
     });
 
     it('should detect score improvement', () => {
-      const quizzes: Quiz[] = Array.from({ length: 10 }, (_, i) => ({
-        id: i + 1,
-        userId: 'user1',
-        tenantId: 1,
-        title: `Quiz ${i + 1}`,
-        categoryIds: [1],
-        subcategoryIds: [1],
-        questionIds: null,
-        questionCount: 10,
-        timeLimit: null,
-        startedAt: new Date(Date.now() - (9 - i) * 24 * 60 * 60 * 1000),
-        completedAt: new Date(Date.now() - (9 - i) * 24 * 60 * 60 * 1000),
-        score: 70 + i * 2,
-        correctAnswers: 7 + i,
-        totalQuestions: 10,
-        answers: null,
-        isAdaptive: false,
-        adaptiveMetrics: null,
-        difficultyLevel: 1,
-        difficultyFilter: null,
-        isPassing: i >= 5,
-        missedTopics: null,
-        mode: 'study',
-      }));
+      const quizzes: Quiz[] = Array.from({ length: 10 }, (_, i) =>
+        createMockQuiz({
+          id: i + 1,
+          title: `Quiz ${i + 1}`,
+          startedAt: new Date(Date.now() - (9 - i) * 24 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - (9 - i) * 24 * 60 * 60 * 1000),
+          score: 70 + i * 2,
+          correctAnswers: 7 + i,
+          isPassing: i >= 5,
+        })
+      );
 
       const result = calculateLearningVelocity(quizzes);
 
@@ -629,30 +469,17 @@ describe('Smart Recommendations Engine', () => {
     });
 
     it('should predict certification date for improving users', () => {
-      const quizzes: Quiz[] = Array.from({ length: 6 }, (_, i) => ({
-        id: i + 1,
-        userId: 'user1',
-        tenantId: 1,
-        title: `Quiz ${i + 1}`,
-        categoryIds: [1],
-        subcategoryIds: [1],
-        questionIds: null,
-        questionCount: 10,
-        timeLimit: null,
-        startedAt: new Date(Date.now() - (5 - i) * 7 * 24 * 60 * 60 * 1000),
-        completedAt: new Date(Date.now() - (5 - i) * 7 * 24 * 60 * 60 * 1000),
-        score: 70 + i * 3,
-        correctAnswers: 7 + i,
-        totalQuestions: 10,
-        answers: null,
-        isAdaptive: false,
-        adaptiveMetrics: null,
-        difficultyLevel: 1,
-        difficultyFilter: null,
-        isPassing: i >= 3,
-        missedTopics: null,
-        mode: 'study',
-      }));
+      const quizzes: Quiz[] = Array.from({ length: 6 }, (_, i) =>
+        createMockQuiz({
+          id: i + 1,
+          title: `Quiz ${i + 1}`,
+          startedAt: new Date(Date.now() - (5 - i) * 7 * 24 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - (5 - i) * 7 * 24 * 60 * 60 * 1000),
+          score: 70 + i * 3,
+          correctAnswers: 7 + i,
+          isPassing: i >= 3,
+        })
+      );
 
       const result = calculateLearningVelocity(quizzes);
 
@@ -663,30 +490,13 @@ describe('Smart Recommendations Engine', () => {
   describe('analyzePerformance', () => {
     it('should analyze performance for a category', () => {
       const quizzes: Quiz[] = [
-        {
+        createMockQuiz({
           id: 1,
-          userId: 'user1',
-          tenantId: 1,
           title: 'Quiz',
-          categoryIds: [1],
-          subcategoryIds: [1],
-          questionIds: null,
-          questionCount: 10,
-          timeLimit: null,
-          startedAt: new Date(),
-          completedAt: new Date(),
           score: 80,
           correctAnswers: 8,
-          totalQuestions: 10,
-          answers: null,
-          isAdaptive: false,
-          adaptiveMetrics: null,
-          difficultyLevel: 1,
-          difficultyFilter: null,
           isPassing: true,
-          missedTopics: null,
-          mode: 'study',
-        },
+        }),
       ];
 
       const result = analyzePerformance(quizzes, [], 1);
@@ -697,30 +507,17 @@ describe('Smart Recommendations Engine', () => {
     });
 
     it('should identify recent trend', () => {
-      const quizzes: Quiz[] = Array.from({ length: 5 }, (_, i) => ({
-        id: i + 1,
-        userId: 'user1',
-        tenantId: 1,
-        title: `Quiz ${i + 1}`,
-        categoryIds: [1],
-        subcategoryIds: [1],
-        questionIds: null,
-        questionCount: 10,
-        timeLimit: null,
-        startedAt: new Date(Date.now() - (4 - i) * 24 * 60 * 60 * 1000),
-        completedAt: new Date(Date.now() - (4 - i) * 24 * 60 * 60 * 1000),
-        score: 70 + i * 5,
-        correctAnswers: 7 + i,
-        totalQuestions: 10,
-        answers: null,
-        isAdaptive: false,
-        adaptiveMetrics: null,
-        difficultyLevel: 1,
-        difficultyFilter: null,
-        isPassing: i >= 2,
-        missedTopics: null,
-        mode: 'study',
-      }));
+      const quizzes: Quiz[] = Array.from({ length: 5 }, (_, i) =>
+        createMockQuiz({
+          id: i + 1,
+          title: `Quiz ${i + 1}`,
+          startedAt: new Date(Date.now() - (4 - i) * 24 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - (4 - i) * 24 * 60 * 60 * 1000),
+          score: 70 + i * 5,
+          correctAnswers: 7 + i,
+          isPassing: i >= 2,
+        })
+      );
 
       const result = analyzePerformance(quizzes, [], 1);
 
