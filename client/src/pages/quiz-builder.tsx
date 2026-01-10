@@ -34,7 +34,10 @@ import {
   ArrowLeft,
   Check,
   X,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { Category, Subcategory, Question, QuestionOption } from '@shared/schema';
 
 interface CustomQuestion {
@@ -118,12 +121,21 @@ export default function QuizBuilder() {
   const [currentPreviewQuestion, setCurrentPreviewQuestion] = useState(0);
 
   // Fetch categories
-  const { data: categories = [] } = useQuery<Category[]>({
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    isError: categoriesError,
+    error: categoriesErrorObj,
+  } = useQuery<Category[]>({
     queryKey: queryKeys.categories.all(),
   });
 
   // Fetch subcategories
-  const { data: subcategories = [] } = useQuery<Subcategory[]>({
+  const {
+    data: subcategories = [],
+    isLoading: subcategoriesLoading,
+    isError: subcategoriesError,
+  } = useQuery<Subcategory[]>({
     queryKey: queryKeys.subcategories.all(),
     enabled: selectedCategories.length > 0,
   });
@@ -665,50 +677,121 @@ export default function QuizBuilder() {
               <CardContent className="space-y-4">
                 <div>
                   <Label className="mb-3 block">Categories *</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {categories.map((category) => (
-                      <label
-                        key={category.id}
-                        className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-accent"
-                      >
-                        <Checkbox
-                          checked={selectedCategories.includes(category.id)}
-                          onCheckedChange={(checked) =>
-                            handleCategoryToggle(category.id, checked as boolean)
-                          }
-                        />
-                        <div>
-                          <div className="font-medium">{category.name}</div>
-                          {category.description && (
-                            <div className="text-xs text-muted-foreground">
-                              {category.description}
-                            </div>
-                          )}
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </div>
 
-                {filteredSubcategories.length > 0 && (
-                  <div>
-                    <Label className="mb-3 block">Subcategories (Optional)</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {filteredSubcategories.map((subcategory) => (
+                  {/* Loading State */}
+                  {categoriesLoading && (
+                    <div className="flex items-center justify-center py-8 text-muted-foreground">
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Loading categories...
+                    </div>
+                  )}
+
+                  {/* Error State */}
+                  {categoriesError && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Failed to load categories: {categoriesErrorObj?.message || 'Unknown error'}
+                        <br />
+                        Please check your Firebase connection and ensure categories are seeded in
+                        Firestore.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Empty State */}
+                  {!categoriesLoading && !categoriesError && categories.length === 0 && (
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        No categories available. Please ensure your Firestore database has
+                        categories seeded. You may need to run the data import/seeding scripts or
+                        add categories through the admin interface.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Categories Grid */}
+                  {!categoriesLoading && !categoriesError && categories.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {categories.map((category) => (
                         <label
-                          key={subcategory.id}
-                          className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-accent text-sm"
+                          key={category.id}
+                          className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-accent"
                         >
                           <Checkbox
-                            checked={selectedSubcategories.includes(subcategory.id)}
+                            checked={selectedCategories.includes(category.id)}
                             onCheckedChange={(checked) =>
-                              handleSubcategoryToggle(subcategory.id, checked as boolean)
+                              handleCategoryToggle(category.id, checked as boolean)
                             }
                           />
-                          <span>{subcategory.name}</span>
+                          <div>
+                            <div className="font-medium">{category.name}</div>
+                            {category.description && (
+                              <div className="text-xs text-muted-foreground">
+                                {category.description}
+                              </div>
+                            )}
+                          </div>
                         </label>
                       ))}
                     </div>
+                  )}
+                </div>
+
+                {/* Subcategories Section */}
+                {selectedCategories.length > 0 && (
+                  <div>
+                    <Label className="mb-3 block">Subcategories (Optional)</Label>
+
+                    {/* Subcategories Loading State */}
+                    {subcategoriesLoading && (
+                      <div className="flex items-center justify-center py-4 text-muted-foreground text-sm">
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Loading subcategories...
+                      </div>
+                    )}
+
+                    {/* Subcategories Error State */}
+                    {subcategoriesError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          Failed to load subcategories. Please try again.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Subcategories Grid */}
+                    {!subcategoriesLoading &&
+                      !subcategoriesError &&
+                      filteredSubcategories.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {filteredSubcategories.map((subcategory) => (
+                            <label
+                              key={subcategory.id}
+                              className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-accent text-sm"
+                            >
+                              <Checkbox
+                                checked={selectedSubcategories.includes(subcategory.id)}
+                                onCheckedChange={(checked) =>
+                                  handleSubcategoryToggle(subcategory.id, checked as boolean)
+                                }
+                              />
+                              <span>{subcategory.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+
+                    {/* No Subcategories State */}
+                    {!subcategoriesLoading &&
+                      !subcategoriesError &&
+                      filteredSubcategories.length === 0 && (
+                        <p className="text-sm text-muted-foreground py-2">
+                          No subcategories available for the selected categories.
+                        </p>
+                      )}
                   </div>
                 )}
               </CardContent>
