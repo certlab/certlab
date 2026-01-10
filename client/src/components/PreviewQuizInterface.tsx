@@ -648,7 +648,20 @@ export default function PreviewQuizInterface({
   );
 }
 
-// Helper function to parse answer based on question type
+/**
+ * Parses an answer string into the appropriate QuizAnswer format based on question type.
+ *
+ * Different question types require different answer formats:
+ * - Single choice and true/false: number (option index)
+ * - Multiple choice: number[] (array of selected option indices)
+ * - Text-based: string (the answer text)
+ * - Matching: Record<number, number> (mapping of left items to right items)
+ * - Ordering: number[] (ordered array of item IDs)
+ *
+ * @param answer - The raw answer string to parse
+ * @param question - The question object containing type information
+ * @returns Parsed answer in the appropriate format for the question type
+ */
 function parseAnswer(answer: string, question: Question): QuizAnswer {
   switch (question.questionType) {
     case 'multiple_choice_single':

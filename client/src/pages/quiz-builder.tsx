@@ -605,7 +605,13 @@ export default function QuizBuilder() {
     }
   };
 
-  // Create preview quiz and questions from current builder state
+  /**
+   * Creates a Quiz object from the current builder state for preview mode.
+   * This converts the quiz builder's form state into a Quiz interface that
+   * can be consumed by the PreviewQuizInterface component.
+   *
+   * @returns A Quiz object with preview-specific properties (id: 0, no persistence)
+   */
   const createPreviewQuiz = (): Quiz => {
     return {
       id: 0, // Preview ID
@@ -633,6 +639,13 @@ export default function QuizBuilder() {
     };
   };
 
+  /**
+   * Creates an array of Question objects from the current custom questions.
+   * Converts the quiz builder's CustomQuestion format to the Question interface
+   * expected by the quiz-taking components.
+   *
+   * @returns Array of Question objects suitable for quiz rendering
+   */
   const createPreviewQuestions = (): Question[] => {
     return customQuestions.map((q, index) => ({
       id: index,
