@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,6 +40,100 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
     enabled: !!quiz,
   });
 
+  // Track if we've already randomized for this quiz session
+  const randomizationAppliedRef = useRef(false);
+  const randomizedQuestionsRef = useRef<Question[]>([]);
+
+  // Apply randomization to questions and answers based on quiz configuration
+  // This runs only once per quiz session to prevent re-randomization on data refetch
+  const processedQuestions = useMemo(() => {
+    if (!quiz || questions.length === 0) return questions;
+
+    // If we've already randomized and have cached results, return them
+    if (randomizationAppliedRef.current && randomizedQuestionsRef.current.length > 0) {
+      return randomizedQuestionsRef.current;
+    }
+
+    let processed = [...questions];
+
+    // Randomize question order if enabled
+    if (quiz.randomizeQuestions) {
+      // Use Fisher-Yates shuffle algorithm
+      for (let i = processed.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [processed[i], processed[j]] = [processed[j], processed[i]];
+      }
+    }
+
+    // Randomize answer options if enabled
+    if (quiz.randomizeAnswers) {
+      processed = processed.map((question) => {
+        // Only randomize for question types that have options
+        if (
+          question.questionType === 'multiple_choice_single' ||
+          question.questionType === 'multiple_choice_multiple'
+        ) {
+          if (question.options && question.options.length > 0) {
+            // Build a map from option ID to its original index for efficient lookup
+            const idToOldIndex = new Map(question.options.map((opt, index) => [opt.id, index]));
+
+            // Create a shuffled copy of the options
+            const shuffledOptions = [...question.options];
+            for (let i = shuffledOptions.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+            }
+
+            // Update correct answer index(es) to match shuffled positions
+            const oldToNewIndexMap = new Map<number, number>();
+            shuffledOptions.forEach((opt, newIndex) => {
+              const oldIndex = idToOldIndex.get(opt.id);
+              if (oldIndex !== undefined) {
+                oldToNewIndexMap.set(oldIndex, newIndex);
+              }
+            });
+
+            // Re-index shuffled options
+            const reindexedOptions = shuffledOptions.map((opt, idx) => ({
+              ...opt,
+              id: idx,
+            }));
+
+            let updatedCorrectAnswer = question.correctAnswer;
+            let updatedCorrectAnswers = question.correctAnswers;
+
+            // Update single correct answer
+            if (question.correctAnswer !== null && question.correctAnswer !== undefined) {
+              updatedCorrectAnswer =
+                oldToNewIndexMap.get(question.correctAnswer) ?? question.correctAnswer;
+            }
+
+            // Update multiple correct answers
+            if (question.correctAnswers && question.correctAnswers.length > 0) {
+              updatedCorrectAnswers = question.correctAnswers
+                .map((oldIdx) => oldToNewIndexMap.get(oldIdx) ?? oldIdx)
+                .sort((a, b) => a - b);
+            }
+
+            return {
+              ...question,
+              options: reindexedOptions,
+              correctAnswer: updatedCorrectAnswer,
+              correctAnswers: updatedCorrectAnswers,
+            };
+          }
+        }
+        return question;
+      });
+    }
+
+    // Mark that randomization has been applied and cache the result
+    randomizationAppliedRef.current = true;
+    randomizedQuestionsRef.current = processed;
+
+    return processed;
+  }, [quiz, questions]);
+
   const {
     state,
     timeRemaining,
@@ -55,7 +149,7 @@ export default function QuizInterface({ quizId }: QuizInterfaceProps) {
     handleReviewFlaggedQuestions,
     handleSubmitWithoutReview,
     navigateToQuestion,
-  } = useQuizState({ quizId, quiz, questions });
+  } = useQuizState({ quizId, quiz, questions: processedQuestions });
 
   // Swipe gesture support for mobile navigation
   const swipeRef = useSwipe(

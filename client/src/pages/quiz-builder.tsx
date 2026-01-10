@@ -23,6 +23,8 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Save,
   Eye,
@@ -34,6 +36,7 @@ import {
   ArrowLeft,
   Check,
   X,
+  ChevronDown,
   Loader2,
   AlertCircle,
 } from 'lucide-react';
@@ -71,6 +74,13 @@ interface QuizTemplate {
   isDraft: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  // Advanced Configuration
+  randomizeQuestions?: boolean;
+  randomizeAnswers?: boolean;
+  timeLimitPerQuestion?: number | null;
+  questionWeights?: Record<number, number>;
+  feedbackMode?: 'instant' | 'delayed' | 'final';
+  isAdvancedConfig?: boolean;
 }
 
 export default function QuizBuilder() {
@@ -97,6 +107,14 @@ export default function QuizBuilder() {
   const [maxAttempts, setMaxAttempts] = useState<string>('0');
   const [difficultyLevel, setDifficultyLevel] = useState<string>('1');
   const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([]);
+
+  // Advanced Configuration State
+  const [randomizeQuestions, setRandomizeQuestions] = useState(false);
+  const [randomizeAnswers, setRandomizeAnswers] = useState(false);
+  const [timeLimitPerQuestion, setTimeLimitPerQuestion] = useState<string>('0');
+  const [feedbackMode, setFeedbackMode] = useState<'instant' | 'delayed' | 'final'>('instant');
+  const [questionWeights, setQuestionWeights] = useState<Record<number, number>>({});
+  const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
 
   // Question Editor State
   const [editingQuestion, setEditingQuestion] = useState<CustomQuestion | null>(null);
@@ -211,6 +229,14 @@ export default function QuizBuilder() {
         difficultyLevel: parseInt(difficultyLevel, 10),
         isPublished: !isDraft,
         isDraft,
+        // Advanced Configuration
+        randomizeQuestions,
+        randomizeAnswers,
+        timeLimitPerQuestion:
+          timeLimitPerQuestion === '0' ? null : parseInt(timeLimitPerQuestion, 10),
+        feedbackMode,
+        questionWeights: Object.keys(questionWeights).length > 0 ? questionWeights : undefined,
+        isAdvancedConfig: false, // Default to false, admin can promote later
       };
 
       // Store in Firestore as a user document
@@ -878,6 +904,197 @@ export default function QuizBuilder() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Advanced Configuration Card */}
+            <Collapsible open={showAdvancedConfig} onOpenChange={setShowAdvancedConfig}>
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-accent/5 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Advanced Configuration</CardTitle>
+                        <CardDescription>
+                          Optional settings for randomization, timing, scoring, and feedback
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ChevronDown
+                          className={`h-5 w-5 text-muted-foreground transition-transform ${
+                            showAdvancedConfig ? 'transform rotate-180' : ''
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <span className="sr-only">
+                          {showAdvancedConfig
+                            ? 'Collapse advanced configuration section'
+                            : 'Expand advanced configuration section'}
+                        </span>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-6">
+                    {/* Randomization Options */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-sm text-foreground">Randomization</h4>
+                      <div className="flex items-center justify-between space-x-2">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="randomizeQuestions" className="text-sm font-normal">
+                            Randomize Question Order
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Shuffle the order of questions for each quiz attempt
+                          </p>
+                        </div>
+                        <Switch
+                          id="randomizeQuestions"
+                          checked={randomizeQuestions}
+                          onCheckedChange={setRandomizeQuestions}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between space-x-2">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="randomizeAnswers" className="text-sm font-normal">
+                            Randomize Answer Options
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Shuffle the order of answer choices for each question
+                          </p>
+                        </div>
+                        <Switch
+                          id="randomizeAnswers"
+                          checked={randomizeAnswers}
+                          onCheckedChange={setRandomizeAnswers}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Time Limits */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-sm text-foreground">Time Limits</h4>
+                      <div>
+                        <Label htmlFor="timeLimitPerQuestion">
+                          Time Limit Per Question (seconds)
+                        </Label>
+                        <Select
+                          value={timeLimitPerQuestion}
+                          onValueChange={setTimeLimitPerQuestion}
+                        >
+                          <SelectTrigger id="timeLimitPerQuestion">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">No Limit</SelectItem>
+                            <SelectItem value="30">30 seconds</SelectItem>
+                            <SelectItem value="60">1 minute</SelectItem>
+                            <SelectItem value="90">1.5 minutes</SelectItem>
+                            <SelectItem value="120">2 minutes</SelectItem>
+                            <SelectItem value="180">3 minutes</SelectItem>
+                            <SelectItem value="300">5 minutes</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Set a time limit for each individual question (in addition to overall quiz
+                          time limit)
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Feedback Mode */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-sm text-foreground">Feedback Settings</h4>
+                      <div>
+                        <Label htmlFor="feedbackMode">Feedback Mode</Label>
+                        <Select
+                          value={feedbackMode}
+                          onValueChange={(value: 'instant' | 'delayed' | 'final') =>
+                            setFeedbackMode(value)
+                          }
+                        >
+                          <SelectTrigger id="feedbackMode">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="instant">
+                              Instant - Show explanations immediately after each answer
+                            </SelectItem>
+                            <SelectItem value="delayed">
+                              Delayed - Show explanations after quiz submission
+                            </SelectItem>
+                            <SelectItem value="final">
+                              Final - Show explanations only in results page
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Control when students see question explanations and correct answers
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Question Weights */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-sm text-foreground">Question Weighting</h4>
+                      <div className="text-sm text-muted-foreground">
+                        <p>
+                          Question weights can be configured per-question after adding questions.
+                        </p>
+                        <p className="mt-1">
+                          By default, all questions have equal weight. Custom weights allow you to
+                          assign more points to important questions.
+                        </p>
+                        {customQuestions.length > 0 && (
+                          <div className="mt-3 p-3 bg-muted/30 rounded-md space-y-2">
+                            <p className="font-medium">Current Questions:</p>
+                            <p className="text-xs text-muted-foreground italic">
+                              Note: Weights are set by question position. Reordering questions will
+                              reorder weights accordingly.
+                            </p>
+                            {customQuestions.map((q, index) => (
+                              <div key={q.id} className="flex items-center justify-between text-xs">
+                                <span className="truncate flex-1">
+                                  Q{index + 1}: {q.text.slice(0, 50)}...
+                                </span>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="10"
+                                  value={questionWeights[index] ?? 1}
+                                  onChange={(e) => {
+                                    const rawValue = e.target.value;
+
+                                    // Preserve the previous valid value if the input is empty or invalid
+                                    if (rawValue === '') {
+                                      return;
+                                    }
+
+                                    const parsed = Number.parseInt(rawValue, 10);
+
+                                    if (Number.isNaN(parsed)) {
+                                      return;
+                                    }
+
+                                    // Clamp value between 1 and 10
+                                    const clampedValue = Math.min(10, Math.max(1, parsed));
+                                    setQuestionWeights({
+                                      ...questionWeights,
+                                      [index]: clampedValue,
+                                    });
+                                  }}
+                                  className="w-16 ml-2 h-7"
+                                  placeholder="1"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
           </TabsContent>
 
           {/* Questions List Tab */}
