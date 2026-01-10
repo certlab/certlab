@@ -42,6 +42,15 @@ describe('Dashboard Learning Velocity Calculation', () => {
     author: null,
     authorName: null,
     prerequisites: null,
+    // Advanced Configuration Options
+    randomizeQuestions: null,
+    randomizeAnswers: null,
+    timeLimitPerQuestion: null,
+    questionWeights: null,
+    feedbackMode: null,
+    passingScore: null,
+    maxAttempts: null,
+    isAdvancedConfig: null,
   });
 
   // Function to calculate points for a quiz (matching dashboard logic)

@@ -47,6 +47,15 @@ function createMockQuiz(overrides: Partial<Quiz> = {}): Quiz {
     prerequisites: null,
     createdAt: new Date('2025-01-01'),
     updatedAt: null,
+    // Advanced Configuration Options
+    randomizeQuestions: null,
+    randomizeAnswers: null,
+    timeLimitPerQuestion: null,
+    questionWeights: null,
+    feedbackMode: null,
+    passingScore: null,
+    maxAttempts: null,
+    isAdvancedConfig: null,
     ...overrides,
   };
 }
