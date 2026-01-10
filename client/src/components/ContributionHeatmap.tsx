@@ -210,8 +210,7 @@ export default function ContributionHeatmap() {
               </ul>
               <p className="text-sm mt-3 text-muted-foreground">
                 <em>
-                  Note: Firestore SDK automatically caches data for offline viewing. access, not as
-                  the primary data source for this feature.
+                  Note: Firestore SDK automatically caches data for offline viewing.
                 </em>
               </p>
             </AlertDescription>
