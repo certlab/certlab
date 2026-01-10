@@ -53,7 +53,9 @@ export default function Accessibility() {
                 <p className="text-sm text-muted-foreground">
                   For more information, see our{' '}
                   <a
-                    href="/ACCESSIBILITY.md"
+                    href="https://github.com/archubbuck/certlab/blob/main/ACCESSIBILITY.md"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-primary hover:underline focus:underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
                   >
                     full accessibility statement

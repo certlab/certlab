@@ -17,10 +17,12 @@ CertLab has undergone a comprehensive accessibility audit against WCAG 2.2 Level
 
 **Status**: ✅ **Partially Conformant**
 
-- **Conformant**: 41 success criteria
-- **Partially Conformant**: 8 success criteria
-- **Not Applicable**: 3 success criteria
+- **Conformant**: 47 success criteria
+- **Partially Conformant**: 5 success criteria  
+- **Not Applicable**: 0 success criteria
 - **Not Tested**: 0 success criteria
+
+> **Note**: The numbers above reflect the current audit results. "Conformant" refers to success criteria that currently meet WCAG 2.2 Level AA standards, and "Partially Conformant" refers to criteria with identified gaps where remediation is underway. See Appendix A for the detailed breakdown by conformance level (A vs AA).
 
 ### Priority Recommendations
 

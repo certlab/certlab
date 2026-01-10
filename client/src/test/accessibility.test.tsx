@@ -9,9 +9,6 @@ import { AuthProvider } from '@/lib/auth-provider';
 
 // Test pages
 import Landing from '@/pages/landing';
-import Dashboard from '@/pages/dashboard';
-import Quiz from '@/pages/quiz';
-import Achievements from '@/pages/achievements';
 import Accessibility from '@/pages/accessibility';
 
 // Test components
@@ -74,15 +71,16 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
       expect(h1?.textContent).toBeTruthy();
     });
 
-    it('should have skip navigation link', async () => {
+    it('should not have skip navigation link (landing page exception)', async () => {
       const { container } = render(
         <PublicWrapper>
           <Landing />
         </PublicWrapper>
       );
-      // Landing page doesn't have skip link, but authenticated pages do
-      // This is acceptable as landing is a simple page
-      expect(container).toBeTruthy();
+      // Landing page doesn't have skip link as it's a simple single-screen page
+      // Skip links are present on authenticated pages with complex navigation
+      const skipLink = container.querySelector('a[href="#main-content"]');
+      expect(skipLink).toBeNull();
     });
   });
 
@@ -283,19 +281,26 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
         const hasLabel = container.querySelector(`label[for="${input.id}"]`);
         const hasAriaLabel = input.hasAttribute('aria-label');
         const hasAriaLabelledBy = input.hasAttribute('aria-labelledby');
-        const hasPlaceholder = input.hasAttribute('placeholder');
 
-        // At least one form of labeling should be present
-        expect(hasLabel || hasAriaLabel || hasAriaLabelledBy || hasPlaceholder).toBe(true);
+        // At least one accessible form of labeling should be present.
+        // Note: placeholders alone are not sufficient for labeling per WCAG.
+        expect(hasLabel || hasAriaLabel || hasAriaLabelledBy).toBe(true);
       });
     });
   });
 
   describe('Skip Navigation', () => {
-    it('should have skip to main content link', () => {
-      // This is tested in App.tsx - skip link exists at line 94-99
+    it('should have skip to main content link in authenticated pages', async () => {
+      const { container } = render(
+        <AuthenticatedWrapper>
+          <Accessibility />
+        </AuthenticatedWrapper>
+      );
+      // Skip link is rendered in App.tsx for authenticated pages
       // It's visible only on focus which is proper accessibility practice
-      expect(true).toBe(true);
+      const skipLink = document.querySelector('a[href="#main-content"]');
+      expect(skipLink).toBeTruthy();
+      expect(skipLink?.textContent).toContain('Skip to main content');
     });
   });
 });
