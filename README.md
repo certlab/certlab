@@ -116,8 +116,9 @@ npm test
 2. Complete Dynatrace setup (see [Dynatrace Setup](#-dynatrace-setup-recommended)) for monitoring
 3. Open the app in your browser
 4. Click "Sign in with Google"
-5. Initial sample data (categories, questions, badges) will be automatically seeded
-6. Select your certification goals and start learning!
+5. **For first admin**: Grant yourself admin access in Firestore (`/users/{userId}` → set `role: "admin"`)
+6. **Import sample data**: Navigate to Data Import page and import CISSP/CISM questions (see [Data Import Guide](docs/DATA_IMPORT_GUIDE.md))
+7. Select your certification goals and start learning!
 
 **⚠️ Important**: The `VITE_DYNATRACE_DEV_SKIP` flag is ONLY for local development. Deployments to production, staging, or via CI/CD will fail without proper Dynatrace configuration.
 
@@ -273,6 +274,19 @@ For detailed architecture information, see [docs/architecture/overview.md](docs/
 | **Profile** | View your stats and manage your account |
 
 ### Data Management
+
+#### Importing Sample Questions (Admins Only)
+
+Sample certification questions can be imported by administrators:
+
+1. **Grant Admin Access**: Update your user's `role` field to `"admin"` in Firestore
+2. **Navigate to Data Import**: Access the data import page from the menu
+3. **Import Sample Data**: Click "Import Sample Data" for CISSP or CISM (500 questions each)
+4. **Or Upload Custom YAML**: Upload your own question bank in YAML format
+
+📖 **Detailed Guide**: See [Data Import Guide](docs/DATA_IMPORT_GUIDE.md) for complete instructions, YAML format, and troubleshooting.
+
+**Note**: Data import is restricted to administrators to maintain data integrity in the shared question bank. Regular users will see a message explaining this restriction.
 
 #### Export Your Data
 
