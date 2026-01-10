@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EnhancedExplanation } from '@/components/EnhancedExplanation';
@@ -30,9 +30,16 @@ export function MatchingQuestion({ question, state, onAnswerChange }: MatchingQu
     return deterministicShuffle(matchingPairs, question.id || 0);
   });
 
+  // Use ref to track previous matches to avoid unnecessary updates
+  const previousMatchesRef = useRef<string>('');
+
   // Update parent when matches change
   useEffect(() => {
-    if (Object.keys(matches).length > 0) {
+    const matchesString = JSON.stringify(matches);
+
+    // Only call onAnswerChange if matches actually changed
+    if (matchesString !== previousMatchesRef.current) {
+      previousMatchesRef.current = matchesString;
       onAnswerChange(matches);
     }
   }, [matches, onAnswerChange]);

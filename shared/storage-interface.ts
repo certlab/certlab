@@ -612,7 +612,10 @@ export interface IClientStorage extends IStorageAdapter {
   getQuizQuestions(quizId: number): Promise<Question[]>;
 
   /** Submit a completed quiz */
-  submitQuiz(quizId: number, answers: { questionId: number; answer: number }[]): Promise<Quiz>;
+  submitQuiz(
+    quizId: number,
+    answers: { questionId: number; answer: number | number[] | string | Record<number, number> }[]
+  ): Promise<Quiz>;
 
   // ==========================================
   // Badge Operations (Extended)

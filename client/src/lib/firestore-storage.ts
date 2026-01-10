@@ -690,7 +690,7 @@ class FirestoreStorage implements IClientStorage {
 
   async submitQuiz(
     quizId: number,
-    answers: { questionId: number; answer: number }[]
+    answers: { questionId: number; answer: number | number[] | string | Record<number, number> }[]
   ): Promise<Quiz> {
     try {
       const quiz = await this.getQuiz(quizId);
@@ -699,10 +699,16 @@ class FirestoreStorage implements IClientStorage {
       const questions = await this.getQuizQuestions(quizId);
       let correctCount = 0;
 
+      // Import grading function dynamically to avoid circular dependency
+      const { gradeQuestion } = await import('./quiz-grading');
+
       for (const answer of answers) {
         const question = questions.find((q) => q.id === answer.questionId);
-        if (question && question.correctAnswer === answer.answer) {
-          correctCount++;
+        if (question) {
+          const { isCorrect } = gradeQuestion(question, answer.answer);
+          if (isCorrect) {
+            correctCount++;
+          }
         }
       }
 

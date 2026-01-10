@@ -99,7 +99,12 @@ export function useQuizState({ quizId, quiz, questions }: UseQuizStateOptions) {
    * On success, processes achievements, quests, and navigates to results page.
    */
   const submitQuizMutation = useMutation({
-    mutationFn: async (quizAnswers: { questionId: number; answer: number }[]) => {
+    mutationFn: async (
+      quizAnswers: {
+        questionId: number;
+        answer: number | number[] | string | Record<number, number>;
+      }[]
+    ) => {
       const completedQuiz = await storage.submitQuiz(quizId, quizAnswers);
 
       // Process achievements after quiz completion

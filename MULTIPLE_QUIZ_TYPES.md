@@ -1,6 +1,6 @@
 # Multiple Quiz Types Support
 
-CertLab now supports 6 different quiz question types to provide a comprehensive learning experience.
+CertLab now supports 7 different quiz question types to provide a comprehensive learning experience.
 
 ## Supported Question Types
 

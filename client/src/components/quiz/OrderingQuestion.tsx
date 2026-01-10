@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EnhancedExplanation } from '@/components/EnhancedExplanation';
@@ -32,10 +32,19 @@ export function OrderingQuestion({ question, state, onAnswerChange }: OrderingQu
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
+  // Use ref to track previous order to avoid unnecessary updates
+  const previousOrderRef = useRef<string>('');
+
   // Update parent when order changes
   useEffect(() => {
     const order = orderedItems.map((item) => item.id);
-    onAnswerChange(order);
+    const orderString = JSON.stringify(order);
+
+    // Only call onAnswerChange if the order actually changed
+    if (orderString !== previousOrderRef.current) {
+      previousOrderRef.current = orderString;
+      onAnswerChange(order);
+    }
   }, [orderedItems, onAnswerChange]);
 
   const moveItem = useCallback(

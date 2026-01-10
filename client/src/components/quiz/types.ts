@@ -3,10 +3,9 @@ import type { Question, Quiz } from '@shared/schema';
 // Union type for different answer formats
 export type QuizAnswer =
   | number // Single choice (MCQ single, True/False)
-  | number[] // Multiple choice (MCQ multiple)
+  | number[] // Multiple choice (MCQ multiple) and Ordering (array of item ids in user's order)
   | string // Text answer (Fill-in-blank, Short answer)
-  | Record<number, number> // Matching pairs (left id -> right id)
-  | number[]; // Ordering (array of item ids in user's order)
+  | Record<number, number>; // Matching pairs (left id -> right id)
 
 // Define quiz state shape
 export interface QuizState {
