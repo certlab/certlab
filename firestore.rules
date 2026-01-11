@@ -98,6 +98,39 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    // Groups for sharing content
+    match /groups/{groupId} {
+      // Anyone authenticated can read groups (for search/discovery)
+      allow read: if isAuthenticated();
+      
+      // Only group owner or admin can update/delete
+      allow update, delete: if isAuthenticated() && 
+                              (resource.data.ownerId == request.auth.uid || isAdmin());
+      
+      // Any authenticated user can create a group
+      allow create: if isAuthenticated() && 
+                      request.resource.data.ownerId == request.auth.uid;
+      
+      // Group members subcollection
+      match /members/{memberId} {
+        // Members can read membership
+        allow read: if isAuthenticated();
+        
+        // Users can join groups (create membership)
+        allow create: if isAuthenticated() && 
+                        request.resource.data.userId == request.auth.uid;
+        
+        // Users can leave groups (delete their own membership)
+        allow delete: if isAuthenticated() && 
+                        resource.data.userId == request.auth.uid;
+        
+        // Group owner or admin can manage members
+        allow update, delete: if isAuthenticated() && 
+                                  (get(/databases/$(database)/documents/groups/$(groupId)).data.ownerId == request.auth.uid || 
+                                   isAdmin());
+      }
+    }
+    
     // Study groups (collaborative feature)
     match /studyGroups/{groupId} {
       // Anyone authenticated can read study groups
