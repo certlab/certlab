@@ -1086,26 +1086,25 @@ class FirestoreStorage implements IClientStorage {
    * Delete a quiz template
    * Only the owner can delete their own templates
    *
+   * Note: Templates are stored per-user in Firestore, so users can only
+   * access and delete their own templates. This provides implicit ownership validation.
+   *
    * @param templateId - ID of the template to delete
    * @param userId - ID of the user requesting deletion (must be the owner)
-   * @throws Error if template not found or user is not the owner
+   * @throws Error if template not found (which means user doesn't own it)
    */
   async deleteQuizTemplate(templateId: number, userId: string): Promise<void> {
     try {
       if (!userId) throw new Error('User ID required');
 
-      // 1. Fetch template to verify ownership
+      // 1. Fetch template to verify it exists in user's collection
+      // Note: getQuizTemplate only returns templates owned by userId
       const template = await this.getQuizTemplate(userId, templateId);
       if (!template) {
-        throw new Error('Quiz template not found');
+        throw new Error('Quiz template not found or you do not have permission to delete it');
       }
 
-      // 2. Verify ownership
-      if (template.userId !== userId) {
-        throw new Error('Only the quiz owner can delete this template');
-      }
-
-      // 3. Delete the template
+      // 2. Delete the template (implicit ownership check via Firestore collection path)
       await deleteUserDocument(userId, 'quizTemplates', templateId.toString());
 
       logInfo('deleteQuizTemplate', { templateId, userId, timestamp: new Date().toISOString() });
@@ -1317,26 +1316,25 @@ class FirestoreStorage implements IClientStorage {
    * Delete a lecture
    * Only the owner can delete their own lectures
    *
+   * Note: Lectures are stored per-user in Firestore, so users can only
+   * access and delete their own lectures. This provides implicit ownership validation.
+   *
    * @param id - ID of the lecture to delete
    * @param userId - ID of the user requesting deletion (must be the owner)
-   * @throws Error if lecture not found or user is not the owner
+   * @throws Error if lecture not found (which means user doesn't own it)
    */
   async deleteLecture(id: number, userId: string): Promise<void> {
     try {
       if (!userId) throw new Error('User ID required');
 
-      // 1. Fetch lecture to verify ownership
+      // 1. Fetch lecture to verify it exists in user's collection
+      // Note: getUserDocument only returns lectures owned by userId
       const lecture = await getUserDocument<Lecture>(userId, 'lectures', id.toString());
       if (!lecture) {
-        throw new Error('Lecture not found');
+        throw new Error('Lecture not found or you do not have permission to delete it');
       }
 
-      // 2. Verify ownership
-      if (lecture.userId !== userId) {
-        throw new Error('Only the lecture owner can delete this content');
-      }
-
-      // 3. Delete the lecture
+      // 2. Delete the lecture (implicit ownership check via Firestore collection path)
       await deleteUserDocument(userId, 'lectures', id.toString());
 
       logInfo('deleteLecture', { lectureId: id, userId, timestamp: new Date().toISOString() });
