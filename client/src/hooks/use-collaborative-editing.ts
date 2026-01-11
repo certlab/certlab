@@ -106,6 +106,11 @@ export function useCollaborativeEditing({
         setIsLoading(true);
         setError(null);
 
+        // Ensure user is available
+        if (!user?.id) {
+          throw new Error('User not authenticated');
+        }
+
         // Set editor presence
         await setEditorPresence(
           user.id,

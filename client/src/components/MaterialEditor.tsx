@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,9 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { FileText, Video, FileType, Code, Play, Plus, Save, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/lib/auth-provider';
+import { useCollaborativeEditing } from '@/hooks/use-collaborative-editing';
+import { CollaborativeEditors } from '@/components/CollaborativeEditors';
 import type { Lecture } from '@shared/schema';
 
 interface MaterialEditorProps {
@@ -22,6 +25,7 @@ interface MaterialEditorProps {
   onCancel: () => void;
   categories: Array<{ id: number; name: string }>;
   subcategories: Array<{ id: number; name: string; categoryId: number }>;
+  lectureId?: number; // Optional ID for existing lectures to enable collaboration
 }
 
 const contentTypeOptions = [
@@ -75,7 +79,17 @@ export function MaterialEditor({
   onCancel,
   categories,
   subcategories,
+  lectureId,
 }: MaterialEditorProps) {
+  const { user } = useAuth();
+
+  // Collaborative editing support
+  const { activeEditors, isOnline, hasConflict, recordEdit } = useCollaborativeEditing({
+    documentType: 'lecture',
+    documentId: lectureId?.toString() || 'new',
+    enabled: !!lectureId, // Only enable for existing lectures
+  });
+
   const [formData, setFormData] = useState<Partial<Lecture>>({
     contentType: 'text',
     title: '',
@@ -141,6 +155,11 @@ export function MaterialEditor({
     setIsSaving(true);
     try {
       await onSave(formData);
+
+      // Record edit in collaborative session if active
+      if (lectureId) {
+        await recordEdit();
+      }
     } catch (error) {
       console.error('Error saving material:', error);
 
@@ -542,6 +561,16 @@ export function MaterialEditor({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Collaborative Editing Status */}
+        {lectureId && user && (
+          <CollaborativeEditors
+            editors={activeEditors}
+            currentUserId={user.id}
+            isOnline={isOnline}
+            hasConflict={hasConflict}
+          />
+        )}
+
         {errors.general && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-red-700">{errors.general}</p>
