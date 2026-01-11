@@ -57,7 +57,7 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
         </PublicWrapper>
       );
       const results = await axe(container);
-      expect(results).toHaveNoViolations();
+      expect(results.violations).toHaveLength(0);
     });
 
     it('should have proper heading hierarchy', async () => {
@@ -92,7 +92,7 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
         </AuthenticatedWrapper>
       );
       const results = await axe(container);
-      expect(results).toHaveNoViolations();
+      expect(results.violations).toHaveLength(0);
     });
 
     it('should have accessible navigation', async () => {
@@ -132,7 +132,7 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
         </AuthenticatedWrapper>
       );
       const results = await axe(container);
-      expect(results).toHaveNoViolations();
+      expect(results.violations).toHaveLength(0);
     });
 
     it('should display contrast ratios', async () => {
@@ -154,7 +154,7 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
         </AuthenticatedWrapper>
       );
       const results = await axe(container);
-      expect(results).toHaveNoViolations();
+      expect(results.violations).toHaveLength(0);
     });
 
     it('should have proper page title', async () => {
@@ -210,7 +210,7 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       const results = await axe(container);
-      expect(results).toHaveNoViolations();
+      expect(results.violations).toHaveLength(0);
     });
   });
 
@@ -223,7 +223,7 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
       );
 
       const results = await axe(container);
-      expect(results).toHaveNoViolations();
+      expect(results.violations).toHaveLength(0);
     });
 
     it('should have proper ARIA labels on interactive elements', async () => {

@@ -1,9 +1,4 @@
 import { configureAxe } from 'vitest-axe';
-import { toHaveNoViolations } from 'vitest-axe/matchers';
-import { expect } from 'vitest';
-
-// Extend Vitest's expect with axe matchers
-expect.extend(toHaveNoViolations);
 
 // Configure axe for WCAG 2.2 AA compliance testing
 export const axe = configureAxe({
