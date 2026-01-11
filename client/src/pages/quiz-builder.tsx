@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-provider';
@@ -67,36 +67,34 @@ export default function QuizBuilder() {
   const searchParams = new URLSearchParams(location.search);
   const templateId = searchParams.get('template');
 
-  // Collaborative editing support
-  const {
-    activeEditors,
-    isOnline,
-    documentLock,
-    currentVersion,
-    sessionId,
-    updatePresence,
-    recordEdit,
-    hasConflict,
-    isLoading: collabLoading,
-    error: collabError,
-  } = useCollaborativeEditing({
-    documentType: 'quizTemplate',
-    documentId: templateId || 'new',
-    enabled: !!templateId, // Only enable for existing templates
-    onConflict: (lock) => {
+  // Memoized callbacks for collaborative editing
+  const handleConflict = useCallback(
+    (lock) => {
       toast({
         title: 'Concurrent Edit Detected',
         description: `${lock.lastModifiedBy === user?.id ? 'You' : 'Another user'} modified this quiz. Your changes may conflict.`,
         variant: 'destructive',
       });
     },
-    onEditorsChange: (editors) => {
-      // Could show a notification when new editors join
-      if (editors.length > 0) {
-        console.log(`${editors.length} other editor(s) active`);
-      }
-    },
-  });
+    [user?.id, toast]
+  );
+
+  const handleEditorsChange = useCallback((editors) => {
+    // Could show a notification when new editors join
+    if (editors.length > 0) {
+      console.log(`${editors.length} other editor(s) active`);
+    }
+  }, []);
+
+  // Collaborative editing support
+  const { activeEditors, isOnline, sessionId, updatePresence, recordEdit, hasConflict } =
+    useCollaborativeEditing({
+      documentType: 'quizTemplate',
+      documentId: templateId || 'new',
+      enabled: !!templateId, // Only enable for existing templates
+      onConflict: handleConflict,
+      onEditorsChange: handleEditorsChange,
+    });
 
   // Quiz Configuration State
   const [title, setTitle] = useState('');
@@ -147,13 +145,15 @@ export default function QuizBuilder() {
   const [previewKey, setPreviewKey] = useState(0); // Key for forcing preview remount
 
   // Update presence when active tab changes
+  // Note: updatePresence is a stable callback from useCollaborativeEditing hook
+
   useEffect(() => {
     if (templateId && activeTab) {
       updatePresence(activeTab).catch(() => {
         // Silently fail - presence is not critical
       });
     }
-  }, [activeTab, templateId, updatePresence]);
+  }, [activeTab, templateId]);
 
   // Fetch categories
   const {
@@ -267,14 +267,8 @@ export default function QuizBuilder() {
 
       await setUserDocument(user.id, 'quizTemplates', id.toString(), templateData);
 
-      // Create version history entry
-      const changeDesc = templateId
-        ? `Updated quiz: ${isDraft ? 'saved as draft' : 'published'}`
-        : `Created quiz: ${isDraft ? 'saved as draft' : 'published'}`;
-
-      await storage.createQuizVersion(id, templateData, changeDesc, 'quizTemplates');
-
-      // Record edit in collaborative session if active
+      // Record edit in collaborative session if active (before version creation)
+      // This ensures conflict detection happens before we commit changes
       if (sessionId && templateId) {
         const editSuccess = await recordEdit();
         if (!editSuccess) {
@@ -282,11 +276,18 @@ export default function QuizBuilder() {
           toast({
             title: 'Concurrent Edit Warning',
             description:
-              'Another user may have modified this quiz. Consider reviewing recent changes.',
+              'Another user may have modified this quiz. Your changes will create a new version.',
             variant: 'default',
           });
         }
       }
+
+      // Create version history entry
+      const changeDesc = templateId
+        ? `Updated quiz: ${isDraft ? 'saved as draft' : 'published'}`
+        : `Created quiz: ${isDraft ? 'saved as draft' : 'published'}`;
+
+      await storage.createQuizVersion(id, templateData, changeDesc, 'quizTemplates');
 
       return { id, template };
     },

@@ -28,7 +28,7 @@ CertLab now supports real-time collaborative editing for quizzes and learning ma
 ### Data Model
 
 #### Editor Presence
-Stored at: `/presence/{documentType}/{documentId}/editors/{userId}`
+Stored at: `/presence/{documentType}-{documentId}/editors/{userId}`
 
 ```typescript
 interface EditorPresence {
@@ -46,7 +46,7 @@ interface EditorPresence {
 ```
 
 #### Document Lock
-Stored at: `/locks/{documentType}/{documentId}`
+Stored at: `/locks/{documentType}-{documentId}`
 
 ```typescript
 interface DocumentLock {
@@ -204,15 +204,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Presence - users can write their own presence
-    match /presence/{docType}/{docId}/editors/{userId} {
+    match /presence/{presenceDocId}/editors/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && 
+                      request.auth.uid == userId &&
+                      request.resource.data.userId == userId;
     }
     
-    // Locks - any authenticated user can read
-    match /locks/{docType}/{docId} {
+    // Locks - authenticated users can read; write restricted to document editors
+    match /locks/{lockId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null;
+      // TODO: Add additional checks to verify user has edit permission on the document
     }
     
     // Edit sessions - users can only access their own

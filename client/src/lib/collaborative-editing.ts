@@ -12,12 +12,7 @@
  * @module collaborative-editing
  */
 
-import {
-  getFirestoreInstance,
-  Timestamp,
-  timestampToDate,
-  dateToTimestamp,
-} from './firestore-service';
+import { getFirestoreInstance, timestampToDate } from './firestore-service';
 import {
   collection,
   doc,
@@ -25,7 +20,6 @@ import {
   getDocs,
   setDoc,
   updateDoc,
-  deleteDoc,
   query,
   where,
   onSnapshot,
@@ -92,7 +86,9 @@ export async function setEditorPresence(
 ): Promise<EditorPresence> {
   try {
     const db = getFirestoreInstance();
-    const presenceRef = doc(db, 'presence', documentType, documentId, 'editors', userId);
+    // Use compound ID to properly structure the document path
+    const presenceDocId = `${documentType}-${documentId}`;
+    const presenceRef = doc(db, 'presence', presenceDocId, 'editors', userId);
 
     const presence: EditorPresence = {
       userId,
@@ -134,7 +130,8 @@ export async function updateEditorPresence(
 ): Promise<void> {
   try {
     const db = getFirestoreInstance();
-    const presenceRef = doc(db, 'presence', documentType, documentId, 'editors', userId);
+    const presenceDocId = `${documentType}-${documentId}`;
+    const presenceRef = doc(db, 'presence', presenceDocId, 'editors', userId);
 
     await updateDoc(presenceRef, {
       lastSeen: serverTimestamp(),
@@ -158,7 +155,8 @@ export async function removeEditorPresence(
 ): Promise<void> {
   try {
     const db = getFirestoreInstance();
-    const presenceRef = doc(db, 'presence', documentType, documentId, 'editors', userId);
+    const presenceDocId = `${documentType}-${documentId}`;
+    const presenceRef = doc(db, 'presence', presenceDocId, 'editors', userId);
 
     await updateDoc(presenceRef, {
       isActive: false,
@@ -180,7 +178,8 @@ export function subscribeToEditors(
 ): Unsubscribe {
   try {
     const db = getFirestoreInstance();
-    const editorsRef = collection(db, 'presence', documentType, documentId, 'editors');
+    const presenceDocId = `${documentType}-${documentId}`;
+    const editorsRef = collection(db, 'presence', presenceDocId, 'editors');
     const q = query(editorsRef, where('isActive', '==', true));
 
     return onSnapshot(q, (snapshot) => {
@@ -214,7 +213,9 @@ export async function getDocumentLock(
 ): Promise<DocumentLock> {
   try {
     const db = getFirestoreInstance();
-    const lockRef = doc(db, 'locks', documentType, documentId);
+    // Use compound ID to avoid path structure issues
+    const lockId = `${documentType}-${documentId}`;
+    const lockRef = doc(db, 'locks', lockId);
     const lockSnap = await getDoc(lockRef);
 
     if (lockSnap.exists()) {
@@ -261,7 +262,8 @@ export async function updateDocumentVersion(
 ): Promise<{ success: boolean; currentVersion: number; conflict?: boolean }> {
   try {
     const db = getFirestoreInstance();
-    const lockRef = doc(db, 'locks', documentType, documentId);
+    const lockId = `${documentType}-${documentId}`;
+    const lockRef = doc(db, 'locks', lockId);
 
     // Get current lock to check version
     const currentLock = await getDocumentLock(documentType, documentId, userId);
@@ -303,7 +305,8 @@ export function subscribeToDocumentLock(
 ): Unsubscribe {
   try {
     const db = getFirestoreInstance();
-    const lockRef = doc(db, 'locks', documentType, documentId);
+    const lockId = `${documentType}-${documentId}`;
+    const lockRef = doc(db, 'locks', lockId);
 
     return onSnapshot(lockRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -585,7 +588,8 @@ export async function cleanupStalePresence(
 ): Promise<void> {
   try {
     const db = getFirestoreInstance();
-    const editorsRef = collection(db, 'presence', documentType, documentId, 'editors');
+    const presenceDocId = `${documentType}-${documentId}`;
+    const editorsRef = collection(db, 'presence', presenceDocId, 'editors');
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
     const staleQuery = query(editorsRef, where('lastSeen', '<', fiveMinutesAgo));
@@ -607,8 +611,6 @@ export async function getActiveEditSessions(
   documentId: string
 ): Promise<EditSession[]> {
   try {
-    const db = getFirestoreInstance();
-
     // This would require a collection group query across all users
     // For now, we'll return empty array and track sessions client-side
     // In production, consider creating a shared editSessions collection

@@ -158,23 +158,26 @@ export function useCollaborativeEditing({
         });
         unsubscribeLockRef.current = unsubLock;
 
-        // Set up presence heartbeat
-        heartbeatIntervalRef.current = setInterval(() => {
-          if (isOnline) {
-            updateEditorPresence(user.id, documentType, documentId).catch((err) => {
-              console.error('Failed to update presence:', err);
-            });
-          }
-        }, PRESENCE_HEARTBEAT_INTERVAL);
+        // Set up intervals only if component is still mounted
+        if (mounted) {
+          // Set up presence heartbeat
+          heartbeatIntervalRef.current = setInterval(() => {
+            if (isOnline) {
+              updateEditorPresence(user.id, documentType, documentId).catch((err) => {
+                console.error('Failed to update presence:', err);
+              });
+            }
+          }, PRESENCE_HEARTBEAT_INTERVAL);
 
-        // Set up cleanup interval
-        cleanupIntervalRef.current = setInterval(() => {
-          if (isOnline) {
-            cleanupStalePresence(documentType, documentId).catch((err) => {
-              console.error('Failed to cleanup stale presence:', err);
-            });
-          }
-        }, CLEANUP_INTERVAL);
+          // Set up cleanup interval
+          cleanupIntervalRef.current = setInterval(() => {
+            if (isOnline) {
+              cleanupStalePresence(documentType, documentId).catch((err) => {
+                console.error('Failed to cleanup stale presence:', err);
+              });
+            }
+          }, CLEANUP_INTERVAL);
+        }
 
         setIsLoading(false);
       } catch (err) {
@@ -212,12 +215,10 @@ export function useCollaborativeEditing({
         cleanupIntervalRef.current = null;
       }
 
-      // Remove presence and end session
-      if (user) {
+      // Remove presence and end session only if they were initialized
+      if (user && sessionId) {
         removeEditorPresence(user.id, documentType, documentId).catch(() => {});
-        if (sessionId) {
-          endEditSession(user.id, sessionId).catch(() => {});
-        }
+        endEditSession(user.id, sessionId).catch(() => {});
       }
     };
   }, [enabled, user, documentType, documentId, isOnline, onConflict, onEditorsChange]);

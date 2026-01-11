@@ -20,6 +20,7 @@ import type {
   Question,
   Quiz,
   QuizTemplate,
+  QuizVersion,
   UserProgress,
   MasteryScore,
   Badge,
@@ -991,17 +992,20 @@ export interface IClientStorage extends IStorageAdapter {
     quizData: Quiz | QuizTemplate,
     changeDescription?: string,
     collectionName?: 'quizzes' | 'quizTemplates'
-  ): Promise<any>;
+  ): Promise<QuizVersion>;
 
   /** Get all versions for a quiz, ordered by creation date (newest first) */
-  getQuizVersions(quizId: number, collectionName?: 'quizzes' | 'quizTemplates'): Promise<any[]>;
+  getQuizVersions(
+    quizId: number,
+    collectionName?: 'quizzes' | 'quizTemplates'
+  ): Promise<QuizVersion[]>;
 
   /** Get a specific version of a quiz */
   getQuizVersion(
     quizId: number,
     versionId: string,
     collectionName?: 'quizzes' | 'quizTemplates'
-  ): Promise<any | null>;
+  ): Promise<QuizVersion | null>;
 
   /** Restore a quiz to a previous version */
   restoreQuizVersion(

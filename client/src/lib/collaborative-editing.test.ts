@@ -4,7 +4,7 @@
  * Tests for presence tracking, conflict detection, and version management
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { detectConflict } from '@/lib/collaborative-editing';
 import type { EditOperation } from '@shared/schema';
 
@@ -167,15 +167,17 @@ describe('Collaborative Editing', () => {
 
   describe('Presence Tracking', () => {
     it('should detect stale presence (> 5 minutes)', () => {
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000 - 1000); // 5 min + 1 sec ago
-      const sixMinutesAgo = new Date(Date.now() - 6 * 60 * 1000);
+      const FIVE_MINUTES_MS = 5 * 60 * 1000;
       const now = new Date();
+      const fiveMinutesAgo = new Date(now.getTime() - FIVE_MINUTES_MS);
+      const sixMinutesAgo = new Date(now.getTime() - 6 * 60 * 1000);
 
-      const recentActivity = now.getTime() - fiveMinutesAgo.getTime();
-      const staleActivity = now.getTime() - sixMinutesAgo.getTime();
+      const isStale = (lastSeen: Date) => now.getTime() - lastSeen.getTime() > FIVE_MINUTES_MS;
 
-      expect(recentActivity).toBeGreaterThan(5 * 60 * 1000);
-      expect(staleActivity).toBeGreaterThan(5 * 60 * 1000);
+      // Exactly at the 5 minute boundary should NOT be considered stale
+      expect(isStale(fiveMinutesAgo)).toBe(false);
+      // More than 5 minutes ago should be considered stale
+      expect(isStale(sixMinutesAgo)).toBe(true);
     });
 
     it('should maintain unique colors for editors', () => {

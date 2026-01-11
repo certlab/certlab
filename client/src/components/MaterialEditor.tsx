@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -154,12 +154,13 @@ export function MaterialEditor({
 
     setIsSaving(true);
     try {
-      await onSave(formData);
-
-      // Record edit in collaborative session if active
+      // Record edit in collaborative session if active (for conflict detection)
+      // This must happen BEFORE the save to detect conflicts
       if (lectureId) {
         await recordEdit();
       }
+
+      await onSave(formData);
     } catch (error) {
       console.error('Error saving material:', error);
 
