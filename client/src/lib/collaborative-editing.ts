@@ -57,12 +57,18 @@ const EDITOR_COLORS = [
   '#F97316', // Orange
 ];
 
-let colorIndex = 0;
-
-function getNextEditorColor(): string {
-  const color = EDITOR_COLORS[colorIndex];
-  colorIndex = (colorIndex + 1) % EDITOR_COLORS.length;
-  return color;
+/**
+ * Get a consistent color for a user ID using a hash-based approach
+ * This ensures the same user always gets the same color across sessions
+ */
+function getUserColor(userId: string): string {
+  // Simple hash function to map userId to a color
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % EDITOR_COLORS.length;
+  return EDITOR_COLORS[index];
 }
 
 // ============================================================================
@@ -93,7 +99,7 @@ export async function setEditorPresence(
       userName,
       userEmail: options?.userEmail,
       profileImageUrl: options?.profileImageUrl,
-      color: getNextEditorColor(),
+      color: getUserColor(userId),
       lastSeen: new Date(),
       isActive: true,
       documentType,

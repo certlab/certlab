@@ -220,7 +220,7 @@ export function useCollaborativeEditing({
         }
       }
     };
-  }, [enabled, user, documentType, documentId, isOnline, onConflict, onEditorsChange, sessionId]);
+  }, [enabled, user, documentType, documentId, isOnline, onConflict, onEditorsChange]);
 
   // Update presence with current editing section
   const updatePresence = useCallback(

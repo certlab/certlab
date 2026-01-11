@@ -19,6 +19,7 @@ import type {
   Subcategory,
   Question,
   Quiz,
+  QuizTemplate,
   UserProgress,
   MasteryScore,
   Badge,
@@ -987,7 +988,7 @@ export interface IClientStorage extends IStorageAdapter {
   /** Create a new version snapshot of a quiz or template */
   createQuizVersion(
     quizId: number,
-    quizData: any,
+    quizData: Quiz | QuizTemplate,
     changeDescription?: string,
     collectionName?: 'quizzes' | 'quizTemplates'
   ): Promise<any>;
@@ -1007,5 +1008,5 @@ export interface IClientStorage extends IStorageAdapter {
     quizId: number,
     versionId: string,
     collectionName?: 'quizzes' | 'quizTemplates'
-  ): Promise<any>;
+  ): Promise<Quiz | QuizTemplate>;
 }

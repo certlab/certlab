@@ -144,7 +144,8 @@ export function CollaborativeEditors({
         <Alert variant="destructive" className="py-2 px-3">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="text-xs">
-            Changes detected from another editor. Please refresh to see latest version.
+            Another editor has made changes. Your next save will create a new version to preserve
+            both versions.
           </AlertDescription>
         </Alert>
       )}
