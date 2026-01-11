@@ -38,6 +38,12 @@ export function canEdit(
 
   // Creator can always edit
   // Check userId (lectures), author (quizzes), or createdBy (templates)
+  // Priority order: userId > author > createdBy
+  // Note: Different resource types use different owner fields:
+  //   - Lectures use 'userId'
+  //   - Quizzes use 'author'
+  //   - Templates use 'createdBy'
+  // The fallback chain ensures compatibility with all resource types
   const creatorId = resource.userId || resource.author || resource.createdBy;
   if (creatorId === user.id) {
     return true;

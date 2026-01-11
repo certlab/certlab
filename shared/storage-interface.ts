@@ -19,6 +19,7 @@ import type {
   Subcategory,
   Question,
   Quiz,
+  QuizTemplate,
   UserProgress,
   MasteryScore,
   Badge,
@@ -238,6 +239,22 @@ export interface IStorageAdapter {
   updateQuiz(id: number, updates: Partial<Quiz>): Promise<Quiz>;
 
   // ==========================================
+  // Quiz Templates
+  // ==========================================
+
+  /** Get all quiz templates for a user */
+  getUserQuizTemplates(userId: string, tenantId?: number): Promise<QuizTemplate[]>;
+
+  /** Get a specific quiz template by ID */
+  getQuizTemplate(userId: string, templateId: number): Promise<QuizTemplate | undefined>;
+
+  /** Duplicate an existing quiz template */
+  duplicateQuizTemplate(templateId: number, userId: string): Promise<QuizTemplate>;
+
+  /** Delete a quiz template (only owner can delete) */
+  deleteQuizTemplate(templateId: number, userId: string): Promise<void>;
+
+  // ==========================================
   // User Progress
   // ==========================================
 
@@ -275,6 +292,12 @@ export interface IStorageAdapter {
 
   /** Get a specific lecture by ID */
   getLecture(id: number): Promise<Lecture | undefined>;
+
+  /** Update an existing lecture */
+  updateLecture(id: number, updates: Partial<Lecture>): Promise<Lecture>;
+
+  /** Delete a lecture (only owner can delete) */
+  deleteLecture(id: number, userId: string): Promise<void>;
 
   // ==========================================
   // Mastery Scores

@@ -69,11 +69,11 @@ export default function LecturePage() {
   });
 
   const handleDeleteClick = () => {
-    if (!lecture || !user) return;
+    if (!lecture || !user || !lecture.id) return;
 
     // Check delete permission
     const hasPermission = canDelete(lecture, user);
-    logPermissionCheck('delete', 'lecture', lecture.id!, user.id, hasPermission);
+    logPermissionCheck('delete', 'lecture', lecture.id, user.id, hasPermission);
 
     if (!hasPermission) {
       toast({
@@ -92,31 +92,6 @@ export default function LecturePage() {
     if (lecture?.id) {
       deleteMutation.mutate(lecture.id);
     }
-  };
-
-  const handleEditClick = () => {
-    if (!lecture || !user) return;
-
-    // Check edit permission
-    const hasPermission = canEdit(lecture, user);
-    logPermissionCheck('edit', 'lecture', lecture.id!, user.id, hasPermission);
-
-    if (!hasPermission) {
-      toast({
-        title: 'Permission Denied',
-        description:
-          'You can view this lecture but cannot edit it. Only the creator can make changes.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Navigate to lecture editor (if it exists)
-    // For now, show a message
-    toast({
-      title: 'Edit Not Available',
-      description: 'Lecture editing is coming soon.',
-    });
   };
 
   if (isLoading) {
@@ -199,9 +174,14 @@ export default function LecturePage() {
           </Button>
           {canEdit(lecture, user) && (
             <>
-              <Button variant="outline" onClick={handleEditClick} className="flex-1">
+              <Button
+                variant="outline"
+                className="flex-1"
+                disabled
+                title="Lecture editing feature is coming soon"
+              >
                 <Edit2 className="h-4 w-4 mr-2" />
-                Edit Lecture
+                Edit Lecture (Coming Soon)
               </Button>
               <Button
                 variant="destructive"

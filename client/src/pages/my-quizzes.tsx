@@ -344,43 +344,46 @@ export default function MyQuizzes() {
                           {formatDate(template.createdAt)}
                         </TableCell>
                         <TableCell>
-                          {canEdit(template, user) ? (
-                            <div className="flex items-center justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEdit(template)}
-                                title="Edit quiz"
-                                disabled={!template.id}
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDuplicateClick(template)}
-                                title="Duplicate quiz"
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteClick(template)}
-                                title="Delete quiz"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <Alert className="py-2">
-                              <Lock className="h-4 w-4" />
-                              <AlertDescription className="text-xs ml-2">
-                                View only
-                              </AlertDescription>
-                            </Alert>
-                          )}
+                          <div className="flex items-center justify-end gap-2">
+                            {canEdit(template, user) && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(template)}
+                                  title="Edit quiz"
+                                  disabled={!template.id}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteClick(template)}
+                                  title="Delete quiz"
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDuplicateClick(template)}
+                              title="Duplicate quiz"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            {!canEdit(template, user) && (
+                              <Alert className="py-2">
+                                <Lock className="h-4 w-4" />
+                                <AlertDescription className="text-xs ml-2">
+                                  View only
+                                </AlertDescription>
+                              </Alert>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
