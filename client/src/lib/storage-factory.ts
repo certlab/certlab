@@ -589,6 +589,10 @@ class StorageRouter implements IClientStorage {
     return this.executeStorageOperation((s) => s.getLecture(id), 'getLecture');
   }
 
+  async updateLecture(id: number, updates: Partial<any>): Promise<any> {
+    return this.executeStorageOperation((s) => s.updateLecture(id, updates), 'updateLecture');
+  }
+
   async deleteLecture(id: number, userId: string): Promise<void> {
     return this.executeStorageOperation((s) => s.deleteLecture(id, userId), 'deleteLecture');
   }
