@@ -5,9 +5,9 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useAuth } from './auth-provider';
-import { verifyPurchaseWithAdminBypass } from './purchase-verification';
-import type { PurchaseVerificationResult } from './purchase-verification';
+import { useAuth } from '../lib/auth-provider';
+import { verifyPurchaseWithAdminBypass } from '../lib/purchase-verification';
+import type { PurchaseVerificationResult } from '../lib/purchase-verification';
 
 /**
  * Hook for verifying user purchase access to a product
