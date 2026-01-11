@@ -3310,6 +3310,7 @@ class FirestoreStorage implements IClientStorage {
 
   /**
    * Check if a user is in any of the specified groups
+   * Optimized to reduce N+1 queries by using a single collection group query
    */
   async isUserInGroups(userId: string, groupIds: number[]): Promise<boolean> {
     if (!groupIds || groupIds.length === 0) {
@@ -3317,15 +3318,45 @@ class FirestoreStorage implements IClientStorage {
     }
 
     try {
-      // Check each group for membership
-      for (const groupId of groupIds) {
-        const members = await getSharedDocuments<any>(`groups/${groupId}/members`, [
-          where('userId', '==', userId),
-        ]);
-        if (members.length > 0) {
-          return true;
+      // Use collection group query to check membership across all groups in a single query
+      // This is more efficient than querying each group individually (N+1 problem)
+      const db = getFirestoreInstance();
+      const {
+        collectionGroup,
+        query,
+        where: whereClause,
+        getDocs,
+      } = await import('firebase/firestore');
+
+      // Query the members collection group for this user in any of the specified groups
+      const membersQuery = query(
+        collectionGroup(db, 'members'),
+        whereClause('userId', '==', userId),
+        whereClause('groupId', 'in', groupIds.slice(0, 10)) // Firestore 'in' limited to 10 items
+      );
+
+      const snapshot = await getDocs(membersQuery);
+      if (!snapshot.empty) {
+        return true;
+      }
+
+      // If there are more than 10 groups, we need to check the remaining groups
+      // This is still better than N queries but handles the Firestore 'in' limitation
+      if (groupIds.length > 10) {
+        for (let i = 10; i < groupIds.length; i += 10) {
+          const batch = groupIds.slice(i, i + 10);
+          const batchQuery = query(
+            collectionGroup(db, 'members'),
+            whereClause('userId', '==', userId),
+            whereClause('groupId', 'in', batch)
+          );
+          const batchSnapshot = await getDocs(batchQuery);
+          if (!batchSnapshot.empty) {
+            return true;
+          }
         }
       }
+
       return false;
     } catch (error) {
       logError('isUserInGroups', error, { userId, groupIds });
@@ -3360,8 +3391,9 @@ class FirestoreStorage implements IClientStorage {
    */
   async createGroup(group: Partial<Group>): Promise<Group> {
     try {
-      // Use crypto.randomUUID() for more robust ID generation
-      const groupId = Date.now(); // Keep for now since it's stored as number
+      // Using timestamp-based ID generation
+      // Note: This may cause collisions in high-concurrency scenarios
+      const groupId = Date.now();
       const newGroup: Group = {
         ...group,
         id: groupId,

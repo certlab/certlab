@@ -51,6 +51,8 @@ import type {
   QuizVersion,
   QuizTemplate,
   Group,
+  GroupMember,
+  Purchase,
 } from '@shared/schema';
 
 /**
@@ -1125,19 +1127,19 @@ class StorageRouter implements IClientStorage {
     );
   }
 
-  async getGroupMembers(groupId: number): Promise<any[]> {
+  async getGroupMembers(groupId: number): Promise<GroupMember[]> {
     return this.executeStorageOperation((s) => s.getGroupMembers(groupId), 'getGroupMembers');
   }
 
-  async getAllGroups(tenantId?: number): Promise<any[]> {
+  async getAllGroups(tenantId?: number): Promise<Group[]> {
     return this.executeStorageOperation((s) => s.getAllGroups(tenantId), 'getAllGroups');
   }
 
-  async recordPurchase(purchase: Partial<any>): Promise<any> {
+  async recordPurchase(purchase: Partial<Purchase>): Promise<Purchase> {
     return this.executeStorageOperation((s) => s.recordPurchase(purchase), 'recordPurchase');
   }
 
-  async getUserPurchases(userId: string): Promise<any[]> {
+  async getUserPurchases(userId: string): Promise<Purchase[]> {
     return this.executeStorageOperation((s) => s.getUserPurchases(userId), 'getUserPurchases');
   }
 }

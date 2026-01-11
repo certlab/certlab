@@ -5,7 +5,6 @@
  * Supports three visibility levels: private, shared, and public.
  */
 
-import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Lock, Users, Globe } from 'lucide-react';
