@@ -47,6 +47,10 @@ import type {
   StudyTimerSession,
   StudyTimerSettings,
   StudyTimerStats,
+  Group,
+  GroupMember,
+  Purchase,
+  AccessCheckResult,
 } from './schema';
 
 /**
@@ -979,4 +983,55 @@ export interface IClientStorage extends IStorageAdapter {
 
   /** Get study timer statistics for a user */
   getStudyTimerStats(userId: string): Promise<StudyTimerStats>;
+
+  // ==========================================
+  // Access Control & Permissions
+  // ==========================================
+
+  /** Check if a user has access to a resource (quiz, lecture, template) */
+  checkAccess(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<{
+    allowed: boolean;
+    reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
+    productId?: string;
+  }>;
+
+  /** Check if a user has purchased a product */
+  checkPurchase(userId: string, productId: string): Promise<boolean>;
+
+  /** Check if a user is in any of the specified groups */
+  isUserInGroups(userId: string, groupIds: number[]): Promise<boolean>;
+
+  /** Get all groups a user is a member of */
+  getUserGroups(userId: string): Promise<Group[]>;
+
+  /** Create a new group */
+  createGroup(group: Partial<Group>): Promise<Group>;
+
+  /** Update a group */
+  updateGroup(groupId: number, updates: Partial<Group>): Promise<Group>;
+
+  /** Delete a group */
+  deleteGroup(groupId: number): Promise<void>;
+
+  /** Add a user to a group */
+  addGroupMember(groupId: number, userId: string, addedBy: string): Promise<void>;
+
+  /** Remove a user from a group */
+  removeGroupMember(groupId: number, userId: string): Promise<void>;
+
+  /** Get all members of a group */
+  getGroupMembers(groupId: number): Promise<GroupMember[]>;
+
+  /** Get all groups (for admins or searching) */
+  getAllGroups(tenantId?: number): Promise<Group[]>;
+
+  /** Record a purchase */
+  recordPurchase(purchase: Partial<Purchase>): Promise<Purchase>;
+
+  /** Get all purchases for a user */
+  getUserPurchases(userId: string): Promise<Purchase[]>;
 }
