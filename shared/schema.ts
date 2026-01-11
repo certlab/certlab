@@ -1657,6 +1657,213 @@ export interface CustomQuestion {
 }
 
 // ============================================================================
+// Collaborative Editing - Presence and Session Management
+// ============================================================================
+
+/**
+ * Editor presence information for collaborative editing
+ * Stored in Firestore at: /presence/{documentType}/{documentId}/editors/{userId}
+ */
+export interface EditorPresence {
+  userId: string;
+  userName: string;
+  userEmail?: string;
+  profileImageUrl?: string;
+  color: string; // Unique color for this editor's cursor/highlights
+  lastSeen: Date;
+  isActive: boolean;
+  documentType: 'quiz' | 'quizTemplate' | 'lecture' | 'material';
+  documentId: string;
+  editingSection?: string; // Optional: which section they're editing (e.g., 'question-3', 'description')
+  cursorPosition?: {
+    fieldId: string;
+    offset: number;
+  };
+}
+
+/**
+ * Zod schema for editor presence validation
+ */
+export const editorPresenceSchema = z.object({
+  userId: z.string(),
+  userName: z.string(),
+  userEmail: z.string().optional(),
+  profileImageUrl: z.string().optional(),
+  color: z.string(),
+  lastSeen: z.date(),
+  isActive: z.boolean(),
+  documentType: z.enum(['quiz', 'quizTemplate', 'lecture', 'material']),
+  documentId: z.string(),
+  editingSection: z.string().optional(),
+  cursorPosition: z
+    .object({
+      fieldId: z.string(),
+      offset: z.number(),
+    })
+    .optional(),
+});
+
+export type InsertEditorPresence = z.infer<typeof editorPresenceSchema>;
+
+/**
+ * Edit session tracking for collaborative editing
+ * Stored in Firestore at: /users/{userId}/editSessions/{sessionId}
+ */
+export interface EditSession {
+  id: string;
+  userId: string;
+  documentType: 'quiz' | 'quizTemplate' | 'lecture' | 'material';
+  documentId: string;
+  startedAt: Date;
+  lastActivityAt: Date;
+  endedAt?: Date;
+  isActive: boolean;
+  editCount: number; // Number of edits made in this session
+  conflictsResolved: number; // Number of conflicts resolved
+}
+
+/**
+ * Zod schema for edit session validation
+ */
+export const editSessionSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  documentType: z.enum(['quiz', 'quizTemplate', 'lecture', 'material']),
+  documentId: z.string(),
+  startedAt: z.date(),
+  lastActivityAt: z.date(),
+  endedAt: z.date().optional(),
+  isActive: z.boolean(),
+  editCount: z.number().default(0),
+  conflictsResolved: z.number().default(0),
+});
+
+export type InsertEditSession = z.infer<typeof editSessionSchema>;
+
+/**
+ * Document lock for coordinating edits
+ * Stored in Firestore at: /locks/{documentType}/{documentId}
+ */
+export interface DocumentLock {
+  documentType: 'quiz' | 'quizTemplate' | 'lecture' | 'material';
+  documentId: string;
+  lockedBy?: string; // userId who holds the lock (null for optimistic locking)
+  lockedAt?: Date;
+  lockExpiry?: Date; // Auto-release lock after this time
+  lockMode: 'optimistic' | 'pessimistic'; // Optimistic = last-write-wins with conflict detection
+  version: number; // Document version number for optimistic locking
+  lastModifiedBy: string;
+  lastModifiedAt: Date;
+}
+
+/**
+ * Zod schema for document lock validation
+ */
+export const documentLockSchema = z.object({
+  documentType: z.enum(['quiz', 'quizTemplate', 'lecture', 'material']),
+  documentId: z.string(),
+  lockedBy: z.string().optional(),
+  lockedAt: z.date().optional(),
+  lockExpiry: z.date().optional(),
+  lockMode: z.enum(['optimistic', 'pessimistic']),
+  version: z.number(),
+  lastModifiedBy: z.string(),
+  lastModifiedAt: z.date(),
+});
+
+export type InsertDocumentLock = z.infer<typeof documentLockSchema>;
+
+/**
+ * Edit operation for conflict resolution
+ * Tracks individual edit operations for operational transformation
+ */
+export interface EditOperation {
+  id: string;
+  sessionId: string;
+  userId: string;
+  documentType: 'quiz' | 'quizTemplate' | 'lecture' | 'material';
+  documentId: string;
+  timestamp: Date;
+  operation: 'insert' | 'delete' | 'update' | 'replace';
+  fieldPath: string; // JSONPath to the field being edited
+  oldValue?: any;
+  newValue?: any;
+  position?: number; // For insert/delete operations in arrays or text
+  length?: number; // For delete operations
+  baseVersion: number; // Document version this edit is based on
+  applied: boolean; // Whether this operation has been applied
+  conflicted: boolean; // Whether this operation conflicts with another
+  mergedInto?: string; // ID of the operation this was merged into
+}
+
+/**
+ * Zod schema for edit operation validation
+ */
+export const editOperationSchema = z.object({
+  id: z.string(),
+  sessionId: z.string(),
+  userId: z.string(),
+  documentType: z.enum(['quiz', 'quizTemplate', 'lecture', 'material']),
+  documentId: z.string(),
+  timestamp: z.date(),
+  operation: z.enum(['insert', 'delete', 'update', 'replace']),
+  fieldPath: z.string(),
+  oldValue: z.any().optional(),
+  newValue: z.any().optional(),
+  position: z.number().optional(),
+  length: z.number().optional(),
+  baseVersion: z.number(),
+  applied: z.boolean(),
+  conflicted: z.boolean(),
+  mergedInto: z.string().optional(),
+});
+
+export type InsertEditOperation = z.infer<typeof editOperationSchema>;
+
+/**
+ * Conflict record for tracking and resolving edit conflicts
+ * Stored in Firestore at: /conflicts/{conflictId}
+ */
+export interface EditConflict {
+  id: string;
+  documentType: 'quiz' | 'quizTemplate' | 'lecture' | 'material';
+  documentId: string;
+  detectedAt: Date;
+  resolvedAt?: Date;
+  status: 'detected' | 'resolving' | 'resolved' | 'abandoned';
+  conflictingOperations: string[]; // IDs of conflicting EditOperations
+  resolution?: {
+    strategy: 'manual' | 'last-write-wins' | 'first-write-wins' | 'merge' | 'reject';
+    resolvedBy: string; // userId who resolved the conflict
+    selectedOperation?: string; // Operation ID that was chosen
+    mergedResult?: any; // Result of merge if applicable
+  };
+  affectedUsers: string[]; // userIds of users whose edits are in conflict
+}
+
+/**
+ * Zod schema for edit conflict validation
+ */
+export const editConflictSchema = z.object({
+  id: z.string(),
+  documentType: z.enum(['quiz', 'quizTemplate', 'lecture', 'material']),
+  documentId: z.string(),
+  detectedAt: z.date(),
+  resolvedAt: z.date().optional(),
+  status: z.enum(['detected', 'resolving', 'resolved', 'abandoned']),
+  conflictingOperations: z.array(z.string()),
+  resolution: z
+    .object({
+      strategy: z.enum(['manual', 'last-write-wins', 'first-write-wins', 'merge', 'reject']),
+      resolvedBy: z.string(),
+      selectedOperation: z.string().optional(),
+      mergedResult: z.any().optional(),
+    })
+    .optional(),
+  affectedUsers: z.array(z.string()),
+});
+
+export type InsertEditConflict = z.infer<typeof editConflictSchema>;
 // Access Control & Permissions
 // ============================================================================
 

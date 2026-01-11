@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-provider';
@@ -7,6 +7,7 @@ import { setUserDocument } from '@/lib/firestore-service';
 import { queryKeys } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { sanitizeInput, sanitizeArray } from '@/lib/sanitize';
+import { useCollaborativeEditing } from '@/hooks/use-collaborative-editing';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +43,7 @@ import {
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { QuizVersionHistory } from '@/components/QuizVersionHistory';
+import { CollaborativeEditors } from '@/components/CollaborativeEditors';
 import PreviewQuizInterface from '@/components/PreviewQuizInterface';
 import { DraggableList } from '@/components/DraggableList';
 import type {
@@ -52,6 +54,8 @@ import type {
   Quiz,
   QuizTemplate,
   CustomQuestion,
+  DocumentLock,
+  EditorPresence,
 } from '@shared/schema';
 
 export default function QuizBuilder() {
@@ -64,6 +68,35 @@ export default function QuizBuilder() {
   // Get template ID from query params if editing
   const searchParams = new URLSearchParams(location.search);
   const templateId = searchParams.get('template');
+
+  // Memoized callbacks for collaborative editing
+  const handleConflict = useCallback(
+    (lock: DocumentLock) => {
+      toast({
+        title: 'Concurrent Edit Detected',
+        description: `${lock.lastModifiedBy === user?.id ? 'You' : 'Another user'} modified this quiz. Your changes may conflict.`,
+        variant: 'destructive',
+      });
+    },
+    [user?.id, toast]
+  );
+
+  const handleEditorsChange = useCallback((editors: EditorPresence[]) => {
+    // Could show a notification when new editors join
+    if (editors.length > 0) {
+      console.log(`${editors.length} other editor(s) active`);
+    }
+  }, []);
+
+  // Collaborative editing support
+  const { activeEditors, isOnline, sessionId, updatePresence, recordEdit, hasConflict } =
+    useCollaborativeEditing({
+      documentType: 'quizTemplate',
+      documentId: templateId || 'new',
+      enabled: !!templateId, // Only enable for existing templates
+      onConflict: handleConflict,
+      onEditorsChange: handleEditorsChange,
+    });
 
   // Quiz Configuration State
   const [title, setTitle] = useState('');
@@ -112,6 +145,17 @@ export default function QuizBuilder() {
   const [currentPreviewQuestion, setCurrentPreviewQuestion] = useState(0);
   const [showRealisticPreview, setShowRealisticPreview] = useState(false);
   const [previewKey, setPreviewKey] = useState(0); // Key for forcing preview remount
+
+  // Update presence when active tab changes
+  // Note: updatePresence is a stable callback from useCollaborativeEditing hook
+
+  useEffect(() => {
+    if (templateId && activeTab) {
+      updatePresence(activeTab).catch(() => {
+        // Silently fail - presence is not critical
+      });
+    }
+  }, [activeTab, templateId]);
 
   // Fetch categories
   const {
@@ -224,6 +268,21 @@ export default function QuizBuilder() {
       };
 
       await setUserDocument(user.id, 'quizTemplates', id.toString(), templateData);
+
+      // Record edit in collaborative session if active (before version creation)
+      // This ensures conflict detection happens before we commit changes
+      if (sessionId && templateId) {
+        const editSuccess = await recordEdit();
+        if (!editSuccess) {
+          // Conflict detected - show warning but don't fail the save
+          toast({
+            title: 'Concurrent Edit Warning',
+            description:
+              'Another user may have modified this quiz. Your changes will create a new version.',
+            variant: 'default',
+          });
+        }
+      }
 
       // Create version history entry
       const changeDesc = templateId
@@ -745,6 +804,18 @@ export default function QuizBuilder() {
             </Button>
           </div>
         </div>
+
+        {/* Collaborative Editing Status */}
+        {templateId && user && (
+          <div className="mb-4">
+            <CollaborativeEditors
+              editors={activeEditors}
+              currentUserId={user.id}
+              isOnline={isOnline}
+              hasConflict={hasConflict}
+            />
+          </div>
+        )}
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

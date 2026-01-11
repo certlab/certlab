@@ -20,6 +20,7 @@ import type {
   Question,
   Quiz,
   QuizTemplate,
+  QuizVersion,
   UserProgress,
   MasteryScore,
   Badge,
@@ -1011,6 +1012,36 @@ export interface IClientStorage extends IStorageAdapter {
   getStudyTimerStats(userId: string): Promise<StudyTimerStats>;
 
   // ==========================================
+  // Quiz Version History (Collaborative Editing Support)
+  // ==========================================
+
+  /** Create a new version snapshot of a quiz or template */
+  createQuizVersion(
+    quizId: number,
+    quizData: Quiz | QuizTemplate,
+    changeDescription?: string,
+    collectionName?: 'quizzes' | 'quizTemplates'
+  ): Promise<QuizVersion>;
+
+  /** Get all versions for a quiz, ordered by creation date (newest first) */
+  getQuizVersions(
+    quizId: number,
+    collectionName?: 'quizzes' | 'quizTemplates'
+  ): Promise<QuizVersion[]>;
+
+  /** Get a specific version of a quiz */
+  getQuizVersion(
+    quizId: number,
+    versionId: string,
+    collectionName?: 'quizzes' | 'quizTemplates'
+  ): Promise<QuizVersion | null>;
+
+  /** Restore a quiz to a previous version */
+  restoreQuizVersion(
+    quizId: number,
+    versionId: string,
+    collectionName?: 'quizzes' | 'quizTemplates'
+  ): Promise<Quiz | QuizTemplate>;
   // Product Management
   // ==========================================
 
