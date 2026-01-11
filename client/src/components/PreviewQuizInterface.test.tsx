@@ -81,6 +81,12 @@ describe('PreviewQuizInterface', () => {
     authorName: null,
     prerequisites: null,
     tags: null,
+    // Access control fields
+    visibility: 'private',
+    sharedWithUsers: null,
+    sharedWithGroups: null,
+    requiresPurchase: false,
+    purchaseProductId: null,
   };
 
   const mockQuestions: Question[] = [

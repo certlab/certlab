@@ -330,6 +330,27 @@ export function logError(
 }
 
 /**
+ * Log informational messages (non-error events) for audit and monitoring
+ * Use for security-relevant events like permission checks, user actions, etc.
+ *
+ * @param operation - The operation being logged (e.g., 'permissionCheck', 'userLogin')
+ * @param context - Additional context about the operation
+ *
+ * @example
+ * logInfo('permissionCheck', { action: 'edit', resource: 'quiz', userId: '123', granted: true });
+ */
+export function logInfo(operation: string, context?: Record<string, unknown>): void {
+  const logInfo = {
+    operation,
+    timestamp: new Date().toISOString(),
+    context: sanitizeContext(context),
+  };
+
+  // Console logging for development/debugging
+  console.info(`[CertLab Info] ${operation}:`, logInfo);
+}
+
+/**
  * Categorize an error into one of the standard categories
  * @param error - The error to categorize
  * @returns The error category

@@ -32,6 +32,7 @@ import {
   getUserDocuments,
   setUserDocument,
   updateUserDocument,
+  deleteUserDocument,
   getUserSubcollectionDocument,
   getUserSubcollectionDocuments,
   setUserSubcollectionDocument,
@@ -46,7 +47,8 @@ import {
   where,
   orderBy,
 } from './firestore-service';
-import { logError } from './errors';
+import { logError, logInfo } from './errors';
+import { doc, deleteDoc } from 'firebase/firestore';
 import { sanitizeInput, sanitizeArray } from './sanitize';
 import { insertQuestionSchema, insertCategorySchema } from '@shared/schema';
 import type {
@@ -82,6 +84,12 @@ import type {
   StudyTimerSession,
   StudyTimerSettings,
   StudyTimerStats,
+  Product,
+  InsertProduct,
+  Purchase,
+  InsertPurchase,
+  Group,
+  GroupMember,
 } from '@shared/schema';
 import type {
   IClientStorage,
@@ -1081,6 +1089,38 @@ class FirestoreStorage implements IClientStorage {
     }
   }
 
+  /**
+   * Delete a quiz template
+   * Only the owner can delete their own templates
+   *
+   * Note: Templates are stored per-user in Firestore, so users can only
+   * access and delete their own templates. This provides implicit ownership validation.
+   *
+   * @param templateId - ID of the template to delete
+   * @param userId - ID of the user requesting deletion (must be the owner)
+   * @throws Error if template not found (which means user doesn't own it)
+   */
+  async deleteQuizTemplate(templateId: number, userId: string): Promise<void> {
+    try {
+      if (!userId) throw new Error('User ID required');
+
+      // 1. Fetch template to verify it exists in user's collection
+      // Note: getQuizTemplate only returns templates owned by userId
+      const template = await this.getQuizTemplate(userId, templateId);
+      if (!template) {
+        throw new Error('Quiz template not found or you do not have permission to delete it');
+      }
+
+      // 2. Delete the template (implicit ownership check via Firestore collection path)
+      await deleteUserDocument(userId, 'quizTemplates', templateId.toString());
+
+      logInfo('deleteQuizTemplate', { templateId, userId, timestamp: new Date().toISOString() });
+    } catch (error) {
+      logError('deleteQuizTemplate', error, { templateId, userId });
+      throw error;
+    }
+  }
+
   // ==========================================
   // User Progress
   // ==========================================
@@ -1224,6 +1264,12 @@ class FirestoreStorage implements IClientStorage {
         thumbnailUrl: null,
         fileSize: null,
         accessibilityFeatures: null,
+        // Access control fields - default to private
+        visibility: 'private',
+        sharedWithUsers: null,
+        sharedWithGroups: null,
+        requiresPurchase: false,
+        purchaseProductId: null,
       };
 
       await setUserDocument(userId, 'lectures', id.toString(), lecture);
@@ -1275,6 +1321,38 @@ class FirestoreStorage implements IClientStorage {
       return lecture;
     } catch (error) {
       logError('updateLecture', error, { id, updates });
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a lecture
+   * Only the owner can delete their own lectures
+   *
+   * Note: Lectures are stored per-user in Firestore, so users can only
+   * access and delete their own lectures. This provides implicit ownership validation.
+   *
+   * @param id - ID of the lecture to delete
+   * @param userId - ID of the user requesting deletion (must be the owner)
+   * @throws Error if lecture not found (which means user doesn't own it)
+   */
+  async deleteLecture(id: number, userId: string): Promise<void> {
+    try {
+      if (!userId) throw new Error('User ID required');
+
+      // 1. Fetch lecture to verify it exists in user's collection
+      // Note: getUserDocument only returns lectures owned by userId
+      const lecture = await getUserDocument<Lecture>(userId, 'lectures', id.toString());
+      if (!lecture) {
+        throw new Error('Lecture not found or you do not have permission to delete it');
+      }
+
+      // 2. Delete the lecture (implicit ownership check via Firestore collection path)
+      await deleteUserDocument(userId, 'lectures', id.toString());
+
+      logInfo('deleteLecture', { lectureId: id, userId, timestamp: new Date().toISOString() });
+    } catch (error) {
+      logError('deleteLecture', error, { id, userId });
       throw error;
     }
   }
@@ -3198,6 +3276,590 @@ class FirestoreStorage implements IClientStorage {
       lastAttemptDate: null,
     };
   }
+
+  // ==========================================
+  // Product Management
+  // ==========================================
+
+  async getProducts(tenantId?: number): Promise<Product[]> {
+    try {
+      const products = await getSharedDocuments<Product>('products');
+      const filtered = tenantId ? products.filter((p) => p.tenantId === tenantId) : products;
+      return filtered.map((p) => convertTimestamps<Product>(p));
+    } catch (error) {
+      logError('getProducts', error, { tenantId });
+      return [];
+    }
+  }
+
+  async getProduct(id: number): Promise<Product | null> {
+    try {
+      const product = await getSharedDocument<Product>('products', id.toString());
+      return product ? convertTimestamps<Product>(product) : null;
+    } catch (error) {
+      logError('getProduct', error, { id });
+      return null;
+    }
+  }
+
+  /**
+   * Generate a high-entropy numeric ID to minimize collision risk
+   */
+  private generateNumericId(): number {
+    // Prefer cryptographically strong randomness when available
+    if (typeof crypto !== 'undefined' && 'getRandomValues' in crypto) {
+      const array = new Uint32Array(2);
+      crypto.getRandomValues(array);
+      // Construct a 53-bit safe integer (Number.MAX_SAFE_INTEGER is 2^53 - 1)
+      const high = array[0] & 0x1fffff; // 21 bits
+      const low = array[1]; // 32 bits
+      return high * 0x100000000 + low;
+    }
+    // Fallback: use Math.random within the safe integer range
+    return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+  }
+
+  async createProduct(product: InsertProduct): Promise<Product> {
+    try {
+      // Validate inputs
+      if (!product.title || product.title.trim().length === 0) {
+        throw new Error('Product title is required');
+      }
+      if (!product.description || product.description.trim().length === 0) {
+        throw new Error('Product description is required');
+      }
+      if (product.price < 0) {
+        throw new Error('Product price must be non-negative');
+      }
+      if (!Array.isArray(product.resourceIds)) {
+        throw new Error('Product resourceIds must be an array');
+      }
+      const validTypes = ['quiz', 'material', 'course', 'bundle'];
+      if (!validTypes.includes(product.type)) {
+        throw new Error(`Product type must be one of: ${validTypes.join(', ')}`);
+      }
+
+      const sanitized = {
+        ...product,
+        title: sanitizeInput(product.title),
+        description: sanitizeInput(product.description),
+      };
+
+      if (!sanitized.title || !sanitized.description) {
+        throw new Error('Product title and description are required');
+      }
+
+      const newProduct: Product = {
+        id: this.generateNumericId(),
+        tenantId: sanitized.tenantId || 1,
+        title: sanitized.title,
+        description: sanitized.description,
+        type: sanitized.type,
+        resourceIds: sanitized.resourceIds,
+        price: sanitized.price,
+        currency: sanitized.currency || 'USD',
+        isPremium: sanitized.isPremium ?? false,
+        subscriptionDuration: sanitized.subscriptionDuration || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await setSharedDocument('products', newProduct.id.toString(), newProduct);
+      return newProduct;
+    } catch (error) {
+      logError('createProduct', error, { product });
+      throw error;
+    }
+  }
+
+  async updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product | null> {
+    try {
+      const existing = await this.getProduct(id);
+      if (!existing) return null;
+
+      const sanitized: Partial<Product> = {
+        ...updates,
+        title: updates.title ? sanitizeInput(updates.title) : existing.title,
+        description: updates.description
+          ? sanitizeInput(updates.description)
+          : existing.description,
+      };
+
+      const updated: Product = {
+        ...existing,
+        ...sanitized,
+        updatedAt: new Date(),
+      };
+
+      await setSharedDocument('products', id.toString(), updated);
+      return updated;
+    } catch (error) {
+      logError('updateProduct', error, { id, updates });
+      return null;
+    }
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    try {
+      // Actually delete the product document from Firestore
+      const db = getFirestoreInstance();
+      const docRef = doc(db, 'products', id.toString());
+      await deleteDoc(docRef);
+    } catch (error) {
+      logError('deleteProduct', error, { id });
+      throw error;
+    }
+  }
+
+  // ==========================================
+  // Access Control & Permissions
+  // ==========================================
+
+  /**
+   * Check if a user has access to a resource
+   */
+  async checkAccess(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<{
+    allowed: boolean;
+    reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
+    productId?: string;
+  }> {
+    try {
+      // Get the resource to check visibility settings
+      let resource: any;
+
+      if (resourceType === 'quiz') {
+        resource = await this.getQuiz(resourceId);
+      } else if (resourceType === 'lecture') {
+        resource = await this.getLecture(resourceId);
+      } else {
+        // Template access would need additional implementation
+        return { allowed: false, reason: 'access_denied' };
+      }
+
+      if (!resource) {
+        return { allowed: false, reason: 'access_denied' };
+      }
+
+      // Check if user is the creator
+      if (resource.userId === userId || resource.author === userId) {
+        return { allowed: true };
+      }
+
+      // Get visibility setting (default to 'private' if not set)
+      const visibility = resource.visibility || 'private';
+
+      // Check visibility level
+      if (visibility === 'public') {
+        // For public content, check if purchase is required
+        if (resource.requiresPurchase && resource.purchaseProductId) {
+          const hasPurchase = await this.checkPurchase(userId, resource.purchaseProductId);
+          return {
+            allowed: hasPurchase,
+            reason: hasPurchase ? undefined : 'purchase_required',
+            productId: resource.purchaseProductId,
+          };
+        }
+        return { allowed: true };
+      }
+
+      if (visibility === 'private') {
+        return { allowed: false, reason: 'private_content' };
+      }
+
+      if (visibility === 'shared') {
+        // Check if user is in the shared user list
+        if (resource.sharedWithUsers && resource.sharedWithUsers.includes(userId)) {
+          return { allowed: true };
+        }
+
+        // Check if user is in any of the shared groups
+        if (resource.sharedWithGroups && resource.sharedWithGroups.length > 0) {
+          const isInGroup = await this.isUserInGroups(userId, resource.sharedWithGroups);
+          return {
+            allowed: isInGroup,
+            reason: isInGroup ? undefined : 'not_shared_with_you',
+          };
+        }
+
+        return { allowed: false, reason: 'not_shared_with_you' };
+      }
+
+      return { allowed: false, reason: 'access_denied' };
+    } catch (error) {
+      logError('checkAccess', error, { userId, resourceType, resourceId });
+      return { allowed: false, reason: 'access_denied' };
+    }
+  }
+
+  /**
+   * Check if a user has purchased a product
+   */
+  async checkPurchase(userId: string, productId: string): Promise<boolean> {
+    try {
+      // Query purchases collection for this user and product
+      const purchases = await getUserDocuments<any>(userId, 'purchases', [
+        where('productId', '==', productId),
+      ]);
+      return purchases.length > 0;
+    } catch (error) {
+      logError('checkPurchase', error, { userId, productId });
+      return false;
+    }
+  }
+
+  /**
+   * Check if a user is in any of the specified groups
+   * Optimized to reduce N+1 queries by using a single collection group query
+   */
+  async isUserInGroups(userId: string, groupIds: number[]): Promise<boolean> {
+    if (!groupIds || groupIds.length === 0) {
+      return false;
+    }
+
+    try {
+      // Use collection group query to check membership across all groups in a single query
+      // This is more efficient than querying each group individually (N+1 problem)
+      const db = getFirestoreInstance();
+      const {
+        collectionGroup,
+        query,
+        where: whereClause,
+        getDocs,
+      } = await import('firebase/firestore');
+
+      // Query the members collection group for this user in any of the specified groups
+      const membersQuery = query(
+        collectionGroup(db, 'members'),
+        whereClause('userId', '==', userId),
+        whereClause('groupId', 'in', groupIds.slice(0, 10)) // Firestore 'in' limited to 10 items
+      );
+
+      const snapshot = await getDocs(membersQuery);
+      if (!snapshot.empty) {
+        return true;
+      }
+
+      // If there are more than 10 groups, we need to check the remaining groups
+      // This is still better than N queries but handles the Firestore 'in' limitation
+      if (groupIds.length > 10) {
+        for (let i = 10; i < groupIds.length; i += 10) {
+          const batch = groupIds.slice(i, i + 10);
+          const batchQuery = query(
+            collectionGroup(db, 'members'),
+            whereClause('userId', '==', userId),
+            whereClause('groupId', 'in', batch)
+          );
+          const batchSnapshot = await getDocs(batchQuery);
+          if (!batchSnapshot.empty) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    } catch (error) {
+      logError('isUserInGroups', error, { userId, groupIds });
+      return false;
+    }
+  }
+
+  /**
+   * Get all groups a user is a member of
+   * TODO: This requires a collection group query or denormalized data structure
+   * For now, returns empty array. To implement properly, consider:
+   * 1. Using Firestore collection group queries with proper indexing
+   * 2. Denormalizing group membership into user documents
+   * 3. Maintaining a separate user-groups mapping collection
+   * See issue: https://github.com/archubbuck/certlab/issues/[TBD]
+   */
+  async getUserGroups(userId: string): Promise<Group[]> {
+    try {
+      // Implementation pending: requires collection group query or denormalization
+      console.warn(
+        '[FirestoreStorage] getUserGroups requires collection group query implementation'
+      );
+      return [];
+    } catch (error) {
+      logError('getUserGroups', error, { userId });
+      return [];
+    }
+  }
+
+  /**
+   * Create a new group
+   */
+  async createGroup(group: Partial<Group>): Promise<Group> {
+    try {
+      // Using timestamp-based ID generation
+      // Note: This may cause collisions in high-concurrency scenarios
+      const groupId = Date.now();
+      const newGroup: Group = {
+        ...group,
+        id: groupId,
+        name: group.name || '',
+        description: group.description || '',
+        ownerId: group.ownerId || '',
+        tenantId: group.tenantId || 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await setSharedDocument('groups', groupId.toString(), newGroup);
+      return newGroup;
+    } catch (error) {
+      logError('createGroup', error, { group });
+      throw error;
+    }
+  }
+
+  /**
+   * Update a group
+   */
+  async updateGroup(groupId: number, updates: Partial<Group>): Promise<Group> {
+    try {
+      const existing = await getSharedDocument<Group>('groups', groupId.toString());
+      if (!existing) {
+        throw new Error('Group not found');
+      }
+
+      const updated: Group = {
+        ...existing,
+        ...updates,
+        updatedAt: new Date(),
+      };
+
+      await setSharedDocument('groups', groupId.toString(), updated);
+      return updated;
+    } catch (error) {
+      logError('updateGroup', error, { groupId, updates });
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a group
+   */
+  async deleteGroup(groupId: number): Promise<void> {
+    try {
+      // Note: This should also delete all members, but for now just delete the group
+      // In production, this would need a transaction or cloud function
+      const db = getFirestoreInstance();
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      await deleteDoc(doc(db, 'groups', groupId.toString()));
+    } catch (error) {
+      logError('deleteGroup', error, { groupId });
+      throw error;
+    }
+  }
+
+  // ==========================================
+  // Purchase Management
+  // ==========================================
+
+  async getUserPurchases(userId: string): Promise<Purchase[]> {
+    try {
+      const purchases = await getUserDocuments<Purchase>(userId, 'purchases');
+      return purchases.map((p) => convertTimestamps<Purchase>(p));
+    } catch (error) {
+      logError('getUserPurchases', error, { userId });
+      return [];
+    }
+  }
+
+  async getPurchase(id: number): Promise<Purchase | null> {
+    try {
+      // Since purchases are stored per-user, we need to search through users
+      // For now, this is a simplified implementation
+      // In production, you might want to have a global purchases collection
+      console.warn('[FirestoreStorage] getPurchase by ID without userId is not optimal');
+      return null;
+    } catch (error) {
+      logError('getPurchase', error, { id });
+      return null;
+    }
+  }
+
+  async getUserPurchase(userId: string, productId: number): Promise<Purchase | null> {
+    try {
+      const purchases = await this.getUserPurchases(userId);
+      return purchases.find((p) => p.productId === productId) || null;
+    } catch (error) {
+      logError('getUserPurchase', error, { userId, productId });
+      return null;
+    }
+  }
+
+  async createPurchase(purchase: InsertPurchase): Promise<Purchase> {
+    try {
+      // Validate inputs
+      if (!purchase.userId || purchase.userId.trim().length === 0) {
+        throw new Error('Purchase userId is required');
+      }
+      if (!purchase.productId || typeof purchase.productId !== 'number') {
+        throw new Error('Purchase productId must be a valid number');
+      }
+      if (purchase.amount < 0) {
+        throw new Error('Purchase amount must be non-negative');
+      }
+      const validStatuses = ['active', 'expired', 'refunded'];
+      if (purchase.status && !validStatuses.includes(purchase.status)) {
+        throw new Error(`Purchase status must be one of: ${validStatuses.join(', ')}`);
+      }
+      const validTypes = ['quiz', 'material', 'course', 'bundle'];
+      if (!validTypes.includes(purchase.productType)) {
+        throw new Error(`Purchase productType must be one of: ${validTypes.join(', ')}`);
+      }
+
+      const newPurchase: Purchase = {
+        id: this.generateNumericId(),
+        userId: purchase.userId,
+        tenantId: purchase.tenantId || 1,
+        productId: purchase.productId,
+        productType: purchase.productType,
+        purchaseDate: new Date(),
+        expiryDate: purchase.expiryDate || null,
+        status: purchase.status || 'active',
+        amount: purchase.amount,
+        currency: purchase.currency || 'USD',
+        paymentMethod: purchase.paymentMethod,
+        transactionId: purchase.transactionId || null,
+      };
+
+      await setUserDocument(purchase.userId, 'purchases', newPurchase.id.toString(), newPurchase);
+      return newPurchase;
+    } catch (error) {
+      logError('createPurchase', error, { purchase });
+      throw error;
+    }
+  }
+
+  async updatePurchase(id: number, updates: Partial<InsertPurchase>): Promise<Purchase | null> {
+    const message =
+      '[FirestoreStorage] updatePurchase is not implemented for per-user Firestore storage. ' +
+      'Use user-scoped purchase methods that include userId instead.';
+    console.warn(message, { id, updates });
+    throw new Error(message);
+  }
+
+  async getAllPurchases(tenantId?: number): Promise<Purchase[]> {
+    const message =
+      '[FirestoreStorage] getAllPurchases is not implemented because it would require ' +
+      'scanning all users in the per-user Firestore model.';
+    console.warn(message, { tenantId });
+    throw new Error(message);
+  }
+
+  async refundPurchase(id: number): Promise<Purchase | null> {
+    const message =
+      '[FirestoreStorage] refundPurchase is not implemented for per-user Firestore storage. ' +
+      'Use user-scoped purchase refund logic that includes userId instead.';
+    console.warn(message, { id });
+    throw new Error(message);
+  }
+
+  async checkProductAccess(userId: string, productId: number): Promise<boolean> {
+    try {
+      const purchase = await this.getUserPurchase(userId, productId);
+
+      if (!purchase) {
+        return false;
+      }
+
+      // Check if purchase is active
+      if (purchase.status !== 'active') {
+        return false;
+      }
+
+      // Check if subscription has expired
+      if (purchase.expiryDate && new Date() > new Date(purchase.expiryDate)) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      logError('checkProductAccess', error, { userId, productId });
+      return false;
+    }
+  }
+
+  // ==========================================
+  // Group Management
+  // ==========================================
+
+  /**
+   * Add a user to a group
+   */
+  async addGroupMember(groupId: number, userId: string, addedBy: string): Promise<void> {
+    try {
+      const memberId = `${groupId}-${userId}`;
+      const member: GroupMember = {
+        id: memberId,
+        groupId,
+        userId,
+        addedBy,
+        joinedAt: new Date(),
+      };
+
+      await setSharedDocument(`groups/${groupId}/members`, memberId, member);
+    } catch (error) {
+      logError('addGroupMember', error, { groupId, userId, addedBy });
+      throw error;
+    }
+  }
+
+  /**
+   * Remove a user from a group
+   */
+  async removeGroupMember(groupId: number, userId: string): Promise<void> {
+    try {
+      const memberId = `${groupId}-${userId}`;
+      const db = getFirestoreInstance();
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      await deleteDoc(doc(db, 'groups', groupId.toString(), 'members', memberId));
+    } catch (error) {
+      logError('removeGroupMember', error, { groupId, userId });
+      throw error;
+    }
+  }
+
+  /**
+   * Get all members of a group
+   */
+  async getGroupMembers(groupId: number): Promise<GroupMember[]> {
+    try {
+      const members = await getSharedDocuments<GroupMember>(`groups/${groupId}/members`);
+      return members.map((m) => convertTimestamps<GroupMember>(m));
+    } catch (error) {
+      logError('getGroupMembers', error, { groupId });
+      return [];
+    }
+  }
+
+  /**
+   * Get all groups (for admins or searching)
+   */
+  async getAllGroups(tenantId?: number): Promise<Group[]> {
+    try {
+      let groups = await getSharedDocuments<Group>('groups');
+
+      if (tenantId) {
+        groups = groups.filter((g) => g.tenantId === tenantId);
+      }
+
+      return groups.map((g) => convertTimestamps<Group>(g));
+    } catch (error) {
+      logError('getAllGroups', error, { tenantId });
+      return [];
+    }
+  }
+
+  // ==========================================
+  // Group Management
+  // ==========================================
 }
 
 // Export singleton instance

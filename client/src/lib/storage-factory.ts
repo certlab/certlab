@@ -50,6 +50,12 @@ import type {
   Quiz,
   QuizVersion,
   QuizTemplate,
+  Product,
+  Purchase,
+  InsertProduct,
+  InsertPurchase,
+  Group,
+  GroupMember,
 } from '@shared/schema';
 
 /**
@@ -500,22 +506,29 @@ class StorageRouter implements IClientStorage {
 
   async getUserQuizTemplates(userId: string, tenantId?: number): Promise<QuizTemplate[]> {
     return this.executeStorageOperation(
-      (s) => (s as any).getUserQuizTemplates(userId, tenantId),
+      (s) => s.getUserQuizTemplates(userId, tenantId),
       'getUserQuizTemplates'
     );
   }
 
   async getQuizTemplate(userId: string, templateId: number): Promise<QuizTemplate | undefined> {
     return this.executeStorageOperation(
-      (s) => (s as any).getQuizTemplate(userId, templateId),
+      (s) => s.getQuizTemplate(userId, templateId),
       'getQuizTemplate'
     );
   }
 
   async duplicateQuizTemplate(templateId: number, userId: string): Promise<QuizTemplate> {
     return this.executeStorageOperation(
-      (s) => (s as any).duplicateQuizTemplate(templateId, userId),
+      (s) => s.duplicateQuizTemplate(templateId, userId),
       'duplicateQuizTemplate'
+    );
+  }
+
+  async deleteQuizTemplate(templateId: number, userId: string): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.deleteQuizTemplate(templateId, userId),
+      'deleteQuizTemplate'
     );
   }
 
@@ -574,6 +587,14 @@ class StorageRouter implements IClientStorage {
 
   async getLecture(id: number): Promise<any> {
     return this.executeStorageOperation((s) => s.getLecture(id), 'getLecture');
+  }
+
+  async updateLecture(id: number, updates: Partial<any>): Promise<any> {
+    return this.executeStorageOperation((s) => s.updateLecture(id, updates), 'updateLecture');
+  }
+
+  async deleteLecture(id: number, userId: string): Promise<void> {
+    return this.executeStorageOperation((s) => s.deleteLecture(id, userId), 'deleteLecture');
   }
 
   // ==========================================
@@ -1062,6 +1083,140 @@ class StorageRouter implements IClientStorage {
       (s) => s.getUserDailyRewards(userId, tenantId),
       'getUserDailyRewards'
     );
+  }
+
+  // ==========================================
+  // Product Management
+  // ==========================================
+
+  async getProducts(tenantId?: number): Promise<Product[]> {
+    return this.executeStorageOperation((s) => s.getProducts(tenantId), 'getProducts');
+  }
+
+  async getProduct(id: number): Promise<Product | null> {
+    return this.executeStorageOperation((s) => s.getProduct(id), 'getProduct');
+  }
+
+  async createProduct(product: InsertProduct): Promise<Product> {
+    return this.executeStorageOperation((s) => s.createProduct(product), 'createProduct');
+  }
+
+  async updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product | null> {
+    return this.executeStorageOperation((s) => s.updateProduct(id, updates), 'updateProduct');
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    return this.executeStorageOperation((s) => s.deleteProduct(id), 'deleteProduct');
+  }
+
+  // ==========================================
+  // Purchase Management
+  // ==========================================
+
+  async getUserPurchases(userId: string): Promise<Purchase[]> {
+    return this.executeStorageOperation((s) => s.getUserPurchases(userId), 'getUserPurchases');
+  }
+
+  async getPurchase(id: number): Promise<Purchase | null> {
+    return this.executeStorageOperation((s) => s.getPurchase(id), 'getPurchase');
+  }
+
+  async getUserPurchase(userId: string, productId: number): Promise<Purchase | null> {
+    return this.executeStorageOperation(
+      (s) => s.getUserPurchase(userId, productId),
+      'getUserPurchase'
+    );
+  }
+
+  async createPurchase(purchase: InsertPurchase): Promise<Purchase> {
+    return this.executeStorageOperation((s) => s.createPurchase(purchase), 'createPurchase');
+  }
+
+  async updatePurchase(id: number, updates: Partial<InsertPurchase>): Promise<Purchase | null> {
+    return this.executeStorageOperation((s) => s.updatePurchase(id, updates), 'updatePurchase');
+  }
+
+  async getAllPurchases(tenantId?: number): Promise<Purchase[]> {
+    return this.executeStorageOperation((s) => s.getAllPurchases(tenantId), 'getAllPurchases');
+  }
+
+  async refundPurchase(id: number): Promise<Purchase | null> {
+    return this.executeStorageOperation((s) => s.refundPurchase(id), 'refundPurchase');
+  }
+
+  async checkProductAccess(userId: string, productId: number): Promise<boolean> {
+    return this.executeStorageOperation(
+      (s) => s.checkProductAccess(userId, productId),
+      'checkProductAccess'
+    );
+  }
+
+  // ==========================================
+  // Access Control & Permissions
+  // ==========================================
+
+  async checkAccess(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<{
+    allowed: boolean;
+    reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
+    productId?: string;
+  }> {
+    return this.executeStorageOperation(
+      (s) => s.checkAccess(userId, resourceType, resourceId),
+      'checkAccess'
+    );
+  }
+
+  async checkPurchase(userId: string, productId: string): Promise<boolean> {
+    return this.executeStorageOperation((s) => s.checkPurchase(userId, productId), 'checkPurchase');
+  }
+
+  async isUserInGroups(userId: string, groupIds: number[]): Promise<boolean> {
+    return this.executeStorageOperation(
+      (s) => s.isUserInGroups(userId, groupIds),
+      'isUserInGroups'
+    );
+  }
+
+  async getUserGroups(userId: string): Promise<Group[]> {
+    return this.executeStorageOperation((s) => s.getUserGroups(userId), 'getUserGroups');
+  }
+
+  async createGroup(group: Partial<Group>): Promise<Group> {
+    return this.executeStorageOperation((s) => s.createGroup(group), 'createGroup');
+  }
+
+  async updateGroup(groupId: number, updates: Partial<Group>): Promise<Group> {
+    return this.executeStorageOperation((s) => s.updateGroup(groupId, updates), 'updateGroup');
+  }
+
+  async deleteGroup(groupId: number): Promise<void> {
+    return this.executeStorageOperation((s) => s.deleteGroup(groupId), 'deleteGroup');
+  }
+
+  async addGroupMember(groupId: number, userId: string, addedBy: string): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.addGroupMember(groupId, userId, addedBy),
+      'addGroupMember'
+    );
+  }
+
+  async removeGroupMember(groupId: number, userId: string): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.removeGroupMember(groupId, userId),
+      'removeGroupMember'
+    );
+  }
+
+  async getGroupMembers(groupId: number): Promise<GroupMember[]> {
+    return this.executeStorageOperation((s) => s.getGroupMembers(groupId), 'getGroupMembers');
+  }
+
+  async getAllGroups(tenantId?: number): Promise<Group[]> {
+    return this.executeStorageOperation((s) => s.getAllGroups(tenantId), 'getAllGroups');
   }
 }
 

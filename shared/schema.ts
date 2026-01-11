@@ -318,6 +318,12 @@ export const quizzes = pgTable('quizzes', {
   passingScore: integer('passing_score').default(70), // Passing percentage threshold
   maxAttempts: integer('max_attempts'), // Maximum attempts allowed, null for unlimited
   isAdvancedConfig: boolean('is_advanced_config').default(false), // Flag indicating if admin promoted this config
+  // Access Control
+  visibility: text('visibility').default('private'), // 'private', 'shared', 'public' - who can access this quiz
+  sharedWithUsers: jsonb('shared_with_users').$type<string[]>(), // User IDs who have access (for 'shared' visibility)
+  sharedWithGroups: jsonb('shared_with_groups').$type<number[]>(), // Group IDs who have access (for 'shared' visibility)
+  requiresPurchase: boolean('requires_purchase').default(false), // Whether purchase is required for access
+  purchaseProductId: text('purchase_product_id'), // Product ID for marketplace integration
 });
 
 // Micro-learning challenges table
@@ -426,6 +432,12 @@ export const lectures = pgTable('lectures', {
     hasAudioDescription?: boolean;
     altText?: string;
   }>(), // Accessibility metadata
+  // Access Control
+  visibility: text('visibility').default('private'), // 'private', 'shared', 'public' - who can access this lecture
+  sharedWithUsers: jsonb('shared_with_users').$type<string[]>(), // User IDs who have access (for 'shared' visibility)
+  sharedWithGroups: jsonb('shared_with_groups').$type<number[]>(), // Group IDs who have access (for 'shared' visibility)
+  requiresPurchase: boolean('requires_purchase').default(false), // Whether purchase is required for access
+  purchaseProductId: text('purchase_product_id'), // Product ID for marketplace integration
 });
 
 // Study Notes table for user-generated study notes from quiz results
@@ -1324,7 +1336,57 @@ export const userTitles = pgTable('user_titles', {
   source: text('source'), // Where it came from: "quest", "badge", "achievement", "special"
 });
 
-// Marketplace purchase type (client-side only, no DB table)
+// Marketplace Product table
+export const products = pgTable('products', {
+  id: serial('id').primaryKey(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  type: text('type').notNull(), // 'quiz' | 'material' | 'course' | 'bundle'
+  resourceIds: jsonb('resource_ids').$type<number[]>().notNull(), // Content IDs included in this product
+  price: integer('price').notNull(), // Price in cents or tokens
+  currency: text('currency').notNull().default('USD'),
+  isPremium: boolean('is_premium').notNull().default(false),
+  subscriptionDuration: integer('subscription_duration'), // Duration in days for subscriptions (nullable)
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Purchase table for tracking marketplace purchases
+export const purchases = pgTable('purchases', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  productId: integer('product_id').notNull(),
+  productType: text('product_type').notNull(), // 'quiz' | 'material' | 'course' | 'bundle'
+  purchaseDate: timestamp('purchase_date').defaultNow(),
+  expiryDate: timestamp('expiry_date'), // For subscriptions
+  status: text('status').notNull().default('active'), // 'active' | 'expired' | 'refunded'
+  amount: integer('amount').notNull(), // Amount paid in cents or tokens
+  currency: text('currency').notNull().default('USD'),
+  paymentMethod: text('payment_method').notNull(), // 'stripe' | 'tokens' | 'polar'
+  transactionId: text('transaction_id'), // External payment ID
+});
+
+// Insert schemas for products and purchases
+export const insertProductSchema = createInsertSchema(products).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPurchaseSchema = createInsertSchema(purchases).omit({
+  id: true,
+  purchaseDate: true,
+});
+
+// Types for products and purchases
+export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type Product = typeof products.$inferSelect;
+export type InsertPurchase = z.infer<typeof insertPurchaseSchema>;
+export type Purchase = typeof purchases.$inferSelect;
+
+// Marketplace purchase type (legacy - kept for compatibility)
 export type MarketplacePurchase = {
   id: number;
   userId: string;
@@ -1802,3 +1864,125 @@ export const editConflictSchema = z.object({
 });
 
 export type InsertEditConflict = z.infer<typeof editConflictSchema>;
+// Access Control & Permissions
+// ============================================================================
+
+/**
+ * Visibility levels for quizzes, lectures, and other learning materials
+ */
+export type VisibilityLevel = 'private' | 'shared' | 'public';
+
+/**
+ * Zod schema for visibility level validation
+ */
+export const visibilityLevelSchema = z.enum(['private', 'shared', 'public']);
+
+/**
+ * Access control record for quizzes and learning materials
+ * Stored in Firestore at: /accessControl/{resourceType}-{resourceId}
+ */
+export interface AccessControl {
+  id: string; // Firestore document ID: "{resourceType}-{resourceId}"
+  resourceType: 'quiz' | 'lecture' | 'template';
+  resourceId: number;
+  creatorId: string;
+  visibility: VisibilityLevel;
+  sharedWith?: {
+    userIds?: string[];
+    groupIds?: number[];
+  };
+  requiresPurchase?: boolean;
+  purchaseProductId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Zod schema for access control validation
+ */
+export const accessControlSchema = z.object({
+  id: z.string(),
+  resourceType: z.enum(['quiz', 'lecture', 'template']),
+  resourceId: z.number(),
+  creatorId: z.string(),
+  visibility: visibilityLevelSchema,
+  sharedWith: z
+    .object({
+      userIds: z.array(z.string()).optional(),
+      groupIds: z.array(z.number()).optional(),
+    })
+    .optional(),
+  requiresPurchase: z.boolean().optional(),
+  purchaseProductId: z.string().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export type InsertAccessControl = Omit<AccessControl, 'id' | 'createdAt' | 'updatedAt'>;
+
+/**
+ * Group for sharing content with multiple users
+ * Stored in Firestore at: /groups/{groupId}
+ * Members stored at: /groups/{groupId}/members/{userId}
+ */
+export interface Group {
+  id: number;
+  name: string;
+  description: string;
+  ownerId: string;
+  tenantId: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Zod schema for group validation
+ */
+export const groupSchema = z.object({
+  id: z.number(),
+  name: z.string().min(1).max(200),
+  description: z.string().max(2000),
+  ownerId: z.string(),
+  tenantId: z.number(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export const insertGroupSchema = groupSchema.omit({ id: true, createdAt: true, updatedAt: true });
+
+export type InsertGroup = z.infer<typeof insertGroupSchema>;
+
+/**
+ * Group member record
+ */
+export interface GroupMember {
+  id: string; // Firestore document ID
+  groupId: number;
+  userId: string;
+  addedBy: string;
+  joinedAt: Date;
+}
+
+/**
+ * Zod schema for group member validation
+ */
+export const groupMemberSchema = z.object({
+  id: z.string(),
+  groupId: z.number(),
+  userId: z.string(),
+  addedBy: z.string(),
+  joinedAt: z.date(),
+});
+
+export const insertGroupMemberSchema = groupMemberSchema.omit({ id: true, joinedAt: true });
+
+export type InsertGroupMember = z.infer<typeof insertGroupMemberSchema>;
+
+/**
+ * Access check result
+ */
+export interface AccessCheckResult {
+  allowed: boolean;
+  reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
+  productId?: string;
+}

@@ -56,6 +56,12 @@ function createMockQuiz(overrides: Partial<Quiz> = {}): Quiz {
     passingScore: null,
     maxAttempts: null,
     isAdvancedConfig: null,
+    // Access control fields
+    visibility: 'private',
+    sharedWithUsers: null,
+    sharedWithGroups: null,
+    requiresPurchase: false,
+    purchaseProductId: null,
     ...overrides,
   };
 }

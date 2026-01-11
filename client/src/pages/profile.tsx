@@ -17,10 +17,21 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, BookOpen, Save, Award, AlertCircle, Shield, Cloud, CloudOff } from 'lucide-react';
+import {
+  User,
+  BookOpen,
+  Save,
+  Award,
+  AlertCircle,
+  Shield,
+  Cloud,
+  CloudOff,
+  ShoppingBag,
+} from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import ContributionHeatmap from '@/components/ContributionHeatmap';
+import { UserPurchasesCard } from '@/components/UserPurchasesCard';
 
 interface UserProfile {
   id: string;
@@ -193,7 +204,10 @@ export default function ProfilePage() {
       </div>
 
       <Tabs defaultValue="personal" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4" data-testid="profile-tabs">
+        <TabsList
+          className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
+          data-testid="profile-tabs"
+        >
           <TabsTrigger value="personal" className="flex items-center gap-1">
             <User className="h-4 w-4" />
             Personal
@@ -205,6 +219,10 @@ export default function ProfilePage() {
           <TabsTrigger value="skills" className="flex items-center gap-1">
             <Award className="h-4 w-4" />
             Skills
+          </TabsTrigger>
+          <TabsTrigger value="purchases" className="flex items-center gap-1">
+            <ShoppingBag className="h-4 w-4" />
+            Purchases
           </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-1">
             <Shield className="h-4 w-4" />
@@ -547,6 +565,10 @@ export default function ProfilePage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="purchases" className="space-y-4">
+          <UserPurchasesCard />
         </TabsContent>
 
         <TabsContent value="security" className="space-y-4">

@@ -15,8 +15,8 @@ CertLab is a modern, cloud-based certification study platform. Study for certifi
 - **Practice Tests**: Full-length practice exams
 - **Multiple Content Types**: Support for text, video, PDF, interactive content, and code examples
 - **Export/Import**: Backup and restore your data
-- **Theme Options**: Seven themes including dark mode
-- **Accessibility**: Keyboard navigation, skip links, ARIA support, video captions, and screen reader support
+- **Theme Options**: Seven themes including dark mode for reduced eye strain
+- **Accessibility**: Designed to meet WCAG 2.2 Level AA guidelines and currently partially conformant, with keyboard navigation, skip links, ARIA support, screen reader optimization, color contrast tools, and comprehensive accessibility documentation ([Learn more](ACCESSIBILITY.md))
 
 📋 **[View Complete Feature List](FEATURES.md)** | 🗺️ **[View Roadmap](ROADMAP.md)**
 

@@ -24,8 +24,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Edit2, Copy, Search, FileText, Clock, BookOpen } from 'lucide-react';
+import { Plus, Edit2, Copy, Search, FileText, Clock, BookOpen, Lock, Trash2 } from 'lucide-react';
 import type { QuizTemplate } from '@shared/schema';
+import { canEdit, canDelete, logPermissionCheck } from '@/lib/permissions';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function MyQuizzes() {
   const { user } = useAuth();
@@ -35,6 +37,7 @@ export default function MyQuizzes() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<QuizTemplate | null>(null);
 
   // Fetch user's quiz templates
@@ -92,6 +95,32 @@ export default function MyQuizzes() {
     },
   });
 
+  // Delete quiz mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (templateId: number) => {
+      if (!user?.id) throw new Error('Not authenticated');
+      return await storage.deleteQuizTemplate(templateId, user.id);
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Quiz Deleted',
+        description: 'Your quiz has been deleted successfully.',
+      });
+      // Invalidate and refetch templates
+      queryClient.invalidateQueries({ queryKey: ['userQuizTemplates', user?.id] });
+      // Close dialog
+      setDeleteDialogOpen(false);
+      setSelectedTemplate(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Deletion Failed',
+        description: error?.message || 'Failed to delete quiz. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleDuplicateClick = (template: QuizTemplate) => {
     setSelectedTemplate(template);
     setDuplicateDialogOpen(true);
@@ -103,8 +132,51 @@ export default function MyQuizzes() {
     }
   };
 
-  const handleEdit = (templateId: number) => {
-    navigate(`/app/quiz-builder?template=${templateId}`);
+  const handleDeleteClick = (template: QuizTemplate) => {
+    if (!template.id || !user) return;
+
+    // Check delete permission
+    const hasPermission = canDelete(template, user);
+    logPermissionCheck('delete', 'quiz', template.id, user.id, hasPermission);
+
+    if (!hasPermission) {
+      toast({
+        title: 'Permission Denied',
+        description:
+          'You can view this quiz but cannot delete it. Only the creator can delete their own content.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSelectedTemplate(template);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedTemplate && selectedTemplate.id) {
+      deleteMutation.mutate(selectedTemplate.id);
+    }
+  };
+
+  const handleEdit = (template: QuizTemplate) => {
+    if (!template.id || !user) return;
+
+    // Check edit permission
+    const hasPermission = canEdit(template, user);
+    logPermissionCheck('edit', 'quiz', template.id, user.id, hasPermission);
+
+    if (!hasPermission) {
+      toast({
+        title: 'Permission Denied',
+        description:
+          'You can view this quiz but cannot edit it. Only the creator can make changes.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    navigate(`/app/quiz-builder?template=${template.id}`);
   };
 
   const handleCreateNew = () => {
@@ -273,15 +345,28 @@ export default function MyQuizzes() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => template.id && handleEdit(template.id)}
-                              title="Edit quiz"
-                              disabled={!template.id}
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
+                            {canEdit(template, user) && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(template)}
+                                  title="Edit quiz"
+                                  disabled={!template.id}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteClick(template)}
+                                  title="Delete quiz"
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -290,6 +375,14 @@ export default function MyQuizzes() {
                             >
                               <Copy className="h-4 w-4" />
                             </Button>
+                            {!canEdit(template, user) && (
+                              <Alert className="py-2">
+                                <Lock className="h-4 w-4" />
+                                <AlertDescription className="text-xs ml-2">
+                                  View only
+                                </AlertDescription>
+                              </Alert>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -358,6 +451,58 @@ export default function MyQuizzes() {
                   <>
                     <Copy className="h-4 w-4 mr-2" />
                     Duplicate Quiz
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Quiz</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{selectedTemplate?.title}"? This action cannot be
+                undone.
+              </DialogDescription>
+            </DialogHeader>
+            {selectedTemplate && (
+              <div className="py-4">
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    This quiz and all its questions will be permanently deleted. This action cannot
+                    be undone.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteDialogOpen(false);
+                  setSelectedTemplate(null);
+                }}
+                disabled={deleteMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? (
+                  <>
+                    <Clock className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Quiz
                   </>
                 )}
               </Button>
