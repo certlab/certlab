@@ -32,6 +32,7 @@ import { storage } from '@/lib/storage-factory';
 import { useAuth } from '@/lib/auth-provider';
 import { ShoppingCart, UserPlus, RefreshCw, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { formatDate } from '@/lib/date-utils';
 import type { Purchase, Product } from '@shared/schema';
 
 export function AdminPurchasesView() {
@@ -106,6 +107,16 @@ export function AdminPurchasesView() {
         throw new Error('Product not found');
       }
 
+      // Generate secure transaction ID using cryptographic randomness
+      const generateSecureTransactionId = (): string => {
+        if (typeof crypto !== 'undefined' && 'getRandomValues' in crypto) {
+          const array = new Uint32Array(2);
+          crypto.getRandomValues(array);
+          return `admin_grant_${array[0]}_${array[1]}`;
+        }
+        return `admin_grant_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      };
+
       await storage.createPurchase({
         userId: grantUserId,
         tenantId: user.tenantId,
@@ -115,7 +126,7 @@ export function AdminPurchasesView() {
         amount: 0, // Admin grant is free
         currency: product.currency,
         paymentMethod: 'admin_grant',
-        transactionId: `admin_grant_${Date.now()}`,
+        transactionId: generateSecureTransactionId(),
         expiryDate: product.subscriptionDuration
           ? new Date(Date.now() + product.subscriptionDuration * 24 * 60 * 60 * 1000)
           : null,
@@ -295,14 +306,8 @@ export function AdminPurchasesView() {
                           {purchase.currency} {(purchase.amount / 100).toFixed(2)}
                         </TableCell>
                         <TableCell>{getStatusBadge(purchase.status)}</TableCell>
-                        <TableCell>
-                          {new Date(purchase.purchaseDate as any).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {purchase.expiryDate
-                            ? new Date(purchase.expiryDate as any).toLocaleDateString()
-                            : 'N/A'}
-                        </TableCell>
+                        <TableCell>{formatDate(purchase.purchaseDate)}</TableCell>
+                        <TableCell>{formatDate(purchase.expiryDate)}</TableCell>
                         <TableCell>
                           {purchase.status === 'active' && (
                             <Button

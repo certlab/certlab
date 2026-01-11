@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { storage } from '@/lib/storage-factory';
 import { useAuth } from '@/lib/auth-provider';
 import { ShoppingBag, Package } from 'lucide-react';
+import { safeToDate, formatDate } from '@/lib/date-utils';
 import type { Purchase, Product } from '@shared/schema';
 
 export function UserPurchasesCard() {
@@ -49,7 +50,8 @@ export function UserPurchasesCard() {
   };
 
   const getStatusBadge = (status: string, expiryDate?: Date | null) => {
-    const isExpired = expiryDate && new Date() > new Date(expiryDate as any);
+    const expiry = safeToDate(expiryDate);
+    const isExpired = expiry && new Date() > expiry;
 
     const normalizedStatus = status.toLowerCase();
     const variants: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
@@ -65,9 +67,10 @@ export function UserPurchasesCard() {
     return <Badge variant={variants[normalizedStatus] || 'outline'}>{label}</Badge>;
   };
 
-  const activePurchases = purchases.filter(
-    (p) => p.status === 'active' && (!p.expiryDate || new Date() < new Date(p.expiryDate as any))
-  );
+  const activePurchases = purchases.filter((p) => {
+    const expiry = safeToDate(p.expiryDate);
+    return p.status === 'active' && (!expiry || new Date() < expiry);
+  });
 
   if (isLoading) {
     return (
@@ -108,23 +111,25 @@ export function UserPurchasesCard() {
                   <p className="font-medium">{getProductName(purchase.productId)}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <p className="text-sm text-muted-foreground">
-                      Purchased {new Date(purchase.purchaseDate as any).toLocaleDateString()}
+                      Purchased {formatDate(purchase.purchaseDate)}
                     </p>
                     {purchase.expiryDate && (
                       <p className="text-sm text-muted-foreground">
-                        • Expires {new Date(purchase.expiryDate as any).toLocaleDateString()}
+                        • Expires {formatDate(purchase.expiryDate)}
                       </p>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {getStatusBadge(purchase.status, purchase.expiryDate)}
-                  {purchase.status === 'active' &&
-                    (!purchase.expiryDate || new Date() < new Date(purchase.expiryDate)) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(`/app/marketplace/${purchase.productId}`)}
+                  {purchase.status === 'active' && (() => {
+                    const expiry = safeToDate(purchase.expiryDate);
+                    return !expiry || new Date() < expiry;
+                  })() && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/app/marketplace/${purchase.productId}`)}
                       >
                         View
                       </Button>

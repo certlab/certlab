@@ -229,6 +229,18 @@ export default function LecturePage() {
 ```typescript
 import { storage } from '@/lib/storage-factory';
 
+/**
+ * Complete a purchase - SERVER-SIDE ONLY
+ * 
+ * SECURITY WARNING: This function MUST be called from a trusted server-side
+ * context (Cloud Function, backend API) after validating payment. 
+ * NEVER expose this to client-side code as it would allow users to create 
+ * purchases without payment.
+ * 
+ * Current Firestore rules allow users to write to their own purchases collection,
+ * which creates a security vulnerability if called from the client. See Security
+ * Considerations section below.
+ */
 async function completePurchase(userId: string, productId: number) {
   const product = await storage.getProduct(productId);
   
@@ -358,25 +370,134 @@ npm run test:run
 
 ## Security Considerations
 
-1. **Server-side verification** - While this implementation provides client-side gating, actual content should be protected server-side or in Firestore rules.
+### CRITICAL: Purchase Creation Security Vulnerability
 
-2. **Firestore Security Rules** - Add rules to protect purchase data:
+**⚠️ SECURITY WARNING**: The current implementation has a critical security vulnerability that **MUST** be addressed before production use.
+
+#### The Problem
+
+The current Firestore security rules allow users to write to their own purchases collection:
+
 ```javascript
-// Allow users to read their own purchases
-match /users/{userId}/purchases/{purchaseId} {
-  allow read: if request.auth.uid == userId;
-  allow write: if false; // Only server can write
-}
-
-// Allow admins to read all purchases
-match /users/{userId}/purchases/{purchaseId} {
-  allow read: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+match /users/{userId}/{collection}/{documentId} {
+  allow read, write: if isOwner(userId);
 }
 ```
 
-3. **Admin verification** - Always verify admin role server-side before granting manual access.
+This means any authenticated user can create or modify purchase records in their own collection by calling the Firestore SDK directly or via REST API, effectively bypassing payment and granting themselves access to premium content.
 
-4. **Token validation** - Validate payment tokens and transaction IDs on the server before creating purchases.
+#### Required Fix
+
+Purchases MUST be created only by trusted server-side code. Here's the proper approach:
+
+**1. Update Firestore Security Rules:**
+
+```javascript
+match /users/{userId}/purchases/{purchaseId} {
+  // Users can read their own purchases
+  allow read: if request.auth.uid == userId;
+  
+  // Only server-side code can write purchases
+  // Do NOT allow client writes
+  allow write: if false;
+}
+
+// Add a separate collection for server-managed purchases if needed
+match /serverPurchases/{purchaseId} {
+  allow read: if false;
+  allow write: if false;
+  // Only accessible via Admin SDK from Cloud Functions
+}
+```
+
+**2. Use Cloud Functions for Purchase Creation:**
+
+```typescript
+// Cloud Function (server-side)
+import { onCall } from 'firebase-functions/v2/https';
+import { getFirestore } from 'firebase-admin/firestore';
+
+export const createPurchase = onCall(async (request) => {
+  // Verify authentication
+  if (!request.auth) {
+    throw new Error('Unauthenticated');
+  }
+
+  // Verify payment with Stripe/payment processor
+  const { paymentIntentId, productId } = request.data;
+  const paymentVerified = await verifyStripePayment(paymentIntentId);
+  
+  if (!paymentVerified) {
+    throw new Error('Payment verification failed');
+  }
+
+  // Create purchase record using Admin SDK
+  const db = getFirestore();
+  const purchaseRef = db
+    .collection('users')
+    .doc(request.auth.uid)
+    .collection('purchases')
+    .doc();
+
+  await purchaseRef.set({
+    id: Date.now(),
+    userId: request.auth.uid,
+    productId,
+    status: 'active',
+    // ... other fields
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return { success: true, purchaseId: purchaseRef.id };
+});
+```
+
+**3. Client-Side Integration:**
+
+```typescript
+// Client code - calls Cloud Function instead of storage.createPurchase
+import { getFunctions, httpsCallable } from 'firebase/functions';
+
+async function handleSuccessfulPayment(paymentIntentId: string, productId: number) {
+  const functions = getFunctions();
+  const createPurchase = httpsCallable(functions, 'createPurchase');
+  
+  try {
+    const result = await createPurchase({ paymentIntentId, productId });
+    console.log('Purchase created:', result.data);
+  } catch (error) {
+    console.error('Failed to create purchase:', error);
+  }
+}
+```
+
+#### Impact
+
+Without fixing this vulnerability:
+- ✅ Users can forge purchases and access premium content without payment
+- ✅ Financial fraud is trivially easy
+- ✅ Business model is completely bypassable
+
+#### Current Status
+
+🔴 **NOT PRODUCTION READY** - This implementation is suitable for:
+- Development and testing environments
+- Demo purposes
+- Local-only deployments
+
+🔴 **DO NOT DEPLOY** to production without implementing proper server-side purchase validation and Firestore security rules.
+
+### Additional Security Best Practices
+
+1. **Server-side verification** - While this implementation provides client-side gating, actual content should be protected server-side or in Firestore rules.
+
+2. **Admin verification** - Always verify admin role server-side before granting manual access.
+
+3. **Token validation** - Validate payment tokens and transaction IDs on the server before creating purchases.
+
+4. **Audit logging** - Log all purchase creation and modification events for fraud detection.
+
+5. **Rate limiting** - Implement rate limiting on purchase-related operations to prevent abuse.
 
 ## Future Enhancements
 

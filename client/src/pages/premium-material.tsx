@@ -1,8 +1,19 @@
 /**
  * Premium Material Demo Page
  *
- * Example page demonstrating how to use PremiumContentGate to restrict access
- * to premium content based on purchase verification.
+ * DEMO/REFERENCE IMPLEMENTATION ONLY
+ * 
+ * This page demonstrates how to use the PremiumContentGate component to restrict access
+ * to premium content based on purchase verification. It serves as a reference for
+ * developers implementing premium content protection in other pages.
+ * 
+ * This page is NOT currently routed in App.tsx. To make it accessible:
+ * 1. Add a route in client/src/App.tsx:
+ *    <Route path="/app/premium-material/:productId" element={<PremiumMaterialPage />} />
+ * 2. Link to it from the marketplace or other pages
+ * 
+ * Alternatively, this file can remain as documentation and be removed from the build
+ * by moving it to a docs/examples directory.
  */
 
 import { useParams } from 'react-router-dom';
