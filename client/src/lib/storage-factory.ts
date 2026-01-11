@@ -1135,6 +1135,9 @@ class StorageRouter implements IClientStorage {
       (s) => s.checkProductAccess(userId, productId),
       'checkProductAccess'
     );
+  }
+
+  // ==========================================
   // Access Control & Permissions
   // ==========================================
 
@@ -1200,14 +1203,6 @@ class StorageRouter implements IClientStorage {
 
   async getAllGroups(tenantId?: number): Promise<Group[]> {
     return this.executeStorageOperation((s) => s.getAllGroups(tenantId), 'getAllGroups');
-  }
-
-  async recordPurchase(purchase: Partial<Purchase>): Promise<Purchase> {
-    return this.executeStorageOperation((s) => s.recordPurchase(purchase), 'recordPurchase');
-  }
-
-  async getUserPurchases(userId: string): Promise<Purchase[]> {
-    return this.executeStorageOperation((s) => s.getUserPurchases(userId), 'getUserPurchases');
   }
 }
 

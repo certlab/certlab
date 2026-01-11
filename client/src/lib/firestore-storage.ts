@@ -3296,6 +3296,58 @@ class FirestoreStorage implements IClientStorage {
         currency: sanitized.currency || 'USD',
         isPremium: sanitized.isPremium ?? false,
         subscriptionDuration: sanitized.subscriptionDuration || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await setSharedDocument('products', newProduct.id.toString(), newProduct);
+      return newProduct;
+    } catch (error) {
+      logError('createProduct', error, { product });
+      throw error;
+    }
+  }
+
+  async updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product | null> {
+    try {
+      const existing = await this.getProduct(id);
+      if (!existing) return null;
+
+      const sanitized: Partial<Product> = {
+        ...updates,
+        title: updates.title ? sanitizeInput(updates.title) : existing.title,
+        description: updates.description
+          ? sanitizeInput(updates.description)
+          : existing.description,
+      };
+
+      const updated: Product = {
+        ...existing,
+        ...sanitized,
+        updatedAt: new Date(),
+      };
+
+      await setSharedDocument('products', id.toString(), updated);
+      return updated;
+    } catch (error) {
+      logError('updateProduct', error, { id, updates });
+      return null;
+    }
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    try {
+      // Actually delete the product document from Firestore
+      const db = getFirestoreInstance();
+      const docRef = doc(db, 'products', id.toString());
+      await deleteDoc(docRef);
+    } catch (error) {
+      logError('deleteProduct', error, { id });
+      throw error;
+    }
+  }
+
+  // ==========================================
   // Access Control & Permissions
   // ==========================================
 
@@ -3492,10 +3544,6 @@ class FirestoreStorage implements IClientStorage {
         updatedAt: new Date(),
       };
 
-      await setSharedDocument('products', newProduct.id.toString(), newProduct);
-      return newProduct;
-    } catch (error) {
-      logError('createProduct', error, { product });
       await setSharedDocument('groups', groupId.toString(), newGroup);
       return newGroup;
     } catch (error) {
@@ -3504,41 +3552,6 @@ class FirestoreStorage implements IClientStorage {
     }
   }
 
-  async updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product | null> {
-    try {
-      const existing = await this.getProduct(id);
-      if (!existing) return null;
-
-      const sanitized: Partial<Product> = {
-        ...updates,
-        title: updates.title ? sanitizeInput(updates.title) : existing.title,
-        description: updates.description
-          ? sanitizeInput(updates.description)
-          : existing.description,
-      };
-
-      const updated: Product = {
-        ...existing,
-        ...sanitized,
-        updatedAt: new Date(),
-      };
-
-      await setSharedDocument('products', id.toString(), updated);
-      return updated;
-    } catch (error) {
-      logError('updateProduct', error, { id, updates });
-      return null;
-    }
-  }
-
-  async deleteProduct(id: number): Promise<void> {
-    try {
-      // Actually delete the product document from Firestore
-      const db = getFirestoreInstance();
-      const docRef = doc(db, 'products', id.toString());
-      await deleteDoc(docRef);
-    } catch (error) {
-      logError('deleteProduct', error, { id });
   /**
    * Update a group
    */
@@ -3656,6 +3669,63 @@ class FirestoreStorage implements IClientStorage {
       return newPurchase;
     } catch (error) {
       logError('createPurchase', error, { purchase });
+      throw error;
+    }
+  }
+
+  async updatePurchase(id: number, updates: Partial<InsertPurchase>): Promise<Purchase | null> {
+    const message =
+      '[FirestoreStorage] updatePurchase is not implemented for per-user Firestore storage. ' +
+      'Use user-scoped purchase methods that include userId instead.';
+    console.warn(message, { id, updates });
+    throw new Error(message);
+  }
+
+  async getAllPurchases(tenantId?: number): Promise<Purchase[]> {
+    const message =
+      '[FirestoreStorage] getAllPurchases is not implemented because it would require ' +
+      'scanning all users in the per-user Firestore model.';
+    console.warn(message, { tenantId });
+    throw new Error(message);
+  }
+
+  async refundPurchase(id: number): Promise<Purchase | null> {
+    const message =
+      '[FirestoreStorage] refundPurchase is not implemented for per-user Firestore storage. ' +
+      'Use user-scoped purchase refund logic that includes userId instead.';
+    console.warn(message, { id });
+    throw new Error(message);
+  }
+
+  async checkProductAccess(userId: string, productId: number): Promise<boolean> {
+    try {
+      const purchase = await this.getUserPurchase(userId, productId);
+
+      if (!purchase) {
+        return false;
+      }
+
+      // Check if purchase is active
+      if (purchase.status !== 'active') {
+        return false;
+      }
+
+      // Check if subscription has expired
+      if (purchase.expiryDate && new Date() > new Date(purchase.expiryDate)) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      logError('checkProductAccess', error, { userId, productId });
+      return false;
+    }
+  }
+
+  // ==========================================
+  // Group Management
+  // ==========================================
+
   /**
    * Add a user to a group
    */
@@ -3799,18 +3869,12 @@ class FirestoreStorage implements IClientStorage {
     } catch (error) {
       logError('checkProductAccess', error, { userId, productId });
       return false;
-  /**
-   * Get all purchases for a user
-   */
-  async getUserPurchases(userId: string): Promise<Purchase[]> {
-    try {
-      const purchases = await getUserDocuments<Purchase>(userId, 'purchases');
-      return purchases.map((p) => convertTimestamps<Purchase>(p));
-    } catch (error) {
-      logError('getUserPurchases', error, { userId });
-      return [];
     }
   }
+
+  // ==========================================
+  // Group Management
+  // ==========================================
 }
 
 // Export singleton instance
