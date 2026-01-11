@@ -979,4 +979,33 @@ export interface IClientStorage extends IStorageAdapter {
 
   /** Get study timer statistics for a user */
   getStudyTimerStats(userId: string): Promise<StudyTimerStats>;
+
+  // ==========================================
+  // Quiz Version History (Collaborative Editing Support)
+  // ==========================================
+
+  /** Create a new version snapshot of a quiz or template */
+  createQuizVersion(
+    quizId: number,
+    quizData: any,
+    changeDescription?: string,
+    collectionName?: 'quizzes' | 'quizTemplates'
+  ): Promise<any>;
+
+  /** Get all versions for a quiz, ordered by creation date (newest first) */
+  getQuizVersions(quizId: number, collectionName?: 'quizzes' | 'quizTemplates'): Promise<any[]>;
+
+  /** Get a specific version of a quiz */
+  getQuizVersion(
+    quizId: number,
+    versionId: string,
+    collectionName?: 'quizzes' | 'quizTemplates'
+  ): Promise<any | null>;
+
+  /** Restore a quiz to a previous version */
+  restoreQuizVersion(
+    quizId: number,
+    versionId: string,
+    collectionName?: 'quizzes' | 'quizTemplates'
+  ): Promise<any>;
 }
