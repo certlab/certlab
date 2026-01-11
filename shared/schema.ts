@@ -1324,7 +1324,57 @@ export const userTitles = pgTable('user_titles', {
   source: text('source'), // Where it came from: "quest", "badge", "achievement", "special"
 });
 
-// Marketplace purchase type (client-side only, no DB table)
+// Marketplace Product table
+export const products = pgTable('products', {
+  id: serial('id').primaryKey(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  type: text('type').notNull(), // 'quiz' | 'material' | 'course' | 'bundle'
+  resourceIds: jsonb('resource_ids').$type<number[]>().notNull(), // Content IDs included in this product
+  price: integer('price').notNull(), // Price in cents or tokens
+  currency: text('currency').notNull().default('USD'),
+  isPremium: boolean('is_premium').notNull().default(false),
+  subscriptionDuration: integer('subscription_duration'), // Duration in days for subscriptions
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Purchase table for tracking marketplace purchases
+export const purchases = pgTable('purchases', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  productId: integer('product_id').notNull(),
+  productType: text('product_type').notNull(), // 'quiz' | 'material' | 'course' | 'bundle'
+  purchaseDate: timestamp('purchase_date').defaultNow(),
+  expiryDate: timestamp('expiry_date'), // For subscriptions
+  status: text('status').notNull().default('active'), // 'active' | 'expired' | 'refunded'
+  amount: integer('amount').notNull(), // Amount paid in cents or tokens
+  currency: text('currency').notNull().default('USD'),
+  paymentMethod: text('payment_method').notNull(), // 'stripe' | 'tokens' | 'polar'
+  transactionId: text('transaction_id'), // External payment ID
+});
+
+// Insert schemas for products and purchases
+export const insertProductSchema = createInsertSchema(products).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPurchaseSchema = createInsertSchema(purchases).omit({
+  id: true,
+  purchaseDate: true,
+});
+
+// Types for products and purchases
+export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type Product = typeof products.$inferSelect;
+export type InsertPurchase = z.infer<typeof insertPurchaseSchema>;
+export type Purchase = typeof purchases.$inferSelect;
+
+// Marketplace purchase type (legacy - kept for compatibility)
 export type MarketplacePurchase = {
   id: number;
   userId: string;

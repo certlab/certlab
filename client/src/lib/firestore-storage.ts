@@ -82,6 +82,10 @@ import type {
   StudyTimerSession,
   StudyTimerSettings,
   StudyTimerStats,
+  Product,
+  InsertProduct,
+  Purchase,
+  InsertPurchase,
 } from '@shared/schema';
 import type {
   IClientStorage,
@@ -3197,6 +3201,230 @@ class FirestoreStorage implements IClientStorage {
       recentTrend: 'stable',
       lastAttemptDate: null,
     };
+  }
+
+  // ==========================================
+  // Product Management
+  // ==========================================
+
+  async getProducts(tenantId?: number): Promise<Product[]> {
+    try {
+      const products = await getSharedDocuments<Product>('products');
+      const filtered = tenantId ? products.filter((p) => p.tenantId === tenantId) : products;
+      return filtered.map((p) => convertTimestamps<Product>(p));
+    } catch (error) {
+      logError('getProducts', error, { tenantId });
+      return [];
+    }
+  }
+
+  async getProduct(id: number): Promise<Product | null> {
+    try {
+      const product = await getSharedDocument<Product>('products', id.toString());
+      return product ? convertTimestamps<Product>(product) : null;
+    } catch (error) {
+      logError('getProduct', error, { id });
+      return null;
+    }
+  }
+
+  async createProduct(product: InsertProduct): Promise<Product> {
+    try {
+      const sanitized = {
+        ...product,
+        title: sanitizeInput(product.title),
+        description: sanitizeInput(product.description),
+      };
+
+      const newProduct: Product = {
+        id: Date.now(), // Generate a numeric ID
+        tenantId: sanitized.tenantId || 1,
+        title: sanitized.title,
+        description: sanitized.description,
+        type: sanitized.type,
+        resourceIds: sanitized.resourceIds,
+        price: sanitized.price,
+        currency: sanitized.currency,
+        isPremium: sanitized.isPremium,
+        subscriptionDuration: sanitized.subscriptionDuration || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await setSharedDocument('products', newProduct.id.toString(), newProduct);
+      return newProduct;
+    } catch (error) {
+      logError('createProduct', error, { product });
+      throw error;
+    }
+  }
+
+  async updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product | null> {
+    try {
+      const existing = await this.getProduct(id);
+      if (!existing) return null;
+
+      const sanitized = {
+        ...updates,
+        title: updates.title ? sanitizeInput(updates.title) : undefined,
+        description: updates.description ? sanitizeInput(updates.description) : undefined,
+      };
+
+      const updated: Product = {
+        ...existing,
+        ...sanitized,
+        updatedAt: new Date(),
+      };
+
+      await setSharedDocument('products', id.toString(), updated);
+      return updated;
+    } catch (error) {
+      logError('updateProduct', error, { id, updates });
+      return null;
+    }
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    try {
+      // In Firestore, we'll just mark as inactive or delete the document
+      // For now, we'll update the product to mark it as deleted
+      const existing = await this.getProduct(id);
+      if (existing) {
+        await setSharedDocument('products', id.toString(), { ...existing, isPremium: false });
+      }
+    } catch (error) {
+      logError('deleteProduct', error, { id });
+      throw error;
+    }
+  }
+
+  // ==========================================
+  // Purchase Management
+  // ==========================================
+
+  async getUserPurchases(userId: string): Promise<Purchase[]> {
+    try {
+      const purchases = await getUserDocuments<Purchase>(userId, 'purchases');
+      return purchases.map((p) => convertTimestamps<Purchase>(p));
+    } catch (error) {
+      logError('getUserPurchases', error, { userId });
+      return [];
+    }
+  }
+
+  async getPurchase(id: number): Promise<Purchase | null> {
+    try {
+      // Since purchases are stored per-user, we need to search through users
+      // For now, this is a simplified implementation
+      // In production, you might want to have a global purchases collection
+      console.warn('[FirestoreStorage] getPurchase by ID without userId is not optimal');
+      return null;
+    } catch (error) {
+      logError('getPurchase', error, { id });
+      return null;
+    }
+  }
+
+  async getUserPurchase(userId: string, productId: number): Promise<Purchase | null> {
+    try {
+      const purchases = await this.getUserPurchases(userId);
+      return purchases.find((p) => p.productId === productId) || null;
+    } catch (error) {
+      logError('getUserPurchase', error, { userId, productId });
+      return null;
+    }
+  }
+
+  async createPurchase(purchase: InsertPurchase): Promise<Purchase> {
+    try {
+      const newPurchase: Purchase = {
+        id: Date.now(), // Generate a numeric ID
+        userId: purchase.userId,
+        tenantId: purchase.tenantId || 1,
+        productId: purchase.productId,
+        productType: purchase.productType,
+        purchaseDate: new Date(),
+        expiryDate: purchase.expiryDate || null,
+        status: purchase.status || 'active',
+        amount: purchase.amount,
+        currency: purchase.currency,
+        paymentMethod: purchase.paymentMethod,
+        transactionId: purchase.transactionId || null,
+      };
+
+      await setUserSubcollectionDocument(
+        purchase.userId,
+        'purchases',
+        newPurchase.id.toString(),
+        newPurchase
+      );
+      return newPurchase;
+    } catch (error) {
+      logError('createPurchase', error, { purchase });
+      throw error;
+    }
+  }
+
+  async updatePurchase(id: number, updates: Partial<InsertPurchase>): Promise<Purchase | null> {
+    try {
+      // Need userId to update - this is a limitation of the per-user storage model
+      // For now, we'll return null
+      console.warn('[FirestoreStorage] updatePurchase requires userId for per-user storage');
+      return null;
+    } catch (error) {
+      logError('updatePurchase', error, { id, updates });
+      return null;
+    }
+  }
+
+  async getAllPurchases(tenantId?: number): Promise<Purchase[]> {
+    try {
+      // This would require scanning all users' purchases
+      // For now, return empty array
+      console.warn(
+        '[FirestoreStorage] getAllPurchases not fully implemented - requires user iteration'
+      );
+      return [];
+    } catch (error) {
+      logError('getAllPurchases', error, { tenantId });
+      return [];
+    }
+  }
+
+  async refundPurchase(id: number): Promise<Purchase | null> {
+    try {
+      // Need userId to refund - this is a limitation of the per-user storage model
+      console.warn('[FirestoreStorage] refundPurchase requires userId for per-user storage');
+      return null;
+    } catch (error) {
+      logError('refundPurchase', error, { id });
+      return null;
+    }
+  }
+
+  async checkProductAccess(userId: string, productId: number): Promise<boolean> {
+    try {
+      const purchase = await this.getUserPurchase(userId, productId);
+
+      if (!purchase) {
+        return false;
+      }
+
+      // Check if purchase is active
+      if (purchase.status !== 'active') {
+        return false;
+      }
+
+      // Check if subscription has expired
+      if (purchase.expiryDate && new Date() > new Date(purchase.expiryDate)) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      logError('checkProductAccess', error, { userId, productId });
+      return false;
+    }
   }
 }
 

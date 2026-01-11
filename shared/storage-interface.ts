@@ -47,6 +47,10 @@ import type {
   StudyTimerSession,
   StudyTimerSettings,
   StudyTimerStats,
+  Product,
+  InsertProduct,
+  Purchase,
+  InsertPurchase,
 } from './schema';
 
 /**
@@ -979,4 +983,51 @@ export interface IClientStorage extends IStorageAdapter {
 
   /** Get study timer statistics for a user */
   getStudyTimerStats(userId: string): Promise<StudyTimerStats>;
+
+  // ==========================================
+  // Product Management
+  // ==========================================
+
+  /** Get all products, optionally filtered by tenant */
+  getProducts(tenantId?: number): Promise<Product[]>;
+
+  /** Get a product by ID */
+  getProduct(id: number): Promise<Product | null>;
+
+  /** Create a new product */
+  createProduct(product: InsertProduct): Promise<Product>;
+
+  /** Update an existing product */
+  updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product | null>;
+
+  /** Delete a product */
+  deleteProduct(id: number): Promise<void>;
+
+  // ==========================================
+  // Purchase Management
+  // ==========================================
+
+  /** Get all purchases for a user */
+  getUserPurchases(userId: string): Promise<Purchase[]>;
+
+  /** Get a specific purchase by ID */
+  getPurchase(id: number): Promise<Purchase | null>;
+
+  /** Get a user's purchase for a specific product */
+  getUserPurchase(userId: string, productId: number): Promise<Purchase | null>;
+
+  /** Create a new purchase */
+  createPurchase(purchase: InsertPurchase): Promise<Purchase>;
+
+  /** Update an existing purchase */
+  updatePurchase(id: number, updates: Partial<InsertPurchase>): Promise<Purchase | null>;
+
+  /** Get all purchases (admin) */
+  getAllPurchases(tenantId?: number): Promise<Purchase[]>;
+
+  /** Refund a purchase */
+  refundPurchase(id: number): Promise<Purchase | null>;
+
+  /** Check if a user has active access to a product */
+  checkProductAccess(userId: string, productId: number): Promise<boolean>;
 }
