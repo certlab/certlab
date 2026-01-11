@@ -3198,6 +3198,312 @@ class FirestoreStorage implements IClientStorage {
       lastAttemptDate: null,
     };
   }
+
+  // ==========================================
+  // Access Control & Permissions
+  // ==========================================
+
+  /**
+   * Check if a user has access to a resource
+   */
+  async checkAccess(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<{
+    allowed: boolean;
+    reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
+    productId?: string;
+  }> {
+    try {
+      // Get the resource to check visibility settings
+      let resource: any;
+
+      if (resourceType === 'quiz') {
+        resource = await this.getQuiz(resourceId);
+      } else if (resourceType === 'lecture') {
+        resource = await this.getLecture(resourceId);
+      } else {
+        // Template access would need additional implementation
+        return { allowed: false, reason: 'access_denied' };
+      }
+
+      if (!resource) {
+        return { allowed: false, reason: 'access_denied' };
+      }
+
+      // Check if user is the creator
+      if (resource.userId === userId || resource.author === userId) {
+        return { allowed: true };
+      }
+
+      // Get visibility setting (default to 'private' if not set)
+      const visibility = resource.visibility || 'private';
+
+      // Check visibility level
+      if (visibility === 'public') {
+        // For public content, check if purchase is required
+        if (resource.requiresPurchase && resource.purchaseProductId) {
+          const hasPurchase = await this.checkPurchase(userId, resource.purchaseProductId);
+          return {
+            allowed: hasPurchase,
+            reason: hasPurchase ? undefined : 'purchase_required',
+            productId: resource.purchaseProductId,
+          };
+        }
+        return { allowed: true };
+      }
+
+      if (visibility === 'private') {
+        return { allowed: false, reason: 'private_content' };
+      }
+
+      if (visibility === 'shared') {
+        // Check if user is in the shared user list
+        if (resource.sharedWithUsers && resource.sharedWithUsers.includes(userId)) {
+          return { allowed: true };
+        }
+
+        // Check if user is in any of the shared groups
+        if (resource.sharedWithGroups && resource.sharedWithGroups.length > 0) {
+          const isInGroup = await this.isUserInGroups(userId, resource.sharedWithGroups);
+          return {
+            allowed: isInGroup,
+            reason: isInGroup ? undefined : 'not_shared_with_you',
+          };
+        }
+
+        return { allowed: false, reason: 'not_shared_with_you' };
+      }
+
+      return { allowed: false, reason: 'access_denied' };
+    } catch (error) {
+      logError('checkAccess', error, { userId, resourceType, resourceId });
+      return { allowed: false, reason: 'access_denied' };
+    }
+  }
+
+  /**
+   * Check if a user has purchased a product
+   */
+  async checkPurchase(userId: string, productId: string): Promise<boolean> {
+    try {
+      // Query purchases collection for this user and product
+      const purchases = await getUserDocuments<any>(userId, 'purchases', [
+        where('productId', '==', productId),
+      ]);
+      return purchases.length > 0;
+    } catch (error) {
+      logError('checkPurchase', error, { userId, productId });
+      return false;
+    }
+  }
+
+  /**
+   * Check if a user is in any of the specified groups
+   */
+  async isUserInGroups(userId: string, groupIds: number[]): Promise<boolean> {
+    if (!groupIds || groupIds.length === 0) {
+      return false;
+    }
+
+    try {
+      // Check each group for membership
+      for (const groupId of groupIds) {
+        const members = await getSharedDocuments<any>(`groups/${groupId}/members`, [
+          where('userId', '==', userId),
+        ]);
+        if (members.length > 0) {
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      logError('isUserInGroups', error, { userId, groupIds });
+      return false;
+    }
+  }
+
+  /**
+   * Get all groups a user is a member of
+   */
+  async getUserGroups(userId: string): Promise<any[]> {
+    try {
+      // This would require a collection group query or denormalized data
+      // For now, return empty array - can be implemented with proper indexing
+      console.warn('[FirestoreStorage] getUserGroups requires collection group query');
+      return [];
+    } catch (error) {
+      logError('getUserGroups', error, { userId });
+      return [];
+    }
+  }
+
+  /**
+   * Create a new group
+   */
+  async createGroup(group: Partial<any>): Promise<any> {
+    try {
+      const groupId = Date.now(); // Simple ID generation
+      const newGroup = {
+        ...group,
+        id: groupId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await setSharedDocument('groups', groupId.toString(), newGroup);
+      return newGroup;
+    } catch (error) {
+      logError('createGroup', error, { group });
+      throw error;
+    }
+  }
+
+  /**
+   * Update a group
+   */
+  async updateGroup(groupId: number, updates: Partial<any>): Promise<any> {
+    try {
+      const existing = await getSharedDocument<any>('groups', groupId.toString());
+      if (!existing) {
+        throw new Error('Group not found');
+      }
+
+      const updated = {
+        ...existing,
+        ...updates,
+        updatedAt: new Date(),
+      };
+
+      await setSharedDocument('groups', groupId.toString(), updated);
+      return updated;
+    } catch (error) {
+      logError('updateGroup', error, { groupId, updates });
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a group
+   */
+  async deleteGroup(groupId: number): Promise<void> {
+    try {
+      // Note: This should also delete all members, but for now just delete the group
+      // In production, this would need a transaction or cloud function
+      const db = getFirestoreInstance();
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      await deleteDoc(doc(db, 'groups', groupId.toString()));
+    } catch (error) {
+      logError('deleteGroup', error, { groupId });
+      throw error;
+    }
+  }
+
+  /**
+   * Add a user to a group
+   */
+  async addGroupMember(groupId: number, userId: string, addedBy: string): Promise<void> {
+    try {
+      const memberId = `${groupId}-${userId}`;
+      const member = {
+        id: memberId,
+        groupId,
+        userId,
+        addedBy,
+        joinedAt: new Date(),
+      };
+
+      await setSharedDocument(`groups/${groupId}/members`, memberId, member);
+    } catch (error) {
+      logError('addGroupMember', error, { groupId, userId, addedBy });
+      throw error;
+    }
+  }
+
+  /**
+   * Remove a user from a group
+   */
+  async removeGroupMember(groupId: number, userId: string): Promise<void> {
+    try {
+      const memberId = `${groupId}-${userId}`;
+      const db = getFirestoreInstance();
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      await deleteDoc(doc(db, 'groups', groupId.toString(), 'members', memberId));
+    } catch (error) {
+      logError('removeGroupMember', error, { groupId, userId });
+      throw error;
+    }
+  }
+
+  /**
+   * Get all members of a group
+   */
+  async getGroupMembers(groupId: number): Promise<any[]> {
+    try {
+      const members = await getSharedDocuments<any>(`groups/${groupId}/members`);
+      return members.map((m) => convertTimestamps<any>(m));
+    } catch (error) {
+      logError('getGroupMembers', error, { groupId });
+      return [];
+    }
+  }
+
+  /**
+   * Get all groups (for admins or searching)
+   */
+  async getAllGroups(tenantId?: number): Promise<any[]> {
+    try {
+      let groups = await getSharedDocuments<any>('groups');
+
+      if (tenantId) {
+        groups = groups.filter((g) => g.tenantId === tenantId);
+      }
+
+      return groups.map((g) => convertTimestamps<any>(g));
+    } catch (error) {
+      logError('getAllGroups', error, { tenantId });
+      return [];
+    }
+  }
+
+  /**
+   * Record a purchase
+   */
+  async recordPurchase(purchase: Partial<any>): Promise<any> {
+    try {
+      if (!purchase.userId || !purchase.productId) {
+        throw new Error('userId and productId are required');
+      }
+
+      const purchaseId = `${purchase.productId}-${Date.now()}`;
+      const newPurchase = {
+        ...purchase,
+        id: purchaseId,
+        purchaseDate: new Date(),
+      };
+
+      await setUserDocument(purchase.userId, 'purchases', purchaseId, newPurchase);
+
+      return newPurchase;
+    } catch (error) {
+      logError('recordPurchase', error, { purchase });
+      throw error;
+    }
+  }
+
+  /**
+   * Get all purchases for a user
+   */
+  async getUserPurchases(userId: string): Promise<any[]> {
+    try {
+      const purchases = await getUserDocuments<any>(userId, 'purchases');
+      return purchases.map((p) => convertTimestamps<any>(p));
+    } catch (error) {
+      logError('getUserPurchases', error, { userId });
+      return [];
+    }
+  }
 }
 
 // Export singleton instance
