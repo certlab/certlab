@@ -49,6 +49,7 @@ import type {
   DailyReward,
   Quiz,
   QuizVersion,
+  QuizTemplate,
 } from '@shared/schema';
 
 /**
@@ -490,6 +491,31 @@ class StorageRouter implements IClientStorage {
     return this.executeStorageOperation(
       (s) => (s as any).restoreQuizVersion(quizId, versionId, collectionName),
       'restoreQuizVersion'
+    );
+  }
+
+  // ==========================================
+  // Quiz Templates
+  // ==========================================
+
+  async getUserQuizTemplates(userId: string, tenantId?: number): Promise<QuizTemplate[]> {
+    return this.executeStorageOperation(
+      (s) => (s as any).getUserQuizTemplates(userId, tenantId),
+      'getUserQuizTemplates'
+    );
+  }
+
+  async getQuizTemplate(userId: string, templateId: number): Promise<QuizTemplate | undefined> {
+    return this.executeStorageOperation(
+      (s) => (s as any).getQuizTemplate(userId, templateId),
+      'getQuizTemplate'
+    );
+  }
+
+  async duplicateQuizTemplate(templateId: number, userId: string): Promise<QuizTemplate> {
+    return this.executeStorageOperation(
+      (s) => (s as any).duplicateQuizTemplate(templateId, userId),
+      'duplicateQuizTemplate'
     );
   }
 

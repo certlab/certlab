@@ -57,6 +57,7 @@ import type {
   Question,
   Quiz,
   QuizVersion,
+  QuizTemplate,
   UserProgress,
   MasteryScore,
   Badge,
@@ -980,6 +981,102 @@ class FirestoreStorage implements IClientStorage {
       return convertTimestamps(updatedDoc);
     } catch (error) {
       logError('restoreQuizVersion', error, { quizId, versionId, collectionName });
+      throw error;
+    }
+  }
+
+  // ==========================================
+  // Quiz Templates
+  // ==========================================
+
+  /**
+   * Get all quiz templates for a user
+   * @param userId - User ID
+   * @param tenantId - Optional tenant ID filter
+   */
+  async getUserQuizTemplates(userId: string, tenantId?: number): Promise<QuizTemplate[]> {
+    try {
+      const templates = await getUserDocuments<QuizTemplate>(userId, 'quizTemplates');
+      const filtered = tenantId ? templates.filter((t) => t.tenantId === tenantId) : templates;
+      return filtered.map((t) => convertTimestamps(t));
+    } catch (error) {
+      logError('getUserQuizTemplates', error, { userId, tenantId });
+      return [];
+    }
+  }
+
+  /**
+   * Get a single quiz template by ID
+   * @param userId - User ID (owner of the template)
+   * @param templateId - Template ID
+   */
+  async getQuizTemplate(userId: string, templateId: number): Promise<QuizTemplate | undefined> {
+    try {
+      const template = await getUserDocument<QuizTemplate>(
+        userId,
+        'quizTemplates',
+        templateId.toString()
+      );
+      return template ? convertTimestamps(template) : undefined;
+    } catch (error) {
+      logError('getQuizTemplate', error, { userId, templateId });
+      return undefined;
+    }
+  }
+
+  /**
+   * Duplicate a quiz template
+   * Creates a copy of an existing quiz template with all configuration, questions, and metadata
+   * The duplicate is created as a draft with a "Copy of" prefix
+   *
+   * @param templateId - ID of the template to duplicate
+   * @param userId - ID of the user requesting duplication (must be the owner)
+   * @returns The newly created template
+   * @throws Error if template not found or user is not the owner
+   */
+  async duplicateQuizTemplate(templateId: number, userId: string): Promise<QuizTemplate> {
+    try {
+      if (!userId) throw new Error('User ID required');
+
+      // 1. Fetch original template
+      const original = await this.getQuizTemplate(userId, templateId);
+      if (!original) {
+        throw new Error('Quiz template not found');
+      }
+
+      // 2. Verify ownership
+      if (original.userId !== userId) {
+        throw new Error('Only the quiz owner can duplicate this template');
+      }
+
+      // 3. Generate new ID
+      const newId = Date.now();
+
+      // 4. Create duplicate with modified fields
+      const duplicate: QuizTemplate = {
+        ...original,
+        id: newId,
+        title: `Copy of ${original.title}`,
+        isDraft: true,
+        isPublished: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // 5. Save as new template
+      await setUserDocument(userId, 'quizTemplates', newId.toString(), duplicate);
+
+      // 6. Create version history entry for the duplicate
+      await this.createQuizVersion(
+        newId,
+        duplicate,
+        'Created as duplicate of template ' + templateId,
+        'quizTemplates'
+      );
+
+      return convertTimestamps(duplicate);
+    } catch (error) {
+      logError('duplicateQuizTemplate', error, { templateId, userId });
       throw error;
     }
   }

@@ -20,6 +20,7 @@ import {
   ShoppingCart,
   FileText,
   Edit,
+  List,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -73,6 +74,12 @@ export default function MobileNavigationEnhanced() {
       label: 'Quiz Builder',
       icon: <Edit className="w-5 h-5" />,
       href: '/app/quiz-builder',
+    },
+    {
+      id: 'my-quizzes',
+      label: 'My Quizzes',
+      icon: <List className="w-5 h-5" />,
+      href: '/app/my-quizzes',
     },
     {
       id: 'practice-tests',

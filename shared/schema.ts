@@ -1542,3 +1542,54 @@ export const quizVersionSchema = z.object({
 });
 
 export type InsertQuizVersion = z.infer<typeof quizVersionSchema>;
+
+// ============================================================================
+// Quiz Template Interface
+// ============================================================================
+
+/**
+ * Interface for quiz templates used in the quiz builder
+ * Templates are user-created quiz configurations that can be edited and published
+ */
+export interface QuizTemplate {
+  id?: number;
+  userId: string;
+  tenantId: number;
+  title: string;
+  description: string;
+  tags?: string[];
+  instructions: string;
+  categoryIds: number[];
+  subcategoryIds: number[];
+  customQuestions: CustomQuestion[];
+  questionCount: number;
+  timeLimit: number | null;
+  passingScore: number;
+  maxAttempts: number | null;
+  difficultyLevel: number;
+  isPublished: boolean;
+  isDraft: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+  // Advanced Configuration
+  randomizeQuestions?: boolean;
+  randomizeAnswers?: boolean;
+  timeLimitPerQuestion?: number | null;
+  questionWeights?: Record<number, number>;
+  feedbackMode?: 'instant' | 'delayed' | 'final';
+  isAdvancedConfig?: boolean;
+}
+
+/**
+ * Interface for custom questions in quiz templates
+ */
+export interface CustomQuestion {
+  id: string;
+  text: string;
+  options: QuestionOption[];
+  correctAnswer: number;
+  explanation: string;
+  difficultyLevel: number;
+  type: 'multiple_choice' | 'true_false';
+  tags: string[];
+}
