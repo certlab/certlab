@@ -113,11 +113,11 @@ export function UserPurchasesCard() {
                   <p className="font-medium">{getProductName(purchase.productId)}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <p className="text-sm text-muted-foreground">
-                      Purchased {new Date(purchase.purchaseDate).toLocaleDateString()}
+                      Purchased {new Date(purchase.purchaseDate as any).toLocaleDateString()}
                     </p>
                     {purchase.expiryDate && (
                       <p className="text-sm text-muted-foreground">
-                        • Expires {new Date(purchase.expiryDate).toLocaleDateString()}
+                        • Expires {new Date(purchase.expiryDate as any).toLocaleDateString()}
                       </p>
                     )}
                   </div>

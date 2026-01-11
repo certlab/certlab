@@ -1063,6 +1063,72 @@ class StorageRouter implements IClientStorage {
       'getUserDailyRewards'
     );
   }
+
+  // ==========================================
+  // Product Management
+  // ==========================================
+
+  async getProducts(tenantId?: number): Promise<any[]> {
+    return this.executeStorageOperation((s) => s.getProducts(tenantId), 'getProducts');
+  }
+
+  async getProduct(id: number): Promise<any> {
+    return this.executeStorageOperation((s) => s.getProduct(id), 'getProduct');
+  }
+
+  async createProduct(product: any): Promise<any> {
+    return this.executeStorageOperation((s) => s.createProduct(product), 'createProduct');
+  }
+
+  async updateProduct(id: number, updates: any): Promise<any> {
+    return this.executeStorageOperation((s) => s.updateProduct(id, updates), 'updateProduct');
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    return this.executeStorageOperation((s) => s.deleteProduct(id), 'deleteProduct');
+  }
+
+  // ==========================================
+  // Purchase Management
+  // ==========================================
+
+  async getUserPurchases(userId: string): Promise<any[]> {
+    return this.executeStorageOperation((s) => s.getUserPurchases(userId), 'getUserPurchases');
+  }
+
+  async getPurchase(id: number): Promise<any> {
+    return this.executeStorageOperation((s) => s.getPurchase(id), 'getPurchase');
+  }
+
+  async getUserPurchase(userId: string, productId: number): Promise<any> {
+    return this.executeStorageOperation(
+      (s) => s.getUserPurchase(userId, productId),
+      'getUserPurchase'
+    );
+  }
+
+  async createPurchase(purchase: any): Promise<any> {
+    return this.executeStorageOperation((s) => s.createPurchase(purchase), 'createPurchase');
+  }
+
+  async updatePurchase(id: number, updates: any): Promise<any> {
+    return this.executeStorageOperation((s) => s.updatePurchase(id, updates), 'updatePurchase');
+  }
+
+  async getAllPurchases(tenantId?: number): Promise<any[]> {
+    return this.executeStorageOperation((s) => s.getAllPurchases(tenantId), 'getAllPurchases');
+  }
+
+  async refundPurchase(id: number): Promise<any> {
+    return this.executeStorageOperation((s) => s.refundPurchase(id), 'refundPurchase');
+  }
+
+  async checkProductAccess(userId: string, productId: number): Promise<boolean> {
+    return this.executeStorageOperation(
+      (s) => s.checkProductAccess(userId, productId),
+      'checkProductAccess'
+    );
+  }
 }
 
 // Export the storage router as the default storage interface

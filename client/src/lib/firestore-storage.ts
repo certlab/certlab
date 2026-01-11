@@ -3236,6 +3236,10 @@ class FirestoreStorage implements IClientStorage {
         description: sanitizeInput(product.description),
       };
 
+      if (!sanitized.title || !sanitized.description) {
+        throw new Error('Product title and description are required');
+      }
+
       const newProduct: Product = {
         id: Date.now(), // Generate a numeric ID
         tenantId: sanitized.tenantId || 1,
@@ -3244,8 +3248,8 @@ class FirestoreStorage implements IClientStorage {
         type: sanitized.type,
         resourceIds: sanitized.resourceIds,
         price: sanitized.price,
-        currency: sanitized.currency,
-        isPremium: sanitized.isPremium,
+        currency: sanitized.currency || 'USD',
+        isPremium: sanitized.isPremium ?? false,
         subscriptionDuration: sanitized.subscriptionDuration || null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -3264,10 +3268,12 @@ class FirestoreStorage implements IClientStorage {
       const existing = await this.getProduct(id);
       if (!existing) return null;
 
-      const sanitized = {
+      const sanitized: Partial<Product> = {
         ...updates,
-        title: updates.title ? sanitizeInput(updates.title) : undefined,
-        description: updates.description ? sanitizeInput(updates.description) : undefined,
+        title: updates.title ? sanitizeInput(updates.title) : existing.title,
+        description: updates.description
+          ? sanitizeInput(updates.description)
+          : existing.description,
       };
 
       const updated: Product = {
@@ -3347,17 +3353,12 @@ class FirestoreStorage implements IClientStorage {
         expiryDate: purchase.expiryDate || null,
         status: purchase.status || 'active',
         amount: purchase.amount,
-        currency: purchase.currency,
+        currency: purchase.currency || 'USD',
         paymentMethod: purchase.paymentMethod,
         transactionId: purchase.transactionId || null,
       };
 
-      await setUserSubcollectionDocument(
-        purchase.userId,
-        'purchases',
-        newPurchase.id.toString(),
-        newPurchase
-      );
+      await setUserDocument(purchase.userId, 'purchases', newPurchase.id.toString(), newPurchase);
       return newPurchase;
     } catch (error) {
       logError('createPurchase', error, { purchase });

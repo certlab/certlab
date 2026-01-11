@@ -297,11 +297,11 @@ export function AdminPurchasesView() {
                         </TableCell>
                         <TableCell>{getStatusBadge(purchase.status)}</TableCell>
                         <TableCell>
-                          {new Date(purchase.purchaseDate).toLocaleDateString()}
+                          {new Date(purchase.purchaseDate as any).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
                           {purchase.expiryDate
-                            ? new Date(purchase.expiryDate).toLocaleDateString()
+                            ? new Date(purchase.expiryDate as any).toLocaleDateString()
                             : 'N/A'}
                         </TableCell>
                         <TableCell>
