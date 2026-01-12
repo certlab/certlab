@@ -90,6 +90,9 @@ import type {
   InsertPurchase,
   Group,
   GroupMember,
+  Enrollment,
+  Assignment,
+  PrerequisiteCheckResult,
 } from '@shared/schema';
 import type {
   IClientStorage,
@@ -3424,8 +3427,20 @@ class FirestoreStorage implements IClientStorage {
     resourceId: number
   ): Promise<{
     allowed: boolean;
-    reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
+    reason?:
+      | 'purchase_required'
+      | 'private_content'
+      | 'not_shared_with_you'
+      | 'access_denied'
+      | 'not_available_yet'
+      | 'availability_expired'
+      | 'prerequisites_not_met'
+      | 'not_enrolled'
+      | 'not_assigned';
     productId?: string;
+    missingPrerequisites?: { quizIds?: number[]; lectureIds?: number[] };
+    availableFrom?: Date;
+    availableUntil?: Date;
   }> {
     try {
       // Get the resource to check visibility settings
@@ -3447,6 +3462,69 @@ class FirestoreStorage implements IClientStorage {
       // Check if user is the creator
       if (resource.userId === userId || resource.author === userId) {
         return { allowed: true };
+      }
+
+      // Check availability window first
+      if (resource.availableFrom || resource.availableUntil || resource.enrollmentDeadline) {
+        const availabilityCheck = await this.checkAvailability(
+          resource.availableFrom,
+          resource.availableUntil,
+          resource.enrollmentDeadline
+        );
+
+        if (!availabilityCheck.available) {
+          return {
+            allowed: false,
+            reason:
+              availabilityCheck.reason === 'not_started'
+                ? 'not_available_yet'
+                : 'availability_expired',
+            availableFrom: resource.availableFrom,
+            availableUntil: resource.availableUntil,
+          };
+        }
+      }
+
+      // Check prerequisites if required
+      if (resource.prerequisites && resource.requirePrerequisites !== false) {
+        const prereqCheck = await this.checkPrerequisites(userId, resource.prerequisites);
+        if (!prereqCheck.met) {
+          return {
+            allowed: false,
+            reason: 'prerequisites_not_met',
+            missingPrerequisites: {
+              quizIds: prereqCheck.missingQuizzes?.map((q) => q.id),
+              lectureIds: prereqCheck.missingLectures?.map((l) => l.id),
+            },
+          };
+        }
+      }
+
+      // Check distribution method
+      const distributionMethod = resource.distributionMethod || 'open';
+
+      if (distributionMethod === 'self_enroll') {
+        // Check if user is enrolled
+        const isEnrolled = await this.isUserEnrolled(userId, resourceType, resourceId);
+        if (!isEnrolled) {
+          // Check if enrollment is still possible
+          const availabilityCheck = await this.checkAvailability(
+            resource.availableFrom,
+            resource.availableUntil,
+            resource.enrollmentDeadline
+          );
+          if (!availabilityCheck.canEnroll) {
+            return { allowed: false, reason: 'not_enrolled' };
+          }
+          // Allow access to enrollment page, but not to the content itself
+          return { allowed: false, reason: 'not_enrolled' };
+        }
+      } else if (distributionMethod === 'instructor_assign') {
+        // Check if user has an assignment
+        const hasAssign = await this.hasAssignment(userId, resourceType, resourceId);
+        if (!hasAssign) {
+          return { allowed: false, reason: 'not_assigned' };
+        }
       }
 
       // Get visibility setting (default to 'private' if not set)
@@ -4400,6 +4478,666 @@ class FirestoreStorage implements IClientStorage {
     } catch (error) {
       logError('getRecentTemplates', error, { templateType, limit, tenantId });
       return [];
+    }
+  }
+
+  // ==========================================
+  // Enrollment Management
+  // ==========================================
+
+  /**
+   * Enroll a user in a quiz or lecture (self-enrollment)
+   */
+  async enrollUser(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number,
+    tenantId: number,
+    requiresApproval = false
+  ): Promise<import('@shared/schema').Enrollment> {
+    try {
+      const enrollmentId = `${resourceType}_${resourceId}_${userId}_${Date.now()}`;
+      const enrollment: import('@shared/schema').Enrollment = {
+        id: enrollmentId,
+        resourceType,
+        resourceId,
+        userId,
+        tenantId,
+        status: 'enrolled',
+        enrolledAt: new Date(),
+        requiresApproval,
+        isApproved: !requiresApproval, // Auto-approve if approval not required
+        progress: 0,
+      };
+
+      await setSharedDocument('enrollments', enrollmentId, enrollment);
+      logInfo('enrollUser', { enrollmentId, userId, resourceType, resourceId });
+      return enrollment;
+    } catch (error) {
+      logError('enrollUser', error, { userId, resourceType, resourceId, tenantId });
+      throw error;
+    }
+  }
+
+  /**
+   * Unenroll/withdraw a user from a quiz or lecture
+   */
+  async unenrollUser(enrollmentId: string): Promise<void> {
+    try {
+      const enrollment = await getSharedDocument<import('@shared/schema').Enrollment>(
+        'enrollments',
+        enrollmentId
+      );
+      if (!enrollment) throw new Error('Enrollment not found');
+
+      const updated: Partial<import('@shared/schema').Enrollment> = {
+        status: 'withdrawn',
+        withdrawnAt: new Date(),
+      };
+
+      await setSharedDocument('enrollments', enrollmentId, { ...enrollment, ...updated });
+      logInfo('unenrollUser', { enrollmentId });
+    } catch (error) {
+      logError('unenrollUser', error, { enrollmentId });
+      throw error;
+    }
+  }
+
+  /**
+   * Get all enrollments for a user
+   */
+  async getUserEnrollments(
+    userId: string,
+    tenantId: number,
+    resourceType?: 'quiz' | 'lecture' | 'template'
+  ): Promise<import('@shared/schema').Enrollment[]> {
+    try {
+      const filters: any[] = [where('userId', '==', userId), where('tenantId', '==', tenantId)];
+
+      if (resourceType) {
+        filters.push(where('resourceType', '==', resourceType));
+      }
+
+      const enrollments = await getSharedDocuments<import('@shared/schema').Enrollment>(
+        'enrollments',
+        filters
+      );
+      return enrollments.map((e) => convertTimestamps(e));
+    } catch (error) {
+      logError('getUserEnrollments', error, { userId, tenantId, resourceType });
+      return [];
+    }
+  }
+
+  /**
+   * Get all enrollments for a specific resource
+   */
+  async getResourceEnrollments(
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<import('@shared/schema').Enrollment[]> {
+    try {
+      const enrollments = await getSharedDocuments<import('@shared/schema').Enrollment>(
+        'enrollments',
+        [where('resourceType', '==', resourceType), where('resourceId', '==', resourceId)]
+      );
+      return enrollments.map((e) => convertTimestamps(e));
+    } catch (error) {
+      logError('getResourceEnrollments', error, { resourceType, resourceId });
+      return [];
+    }
+  }
+
+  /**
+   * Approve an enrollment (instructor/admin)
+   */
+  async approveEnrollment(
+    enrollmentId: string,
+    approvedBy: string
+  ): Promise<import('@shared/schema').Enrollment> {
+    try {
+      const enrollment = await getSharedDocument<import('@shared/schema').Enrollment>(
+        'enrollments',
+        enrollmentId
+      );
+      if (!enrollment) throw new Error('Enrollment not found');
+
+      const updated = {
+        ...enrollment,
+        isApproved: true,
+        approvedBy,
+        approvedAt: new Date(),
+      };
+
+      await setSharedDocument('enrollments', enrollmentId, updated);
+      logInfo('approveEnrollment', { enrollmentId, approvedBy });
+      return convertTimestamps(updated);
+    } catch (error) {
+      logError('approveEnrollment', error, { enrollmentId, approvedBy });
+      throw error;
+    }
+  }
+
+  /**
+   * Reject/deny an enrollment
+   */
+  async rejectEnrollment(enrollmentId: string): Promise<void> {
+    try {
+      // Simply delete the enrollment
+      const db = getFirestoreInstance();
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      await deleteDoc(doc(db, 'enrollments', enrollmentId));
+      logInfo('rejectEnrollment', { enrollmentId });
+    } catch (error) {
+      logError('rejectEnrollment', error, { enrollmentId });
+      throw error;
+    }
+  }
+
+  /**
+   * Update enrollment progress
+   */
+  async updateEnrollmentProgress(
+    enrollmentId: string,
+    progress: number,
+    completed = false
+  ): Promise<import('@shared/schema').Enrollment> {
+    try {
+      const enrollment = await getSharedDocument<import('@shared/schema').Enrollment>(
+        'enrollments',
+        enrollmentId
+      );
+      if (!enrollment) throw new Error('Enrollment not found');
+
+      const updated = {
+        ...enrollment,
+        progress: Math.min(100, Math.max(0, progress)),
+        status: completed ? ('completed' as const) : enrollment.status,
+        completedAt: completed ? new Date() : enrollment.completedAt,
+        lastAccessedAt: new Date(),
+      };
+
+      await setSharedDocument('enrollments', enrollmentId, updated);
+      return convertTimestamps(updated);
+    } catch (error) {
+      logError('updateEnrollmentProgress', error, { enrollmentId, progress, completed });
+      throw error;
+    }
+  }
+
+  /**
+   * Check if a user is enrolled in a resource
+   */
+  async isUserEnrolled(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<boolean> {
+    try {
+      const enrollments = await getSharedDocuments<import('@shared/schema').Enrollment>(
+        'enrollments',
+        [
+          where('userId', '==', userId),
+          where('resourceType', '==', resourceType),
+          where('resourceId', '==', resourceId),
+          where('status', 'in', ['enrolled', 'completed']),
+        ]
+      );
+      return enrollments.length > 0 && enrollments[0].isApproved;
+    } catch (error) {
+      logError('isUserEnrolled', error, { userId, resourceType, resourceId });
+      return false;
+    }
+  }
+
+  // ==========================================
+  // Assignment Management
+  // ==========================================
+
+  /**
+   * Assign a quiz or lecture to a user (instructor/admin)
+   */
+  async assignToUser(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number,
+    assignedBy: string,
+    tenantId: number,
+    dueDate?: Date,
+    notes?: string
+  ): Promise<import('@shared/schema').Assignment> {
+    try {
+      const assignmentId = `${resourceType}_${resourceId}_${userId}_${Date.now()}`;
+      const assignment: import('@shared/schema').Assignment = {
+        id: assignmentId,
+        resourceType,
+        resourceId,
+        userId,
+        assignedBy,
+        tenantId,
+        status: 'assigned',
+        assignedAt: new Date(),
+        dueDate,
+        notificationSent: false,
+        remindersSent: [],
+        notes,
+        progress: 0,
+      };
+
+      await setSharedDocument('assignments', assignmentId, assignment);
+      logInfo('assignToUser', { assignmentId, userId, resourceType, resourceId, assignedBy });
+      return assignment;
+    } catch (error) {
+      logError('assignToUser', error, {
+        userId,
+        resourceType,
+        resourceId,
+        assignedBy,
+        tenantId,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Assign to multiple users at once
+   */
+  async assignToUsers(
+    userIds: string[],
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number,
+    assignedBy: string,
+    tenantId: number,
+    dueDate?: Date,
+    notes?: string
+  ): Promise<import('@shared/schema').Assignment[]> {
+    try {
+      const assignments = await Promise.all(
+        userIds.map((userId) =>
+          this.assignToUser(userId, resourceType, resourceId, assignedBy, tenantId, dueDate, notes)
+        )
+      );
+      logInfo('assignToUsers', {
+        userCount: userIds.length,
+        resourceType,
+        resourceId,
+        assignedBy,
+      });
+      return assignments;
+    } catch (error) {
+      logError('assignToUsers', error, {
+        userIds,
+        resourceType,
+        resourceId,
+        assignedBy,
+        tenantId,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Unassign a user from a quiz or lecture
+   */
+  async unassignUser(assignmentId: string): Promise<void> {
+    try {
+      const db = getFirestoreInstance();
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      await deleteDoc(doc(db, 'assignments', assignmentId));
+      logInfo('unassignUser', { assignmentId });
+    } catch (error) {
+      logError('unassignUser', error, { assignmentId });
+      throw error;
+    }
+  }
+
+  /**
+   * Get all assignments for a user
+   */
+  async getUserAssignments(
+    userId: string,
+    tenantId: number,
+    resourceType?: 'quiz' | 'lecture' | 'template',
+    status?: import('@shared/schema').AssignmentStatus
+  ): Promise<import('@shared/schema').Assignment[]> {
+    try {
+      const filters: any[] = [where('userId', '==', userId), where('tenantId', '==', tenantId)];
+
+      if (resourceType) {
+        filters.push(where('resourceType', '==', resourceType));
+      }
+      if (status) {
+        filters.push(where('status', '==', status));
+      }
+
+      const assignments = await getSharedDocuments<import('@shared/schema').Assignment>(
+        'assignments',
+        filters
+      );
+      return assignments.map((a) => convertTimestamps(a));
+    } catch (error) {
+      logError('getUserAssignments', error, { userId, tenantId, resourceType, status });
+      return [];
+    }
+  }
+
+  /**
+   * Get all assignments for a specific resource
+   */
+  async getResourceAssignments(
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<import('@shared/schema').Assignment[]> {
+    try {
+      const assignments = await getSharedDocuments<import('@shared/schema').Assignment>(
+        'assignments',
+        [where('resourceType', '==', resourceType), where('resourceId', '==', resourceId)]
+      );
+      return assignments.map((a) => convertTimestamps(a));
+    } catch (error) {
+      logError('getResourceAssignments', error, { resourceType, resourceId });
+      return [];
+    }
+  }
+
+  /**
+   * Update assignment status
+   */
+  async updateAssignmentStatus(
+    assignmentId: string,
+    status: import('@shared/schema').AssignmentStatus,
+    score?: number,
+    progress?: number
+  ): Promise<import('@shared/schema').Assignment> {
+    try {
+      const assignment = await getSharedDocument<import('@shared/schema').Assignment>(
+        'assignments',
+        assignmentId
+      );
+      if (!assignment) throw new Error('Assignment not found');
+
+      const updated: Partial<import('@shared/schema').Assignment> = {
+        ...assignment,
+        status,
+        lastAccessedAt: new Date(),
+      };
+
+      if (score !== undefined) updated.score = score;
+      if (progress !== undefined) updated.progress = Math.min(100, Math.max(0, progress));
+      if (status === 'completed') updated.completedAt = new Date();
+      if (status === 'in_progress' && !assignment.startedAt) updated.startedAt = new Date();
+
+      await setSharedDocument('assignments', assignmentId, updated);
+      return convertTimestamps(updated as import('@shared/schema').Assignment);
+    } catch (error) {
+      logError('updateAssignmentStatus', error, { assignmentId, status, score, progress });
+      throw error;
+    }
+  }
+
+  /**
+   * Update assignment progress
+   */
+  async updateAssignmentProgress(
+    assignmentId: string,
+    progress: number,
+    started = false
+  ): Promise<import('@shared/schema').Assignment> {
+    try {
+      const assignment = await getSharedDocument<import('@shared/schema').Assignment>(
+        'assignments',
+        assignmentId
+      );
+      if (!assignment) throw new Error('Assignment not found');
+
+      const updated = {
+        ...assignment,
+        progress: Math.min(100, Math.max(0, progress)),
+        status:
+          progress >= 100
+            ? ('completed' as const)
+            : started || assignment.status === 'in_progress'
+              ? ('in_progress' as const)
+              : assignment.status,
+        startedAt: started && !assignment.startedAt ? new Date() : assignment.startedAt,
+        completedAt: progress >= 100 ? new Date() : assignment.completedAt,
+        lastAccessedAt: new Date(),
+      };
+
+      await setSharedDocument('assignments', assignmentId, updated);
+      return convertTimestamps(updated);
+    } catch (error) {
+      logError('updateAssignmentProgress', error, { assignmentId, progress, started });
+      throw error;
+    }
+  }
+
+  /**
+   * Mark assignment as completed
+   */
+  async completeAssignment(
+    assignmentId: string,
+    score?: number
+  ): Promise<import('@shared/schema').Assignment> {
+    try {
+      return await this.updateAssignmentStatus(assignmentId, 'completed', score, 100);
+    } catch (error) {
+      logError('completeAssignment', error, { assignmentId, score });
+      throw error;
+    }
+  }
+
+  /**
+   * Check if a user has an assignment for a resource
+   */
+  async hasAssignment(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<boolean> {
+    try {
+      const assignments = await getSharedDocuments<import('@shared/schema').Assignment>(
+        'assignments',
+        [
+          where('userId', '==', userId),
+          where('resourceType', '==', resourceType),
+          where('resourceId', '==', resourceId),
+          where('status', 'in', ['assigned', 'in_progress']),
+        ]
+      );
+      return assignments.length > 0;
+    } catch (error) {
+      logError('hasAssignment', error, { userId, resourceType, resourceId });
+      return false;
+    }
+  }
+
+  /**
+   * Send assignment notification
+   * Note: Actual email/push notification sending would be handled by a separate service
+   */
+  async sendAssignmentNotification(assignmentId: string): Promise<void> {
+    try {
+      const assignment = await getSharedDocument<import('@shared/schema').Assignment>(
+        'assignments',
+        assignmentId
+      );
+      if (!assignment) throw new Error('Assignment not found');
+
+      const updated = {
+        ...assignment,
+        notificationSent: true,
+      };
+
+      await setSharedDocument('assignments', assignmentId, updated);
+      logInfo('sendAssignmentNotification', { assignmentId });
+    } catch (error) {
+      logError('sendAssignmentNotification', error, { assignmentId });
+      throw error;
+    }
+  }
+
+  /**
+   * Send assignment reminder
+   * Note: Actual email/push notification sending would be handled by a separate service
+   */
+  async sendAssignmentReminder(assignmentId: string): Promise<void> {
+    try {
+      const assignment = await getSharedDocument<import('@shared/schema').Assignment>(
+        'assignments',
+        assignmentId
+      );
+      if (!assignment) throw new Error('Assignment not found');
+
+      const now = new Date();
+      const daysUntilDue = assignment.dueDate
+        ? Math.ceil((assignment.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+        : null;
+
+      if (daysUntilDue !== null) {
+        const updated = {
+          ...assignment,
+          remindersSent: [...(assignment.remindersSent || []), daysUntilDue],
+        };
+
+        await setSharedDocument('assignments', assignmentId, updated);
+        logInfo('sendAssignmentReminder', { assignmentId, daysUntilDue });
+      }
+    } catch (error) {
+      logError('sendAssignmentReminder', error, { assignmentId });
+      throw error;
+    }
+  }
+
+  // ==========================================
+  // Prerequisite Checking
+  // ==========================================
+
+  /**
+   * Check if user meets prerequisites for a resource
+   */
+  async checkPrerequisites(
+    userId: string,
+    prerequisites: {
+      quizIds?: number[];
+      lectureIds?: number[];
+      minimumScores?: Record<number, number>;
+    }
+  ): Promise<import('@shared/schema').PrerequisiteCheckResult> {
+    try {
+      const result: import('@shared/schema').PrerequisiteCheckResult = {
+        met: true,
+        missingQuizzes: [],
+        missingLectures: [],
+      };
+
+      // Check quiz prerequisites
+      if (prerequisites.quizIds && prerequisites.quizIds.length > 0) {
+        for (const quizId of prerequisites.quizIds) {
+          const quiz = await this.getQuiz(quizId);
+          if (!quiz) continue;
+
+          // Check if user has completed this quiz
+          const userQuizzes = await this.getUserQuizzes(userId);
+          const userQuiz = userQuizzes.find((q) => q.id === quizId && q.completedAt);
+
+          const requiredScore = prerequisites.minimumScores?.[quizId];
+
+          if (!userQuiz) {
+            result.met = false;
+            result.missingQuizzes?.push({
+              id: quizId,
+              title: quiz.title,
+              requiredScore,
+            });
+          } else if (requiredScore && userQuiz.score && userQuiz.score < requiredScore) {
+            result.met = false;
+            result.missingQuizzes?.push({
+              id: quizId,
+              title: quiz.title,
+              requiredScore,
+              currentScore: userQuiz.score,
+            });
+          }
+        }
+      }
+
+      // Check lecture prerequisites
+      if (prerequisites.lectureIds && prerequisites.lectureIds.length > 0) {
+        for (const lectureId of prerequisites.lectureIds) {
+          const lecture = await this.getLecture(lectureId);
+          if (!lecture) continue;
+
+          if (!lecture.isRead || lecture.userId !== userId) {
+            result.met = false;
+            result.missingLectures?.push({
+              id: lectureId,
+              title: lecture.title,
+              isRead: lecture.isRead || false,
+            });
+          }
+        }
+      }
+
+      return result;
+    } catch (error) {
+      logError('checkPrerequisites', error, { userId, prerequisites });
+      return { met: false };
+    }
+  }
+
+  /**
+   * Check availability window for a resource
+   */
+  async checkAvailability(
+    availableFrom?: Date,
+    availableUntil?: Date,
+    enrollmentDeadline?: Date
+  ): Promise<{
+    available: boolean;
+    canEnroll: boolean;
+    reason?: 'not_started' | 'expired' | 'enrollment_closed';
+    availableFrom?: Date;
+    availableUntil?: Date;
+  }> {
+    try {
+      const now = new Date();
+
+      // Check if content has started
+      if (availableFrom && now < availableFrom) {
+        return {
+          available: false,
+          canEnroll: false,
+          reason: 'not_started',
+          availableFrom,
+          availableUntil,
+        };
+      }
+
+      // Check if content has expired
+      if (availableUntil && now > availableUntil) {
+        return {
+          available: false,
+          canEnroll: false,
+          reason: 'expired',
+          availableFrom,
+          availableUntil,
+        };
+      }
+
+      // Check if enrollment deadline has passed
+      const canEnroll = !enrollmentDeadline || now <= enrollmentDeadline;
+
+      return {
+        available: true,
+        canEnroll,
+        reason: !canEnroll ? 'enrollment_closed' : undefined,
+        availableFrom,
+        availableUntil,
+      };
+    } catch (error) {
+      logError('checkAvailability', error, { availableFrom, availableUntil, enrollmentDeadline });
+      return { available: false, canEnroll: false };
     }
   }
 }
