@@ -2230,6 +2230,7 @@ export interface AccessCheckResult {
     | 'availability_expired'
     | 'prerequisites_not_met'
     | 'not_enrolled'
+    | 'enrollment_closed'
     | 'not_assigned';
   productId?: string;
   missingPrerequisites?: { quizIds?: number[]; lectureIds?: number[] };
