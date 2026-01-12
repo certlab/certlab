@@ -60,6 +60,8 @@ import type {
   MaterialTemplateLibrary,
   TemplateLibraryItem,
   TemplateSearchFilters,
+  Certificate,
+  CertificateTemplate,
 } from './schema';
 
 /**
@@ -1226,4 +1228,52 @@ export interface IClientStorage extends IStorageAdapter {
     limit?: number,
     tenantId?: number
   ): Promise<import('./schema').TemplateLibraryItem[]>;
+
+  // ==========================================
+  // Certificates
+  // ==========================================
+
+  /** Create a new certificate */
+  createCertificate(
+    certificate: Omit<import('./schema').Certificate, 'id' | 'createdAt'>
+  ): Promise<import('./schema').Certificate>;
+
+  /** Get a certificate by ID */
+  getCertificate(
+    certificateId: number,
+    userId: string
+  ): Promise<import('./schema').Certificate | null>;
+
+  /** Get all certificates for a user */
+  getUserCertificates(userId: string, tenantId: number): Promise<import('./schema').Certificate[]>;
+
+  /** Get a certificate by verification ID */
+  getCertificateByVerificationId(
+    verificationId: string
+  ): Promise<import('./schema').Certificate | null>;
+
+  /** Delete a certificate */
+  deleteCertificate(certificateId: number, userId: string): Promise<void>;
+
+  /** Get certificate templates */
+  getCertificateTemplates(tenantId: number): Promise<import('./schema').CertificateTemplate[]>;
+
+  /** Get a certificate template by ID */
+  getCertificateTemplate(
+    templateId: number
+  ): Promise<import('./schema').CertificateTemplate | null>;
+
+  /** Create a new certificate template */
+  createCertificateTemplate(
+    template: Omit<import('./schema').CertificateTemplate, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<import('./schema').CertificateTemplate>;
+
+  /** Update a certificate template */
+  updateCertificateTemplate(
+    templateId: number,
+    updates: Partial<import('./schema').CertificateTemplate>
+  ): Promise<import('./schema').CertificateTemplate>;
+
+  /** Delete a certificate template */
+  deleteCertificateTemplate(templateId: number): Promise<void>;
 }

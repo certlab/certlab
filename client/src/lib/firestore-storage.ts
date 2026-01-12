@@ -90,6 +90,8 @@ import type {
   InsertPurchase,
   Group,
   GroupMember,
+  Certificate,
+  CertificateTemplate,
 } from '@shared/schema';
 import type {
   IClientStorage,
@@ -4400,6 +4402,253 @@ class FirestoreStorage implements IClientStorage {
     } catch (error) {
       logError('getRecentTemplates', error, { templateType, limit, tenantId });
       return [];
+    }
+  }
+
+  // ==========================================
+  // Certificates
+  // ==========================================
+
+  /**
+   * Create a new certificate
+   */
+  async createCertificate(
+    certificate: Omit<Certificate, 'id' | 'createdAt'>
+  ): Promise<Certificate> {
+    try {
+      const userId = certificate.userId;
+
+      // Generate auto-incrementing ID
+      const id = await this.generateId('certificates');
+
+      const newCertificate: Certificate = {
+        ...certificate,
+        id,
+        createdAt: new Date(),
+      };
+
+      await setUserDocument(userId, 'certificates', id.toString(), {
+        ...newCertificate,
+        completedAt: Timestamp.fromDate(
+          newCertificate.completedAt instanceof Date
+            ? newCertificate.completedAt
+            : new Date(newCertificate.completedAt)
+        ),
+        createdAt: Timestamp.fromDate(newCertificate.createdAt),
+      });
+
+      logInfo('Certificate created', { certificateId: id, userId });
+      return newCertificate;
+    } catch (error) {
+      logError('createCertificate', error, { userId: certificate.userId });
+      throw error;
+    }
+  }
+
+  /**
+   * Get a certificate by ID
+   */
+  async getCertificate(certificateId: number, userId: string): Promise<Certificate | null> {
+    try {
+      const doc = await getUserDocument(userId, 'certificates', certificateId.toString());
+      if (!doc) return null;
+
+      return {
+        ...doc,
+        completedAt: timestampToDate(doc.completedAt),
+        createdAt: timestampToDate(doc.createdAt),
+      } as Certificate;
+    } catch (error) {
+      logError('getCertificate', error, { certificateId, userId });
+      return null;
+    }
+  }
+
+  /**
+   * Get all certificates for a user
+   */
+  async getUserCertificates(userId: string, tenantId: number): Promise<Certificate[]> {
+    try {
+      const docs = await getUserDocuments(userId, 'certificates', [
+        where('tenantId', '==', tenantId),
+        orderBy('createdAt', 'desc'),
+      ]);
+
+      return docs.map((doc) => ({
+        ...doc,
+        completedAt: timestampToDate(doc.completedAt),
+        createdAt: timestampToDate(doc.createdAt),
+      })) as Certificate[];
+    } catch (error) {
+      logError('getUserCertificates', error, { userId, tenantId });
+      return [];
+    }
+  }
+
+  /**
+   * Get a certificate by verification ID
+   */
+  async getCertificateByVerificationId(verificationId: string): Promise<Certificate | null> {
+    try {
+      // Search across all users' certificates
+      // Note: This is a simplified implementation. In production, you might want
+      // to create a separate collection for certificates indexed by verification ID
+      const db = getFirestoreInstance();
+      const usersRef = db.collection('users');
+      const usersSnapshot = await usersRef.get();
+
+      for (const userDoc of usersSnapshot.docs) {
+        const certificatesRef = userDoc.ref.collection('certificates');
+        const certQuery = certificatesRef.where('verificationId', '==', verificationId).limit(1);
+        const certSnapshot = await certQuery.get();
+
+        if (!certSnapshot.empty) {
+          const doc = certSnapshot.docs[0].data();
+          return {
+            ...doc,
+            completedAt: timestampToDate(doc.completedAt),
+            createdAt: timestampToDate(doc.createdAt),
+          } as Certificate;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      logError('getCertificateByVerificationId', error, { verificationId });
+      return null;
+    }
+  }
+
+  /**
+   * Delete a certificate
+   */
+  async deleteCertificate(certificateId: number, userId: string): Promise<void> {
+    try {
+      await deleteUserDocument(userId, 'certificates', certificateId.toString());
+      logInfo('Certificate deleted', { certificateId, userId });
+    } catch (error) {
+      logError('deleteCertificate', error, { certificateId, userId });
+      throw error;
+    }
+  }
+
+  /**
+   * Get certificate templates
+   */
+  async getCertificateTemplates(tenantId: number): Promise<CertificateTemplate[]> {
+    try {
+      const docs = await getSharedDocuments('certificateTemplates', [
+        where('tenantId', '==', tenantId),
+        where('isActive', '==', true),
+        orderBy('createdAt', 'desc'),
+      ]);
+
+      return docs.map((doc) => ({
+        ...doc,
+        createdAt: timestampToDate(doc.createdAt),
+        updatedAt: timestampToDate(doc.updatedAt),
+      })) as CertificateTemplate[];
+    } catch (error) {
+      logError('getCertificateTemplates', error, { tenantId });
+      return [];
+    }
+  }
+
+  /**
+   * Get a certificate template by ID
+   */
+  async getCertificateTemplate(templateId: number): Promise<CertificateTemplate | null> {
+    try {
+      const doc = await getSharedDocument('certificateTemplates', templateId.toString());
+      if (!doc) return null;
+
+      return {
+        ...doc,
+        createdAt: timestampToDate(doc.createdAt),
+        updatedAt: timestampToDate(doc.updatedAt),
+      } as CertificateTemplate;
+    } catch (error) {
+      logError('getCertificateTemplate', error, { templateId });
+      return null;
+    }
+  }
+
+  /**
+   * Create a new certificate template
+   */
+  async createCertificateTemplate(
+    template: Omit<CertificateTemplate, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<CertificateTemplate> {
+    try {
+      const id = await this.generateId('certificateTemplates');
+
+      const newTemplate: CertificateTemplate = {
+        ...template,
+        id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await setSharedDocument('certificateTemplates', id.toString(), {
+        ...newTemplate,
+        createdAt: Timestamp.fromDate(newTemplate.createdAt),
+        updatedAt: Timestamp.fromDate(newTemplate.updatedAt),
+      });
+
+      logInfo('Certificate template created', { templateId: id });
+      return newTemplate;
+    } catch (error) {
+      logError('createCertificateTemplate', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update a certificate template
+   */
+  async updateCertificateTemplate(
+    templateId: number,
+    updates: Partial<CertificateTemplate>
+  ): Promise<CertificateTemplate> {
+    try {
+      const existing = await this.getCertificateTemplate(templateId);
+      if (!existing) {
+        throw new Error('Certificate template not found');
+      }
+
+      const updatedTemplate: CertificateTemplate = {
+        ...existing,
+        ...updates,
+        id: templateId,
+        updatedAt: new Date(),
+      };
+
+      await setSharedDocument('certificateTemplates', templateId.toString(), {
+        ...updatedTemplate,
+        createdAt: Timestamp.fromDate(updatedTemplate.createdAt),
+        updatedAt: Timestamp.fromDate(updatedTemplate.updatedAt),
+      });
+
+      logInfo('Certificate template updated', { templateId });
+      return updatedTemplate;
+    } catch (error) {
+      logError('updateCertificateTemplate', error, { templateId });
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a certificate template
+   */
+  async deleteCertificateTemplate(templateId: number): Promise<void> {
+    try {
+      const db = getFirestoreInstance();
+      const docRef = db.collection('certificateTemplates').doc(templateId.toString());
+      await deleteDoc(docRef);
+      logInfo('Certificate template deleted', { templateId });
+    } catch (error) {
+      logError('deleteCertificateTemplate', error, { templateId });
+      throw error;
     }
   }
 }
