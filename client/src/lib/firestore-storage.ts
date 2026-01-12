@@ -4488,21 +4488,37 @@ class FirestoreStorage implements IClientStorage {
 
   /**
    * Get a certificate by verification ID
+   *
+   * NOTE: This implementation performs a full scan across all user collections.
+   * For production use with many users, consider creating a dedicated collection
+   * indexed by verification ID for O(1) lookup performance:
+   * - Create `/certificates/{verificationId}` collection with user reference
+   * - Update createCertificate to write to both locations
+   * - Update this method to query the dedicated collection
    */
   async getCertificateByVerificationId(verificationId: string): Promise<Certificate | null> {
     try {
-      // Search across all users' certificates
-      // Note: This is a simplified implementation. In production, you might want
-      // to create a separate collection for certificates indexed by verification ID
+      // TODO: Optimize for production - use dedicated indexed collection
+      // Current implementation scans all users (acceptable for small user base)
       const db = getFirestoreInstance();
-      const { collection, getDocs, query, where: whereFn } = await import('firebase/firestore');
+      const {
+        collection,
+        getDocs,
+        query,
+        where: whereFn,
+        limit,
+      } = await import('firebase/firestore');
 
       const usersRef = collection(db, 'users');
       const usersSnapshot = await getDocs(usersRef);
 
       for (const userDoc of usersSnapshot.docs) {
         const certificatesRef = collection(db, 'users', userDoc.id, 'certificates');
-        const certQuery = query(certificatesRef, whereFn('verificationId', '==', verificationId));
+        const certQuery = query(
+          certificatesRef,
+          whereFn('verificationId', '==', verificationId),
+          limit(1)
+        );
         const certSnapshot = await getDocs(certQuery);
 
         if (!certSnapshot.empty) {

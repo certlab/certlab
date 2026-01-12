@@ -411,9 +411,20 @@ export function isValidVerificationId(verificationId: string): boolean {
 
 /**
  * Generates a unique verification ID (UUID v4)
+ * Uses crypto.randomUUID() with fallback for older browsers
  *
  * @returns A unique verification ID
  */
 export function generateVerificationId(): string {
-  return crypto.randomUUID();
+  // Check for native crypto.randomUUID support
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  // Fallback for older browsers - generate RFC4122 v4 UUID manually
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }

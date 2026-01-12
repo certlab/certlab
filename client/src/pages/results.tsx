@@ -51,7 +51,7 @@ export default function Results() {
 
       const verificationId = generateVerificationId();
       const userName =
-        `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || currentUser.email;
+        `${currentUser.firstName ?? ''} ${currentUser.lastName ?? ''}`.trim() || currentUser.email;
 
       const certificate: Omit<Certificate, 'id' | 'createdAt'> = {
         userId: currentUser.id,
