@@ -2204,3 +2204,113 @@ export interface AccessCheckResult {
   reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
   productId?: string;
 }
+
+// ============================================================================
+// Notification System
+// ============================================================================
+
+/**
+ * Notification types for different system events
+ */
+export const notificationTypeSchema = z.enum([
+  'assignment', // User is assigned a quiz or course
+  'completion', // User completes a quiz or course
+  'results', // Quiz grading complete with score/feedback
+  'reminder', // Upcoming deadline or pending assignment
+  'achievement', // Achievement unlocked or milestone reached
+]);
+
+export type NotificationType = z.infer<typeof notificationTypeSchema>;
+
+/**
+ * Notification data stored in Firestore
+ * Collection: /users/{userId}/notifications/{notificationId}
+ */
+export interface Notification {
+  id: string;
+  userId: string;
+  tenantId: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  actionUrl?: string; // Link to relevant page
+  actionLabel?: string; // e.g., 'View Quiz', 'See Results'
+  metadata?: {
+    quizId?: number;
+    courseId?: number;
+    score?: number;
+    badgeId?: number;
+    [key: string]: any;
+  };
+  isRead: boolean;
+  isDismissed: boolean;
+  createdAt: Date;
+  readAt?: Date;
+  expiresAt?: Date; // Optional expiration
+}
+
+/**
+ * Zod schema for notification validation
+ */
+export const notificationSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  tenantId: z.number(),
+  type: notificationTypeSchema,
+  title: z.string().min(1).max(200),
+  message: z.string().min(1).max(1000),
+  actionUrl: z.string().optional(),
+  actionLabel: z.string().max(50).optional(),
+  metadata: z.record(z.any()).optional(),
+  isRead: z.boolean(),
+  isDismissed: z.boolean(),
+  createdAt: z.date(),
+  readAt: z.date().optional(),
+  expiresAt: z.date().optional(),
+});
+
+export const insertNotificationSchema = notificationSchema.omit({
+  id: true,
+  createdAt: true,
+  isRead: true,
+  isDismissed: true,
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+/**
+ * User notification preferences
+ * Collection: /users/{userId}/notificationPreferences (single document)
+ */
+export interface NotificationPreferences {
+  userId: string;
+  assignments: boolean;
+  completions: boolean;
+  results: boolean;
+  reminders: boolean;
+  achievements: boolean;
+  emailEnabled: boolean; // Disabled by default
+  smsEnabled: boolean; // Disabled by default
+  updatedAt: Date;
+}
+
+/**
+ * Zod schema for notification preferences validation
+ */
+export const notificationPreferencesSchema = z.object({
+  userId: z.string(),
+  assignments: z.boolean().default(true),
+  completions: z.boolean().default(true),
+  results: z.boolean().default(true),
+  reminders: z.boolean().default(true),
+  achievements: z.boolean().default(true),
+  emailEnabled: z.boolean().default(false),
+  smsEnabled: z.boolean().default(false),
+  updatedAt: z.date(),
+});
+
+export const insertNotificationPreferencesSchema = notificationPreferencesSchema.omit({
+  updatedAt: true,
+});
+
+export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;

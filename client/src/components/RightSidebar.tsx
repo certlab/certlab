@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
 import { storage } from '@/lib/storage-factory';
 import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
+import { NotificationItem } from '@/components/NotificationItem';
 
 interface BadgeData {
   id: number;
@@ -39,17 +40,24 @@ function NotificationsPanel() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { closePanel, openPanel } = useRightSidebar();
+  const { closePanel } = useRightSidebar();
   const [processedBadges, setProcessedBadges] = useState<Set<number>>(new Set());
 
+  // Get achievement badges
   const { data: achievements } = useQuery<AchievementData>({
     queryKey: queryKeys.user.achievements(currentUser?.id),
     enabled: !!currentUser?.id,
-    refetchInterval: 5000, // Check for new achievements every 5 seconds
+    refetchInterval: 5000,
   });
+
+  // Get general notifications using the enhanced hook
+  const { notifications, unreadNotificationCount } = useUnreadNotifications();
 
   // Get unnotified badges
   const unnotifiedBadges = achievements?.badges?.filter((b) => !b.isNotified) || [];
+
+  // Total unread count
+  const totalUnread = unnotifiedBadges.length + unreadNotificationCount;
 
   // Play sound for new badges (only once per badge)
   useEffect(() => {
@@ -79,9 +87,10 @@ function NotificationsPanel() {
   }, [unnotifiedBadges, processedBadges]);
 
   const handleMarkAllRead = async () => {
-    if (unnotifiedBadges.length === 0 || !currentUser) return;
+    if (totalUnread === 0 || !currentUser) return;
 
     try {
+      // Mark all badges as read
       await Promise.all(
         unnotifiedBadges.map(async (achievement) => {
           try {
@@ -91,10 +100,37 @@ function NotificationsPanel() {
           }
         })
       );
-      // Invalidate achievements query to refresh the UI
+
+      // Mark all general notifications as read
+      await storage.markAllNotificationsAsRead(currentUser.id);
+
+      // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: queryKeys.user.achievements(currentUser.id) });
+      queryClient.invalidateQueries({ queryKey: ['notifications', currentUser.id] });
     } catch (error) {
-      console.error('Failed to mark badges as notified:', error);
+      console.error('Failed to mark notifications as read:', error);
+    }
+  };
+
+  const handleDismissNotification = async (notificationId: string) => {
+    if (!currentUser) return;
+
+    try {
+      await storage.dismissNotification(notificationId, currentUser.id);
+      queryClient.invalidateQueries({ queryKey: ['notifications', currentUser.id] });
+    } catch (error) {
+      console.error('Failed to dismiss notification:', error);
+    }
+  };
+
+  const handleReadNotification = async (notificationId: string) => {
+    if (!currentUser) return;
+
+    try {
+      await storage.markNotificationAsRead(notificationId, currentUser.id);
+      queryClient.invalidateQueries({ queryKey: ['notifications', currentUser.id] });
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
     }
   };
 
@@ -149,12 +185,12 @@ function NotificationsPanel() {
         <div className="flex-1">
           <h2 className="font-semibold">Notifications</h2>
           <p className="text-xs text-muted-foreground">
-            {unnotifiedBadges.length > 0
-              ? `${unnotifiedBadges.length} new achievement${unnotifiedBadges.length > 1 ? 's' : ''}`
+            {totalUnread > 0
+              ? `${totalUnread} new notification${totalUnread > 1 ? 's' : ''}`
               : 'Stay updated'}
           </p>
         </div>
-        {unnotifiedBadges.length > 0 && (
+        {totalUnread > 0 && (
           <Button
             variant="ghost"
             size="sm"
@@ -167,8 +203,19 @@ function NotificationsPanel() {
       </div>
 
       <ScrollArea className="flex-1 -mx-4 px-4">
-        {unnotifiedBadges.length > 0 ? (
+        {totalUnread > 0 ? (
           <div className="space-y-3">
+            {/* General Notifications */}
+            {notifications.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onDismiss={handleDismissNotification}
+                onRead={handleReadNotification}
+              />
+            ))}
+
+            {/* Achievement Badge Notifications */}
             {unnotifiedBadges.map((achievement) => (
               <button
                 key={achievement.id}

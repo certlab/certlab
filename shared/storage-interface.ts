@@ -1226,4 +1226,50 @@ export interface IClientStorage extends IStorageAdapter {
     limit?: number,
     tenantId?: number
   ): Promise<import('./schema').TemplateLibraryItem[]>;
+
+  // ==========================================
+  // Notification Management
+  // ==========================================
+
+  /** Get user notifications */
+  getUserNotifications(
+    userId: string,
+    options?: {
+      includeRead?: boolean;
+      includeDismissed?: boolean;
+      types?: import('./schema').NotificationType[];
+      limit?: number;
+    }
+  ): Promise<import('./schema').Notification[]>;
+
+  /** Get unread notification count */
+  getUnreadNotificationCount(userId: string): Promise<number>;
+
+  /** Create a new notification */
+  createNotification(
+    notification: import('./schema').InsertNotification
+  ): Promise<import('./schema').Notification>;
+
+  /** Mark notification as read */
+  markNotificationAsRead(notificationId: string, userId: string): Promise<void>;
+
+  /** Mark all notifications as read */
+  markAllNotificationsAsRead(userId: string): Promise<void>;
+
+  /** Dismiss a notification */
+  dismissNotification(notificationId: string, userId: string): Promise<void>;
+
+  /** Delete expired notifications */
+  deleteExpiredNotifications(userId: string): Promise<void>;
+
+  /** Get user notification preferences */
+  getNotificationPreferences(
+    userId: string
+  ): Promise<import('./schema').NotificationPreferences | null>;
+
+  /** Update user notification preferences */
+  updateNotificationPreferences(
+    userId: string,
+    preferences: Partial<import('./schema').NotificationPreferences>
+  ): Promise<import('./schema').NotificationPreferences>;
 }

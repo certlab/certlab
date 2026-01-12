@@ -1365,6 +1365,88 @@ class StorageRouter implements IClientStorage {
       'getRecentTemplates'
     );
   }
+
+  // ==========================================
+  // Notification Management
+  // ==========================================
+
+  async getUserNotifications(
+    userId: string,
+    options?: {
+      includeRead?: boolean;
+      includeDismissed?: boolean;
+      types?: import('@shared/schema').NotificationType[];
+      limit?: number;
+    }
+  ): Promise<import('@shared/schema').Notification[]> {
+    return this.executeStorageOperation(
+      (s) => s.getUserNotifications(userId, options),
+      'getUserNotifications'
+    );
+  }
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    return this.executeStorageOperation(
+      (s) => s.getUnreadNotificationCount(userId),
+      'getUnreadNotificationCount'
+    );
+  }
+
+  async createNotification(
+    notification: import('@shared/schema').InsertNotification
+  ): Promise<import('@shared/schema').Notification> {
+    return this.executeStorageOperation(
+      (s) => s.createNotification(notification),
+      'createNotification'
+    );
+  }
+
+  async markNotificationAsRead(notificationId: string, userId: string): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.markNotificationAsRead(notificationId, userId),
+      'markNotificationAsRead'
+    );
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.markAllNotificationsAsRead(userId),
+      'markAllNotificationsAsRead'
+    );
+  }
+
+  async dismissNotification(notificationId: string, userId: string): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.dismissNotification(notificationId, userId),
+      'dismissNotification'
+    );
+  }
+
+  async deleteExpiredNotifications(userId: string): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.deleteExpiredNotifications(userId),
+      'deleteExpiredNotifications'
+    );
+  }
+
+  async getNotificationPreferences(
+    userId: string
+  ): Promise<import('@shared/schema').NotificationPreferences | null> {
+    return this.executeStorageOperation(
+      (s) => s.getNotificationPreferences(userId),
+      'getNotificationPreferences'
+    );
+  }
+
+  async updateNotificationPreferences(
+    userId: string,
+    preferences: Partial<import('@shared/schema').NotificationPreferences>
+  ): Promise<import('@shared/schema').NotificationPreferences> {
+    return this.executeStorageOperation(
+      (s) => s.updateNotificationPreferences(userId, preferences),
+      'updateNotificationPreferences'
+    );
+  }
 }
 
 // Export the storage router as the default storage interface

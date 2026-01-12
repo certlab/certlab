@@ -4402,6 +4402,279 @@ class FirestoreStorage implements IClientStorage {
       return [];
     }
   }
+
+  // ==========================================
+  // Notification Management
+  // ==========================================
+
+  /**
+   * Get user notifications
+   * Collection: /users/{userId}/notifications
+   */
+  async getUserNotifications(
+    userId: string,
+    options?: {
+      includeRead?: boolean;
+      includeDismissed?: boolean;
+      types?: import('@shared/schema').NotificationType[];
+      limit?: number;
+    }
+  ): Promise<import('@shared/schema').Notification[]> {
+    try {
+      const constraints = [];
+
+      // Filter by dismissed status
+      if (!options?.includeDismissed) {
+        constraints.push(where('isDismissed', '==', false));
+      }
+
+      // Filter by read status
+      if (!options?.includeRead) {
+        constraints.push(where('isRead', '==', false));
+      }
+
+      // Filter by types
+      if (options?.types && options.types.length > 0) {
+        constraints.push(where('type', 'in', options.types));
+      }
+
+      // Sort by creation date (newest first)
+      constraints.push(orderBy('createdAt', 'desc'));
+
+      // Get notifications from subcollection
+      let notifications = await getUserSubcollectionDocuments<
+        import('@shared/schema').Notification
+      >(userId, 'notifications', constraints);
+
+      // Apply limit if specified
+      if (options?.limit && options.limit > 0) {
+        notifications = notifications.slice(0, options.limit);
+      }
+
+      // Convert timestamps
+      return notifications.map((notif) =>
+        convertTimestamps<import('@shared/schema').Notification>(notif)
+      );
+    } catch (error) {
+      logError('getUserNotifications', error, { userId, options });
+      return [];
+    }
+  }
+
+  /**
+   * Get unread notification count
+   */
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    try {
+      const notifications = await this.getUserNotifications(userId, {
+        includeRead: false,
+        includeDismissed: false,
+      });
+      return notifications.length;
+    } catch (error) {
+      logError('getUnreadNotificationCount', error, { userId });
+      return 0;
+    }
+  }
+
+  /**
+   * Create a new notification
+   */
+  async createNotification(
+    notification: import('@shared/schema').InsertNotification
+  ): Promise<import('@shared/schema').Notification> {
+    try {
+      const id = generateId();
+      const now = new Date();
+
+      const newNotification: import('@shared/schema').Notification = {
+        id,
+        ...notification,
+        isRead: false,
+        isDismissed: false,
+        createdAt: now,
+      };
+
+      await setUserSubcollectionDocument(notification.userId, 'notifications', id, newNotification);
+
+      logInfo('createNotification', 'Notification created', {
+        notificationId: id,
+        type: notification.type,
+      });
+      return convertTimestamps<import('@shared/schema').Notification>(newNotification);
+    } catch (error) {
+      logError('createNotification', error, { notification });
+      throw error;
+    }
+  }
+
+  /**
+   * Mark notification as read
+   */
+  async markNotificationAsRead(notificationId: string, userId: string): Promise<void> {
+    try {
+      const updates = {
+        isRead: true,
+        readAt: new Date(),
+      };
+
+      await updateUserDocument(userId, `notifications/${notificationId}`, updates);
+      logInfo('markNotificationAsRead', 'Notification marked as read', { notificationId, userId });
+    } catch (error) {
+      logError('markNotificationAsRead', error, { notificationId, userId });
+      throw error;
+    }
+  }
+
+  /**
+   * Mark all notifications as read
+   */
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    try {
+      const notifications = await this.getUserNotifications(userId, {
+        includeRead: false,
+        includeDismissed: false,
+      });
+
+      await Promise.all(
+        notifications.map((notif) => this.markNotificationAsRead(notif.id, userId))
+      );
+
+      logInfo(
+        'markAllNotificationsAsRead',
+        `Marked ${notifications.length} notifications as read`,
+        { userId }
+      );
+    } catch (error) {
+      logError('markAllNotificationsAsRead', error, { userId });
+      throw error;
+    }
+  }
+
+  /**
+   * Dismiss a notification
+   */
+  async dismissNotification(notificationId: string, userId: string): Promise<void> {
+    try {
+      const updates = {
+        isDismissed: true,
+        isRead: true,
+        readAt: new Date(),
+      };
+
+      await updateUserDocument(userId, `notifications/${notificationId}`, updates);
+      logInfo('dismissNotification', 'Notification dismissed', { notificationId, userId });
+    } catch (error) {
+      logError('dismissNotification', error, { notificationId, userId });
+      throw error;
+    }
+  }
+
+  /**
+   * Delete expired notifications
+   */
+  async deleteExpiredNotifications(userId: string): Promise<void> {
+    try {
+      const db = getFirestoreInstance();
+      if (!db) throw new Error('Firestore not initialized');
+
+      const now = new Date();
+      const notifications = await this.getUserNotifications(userId, {
+        includeRead: true,
+        includeDismissed: true,
+      });
+
+      const expiredNotifications = notifications.filter(
+        (notif) => notif.expiresAt && notif.expiresAt <= now
+      );
+
+      await Promise.all(
+        expiredNotifications.map(async (notif) => {
+          await deleteUserDocument(userId, `notifications/${notif.id}`);
+        })
+      );
+
+      logInfo(
+        'deleteExpiredNotifications',
+        `Deleted ${expiredNotifications.length} expired notifications`,
+        { userId }
+      );
+    } catch (error) {
+      logError('deleteExpiredNotifications', error, { userId });
+      throw error;
+    }
+  }
+
+  /**
+   * Get user notification preferences
+   */
+  async getNotificationPreferences(
+    userId: string
+  ): Promise<import('@shared/schema').NotificationPreferences | null> {
+    try {
+      const prefs = await getUserDocument<import('@shared/schema').NotificationPreferences>(
+        userId,
+        'notificationPreferences'
+      );
+
+      if (!prefs) {
+        // Return default preferences
+        return {
+          userId,
+          assignments: true,
+          completions: true,
+          results: true,
+          reminders: true,
+          achievements: true,
+          emailEnabled: false,
+          smsEnabled: false,
+          updatedAt: new Date(),
+        };
+      }
+
+      return convertTimestamps<import('@shared/schema').NotificationPreferences>(prefs);
+    } catch (error) {
+      logError('getNotificationPreferences', error, { userId });
+      return null;
+    }
+  }
+
+  /**
+   * Update user notification preferences
+   */
+  async updateNotificationPreferences(
+    userId: string,
+    preferences: Partial<import('@shared/schema').NotificationPreferences>
+  ): Promise<import('@shared/schema').NotificationPreferences> {
+    try {
+      const existingPrefs = await this.getNotificationPreferences(userId);
+
+      const updatedPrefs: import('@shared/schema').NotificationPreferences = {
+        ...(existingPrefs || {
+          userId,
+          assignments: true,
+          completions: true,
+          results: true,
+          reminders: true,
+          achievements: true,
+          emailEnabled: false,
+          smsEnabled: false,
+          updatedAt: new Date(),
+        }),
+        ...preferences,
+        userId,
+        updatedAt: new Date(),
+      };
+
+      await setUserDocument(userId, 'notificationPreferences', updatedPrefs);
+      logInfo('updateNotificationPreferences', 'Notification preferences updated', { userId });
+
+      return convertTimestamps<import('@shared/schema').NotificationPreferences>(updatedPrefs);
+    } catch (error) {
+      logError('updateNotificationPreferences', error, { userId, preferences });
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance
