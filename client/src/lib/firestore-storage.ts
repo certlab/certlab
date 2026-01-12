@@ -4160,7 +4160,13 @@ class FirestoreStorage implements IClientStorage {
         searchText,
       };
 
-      await updateUserDocument(userId, 'templateLibrary', `quiz_${templateId}`, updatesWithMeta);
+      // Merge existing template with updates and write to shared templateLibrary
+      const mergedTemplate = {
+        ...existing,
+        ...updatesWithMeta,
+      };
+
+      await setSharedDocument('templateLibrary', `quiz_${templateId}`, mergedTemplate);
 
       // Fetch updated template
       const updated = await this.getQuizTemplateLibrary(templateId, userId);
@@ -4212,12 +4218,13 @@ class FirestoreStorage implements IClientStorage {
         searchText,
       };
 
-      await updateUserDocument(
-        userId,
-        'templateLibrary',
-        `material_${templateId}`,
-        updatesWithMeta
-      );
+      // Merge existing template with updates and write to shared templateLibrary
+      const mergedTemplate = {
+        ...existing,
+        ...updatesWithMeta,
+      };
+
+      await setSharedDocument('templateLibrary', `material_${templateId}`, mergedTemplate);
 
       // Fetch updated template
       const updated = await this.getMaterialTemplateLibrary(templateId, userId);

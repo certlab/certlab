@@ -23,6 +23,15 @@ export function TemplateBrowserDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {templateType === 'quiz'
+              ? 'Browse Quiz Templates'
+              : templateType === 'material'
+                ? 'Browse Study Material Templates'
+                : 'Browse Templates'}
+          </DialogTitle>
+        </DialogHeader>
         <TemplateBrowser
           templateType={templateType}
           onSelect={handleSelect}

@@ -1683,7 +1683,6 @@ export interface BaseTemplate {
   updatedAt: Date;
   // Search and indexing
   searchText?: string; // Denormalized search text for performance
-  categoryIds?: number[]; // For filtering by category
 }
 
 /**
@@ -1770,27 +1769,36 @@ export const baseTemplateSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   searchText: z.string().optional(),
-  categoryIds: z.array(z.number()).optional(),
 });
 
-export const quizTemplateLibrarySchema = baseTemplateSchema.extend({
-  templateType: z.literal('quiz'),
-  instructions: z.string(),
-  categoryIds: z.array(z.number()),
-  subcategoryIds: z.array(z.number()),
-  customQuestions: z.array(z.any()), // Use any for now, can be more specific
-  questionCount: z.number(),
-  timeLimit: z.number().nullable(),
-  passingScore: z.number(),
-  maxAttempts: z.number().nullable(),
-  difficultyLevel: z.number().min(1).max(5),
-  randomizeQuestions: z.boolean().optional(),
-  randomizeAnswers: z.boolean().optional(),
-  timeLimitPerQuestion: z.number().nullable().optional(),
-  questionWeights: z.record(z.string(), z.number()).optional(),
-  feedbackMode: z.enum(['instant', 'delayed', 'final']).optional(),
-  isAdvancedConfig: z.boolean().optional(),
-});
+export const quizTemplateLibrarySchema = baseTemplateSchema
+  .extend({
+    templateType: z.literal('quiz'),
+    instructions: z.string(),
+    categoryIds: z.array(z.number()),
+    subcategoryIds: z.array(z.number()),
+    customQuestions: z.array(z.any()), // Use any for now, can be more specific
+    questionCount: z.number(),
+    timeLimit: z.number().nullable(),
+    passingScore: z.number(),
+    maxAttempts: z.number().nullable(),
+    difficultyLevel: z.number().min(1).max(5),
+    randomizeQuestions: z.boolean().optional(),
+    randomizeAnswers: z.boolean().optional(),
+    timeLimitPerQuestion: z.number().nullable().optional(),
+    questionWeights: z.record(z.string(), z.number()).optional(),
+    feedbackMode: z.enum(['instant', 'delayed', 'final']).optional(),
+    isAdvancedConfig: z.boolean().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.questionCount !== data.customQuestions.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['questionCount'],
+        message: 'questionCount must match the number of items in customQuestions',
+      });
+    }
+  });
 
 export const materialTemplateLibrarySchema = baseTemplateSchema.extend({
   templateType: z.literal('material'),
