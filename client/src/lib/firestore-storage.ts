@@ -3860,6 +3860,541 @@ class FirestoreStorage implements IClientStorage {
   // ==========================================
   // Group Management
   // ==========================================
+
+  // ==========================================
+  // Template Library
+  // ==========================================
+
+  /**
+   * Create a new quiz template in the library
+   * Stored in /templateLibrary/quiz_{id}
+   */
+  async createQuizTemplateLibrary(
+    template: Omit<
+      import('@shared/schema').QuizTemplateLibrary,
+      'id' | 'createdAt' | 'updatedAt' | 'usageCount'
+    >
+  ): Promise<import('@shared/schema').QuizTemplateLibrary> {
+    try {
+      const id = Date.now();
+      const now = new Date();
+
+      // Build search text for indexing
+      const searchText = [
+        template.title,
+        template.description,
+        ...(template.tags || []),
+        ...(template.categoryIds?.map((id) => `cat${id}`) || []),
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      const newTemplate: import('@shared/schema').QuizTemplateLibrary = {
+        ...template,
+        id,
+        createdAt: now,
+        updatedAt: now,
+        usageCount: 0,
+        searchText,
+        templateType: 'quiz',
+      };
+
+      await setSharedDocument('templateLibrary', `quiz_${id}`, newTemplate);
+      return convertTimestamps(newTemplate);
+    } catch (error) {
+      logError('createQuizTemplateLibrary', error, { template });
+      throw error;
+    }
+  }
+
+  /**
+   * Create a new material template in the library
+   * Stored in /templateLibrary/material_{id}
+   */
+  async createMaterialTemplateLibrary(
+    template: Omit<
+      import('@shared/schema').MaterialTemplateLibrary,
+      'id' | 'createdAt' | 'updatedAt' | 'usageCount'
+    >
+  ): Promise<import('@shared/schema').MaterialTemplateLibrary> {
+    try {
+      const id = Date.now();
+      const now = new Date();
+
+      // Build search text for indexing
+      const searchText = [
+        template.title,
+        template.description,
+        ...(template.tags || []),
+        ...(template.topics || []),
+        template.categoryId ? `cat${template.categoryId}` : '',
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      const newTemplate: import('@shared/schema').MaterialTemplateLibrary = {
+        ...template,
+        id,
+        createdAt: now,
+        updatedAt: now,
+        usageCount: 0,
+        searchText,
+        templateType: 'material',
+      };
+
+      await setSharedDocument('templateLibrary', `material_${id}`, newTemplate);
+      return convertTimestamps(newTemplate);
+    } catch (error) {
+      logError('createMaterialTemplateLibrary', error, { template });
+      throw error;
+    }
+  }
+
+  /**
+   * Get a quiz template from the library by ID
+   */
+  async getQuizTemplateLibrary(
+    templateId: number,
+    userId: string
+  ): Promise<import('@shared/schema').QuizTemplateLibrary | null> {
+    try {
+      const template = await getSharedDocument<import('@shared/schema').QuizTemplateLibrary>(
+        'templateLibrary',
+        `quiz_${templateId}`
+      );
+
+      if (!template) return null;
+
+      // Check access permissions
+      if (template.visibility === 'private' && template.userId !== userId) {
+        return null;
+      }
+
+      if (template.visibility === 'org') {
+        // Check if user is in shared users or groups
+        const hasAccess =
+          template.userId === userId ||
+          template.sharedWithUsers?.includes(userId) ||
+          (template.sharedWithGroups &&
+            (await this.isUserInGroups(userId, template.sharedWithGroups)));
+
+        if (!hasAccess) return null;
+      }
+
+      return convertTimestamps(template);
+    } catch (error) {
+      logError('getQuizTemplateLibrary', error, { templateId, userId });
+      return null;
+    }
+  }
+
+  /**
+   * Get a material template from the library by ID
+   */
+  async getMaterialTemplateLibrary(
+    templateId: number,
+    userId: string
+  ): Promise<import('@shared/schema').MaterialTemplateLibrary | null> {
+    try {
+      const template = await getSharedDocument<import('@shared/schema').MaterialTemplateLibrary>(
+        'templateLibrary',
+        `material_${templateId}`
+      );
+
+      if (!template) return null;
+
+      // Check access permissions
+      if (template.visibility === 'private' && template.userId !== userId) {
+        return null;
+      }
+
+      if (template.visibility === 'org') {
+        // Check if user is in shared users or groups
+        const hasAccess =
+          template.userId === userId ||
+          template.sharedWithUsers?.includes(userId) ||
+          (template.sharedWithGroups &&
+            (await this.isUserInGroups(userId, template.sharedWithGroups)));
+
+        if (!hasAccess) return null;
+      }
+
+      return convertTimestamps(template);
+    } catch (error) {
+      logError('getMaterialTemplateLibrary', error, { templateId, userId });
+      return null;
+    }
+  }
+
+  /**
+   * Search and filter templates in the library
+   */
+  async searchTemplateLibrary(
+    filters: import('@shared/schema').TemplateSearchFilters,
+    userId: string,
+    tenantId: number
+  ): Promise<import('@shared/schema').TemplateLibraryItem[]> {
+    try {
+      // Get all templates
+      const allTemplates =
+        await getSharedDocuments<import('@shared/schema').TemplateLibraryItem>('templateLibrary');
+
+      // Filter by type if specified
+      let templates = filters.templateType
+        ? allTemplates.filter((t) => t.templateType === filters.templateType)
+        : allTemplates;
+
+      // Filter by tenant
+      templates = templates.filter((t) => t.tenantId === tenantId);
+
+      // Filter by visibility and access permissions
+      const accessibleTemplates = await Promise.all(
+        templates.map(async (template) => {
+          if (template.visibility === 'public') return template;
+          if (template.visibility === 'private' && template.userId === userId) return template;
+          if (template.visibility === 'org') {
+            const hasAccess =
+              template.userId === userId ||
+              template.sharedWithUsers?.includes(userId) ||
+              (template.sharedWithGroups &&
+                (await this.isUserInGroups(userId, template.sharedWithGroups)));
+            return hasAccess ? template : null;
+          }
+          return null;
+        })
+      );
+
+      templates = accessibleTemplates.filter(
+        (t): t is import('@shared/schema').TemplateLibraryItem => t !== null
+      );
+
+      // Apply additional filters
+      if (filters.visibility) {
+        templates = templates.filter((t) => t.visibility === filters.visibility);
+      }
+
+      if (filters.categoryIds && filters.categoryIds.length > 0) {
+        templates = templates.filter((t) => {
+          if (t.templateType === 'quiz') {
+            return t.categoryIds.some((cid) => filters.categoryIds!.includes(cid));
+          } else {
+            return filters.categoryIds!.includes(t.categoryId);
+          }
+        });
+      }
+
+      if (filters.tags && filters.tags.length > 0) {
+        templates = templates.filter((t) => filters.tags!.some((tag) => t.tags.includes(tag)));
+      }
+
+      if (filters.difficultyLevel) {
+        templates = templates.filter((t) => t.difficultyLevel === filters.difficultyLevel);
+      }
+
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase();
+        templates = templates.filter(
+          (t) =>
+            t.searchText?.includes(query) ||
+            t.title.toLowerCase().includes(query) ||
+            t.description.toLowerCase().includes(query)
+        );
+      }
+
+      if (filters.userId) {
+        templates = templates.filter((t) => t.userId === filters.userId);
+      }
+
+      // Sort results
+      const sortBy = filters.sortBy || 'recent';
+      if (sortBy === 'recent') {
+        templates.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      } else if (sortBy === 'popular') {
+        templates.sort((a, b) => b.usageCount - a.usageCount);
+      } else if (sortBy === 'title') {
+        templates.sort((a, b) => a.title.localeCompare(b.title));
+      }
+
+      // Apply limit
+      if (filters.limit && filters.limit > 0) {
+        templates = templates.slice(0, filters.limit);
+      }
+
+      return templates.map((t) => convertTimestamps(t));
+    } catch (error) {
+      logError('searchTemplateLibrary', error, { filters, userId, tenantId });
+      return [];
+    }
+  }
+
+  /**
+   * Update a quiz template in the library
+   */
+  async updateQuizTemplateLibrary(
+    templateId: number,
+    updates: Partial<import('@shared/schema').QuizTemplateLibrary>,
+    userId: string
+  ): Promise<import('@shared/schema').QuizTemplateLibrary> {
+    try {
+      // Get existing template to check ownership
+      const existing = await this.getQuizTemplateLibrary(templateId, userId);
+      if (!existing) throw new Error('Template not found');
+      if (existing.userId !== userId) throw new Error('Not authorized to update this template');
+
+      // Update search text if relevant fields changed
+      let searchText = existing.searchText;
+      if (updates.title || updates.description || updates.tags || updates.categoryIds) {
+        searchText = [
+          updates.title || existing.title,
+          updates.description || existing.description,
+          ...(updates.tags || existing.tags || []),
+          ...((updates.categoryIds || existing.categoryIds)?.map((id) => `cat${id}`) || []),
+        ]
+          .join(' ')
+          .toLowerCase();
+      }
+
+      const updatesWithMeta = {
+        ...updates,
+        updatedAt: new Date(),
+        searchText,
+      };
+
+      await updateUserDocument(userId, 'templateLibrary', `quiz_${templateId}`, updatesWithMeta);
+
+      // Fetch updated template
+      const updated = await this.getQuizTemplateLibrary(templateId, userId);
+      if (!updated) throw new Error('Template not found after update');
+      return updated;
+    } catch (error) {
+      logError('updateQuizTemplateLibrary', error, { templateId, updates, userId });
+      throw error;
+    }
+  }
+
+  /**
+   * Update a material template in the library
+   */
+  async updateMaterialTemplateLibrary(
+    templateId: number,
+    updates: Partial<import('@shared/schema').MaterialTemplateLibrary>,
+    userId: string
+  ): Promise<import('@shared/schema').MaterialTemplateLibrary> {
+    try {
+      // Get existing template to check ownership
+      const existing = await this.getMaterialTemplateLibrary(templateId, userId);
+      if (!existing) throw new Error('Template not found');
+      if (existing.userId !== userId) throw new Error('Not authorized to update this template');
+
+      // Update search text if relevant fields changed
+      let searchText = existing.searchText;
+      if (
+        updates.title ||
+        updates.description ||
+        updates.tags ||
+        updates.topics ||
+        updates.categoryId
+      ) {
+        searchText = [
+          updates.title || existing.title,
+          updates.description || existing.description,
+          ...(updates.tags || existing.tags || []),
+          ...(updates.topics || existing.topics || []),
+          updates.categoryId ? `cat${updates.categoryId}` : `cat${existing.categoryId}`,
+        ]
+          .join(' ')
+          .toLowerCase();
+      }
+
+      const updatesWithMeta = {
+        ...updates,
+        updatedAt: new Date(),
+        searchText,
+      };
+
+      await updateUserDocument(
+        userId,
+        'templateLibrary',
+        `material_${templateId}`,
+        updatesWithMeta
+      );
+
+      // Fetch updated template
+      const updated = await this.getMaterialTemplateLibrary(templateId, userId);
+      if (!updated) throw new Error('Template not found after update');
+      return updated;
+    } catch (error) {
+      logError('updateMaterialTemplateLibrary', error, { templateId, updates, userId });
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a template from the library (only owner or admin)
+   */
+  async deleteTemplateLibrary(
+    templateId: number,
+    templateType: 'quiz' | 'material',
+    userId: string
+  ): Promise<void> {
+    try {
+      const docId = `${templateType}_${templateId}`;
+
+      // Check ownership
+      const template = await getSharedDocument<import('@shared/schema').TemplateLibraryItem>(
+        'templateLibrary',
+        docId
+      );
+
+      if (!template) throw new Error('Template not found');
+      if (template.userId !== userId) throw new Error('Not authorized to delete this template');
+
+      const db = getFirestoreInstance();
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      await deleteDoc(doc(db, 'templateLibrary', docId));
+    } catch (error) {
+      logError('deleteTemplateLibrary', error, { templateId, templateType, userId });
+      throw error;
+    }
+  }
+
+  /**
+   * Increment usage count when template is used
+   */
+  async incrementTemplateUsage(
+    templateId: number,
+    templateType: 'quiz' | 'material'
+  ): Promise<void> {
+    try {
+      const docId = `${templateType}_${templateId}`;
+      const template = await getSharedDocument<import('@shared/schema').TemplateLibraryItem>(
+        'templateLibrary',
+        docId
+      );
+
+      if (!template) return;
+
+      const db = getFirestoreInstance();
+      const { doc, updateDoc, increment } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'templateLibrary', docId), {
+        usageCount: increment(1),
+      });
+    } catch (error) {
+      logError('incrementTemplateUsage', error, { templateId, templateType });
+      // Don't throw, this is non-critical
+    }
+  }
+
+  /**
+   * Check for duplicate templates (by title and content similarity)
+   */
+  async checkTemplateDuplicate(
+    title: string,
+    templateType: 'quiz' | 'material',
+    userId: string,
+    tenantId: number
+  ): Promise<{ isDuplicate: boolean; existingTemplateId?: number }> {
+    try {
+      // Get user's templates of the same type
+      const templates = await this.searchTemplateLibrary(
+        { templateType, userId, sortBy: 'recent' },
+        userId,
+        tenantId
+      );
+
+      // Check for exact title match
+      const duplicate = templates.find(
+        (t) => t.title.toLowerCase().trim() === title.toLowerCase().trim()
+      );
+
+      if (duplicate) {
+        return { isDuplicate: true, existingTemplateId: duplicate.id };
+      }
+
+      return { isDuplicate: false };
+    } catch (error) {
+      logError('checkTemplateDuplicate', error, { title, templateType, userId, tenantId });
+      return { isDuplicate: false };
+    }
+  }
+
+  /**
+   * Get templates created by a specific user
+   */
+  async getUserTemplates(
+    userId: string,
+    templateType?: 'quiz' | 'material',
+    tenantId?: number
+  ): Promise<import('@shared/schema').TemplateLibraryItem[]> {
+    try {
+      return await this.searchTemplateLibrary(
+        {
+          templateType,
+          userId,
+          sortBy: 'recent',
+        },
+        userId,
+        tenantId || 1
+      );
+    } catch (error) {
+      logError('getUserTemplates', error, { userId, templateType, tenantId });
+      return [];
+    }
+  }
+
+  /**
+   * Get popular templates (by usage count)
+   */
+  async getPopularTemplates(
+    templateType?: 'quiz' | 'material',
+    limit?: number,
+    tenantId?: number
+  ): Promise<import('@shared/schema').TemplateLibraryItem[]> {
+    try {
+      const userId = this.currentUserId;
+      if (!userId) return [];
+
+      return await this.searchTemplateLibrary(
+        {
+          templateType,
+          sortBy: 'popular',
+          limit: limit || 10,
+        },
+        userId,
+        tenantId || 1
+      );
+    } catch (error) {
+      logError('getPopularTemplates', error, { templateType, limit, tenantId });
+      return [];
+    }
+  }
+
+  /**
+   * Get recent templates
+   */
+  async getRecentTemplates(
+    templateType?: 'quiz' | 'material',
+    limit?: number,
+    tenantId?: number
+  ): Promise<import('@shared/schema').TemplateLibraryItem[]> {
+    try {
+      const userId = this.currentUserId;
+      if (!userId) return [];
+
+      return await this.searchTemplateLibrary(
+        {
+          templateType,
+          sortBy: 'recent',
+          limit: limit || 10,
+        },
+        userId,
+        tenantId || 1
+      );
+    } catch (error) {
+      logError('getRecentTemplates', error, { templateType, limit, tenantId });
+      return [];
+    }
+  }
 }
 
 // Export singleton instance

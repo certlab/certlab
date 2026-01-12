@@ -1218,6 +1218,153 @@ class StorageRouter implements IClientStorage {
   async getAllGroups(tenantId?: number): Promise<Group[]> {
     return this.executeStorageOperation((s) => s.getAllGroups(tenantId), 'getAllGroups');
   }
+
+  // ==========================================
+  // Template Library
+  // ==========================================
+
+  async createQuizTemplateLibrary(
+    template: Omit<
+      import('@shared/schema').QuizTemplateLibrary,
+      'id' | 'createdAt' | 'updatedAt' | 'usageCount'
+    >
+  ): Promise<import('@shared/schema').QuizTemplateLibrary> {
+    return this.executeStorageOperation(
+      (s) => s.createQuizTemplateLibrary(template),
+      'createQuizTemplateLibrary'
+    );
+  }
+
+  async createMaterialTemplateLibrary(
+    template: Omit<
+      import('@shared/schema').MaterialTemplateLibrary,
+      'id' | 'createdAt' | 'updatedAt' | 'usageCount'
+    >
+  ): Promise<import('@shared/schema').MaterialTemplateLibrary> {
+    return this.executeStorageOperation(
+      (s) => s.createMaterialTemplateLibrary(template),
+      'createMaterialTemplateLibrary'
+    );
+  }
+
+  async getQuizTemplateLibrary(
+    templateId: number,
+    userId: string
+  ): Promise<import('@shared/schema').QuizTemplateLibrary | null> {
+    return this.executeStorageOperation(
+      (s) => s.getQuizTemplateLibrary(templateId, userId),
+      'getQuizTemplateLibrary'
+    );
+  }
+
+  async getMaterialTemplateLibrary(
+    templateId: number,
+    userId: string
+  ): Promise<import('@shared/schema').MaterialTemplateLibrary | null> {
+    return this.executeStorageOperation(
+      (s) => s.getMaterialTemplateLibrary(templateId, userId),
+      'getMaterialTemplateLibrary'
+    );
+  }
+
+  async searchTemplateLibrary(
+    filters: import('@shared/schema').TemplateSearchFilters,
+    userId: string,
+    tenantId: number
+  ): Promise<import('@shared/schema').TemplateLibraryItem[]> {
+    return this.executeStorageOperation(
+      (s) => s.searchTemplateLibrary(filters, userId, tenantId),
+      'searchTemplateLibrary'
+    );
+  }
+
+  async updateQuizTemplateLibrary(
+    templateId: number,
+    updates: Partial<import('@shared/schema').QuizTemplateLibrary>,
+    userId: string
+  ): Promise<import('@shared/schema').QuizTemplateLibrary> {
+    return this.executeStorageOperation(
+      (s) => s.updateQuizTemplateLibrary(templateId, updates, userId),
+      'updateQuizTemplateLibrary'
+    );
+  }
+
+  async updateMaterialTemplateLibrary(
+    templateId: number,
+    updates: Partial<import('@shared/schema').MaterialTemplateLibrary>,
+    userId: string
+  ): Promise<import('@shared/schema').MaterialTemplateLibrary> {
+    return this.executeStorageOperation(
+      (s) => s.updateMaterialTemplateLibrary(templateId, updates, userId),
+      'updateMaterialTemplateLibrary'
+    );
+  }
+
+  async deleteTemplateLibrary(
+    templateId: number,
+    templateType: 'quiz' | 'material',
+    userId: string
+  ): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.deleteTemplateLibrary(templateId, templateType, userId),
+      'deleteTemplateLibrary'
+    );
+  }
+
+  async incrementTemplateUsage(
+    templateId: number,
+    templateType: 'quiz' | 'material'
+  ): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.incrementTemplateUsage(templateId, templateType),
+      'incrementTemplateUsage'
+    );
+  }
+
+  async checkTemplateDuplicate(
+    title: string,
+    templateType: 'quiz' | 'material',
+    userId: string,
+    tenantId: number
+  ): Promise<{ isDuplicate: boolean; existingTemplateId?: number }> {
+    return this.executeStorageOperation(
+      (s) => s.checkTemplateDuplicate(title, templateType, userId, tenantId),
+      'checkTemplateDuplicate'
+    );
+  }
+
+  async getUserTemplates(
+    userId: string,
+    templateType?: 'quiz' | 'material',
+    tenantId?: number
+  ): Promise<import('@shared/schema').TemplateLibraryItem[]> {
+    return this.executeStorageOperation(
+      (s) => s.getUserTemplates(userId, templateType, tenantId),
+      'getUserTemplates'
+    );
+  }
+
+  async getPopularTemplates(
+    templateType?: 'quiz' | 'material',
+    limit?: number,
+    tenantId?: number
+  ): Promise<import('@shared/schema').TemplateLibraryItem[]> {
+    return this.executeStorageOperation(
+      (s) => s.getPopularTemplates(templateType, limit, tenantId),
+      'getPopularTemplates'
+    );
+  }
+
+  async getRecentTemplates(
+    templateType?: 'quiz' | 'material',
+    limit?: number,
+    tenantId?: number
+  ): Promise<import('@shared/schema').TemplateLibraryItem[]> {
+    return this.executeStorageOperation(
+      (s) => s.getRecentTemplates(templateType, limit, tenantId),
+      'getRecentTemplates'
+    );
+  }
 }
 
 // Export the storage router as the default storage interface
