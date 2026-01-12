@@ -324,6 +324,16 @@ export const quizzes = pgTable('quizzes', {
   sharedWithGroups: jsonb('shared_with_groups').$type<number[]>(), // Group IDs who have access (for 'shared' visibility)
   requiresPurchase: boolean('requires_purchase').default(false), // Whether purchase is required for access
   purchaseProductId: text('purchase_product_id'), // Product ID for marketplace integration
+  // Distribution Settings
+  distributionMethod: text('distribution_method').default('open'), // 'open', 'self_enroll', 'instructor_assign'
+  availableFrom: timestamp('available_from'), // When quiz becomes available
+  availableUntil: timestamp('available_until'), // When quiz expires
+  enrollmentDeadline: timestamp('enrollment_deadline'), // Last date for enrollment
+  maxEnrollments: integer('max_enrollments'), // Max enrollments allowed, null = unlimited
+  requireApproval: boolean('require_approval').default(false), // Whether enrollment needs approval
+  assignmentDueDate: timestamp('assignment_due_date'), // Due date for assignments
+  sendNotifications: boolean('send_notifications').default(true), // Send assignment notifications
+  reminderDays: jsonb('reminder_days').$type<number[]>(), // Days before due to send reminders
 });
 
 // Micro-learning challenges table
@@ -438,6 +448,16 @@ export const lectures = pgTable('lectures', {
   sharedWithGroups: jsonb('shared_with_groups').$type<number[]>(), // Group IDs who have access (for 'shared' visibility)
   requiresPurchase: boolean('requires_purchase').default(false), // Whether purchase is required for access
   purchaseProductId: text('purchase_product_id'), // Product ID for marketplace integration
+  // Distribution Settings
+  distributionMethod: text('distribution_method').default('open'), // 'open', 'self_enroll', 'instructor_assign'
+  availableFrom: timestamp('available_from'), // When lecture becomes available
+  availableUntil: timestamp('available_until'), // When lecture expires
+  enrollmentDeadline: timestamp('enrollment_deadline'), // Last date for enrollment
+  maxEnrollments: integer('max_enrollments'), // Max enrollments allowed, null = unlimited
+  requireApproval: boolean('require_approval').default(false), // Whether enrollment needs approval
+  assignmentDueDate: timestamp('assignment_due_date'), // Due date for assignments
+  sendNotifications: boolean('send_notifications').default(true), // Send assignment notifications
+  reminderDays: jsonb('reminder_days').$type<number[]>(), // Days before due to send reminders
 });
 
 // Study Notes table for user-generated study notes from quiz results
@@ -2201,6 +2221,244 @@ export type InsertGroupMember = z.infer<typeof insertGroupMemberSchema>;
  */
 export interface AccessCheckResult {
   allowed: boolean;
-  reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
+  reason?:
+    | 'purchase_required'
+    | 'private_content'
+    | 'not_shared_with_you'
+    | 'access_denied'
+    | 'not_available_yet'
+    | 'availability_expired'
+    | 'prerequisites_not_met'
+    | 'not_enrolled'
+    | 'not_assigned';
   productId?: string;
+  missingPrerequisites?: { quizIds?: number[]; lectureIds?: number[] };
+  availableFrom?: Date;
+  availableUntil?: Date;
+}
+
+// ============================================================================
+// Enhanced Distribution Methods
+// ============================================================================
+
+/**
+ * Distribution method for quizzes and materials
+ */
+export type DistributionMethod = 'open' | 'self_enroll' | 'instructor_assign';
+
+/**
+ * Zod schema for distribution method validation
+ */
+export const distributionMethodSchema = z.enum(['open', 'self_enroll', 'instructor_assign']);
+
+/**
+ * Enrollment status for self-enrollment
+ */
+export type EnrollmentStatus = 'enrolled' | 'completed' | 'withdrawn';
+
+/**
+ * Zod schema for enrollment status validation
+ */
+export const enrollmentStatusSchema = z.enum(['enrolled', 'completed', 'withdrawn']);
+
+/**
+ * Assignment status for instructor assignments
+ */
+export type AssignmentStatus = 'assigned' | 'in_progress' | 'completed' | 'overdue';
+
+/**
+ * Zod schema for assignment status validation
+ */
+export const assignmentStatusSchema = z.enum(['assigned', 'in_progress', 'completed', 'overdue']);
+
+/**
+ * Distribution settings for quizzes and materials
+ * Stored inline with quiz/lecture or in a separate collection
+ */
+export interface DistributionSettings {
+  method: DistributionMethod;
+
+  // Time-based availability windows
+  availableFrom?: Date; // When content becomes available
+  availableUntil?: Date; // When content expires/becomes unavailable
+  enrollmentDeadline?: Date; // Last date for self-enrollment
+
+  // Self-enrollment settings
+  selfEnrollEnabled?: boolean;
+  maxEnrollments?: number; // Max number of users who can enroll (null = unlimited)
+  requireApproval?: boolean; // Whether instructor approval is required
+
+  // Assignment settings
+  assignmentDueDate?: Date; // Due date for assigned content
+  sendNotifications?: boolean; // Whether to send assignment notifications
+  reminderDays?: number[]; // Days before due date to send reminders (e.g., [7, 3, 1])
+
+  // Prerequisites
+  requirePrerequisites?: boolean; // Whether prerequisites must be met
+  prerequisites?: {
+    quizIds?: number[];
+    lectureIds?: number[];
+    minimumScores?: Record<number, number>; // quizId/lectureId -> minimum score required
+  };
+}
+
+/**
+ * Zod schema for distribution settings validation
+ */
+export const distributionSettingsSchema = z
+  .object({
+    method: distributionMethodSchema,
+    availableFrom: z.date().optional(),
+    availableUntil: z.date().optional(),
+    enrollmentDeadline: z.date().optional(),
+    selfEnrollEnabled: z.boolean().optional(),
+    maxEnrollments: z.number().int().positive().optional(),
+    requireApproval: z.boolean().optional(),
+    assignmentDueDate: z.date().optional(),
+    sendNotifications: z.boolean().optional(),
+    reminderDays: z.array(z.number().int().positive()).optional(),
+    requirePrerequisites: z.boolean().optional(),
+    prerequisites: z
+      .object({
+        quizIds: z.array(z.number()).optional(),
+        lectureIds: z.array(z.number()).optional(),
+        minimumScores: z.record(z.string(), z.number()).optional(),
+      })
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    // Validate date logic
+    if (data.availableFrom && data.availableUntil) {
+      if (data.availableFrom >= data.availableUntil) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'availableFrom must be before availableUntil',
+          path: ['availableFrom'],
+        });
+      }
+    }
+
+    if (data.enrollmentDeadline && data.availableUntil) {
+      if (data.enrollmentDeadline > data.availableUntil) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'enrollmentDeadline must be before or equal to availableUntil',
+          path: ['enrollmentDeadline'],
+        });
+      }
+    }
+  });
+
+/**
+ * Enrollment record for self-enrollment
+ * Stored in Firestore at: /enrollments/{enrollmentId}
+ */
+export interface Enrollment {
+  id: string;
+  resourceType: 'quiz' | 'lecture' | 'template';
+  resourceId: number;
+  userId: string;
+  tenantId: number;
+  status: EnrollmentStatus;
+  enrolledAt: Date;
+  completedAt?: Date;
+  withdrawnAt?: Date;
+  requiresApproval: boolean;
+  isApproved: boolean;
+  approvedBy?: string;
+  approvedAt?: Date;
+  progress?: number; // 0-100 percentage for lectures, score for quizzes
+  lastAccessedAt?: Date;
+}
+
+/**
+ * Zod schema for enrollment validation
+ */
+export const enrollmentSchema = z.object({
+  id: z.string(),
+  resourceType: z.enum(['quiz', 'lecture', 'template']),
+  resourceId: z.number(),
+  userId: z.string(),
+  tenantId: z.number(),
+  status: enrollmentStatusSchema,
+  enrolledAt: z.date(),
+  completedAt: z.date().optional(),
+  withdrawnAt: z.date().optional(),
+  requiresApproval: z.boolean(),
+  isApproved: z.boolean(),
+  approvedBy: z.string().optional(),
+  approvedAt: z.date().optional(),
+  progress: z.number().min(0).max(100).optional(),
+  lastAccessedAt: z.date().optional(),
+});
+
+export const insertEnrollmentSchema = enrollmentSchema.omit({ id: true, enrolledAt: true });
+export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
+
+/**
+ * Assignment record for instructor-assigned content
+ * Stored in Firestore at: /assignments/{assignmentId}
+ */
+export interface Assignment {
+  id: string;
+  resourceType: 'quiz' | 'lecture' | 'template';
+  resourceId: number;
+  userId: string; // User assigned to
+  assignedBy: string; // Instructor/admin who assigned
+  tenantId: number;
+  status: AssignmentStatus;
+  assignedAt: Date;
+  dueDate?: Date;
+  startedAt?: Date;
+  completedAt?: Date;
+  score?: number; // For quizzes
+  progress?: number; // 0-100 percentage for lectures
+  lastAccessedAt?: Date;
+  notificationSent: boolean;
+  remindersSent: number[]; // Days before due date when reminders were sent
+  notes?: string; // Instructor notes for the assignment
+}
+
+/**
+ * Zod schema for assignment validation
+ */
+export const assignmentSchema = z.object({
+  id: z.string(),
+  resourceType: z.enum(['quiz', 'lecture', 'template']),
+  resourceId: z.number(),
+  userId: z.string(),
+  assignedBy: z.string(),
+  tenantId: z.number(),
+  status: assignmentStatusSchema,
+  assignedAt: z.date(),
+  dueDate: z.date().optional(),
+  startedAt: z.date().optional(),
+  completedAt: z.date().optional(),
+  score: z.number().optional(),
+  progress: z.number().min(0).max(100).optional(),
+  lastAccessedAt: z.date().optional(),
+  notificationSent: z.boolean(),
+  remindersSent: z.array(z.number().int().positive()),
+  notes: z.string().max(2000).optional(),
+});
+
+export const insertAssignmentSchema = assignmentSchema.omit({ id: true, assignedAt: true });
+export type InsertAssignment = z.infer<typeof insertAssignmentSchema>;
+
+/**
+ * Prerequisite check result
+ */
+export interface PrerequisiteCheckResult {
+  met: boolean;
+  missingQuizzes?: Array<{
+    id: number;
+    title: string;
+    requiredScore?: number;
+    currentScore?: number;
+  }>;
+  missingLectures?: Array<{
+    id: number;
+    title: string;
+    isRead: boolean;
+  }>;
 }

@@ -1101,8 +1101,20 @@ export interface IClientStorage extends IStorageAdapter {
     resourceId: number
   ): Promise<{
     allowed: boolean;
-    reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
+    reason?:
+      | 'purchase_required'
+      | 'private_content'
+      | 'not_shared_with_you'
+      | 'access_denied'
+      | 'not_available_yet'
+      | 'availability_expired'
+      | 'prerequisites_not_met'
+      | 'not_enrolled'
+      | 'not_assigned';
     productId?: string;
+    missingPrerequisites?: { quizIds?: number[]; lectureIds?: number[] };
+    availableFrom?: Date;
+    availableUntil?: Date;
   }>;
 
   /** Check if a user has purchased a product */
@@ -1134,6 +1146,159 @@ export interface IClientStorage extends IStorageAdapter {
 
   /** Get all groups (for admins or searching) */
   getAllGroups(tenantId?: number): Promise<Group[]>;
+
+  // ==========================================
+  // Enrollment Management
+  // ==========================================
+
+  /** Enroll a user in a quiz or lecture (self-enrollment) */
+  enrollUser(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number,
+    tenantId: number,
+    requiresApproval?: boolean
+  ): Promise<import('./schema').Enrollment>;
+
+  /** Unenroll/withdraw a user from a quiz or lecture */
+  unenrollUser(enrollmentId: string): Promise<void>;
+
+  /** Get all enrollments for a user */
+  getUserEnrollments(
+    userId: string,
+    tenantId: number,
+    resourceType?: 'quiz' | 'lecture' | 'template'
+  ): Promise<import('./schema').Enrollment[]>;
+
+  /** Get all enrollments for a specific resource */
+  getResourceEnrollments(
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<import('./schema').Enrollment[]>;
+
+  /** Approve an enrollment (instructor/admin) */
+  approveEnrollment(
+    enrollmentId: string,
+    approvedBy: string
+  ): Promise<import('./schema').Enrollment>;
+
+  /** Reject/deny an enrollment */
+  rejectEnrollment(enrollmentId: string): Promise<void>;
+
+  /** Update enrollment progress */
+  updateEnrollmentProgress(
+    enrollmentId: string,
+    progress: number,
+    completed?: boolean
+  ): Promise<import('./schema').Enrollment>;
+
+  /** Check if a user is enrolled in a resource */
+  isUserEnrolled(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<boolean>;
+
+  // ==========================================
+  // Assignment Management
+  // ==========================================
+
+  /** Assign a quiz or lecture to a user (instructor/admin) */
+  assignToUser(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number,
+    assignedBy: string,
+    tenantId: number,
+    dueDate?: Date,
+    notes?: string
+  ): Promise<import('./schema').Assignment>;
+
+  /** Assign to multiple users at once */
+  assignToUsers(
+    userIds: string[],
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number,
+    assignedBy: string,
+    tenantId: number,
+    dueDate?: Date,
+    notes?: string
+  ): Promise<import('./schema').Assignment[]>;
+
+  /** Unassign a user from a quiz or lecture */
+  unassignUser(assignmentId: string): Promise<void>;
+
+  /** Get all assignments for a user */
+  getUserAssignments(
+    userId: string,
+    tenantId: number,
+    resourceType?: 'quiz' | 'lecture' | 'template',
+    status?: import('./schema').AssignmentStatus
+  ): Promise<import('./schema').Assignment[]>;
+
+  /** Get all assignments for a specific resource */
+  getResourceAssignments(
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<import('./schema').Assignment[]>;
+
+  /** Update assignment status */
+  updateAssignmentStatus(
+    assignmentId: string,
+    status: import('./schema').AssignmentStatus,
+    score?: number,
+    progress?: number
+  ): Promise<import('./schema').Assignment>;
+
+  /** Update assignment progress */
+  updateAssignmentProgress(
+    assignmentId: string,
+    progress: number,
+    started?: boolean
+  ): Promise<import('./schema').Assignment>;
+
+  /** Mark assignment as completed */
+  completeAssignment(assignmentId: string, score?: number): Promise<import('./schema').Assignment>;
+
+  /** Check if a user has an assignment for a resource */
+  hasAssignment(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<boolean>;
+
+  /** Send assignment notification */
+  sendAssignmentNotification(assignmentId: string): Promise<void>;
+
+  /** Send assignment reminder */
+  sendAssignmentReminder(assignmentId: string): Promise<void>;
+
+  // ==========================================
+  // Prerequisite Checking
+  // ==========================================
+
+  /** Check if user meets prerequisites for a resource */
+  checkPrerequisites(
+    userId: string,
+    prerequisites: {
+      quizIds?: number[];
+      lectureIds?: number[];
+      minimumScores?: Record<number, number>;
+    }
+  ): Promise<import('./schema').PrerequisiteCheckResult>;
+
+  /** Check availability window for a resource */
+  checkAvailability(
+    availableFrom?: Date,
+    availableUntil?: Date,
+    enrollmentDeadline?: Date
+  ): Promise<{
+    available: boolean;
+    canEnroll: boolean;
+    reason?: 'not_started' | 'expired' | 'enrollment_closed';
+    availableFrom?: Date;
+    availableUntil?: Date;
+  }>;
 
   // ==========================================
   // Template Library
