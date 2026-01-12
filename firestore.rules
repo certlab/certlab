@@ -179,12 +179,18 @@ service cloud.firestore {
       // Users can enroll themselves (create enrollment)
       allow create: if isAuthenticated() && 
                       request.resource.data.userId == request.auth.uid &&
-                      request.resource.data.tenantId is number;
+                      request.resource.data.tenantId is number &&
+                      // If status is provided by the client, it must be "enrolled"
+                      (!request.resource.data.keys().hasAny(['status']) || request.resource.data.status == 'enrolled') &&
+                      // Clients must not set approval-related fields; these are controlled by admins/instructors
+                      !request.resource.data.keys().hasAny(['isApproved', 'requiresApproval']);
       
       // Users can withdraw their own enrollment
       allow update: if isAuthenticated() && 
                       resource.data.userId == request.auth.uid &&
-                      request.resource.data.status == 'withdrawn';
+                      request.resource.data.status == 'withdrawn' &&
+                      // When withdrawing, users may only change the status field
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
       
       // Instructors/admins can approve/reject enrollments
       allow update: if isAuthenticated() && isAdmin();
@@ -212,8 +218,10 @@ service cloud.firestore {
       // Users can update progress on their assignments
       allow update: if isAuthenticated() && 
                       resource.data.userId == request.auth.uid &&
-                      // Users can only update specific fields
-                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['progress', 'status', 'startedAt', 'completedAt', 'lastAccessedAt', 'score']);
+                      // Users can only update specific non-score fields
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['progress', 'status', 'startedAt', 'completedAt', 'lastAccessedAt']) &&
+                      // Prevent users from modifying their own score
+                      (!request.resource.data.keys().hasAny(['score']) || request.resource.data.score == resource.data.score);
       
       // Instructors/admins can update any assignment
       allow update: if isAuthenticated() && 

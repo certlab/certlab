@@ -20,6 +20,7 @@ interface AccessDeniedProps {
     | 'availability_expired'
     | 'prerequisites_not_met'
     | 'not_enrolled'
+    | 'enrollment_closed'
     | 'not_assigned';
   productId?: string;
   resourceType?: 'quiz' | 'lecture' | 'material' | 'template';
@@ -87,6 +88,12 @@ export function AccessDenied({
           title: 'Enrollment Required',
           description: `You need to enroll in this ${resourceType} to access it.`,
           action: 'Enroll Now',
+        };
+      case 'enrollment_closed':
+        return {
+          title: 'Enrollment Closed',
+          description: `Enrollment for this ${resourceType} is no longer available.`,
+          action: null,
         };
       case 'not_assigned':
         return {

@@ -3524,9 +3524,10 @@ class FirestoreStorage implements IClientStorage {
             resource.enrollmentDeadline
           );
           if (!availabilityCheck.canEnroll) {
-            return { allowed: false, reason: 'not_enrolled' };
+            // Enrollment deadline has passed or enrollment window closed
+            return { allowed: false, reason: 'enrollment_closed' };
           }
-          // Allow access to enrollment page, but not to the content itself
+          // User can enroll but hasn't yet
           return { allowed: false, reason: 'not_enrolled' };
         }
       } else if (distributionMethod === 'instructor_assign') {
@@ -4506,7 +4507,35 @@ class FirestoreStorage implements IClientStorage {
     requiresApproval = false
   ): Promise<import('@shared/schema').Enrollment> {
     try {
-      const enrollmentId = `${resourceType}_${resourceId}_${userId}_${Date.now()}`;
+      // Get the resource to check enrollment limits and deadline
+      let resource: any;
+      if (resourceType === 'quiz') {
+        resource = await this.getQuiz(resourceId);
+      } else if (resourceType === 'lecture') {
+        resource = await this.getLecture(resourceId);
+      }
+
+      if (!resource) {
+        throw new Error('Resource not found');
+      }
+
+      // Check if enrollment deadline has passed
+      if (resource.enrollmentDeadline && new Date() > resource.enrollmentDeadline) {
+        throw new Error('Enrollment deadline has passed');
+      }
+
+      // Check if max enrollments reached
+      if (resource.maxEnrollments) {
+        const existingEnrollments = await this.getResourceEnrollments(resourceType, resourceId);
+        const activeEnrollments = existingEnrollments.filter(
+          (e) => e.status === 'enrolled' || e.status === 'completed'
+        );
+        if (activeEnrollments.length >= resource.maxEnrollments) {
+          throw new Error('Maximum enrollment limit reached');
+        }
+      }
+
+      const enrollmentId = generateId();
       const enrollment: import('@shared/schema').Enrollment = {
         id: enrollmentId,
         resourceType,
@@ -4717,7 +4746,7 @@ class FirestoreStorage implements IClientStorage {
     notes?: string
   ): Promise<import('@shared/schema').Assignment> {
     try {
-      const assignmentId = `${resourceType}_${resourceId}_${userId}_${Date.now()}`;
+      const assignmentId = generateId();
       const assignment: import('@shared/schema').Assignment = {
         id: assignmentId,
         resourceType,
@@ -4761,29 +4790,42 @@ class FirestoreStorage implements IClientStorage {
     dueDate?: Date,
     notes?: string
   ): Promise<import('@shared/schema').Assignment[]> {
-    try {
-      const assignments = await Promise.all(
-        userIds.map((userId) =>
-          this.assignToUser(userId, resourceType, resourceId, assignedBy, tenantId, dueDate, notes)
-        )
-      );
-      logInfo('assignToUsers', {
-        userCount: userIds.length,
-        resourceType,
-        resourceId,
-        assignedBy,
-      });
-      return assignments;
-    } catch (error) {
-      logError('assignToUsers', error, {
-        userIds,
-        resourceType,
-        resourceId,
-        assignedBy,
-        tenantId,
-      });
-      throw error;
+    const results: import('@shared/schema').Assignment[] = [];
+    const errors: Array<{ userId: string; error: any }> = [];
+
+    for (const userId of userIds) {
+      try {
+        const assignment = await this.assignToUser(
+          userId,
+          resourceType,
+          resourceId,
+          assignedBy,
+          tenantId,
+          dueDate,
+          notes
+        );
+        results.push(assignment);
+      } catch (error) {
+        errors.push({ userId, error });
+        logError('assignToUsers - individual assignment failed', error, { userId });
+      }
     }
+
+    logInfo('assignToUsers', {
+      successCount: results.length,
+      failureCount: errors.length,
+      totalCount: userIds.length,
+      resourceType,
+      resourceId,
+      assignedBy,
+    });
+
+    // If some assignments failed, log the failures but return the successful ones
+    if (errors.length > 0) {
+      logError('assignToUsers - partial failures', { errors });
+    }
+
+    return results;
   }
 
   /**
@@ -5041,6 +5083,12 @@ class FirestoreStorage implements IClientStorage {
         missingLectures: [],
       };
 
+      // Fetch user quizzes once to avoid N+1 queries
+      const userQuizzes =
+        prerequisites.quizIds && prerequisites.quizIds.length > 0
+          ? await this.getUserQuizzes(userId)
+          : [];
+
       // Check quiz prerequisites
       if (prerequisites.quizIds && prerequisites.quizIds.length > 0) {
         for (const quizId of prerequisites.quizIds) {
@@ -5048,7 +5096,6 @@ class FirestoreStorage implements IClientStorage {
           if (!quiz) continue;
 
           // Check if user has completed this quiz
-          const userQuizzes = await this.getUserQuizzes(userId);
           const userQuiz = userQuizzes.find((q) => q.id === quizId && q.completedAt);
 
           const requiredScore = prerequisites.minimumScores?.[quizId];
@@ -5078,7 +5125,8 @@ class FirestoreStorage implements IClientStorage {
           const lecture = await this.getLecture(lectureId);
           if (!lecture) continue;
 
-          if (!lecture.isRead || lecture.userId !== userId) {
+          // A lecture prerequisite is unmet if the lecture has not been read
+          if (!lecture.isRead) {
             result.met = false;
             result.missingLectures?.push({
               id: lectureId,
