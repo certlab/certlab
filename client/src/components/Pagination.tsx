@@ -61,9 +61,12 @@ export function Pagination({
         pages.push('...');
         pages.push(totalPages);
       } else if (currentPage >= totalPages - 2) {
-        // Near end
-        pages.push('...');
-        for (let i = totalPages - 4; i <= totalPages; i++) {
+        // Near end - ensure we don't show pages below page 2
+        const start = Math.max(2, totalPages - 4);
+        if (start > 2) {
+          pages.push('...');
+        }
+        for (let i = start; i <= totalPages; i++) {
           pages.push(i);
         }
       } else {

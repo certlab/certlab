@@ -6,6 +6,7 @@ import type { Quiz, Lecture, QuizTemplate } from '@shared/schema';
  */
 export type FilterableItem = (Quiz | Lecture | QuizTemplate) & {
   authorName?: string;
+  visibility?: string;
 };
 
 /**
@@ -83,8 +84,8 @@ export function matchesDateRange(
 
   if (dateFrom && itemDate < dateFrom) return false;
   if (dateTo) {
-    // Include the entire end date
-    const endOfDay = new Date(dateTo);
+    // Include the entire end date - create a new Date to avoid mutating the parameter
+    const endOfDay = new Date(dateTo.getTime());
     endOfDay.setHours(23, 59, 59, 999);
     if (itemDate > endOfDay) return false;
   }
@@ -98,7 +99,7 @@ export function matchesDateRange(
 export function matchesVisibility(item: FilterableItem, visibility: string): boolean {
   if (visibility === 'all') return true;
 
-  const itemVisibility = (item as any).visibility || 'private';
+  const itemVisibility = item.visibility || 'private';
   return itemVisibility === visibility;
 }
 

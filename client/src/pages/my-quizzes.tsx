@@ -67,13 +67,13 @@ export default function MyQuizzes() {
   });
 
   // Extract available filter options
-  const availableTags = useMemo(() => extractUniqueTags(templates as any[]), [templates]);
-  const availableAuthors = useMemo(() => extractUniqueAuthors(templates as any[]), [templates]);
+  const availableTags = useMemo(() => extractUniqueTags(templates), [templates]);
+  const availableAuthors = useMemo(() => extractUniqueAuthors(templates), [templates]);
 
   // Apply filters and sorting
   const filteredAndSortedTemplates = useMemo(() => {
     if (!filters) return templates;
-    return filterAndSortItems(templates as any[], filters, 'template');
+    return filterAndSortItems(templates, filters, 'template');
   }, [templates, filters]);
 
   // Paginate results
@@ -86,7 +86,7 @@ export default function MyQuizzes() {
   }, [filteredAndSortedTemplates.length, pageSize]);
 
   const filterStats = useMemo(() => {
-    return getFilterStats(templates as any[], filteredAndSortedTemplates);
+    return getFilterStats(templates, filteredAndSortedTemplates);
   }, [templates, filteredAndSortedTemplates]);
 
   // Handle filter changes

@@ -99,13 +99,13 @@ export default function MyMaterials() {
   });
 
   // Extract available filter options
-  const availableTags = useMemo(() => extractUniqueTags(lectures as any[]), [lectures]);
-  const availableAuthors = useMemo(() => extractUniqueAuthors(lectures as any[]), [lectures]);
+  const availableTags = useMemo(() => extractUniqueTags(lectures), [lectures]);
+  const availableAuthors = useMemo(() => extractUniqueAuthors(lectures), [lectures]);
 
   // Apply filters and sorting
   const filteredAndSortedLectures = useMemo(() => {
     if (!filters) return lectures;
-    return filterAndSortItems(lectures as any[], filters, 'lecture');
+    return filterAndSortItems(lectures, filters, 'lecture');
   }, [lectures, filters]);
 
   // Paginate results
@@ -118,7 +118,7 @@ export default function MyMaterials() {
   }, [filteredAndSortedLectures.length, pageSize]);
 
   const filterStats = useMemo(() => {
-    return getFilterStats(lectures as any[], filteredAndSortedLectures);
+    return getFilterStats(lectures, filteredAndSortedLectures);
   }, [lectures, filteredAndSortedLectures]);
 
   // Handle filter changes

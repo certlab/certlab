@@ -12,15 +12,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Search,
-  X,
-  Filter,
-  Calendar as CalendarIcon,
-  ChevronDown,
-  SlidersHorizontal,
-} from 'lucide-react';
+import { Search, X, Calendar as CalendarIcon, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -179,10 +171,12 @@ export function SearchAndFilter({
           />
           {searchInput && (
             <button
+              type="button"
               onClick={() => setSearchInput('')}
+              aria-label="Clear search"
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -369,14 +363,21 @@ export function SearchAndFilter({
             <Label>Difficulty Levels</Label>
             <div className="flex flex-wrap gap-2">
               {[1, 2, 3, 4, 5].map((level) => (
-                <Badge
+                <button
                   key={level}
-                  variant={filters.difficultyLevels.includes(level) ? 'default' : 'outline'}
-                  className="cursor-pointer"
+                  type="button"
                   onClick={() => toggleDifficulty(level)}
+                  aria-label={`${filters.difficultyLevels.includes(level) ? 'Remove' : 'Add'} difficulty level ${level} filter`}
+                  aria-pressed={filters.difficultyLevels.includes(level)}
+                  className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
                 >
-                  Level {level}
-                </Badge>
+                  <Badge
+                    variant={filters.difficultyLevels.includes(level) ? 'default' : 'outline'}
+                    className="cursor-pointer"
+                  >
+                    Level {level}
+                  </Badge>
+                </button>
               ))}
             </div>
           </div>
@@ -387,14 +388,21 @@ export function SearchAndFilter({
               <Label>Tags</Label>
               <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                 {availableTags.map((tag) => (
-                  <Badge
+                  <button
                     key={tag}
-                    variant={filters.tags.includes(tag) ? 'default' : 'outline'}
-                    className="cursor-pointer"
+                    type="button"
                     onClick={() => toggleTag(tag)}
+                    aria-label={`${filters.tags.includes(tag) ? 'Remove' : 'Add'} tag ${tag} filter`}
+                    aria-pressed={filters.tags.includes(tag)}
+                    className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
                   >
-                    {tag}
-                  </Badge>
+                    <Badge
+                      variant={filters.tags.includes(tag) ? 'default' : 'outline'}
+                      className="cursor-pointer"
+                    >
+                      {tag}
+                    </Badge>
+                  </button>
                 ))}
               </div>
             </div>
@@ -406,14 +414,21 @@ export function SearchAndFilter({
               <Label>Authors</Label>
               <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                 {availableAuthors.map((author) => (
-                  <Badge
+                  <button
                     key={author}
-                    variant={filters.authors.includes(author) ? 'default' : 'outline'}
-                    className="cursor-pointer"
+                    type="button"
                     onClick={() => toggleAuthor(author)}
+                    aria-label={`${filters.authors.includes(author) ? 'Remove' : 'Add'} author ${author} filter`}
+                    aria-pressed={filters.authors.includes(author)}
+                    className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
                   >
-                    {author}
-                  </Badge>
+                    <Badge
+                      variant={filters.authors.includes(author) ? 'default' : 'outline'}
+                      className="cursor-pointer"
+                    >
+                      {author}
+                    </Badge>
+                  </button>
                 ))}
               </div>
             </div>
@@ -428,58 +443,95 @@ export function SearchAndFilter({
           {filters.searchText && (
             <Badge variant="secondary" className="gap-1">
               Search: {filters.searchText}
-              <X
-                className="h-3 w-3 cursor-pointer"
+              <button
+                type="button"
+                className="ml-1 inline-flex h-3 w-3 items-center justify-center rounded-full cursor-pointer hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label="Remove search filter"
                 onClick={() => {
                   setSearchInput('');
                   updateFilter('searchText', '');
                 }}
-              />
+              >
+                <X className="h-3 w-3" aria-hidden="true" />
+              </button>
             </Badge>
           )}
           {filters.contentType !== 'all' && (
             <Badge variant="secondary" className="gap-1">
               Type: {filters.contentType}
-              <X
-                className="h-3 w-3 cursor-pointer"
+              <button
+                type="button"
+                className="ml-1 inline-flex h-3 w-3 items-center justify-center rounded-full cursor-pointer hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label="Remove content type filter"
                 onClick={() => updateFilter('contentType', 'all')}
-              />
+              >
+                <X className="h-3 w-3" aria-hidden="true" />
+              </button>
             </Badge>
           )}
           {filters.tags.map((tag) => (
             <Badge key={tag} variant="secondary" className="gap-1">
               Tag: {tag}
-              <X className="h-3 w-3 cursor-pointer" onClick={() => toggleTag(tag)} />
+              <button
+                type="button"
+                className="ml-1 inline-flex h-3 w-3 items-center justify-center rounded-full cursor-pointer hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label={`Remove tag filter: ${tag}`}
+                onClick={() => toggleTag(tag)}
+              >
+                <X className="h-3 w-3" aria-hidden="true" />
+              </button>
             </Badge>
           ))}
           {filters.difficultyLevels.map((level) => (
             <Badge key={level} variant="secondary" className="gap-1">
               Difficulty: {level}
-              <X className="h-3 w-3 cursor-pointer" onClick={() => toggleDifficulty(level)} />
+              <button
+                type="button"
+                className="ml-1 inline-flex h-3 w-3 items-center justify-center rounded-full cursor-pointer hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label={`Remove difficulty filter: ${level}`}
+                onClick={() => toggleDifficulty(level)}
+              >
+                <X className="h-3 w-3" aria-hidden="true" />
+              </button>
             </Badge>
           ))}
           {filters.authors.map((author) => (
             <Badge key={author} variant="secondary" className="gap-1">
               Author: {author}
-              <X className="h-3 w-3 cursor-pointer" onClick={() => toggleAuthor(author)} />
+              <button
+                type="button"
+                className="ml-1 inline-flex h-3 w-3 items-center justify-center rounded-full cursor-pointer hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label={`Remove author filter: ${author}`}
+                onClick={() => toggleAuthor(author)}
+              >
+                <X className="h-3 w-3" aria-hidden="true" />
+              </button>
             </Badge>
           ))}
           {filters.dateFrom && (
             <Badge variant="secondary" className="gap-1">
               From: {format(filters.dateFrom, 'PP')}
-              <X
-                className="h-3 w-3 cursor-pointer"
+              <button
+                type="button"
+                className="ml-1 inline-flex h-3 w-3 items-center justify-center rounded-full cursor-pointer hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label={`Remove "from" date filter: ${format(filters.dateFrom, 'PP')}`}
                 onClick={() => updateFilter('dateFrom', undefined)}
-              />
+              >
+                <X className="h-3 w-3" aria-hidden="true" />
+              </button>
             </Badge>
           )}
           {filters.dateTo && (
             <Badge variant="secondary" className="gap-1">
               To: {format(filters.dateTo, 'PP')}
-              <X
-                className="h-3 w-3 cursor-pointer"
+              <button
+                type="button"
+                className="ml-1 inline-flex h-3 w-3 items-center justify-center rounded-full cursor-pointer hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label={`Remove "to" date filter: ${format(filters.dateTo, 'PP')}`}
                 onClick={() => updateFilter('dateTo', undefined)}
-              />
+              >
+                <X className="h-3 w-3" aria-hidden="true" />
+              </button>
             </Badge>
           )}
         </div>

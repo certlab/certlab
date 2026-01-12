@@ -8,13 +8,11 @@ import {
   matchesDateRange,
   matchesVisibility,
   matchesCompletionStatus,
-  applyFilters,
   sortItems,
   paginateItems,
   calculateTotalPages,
   extractUniqueTags,
   extractUniqueAuthors,
-  filterAndSortItems,
   getFilterStats,
 } from './filter-utils';
 import type { Quiz, Lecture } from '@shared/schema';
@@ -42,19 +40,6 @@ describe('filter-utils', () => {
     createdAt: new Date('2024-02-01'),
     authorName: 'John Doe',
     visibility: 'public',
-  };
-
-  const defaultFilters: SearchAndFilterState = {
-    searchText: '',
-    contentType: 'all',
-    tags: [],
-    difficultyLevels: [],
-    authors: [],
-    dateFrom: undefined,
-    dateTo: undefined,
-    visibility: 'all',
-    completionStatus: 'all',
-    sortBy: 'date-desc',
   };
 
   describe('matchesSearchText', () => {
