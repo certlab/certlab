@@ -11,10 +11,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 interface AccessDeniedProps {
-  reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
+  reason?:
+    | 'purchase_required'
+    | 'private_content'
+    | 'not_shared_with_you'
+    | 'access_denied'
+    | 'not_available_yet'
+    | 'availability_expired'
+    | 'prerequisites_not_met'
+    | 'not_enrolled'
+    | 'not_assigned';
   productId?: string;
   resourceType?: 'quiz' | 'lecture' | 'material' | 'template';
   resourceTitle?: string;
+  missingPrerequisites?: { quizIds?: number[]; lectureIds?: number[] };
+  availableFrom?: Date;
+  availableUntil?: Date;
 }
 
 export function AccessDenied({
@@ -22,6 +34,9 @@ export function AccessDenied({
   productId,
   resourceType = 'quiz',
   resourceTitle,
+  missingPrerequisites,
+  availableFrom,
+  availableUntil,
 }: AccessDeniedProps) {
   const navigate = useNavigate();
 
@@ -43,6 +58,40 @@ export function AccessDenied({
         return {
           title: 'Not Shared With You',
           description: `This ${resourceType} has not been shared with you. Contact the owner to request access.`,
+          action: null,
+        };
+      case 'not_available_yet':
+        return {
+          title: 'Not Available Yet',
+          description: availableFrom
+            ? `This ${resourceType} will be available on ${availableFrom.toLocaleDateString()}.`
+            : `This ${resourceType} is not available yet.`,
+          action: null,
+        };
+      case 'availability_expired':
+        return {
+          title: 'Content Expired',
+          description: availableUntil
+            ? `This ${resourceType} expired on ${availableUntil.toLocaleDateString()}.`
+            : `This ${resourceType} is no longer available.`,
+          action: null,
+        };
+      case 'prerequisites_not_met':
+        return {
+          title: 'Prerequisites Not Met',
+          description: `You must complete the required prerequisites before accessing this ${resourceType}.`,
+          action: 'View Prerequisites',
+        };
+      case 'not_enrolled':
+        return {
+          title: 'Enrollment Required',
+          description: `You need to enroll in this ${resourceType} to access it.`,
+          action: 'Enroll Now',
+        };
+      case 'not_assigned':
+        return {
+          title: 'Not Assigned',
+          description: `This ${resourceType} has not been assigned to you by an instructor.`,
           action: null,
         };
       default:

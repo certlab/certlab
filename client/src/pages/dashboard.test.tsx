@@ -57,6 +57,16 @@ describe('Dashboard Learning Velocity Calculation', () => {
     sharedWithGroups: null,
     requiresPurchase: false,
     purchaseProductId: null,
+    // Distribution fields
+    distributionMethod: 'open',
+    availableFrom: null,
+    availableUntil: null,
+    enrollmentDeadline: null,
+    maxEnrollments: null,
+    requireApproval: false,
+    assignmentDueDate: null,
+    sendNotifications: true,
+    reminderDays: null,
   });
 
   // Function to calculate points for a quiz (matching dashboard logic)

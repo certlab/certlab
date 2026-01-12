@@ -1165,8 +1165,20 @@ class StorageRouter implements IClientStorage {
     resourceId: number
   ): Promise<{
     allowed: boolean;
-    reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
+    reason?:
+      | 'purchase_required'
+      | 'private_content'
+      | 'not_shared_with_you'
+      | 'access_denied'
+      | 'not_available_yet'
+      | 'availability_expired'
+      | 'prerequisites_not_met'
+      | 'not_enrolled'
+      | 'not_assigned';
     productId?: string;
+    missingPrerequisites?: { quizIds?: number[]; lectureIds?: number[] };
+    availableFrom?: Date;
+    availableUntil?: Date;
   }> {
     return this.executeStorageOperation(
       (s) => s.checkAccess(userId, resourceType, resourceId),

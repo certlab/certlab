@@ -1273,6 +1273,16 @@ class FirestoreStorage implements IClientStorage {
         sharedWithGroups: null,
         requiresPurchase: false,
         purchaseProductId: null,
+        // Distribution fields
+        distributionMethod: 'open',
+        availableFrom: null,
+        availableUntil: null,
+        enrollmentDeadline: null,
+        maxEnrollments: null,
+        requireApproval: false,
+        assignmentDueDate: null,
+        sendNotifications: true,
+        reminderDays: null,
       };
 
       await setUserDocument(userId, 'lectures', id.toString(), lecture);
