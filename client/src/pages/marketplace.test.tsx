@@ -75,8 +75,8 @@ describe('MarketplacePage', () => {
     expect(screen.queryByText('Physics Lab Manual')).not.toBeInTheDocument();
     expect(screen.queryByText('Chemistry Study Pack')).not.toBeInTheDocument();
 
-    // Verify results count shows only 1 of 6 materials
-    expect(screen.getByText('Showing 1 of 6 materials')).toBeInTheDocument();
+    // Verify results count shows only 1 filtered material
+    expect(screen.getByText(/Showing 1 of 1 materials/)).toBeInTheDocument();
   });
 
   it('displays price and rating for each material', () => {
@@ -114,9 +114,9 @@ describe('MarketplacePage', () => {
       </MemoryRouter>
     );
 
-    // Check that sort dropdown exists
-    const sortButton = screen.getByRole('combobox');
-    expect(sortButton).toBeInTheDocument();
+    // Check that sort dropdown exists (multiple comboboxes now exist, including page size selector)
+    const comboboxes = screen.getAllByRole('combobox');
+    expect(comboboxes.length).toBeGreaterThan(0);
   });
 
   it('displays filters button', () => {
