@@ -35,9 +35,10 @@ export class NotificationService {
       const typeEnabled = this.isNotificationTypeEnabled(notification.type, preferences);
 
       if (!typeEnabled) {
-        logInfo('createNotificationIfEnabled', 'Notification skipped due to user preferences', {
+        logInfo('createNotificationIfEnabled', {
           userId: notification.userId,
           type: notification.type,
+          skipped: true,
         });
         return null;
       }

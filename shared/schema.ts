@@ -2261,7 +2261,7 @@ export const notificationSchema = z.object({
   message: z.string().min(1).max(1000),
   actionUrl: z.string().optional(),
   actionLabel: z.string().max(50).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
   isRead: z.boolean(),
   isDismissed: z.boolean(),
   createdAt: z.date(),
@@ -2274,6 +2274,7 @@ export const insertNotificationSchema = notificationSchema.omit({
   createdAt: true,
   isRead: true,
   isDismissed: true,
+  readAt: true,
 });
 
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;

@@ -4441,10 +4441,12 @@ class FirestoreStorage implements IClientStorage {
       // Sort by creation date (newest first)
       constraints.push(orderBy('createdAt', 'desc'));
 
-      // Get notifications from subcollection
-      let notifications = await getUserSubcollectionDocuments<
-        import('@shared/schema').Notification
-      >(userId, 'notifications', constraints);
+      // Get notifications from user collection
+      let notifications = await getUserDocuments<import('@shared/schema').Notification>(
+        userId,
+        'notifications',
+        constraints
+      );
 
       // Apply limit if specified
       if (options?.limit && options.limit > 0) {
@@ -4495,9 +4497,9 @@ class FirestoreStorage implements IClientStorage {
         createdAt: now,
       };
 
-      await setUserSubcollectionDocument(notification.userId, 'notifications', id, newNotification);
+      await setUserDocument(notification.userId, 'notifications', id, newNotification);
 
-      logInfo('createNotification', 'Notification created', {
+      logInfo('createNotification', {
         notificationId: id,
         type: notification.type,
       });
@@ -4518,8 +4520,8 @@ class FirestoreStorage implements IClientStorage {
         readAt: new Date(),
       };
 
-      await updateUserDocument(userId, `notifications/${notificationId}`, updates);
-      logInfo('markNotificationAsRead', 'Notification marked as read', { notificationId, userId });
+      await updateUserDocument(userId, 'notifications', notificationId, updates);
+      logInfo('markNotificationAsRead', { notificationId, userId });
     } catch (error) {
       logError('markNotificationAsRead', error, { notificationId, userId });
       throw error;
@@ -4540,11 +4542,7 @@ class FirestoreStorage implements IClientStorage {
         notifications.map((notif) => this.markNotificationAsRead(notif.id, userId))
       );
 
-      logInfo(
-        'markAllNotificationsAsRead',
-        `Marked ${notifications.length} notifications as read`,
-        { userId }
-      );
+      logInfo('markAllNotificationsAsRead', { userId, count: notifications.length });
     } catch (error) {
       logError('markAllNotificationsAsRead', error, { userId });
       throw error;
@@ -4562,8 +4560,8 @@ class FirestoreStorage implements IClientStorage {
         readAt: new Date(),
       };
 
-      await updateUserDocument(userId, `notifications/${notificationId}`, updates);
-      logInfo('dismissNotification', 'Notification dismissed', { notificationId, userId });
+      await updateUserDocument(userId, 'notifications', notificationId, updates);
+      logInfo('dismissNotification', { notificationId, userId });
     } catch (error) {
       logError('dismissNotification', error, { notificationId, userId });
       throw error;
@@ -4590,15 +4588,11 @@ class FirestoreStorage implements IClientStorage {
 
       await Promise.all(
         expiredNotifications.map(async (notif) => {
-          await deleteUserDocument(userId, `notifications/${notif.id}`);
+          await deleteUserDocument(userId, 'notifications', notif.id);
         })
       );
 
-      logInfo(
-        'deleteExpiredNotifications',
-        `Deleted ${expiredNotifications.length} expired notifications`,
-        { userId }
-      );
+      logInfo('deleteExpiredNotifications', { userId, count: expiredNotifications.length });
     } catch (error) {
       logError('deleteExpiredNotifications', error, { userId });
       throw error;
@@ -4614,7 +4608,8 @@ class FirestoreStorage implements IClientStorage {
     try {
       const prefs = await getUserDocument<import('@shared/schema').NotificationPreferences>(
         userId,
-        'notificationPreferences'
+        'notificationPreferences',
+        'preferences'
       );
 
       if (!prefs) {
@@ -4666,8 +4661,8 @@ class FirestoreStorage implements IClientStorage {
         updatedAt: new Date(),
       };
 
-      await setUserDocument(userId, 'notificationPreferences', updatedPrefs);
-      logInfo('updateNotificationPreferences', 'Notification preferences updated', { userId });
+      await setUserDocument(userId, 'notificationPreferences', 'preferences', updatedPrefs);
+      logInfo('updateNotificationPreferences', { userId });
 
       return convertTimestamps<import('@shared/schema').NotificationPreferences>(updatedPrefs);
     } catch (error) {
