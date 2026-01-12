@@ -48,6 +48,8 @@ import { useAuth } from '@/lib/auth-provider';
 import { queryKeys } from '@/lib/queryClient';
 import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
+import { usePagination } from '@/hooks/use-pagination';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import type { StudyNote, Category } from '@shared/schema';
@@ -142,6 +144,12 @@ export default function EnhancedStudyNotesPage() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Pagination hook with URL sync
+  const { currentPage, pageSize, setCurrentPage, setPageSize, resetPagination } = usePagination({
+    initialPageSize: 10,
+    syncWithUrl: true,
+  });
 
   const { data: studyNotes = [], isLoading } = useQuery<StudyNote[]>({
     queryKey: queryKeys.studyNotes.all(currentUser?.id),
@@ -307,6 +315,16 @@ export default function EnhancedStudyNotesPage() {
     return matchesSearch && matchesCategory;
   });
 
+  // Paginate filtered results
+  const totalPages = Math.ceil(filteredNotes.length / pageSize);
+  const paginatedNotes = filteredNotes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  // Reset to page 1 when filters change
+  const handleFilterChange = (setter: (value: string) => void, value: string) => {
+    setter(value);
+    resetPagination();
+  };
+
   const handleExportMarkdown = (note: StudyNote) => {
     const markdown = `# ${note.title}\n\n${note.content}`;
     const blob = new Blob([markdown], { type: 'text/markdown' });
@@ -455,12 +473,15 @@ export default function EnhancedStudyNotesPage() {
                 <Input
                   placeholder="Search notes..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleFilterChange(setSearchQuery, e.target.value)}
                   className="pl-9"
                 />
               </div>
               <div className="w-full sm:w-48">
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <Select
+                  value={categoryFilter}
+                  onValueChange={(value) => handleFilterChange(setCategoryFilter, value)}
+                >
                   <SelectTrigger>
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="Filter by category" />
@@ -501,108 +522,122 @@ export default function EnhancedStudyNotesPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredNotes.map((note) => (
-              <Card key={note.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-base line-clamp-2">{note.title}</CardTitle>
-                    {note.score !== null && (
-                      <Badge className={getScoreBgColor(note.score)}>{note.score}%</Badge>
-                    )}
-                  </div>
-                  <CardDescription className="flex items-center gap-2 text-xs">
-                    <Calendar className="h-3 w-3" />
-                    {formatDate(note.createdAt, 'Unknown date')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-3">
-                    <div className="flex flex-wrap gap-1">
-                      {note.categoryIds?.map((catId) => {
-                        const cat = categories.find((c) => c.id === catId);
-                        return cat ? (
-                          <Badge key={catId} variant="outline" className="text-xs">
-                            {cat.name}
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {paginatedNotes.map((note) => (
+                <Card key={note.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-base line-clamp-2">{note.title}</CardTitle>
+                      {note.score !== null && (
+                        <Badge className={getScoreBgColor(note.score)}>{note.score}%</Badge>
+                      )}
+                    </div>
+                    <CardDescription className="flex items-center gap-2 text-xs">
+                      <Calendar className="h-3 w-3" />
+                      {formatDate(note.createdAt, 'Unknown date')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="mb-3">
+                      <div className="flex flex-wrap gap-1">
+                        {note.categoryIds?.map((catId) => {
+                          const cat = categories.find((c) => c.id === catId);
+                          return cat ? (
+                            <Badge key={catId} variant="outline" className="text-xs">
+                              {cat.name}
+                            </Badge>
+                          ) : null;
+                        })}
+                        {(!note.categoryIds || note.categoryIds.length === 0) && (
+                          <Badge variant="outline" className="text-xs">
+                            General
                           </Badge>
-                        ) : null;
-                      })}
-                      {(!note.categoryIds || note.categoryIds.length === 0) && (
-                        <Badge variant="outline" className="text-xs">
-                          General
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Feature indicators */}
+                    <div className="flex gap-2 mb-3">
+                      {note.hasCode && (
+                        <Badge variant="secondary" className="text-xs">
+                          <Code className="h-3 w-3 mr-1" />
+                          Code
+                        </Badge>
+                      )}
+                      {note.hasFormulas && (
+                        <Badge variant="secondary" className="text-xs">
+                          <SquareFunction className="h-3 w-3 mr-1" />
+                          Math
+                        </Badge>
+                      )}
+                      {note.hasDiagrams && (
+                        <Badge variant="secondary" className="text-xs">
+                          <FileCode className="h-3 w-3 mr-1" />
+                          Diagrams
                         </Badge>
                       )}
                     </div>
-                  </div>
 
-                  {/* Feature indicators */}
-                  <div className="flex gap-2 mb-3">
-                    {note.hasCode && (
-                      <Badge variant="secondary" className="text-xs">
-                        <Code className="h-3 w-3 mr-1" />
-                        Code
-                      </Badge>
-                    )}
-                    {note.hasFormulas && (
-                      <Badge variant="secondary" className="text-xs">
-                        <SquareFunction className="h-3 w-3 mr-1" />
-                        Math
-                      </Badge>
-                    )}
-                    {note.hasDiagrams && (
-                      <Badge variant="secondary" className="text-xs">
-                        <FileCode className="h-3 w-3 mr-1" />
-                        Diagrams
-                      </Badge>
-                    )}
-                  </div>
-
-                  <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                    {note.content.substring(0, 150)}...
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleViewNote(note)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleEditNote(note)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Study Note?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete "{note.title}"? This action cannot be
-                            undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteNoteMutation.mutate(note.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                      {note.content.substring(0, 150)}...
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleViewNote(note)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleEditNote(note)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Study Note?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{note.title}"? This action cannot be
+                              undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteNoteMutation.mutate(note.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            {/* Pagination */}
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              totalItems={filteredNotes.length}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              showPageSizeSelector={true}
+              showJumpToPage={true}
+              showFirstLastButtons={true}
+            />
+          </>
         )}
 
         {/* Stats Summary */}

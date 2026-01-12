@@ -41,28 +41,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  HelpCircle,
-  Search,
-  PlusCircle,
-  Trash2,
-  Edit,
-  Filter,
-  FileText,
-  Eye,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { HelpCircle, Search, PlusCircle, Trash2, Edit, Filter, FileText, Eye } from 'lucide-react';
 import { useAuth } from '@/lib/auth-provider';
 import { queryKeys, invalidateStaticData } from '@/lib/queryClient';
 import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
+import { usePagination } from '@/hooks/use-pagination';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { sanitizeInput, sanitizeArray } from '@/lib/sanitize';
 import type { Question, Category, Subcategory, QuestionOption } from '@shared/schema';
 import { insertQuestionSchema } from '@shared/schema';
-
-const ITEMS_PER_PAGE = 10;
 
 // Difficulty level configuration - centralized for maintainability
 const DIFFICULTY_CONFIG = {
@@ -102,7 +91,6 @@ export default function QuestionBankPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState(1);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showViewDialog, setShowViewDialog] = useState(false);
@@ -110,6 +98,12 @@ export default function QuestionBankPage() {
   const [formData, setFormData] = useState<QuestionFormData>(defaultFormData);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Pagination hook with URL sync and user preferences
+  const { currentPage, pageSize, setCurrentPage, setPageSize, resetPagination } = usePagination({
+    initialPageSize: 10,
+    syncWithUrl: true,
+  });
 
   // Query for questions
   const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<Question[]>({
@@ -322,16 +316,16 @@ export default function QuestionBankPage() {
   });
 
   // Pagination
-  const totalPages = Math.ceil(filteredQuestions.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredQuestions.length / pageSize);
   const paginatedQuestions = filteredQuestions.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
 
   // Reset to page 1 when filters change
   const handleFilterChange = (setter: (value: string) => void, value: string) => {
     setter(value);
-    setCurrentPage(1);
+    resetPagination();
   };
 
   // Helper functions
@@ -1026,35 +1020,17 @@ export default function QuestionBankPage() {
             </Card>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-4">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    aria-label="Go to previous page"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    <span className="hidden sm:inline">Previous</span>
-                  </Button>
-                  <span className="text-sm text-muted-foreground px-2">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                    aria-label="Go to next page"
-                  >
-                    <span className="hidden sm:inline">Next</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              totalItems={filteredQuestions.length}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              showPageSizeSelector={true}
+              showJumpToPage={true}
+              showFirstLastButtons={true}
+            />
           </>
         )}
 

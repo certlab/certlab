@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-provider';
 import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
+import { usePagination } from '@/hooks/use-pagination';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { Plus, Edit2, Copy, Search, FileText, Clock, BookOpen, Lock, Trash2 } from 'lucide-react';
 import type { QuizTemplate } from '@shared/schema';
 import { canEdit, canDelete, logPermissionCheck } from '@/lib/permissions';
@@ -39,6 +41,12 @@ export default function MyQuizzes() {
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<QuizTemplate | null>(null);
+
+  // Pagination hook with URL sync
+  const { currentPage, pageSize, setCurrentPage, setPageSize, resetPagination } = usePagination({
+    initialPageSize: 10,
+    syncWithUrl: true,
+  });
 
   // Fetch user's quiz templates
   const {
@@ -64,6 +72,19 @@ export default function MyQuizzes() {
       template.tags?.some((tag) => tag.toLowerCase().includes(query))
     );
   });
+
+  // Paginate filtered results
+  const totalPages = Math.ceil(filteredTemplates.length / pageSize);
+  const paginatedTemplates = filteredTemplates.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // Reset to page 1 when search query changes
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    resetPagination();
+  };
 
   // Duplicate quiz mutation
   const duplicateMutation = useMutation({
@@ -245,7 +266,7 @@ export default function MyQuizzes() {
               type="text"
               placeholder="Search quizzes by title, description, or tags..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -298,7 +319,7 @@ export default function MyQuizzes() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTemplates.map((template) => (
+                    {paginatedTemplates.map((template) => (
                       <TableRow key={template.id}>
                         <TableCell>
                           <div>
@@ -390,6 +411,18 @@ export default function MyQuizzes() {
                   </TableBody>
                 </Table>
               </div>
+              {/* Pagination */}
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalItems={filteredTemplates.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                showPageSizeSelector={true}
+                showJumpToPage={true}
+                showFirstLastButtons={true}
+              />
             </CardContent>
           </Card>
         )}
