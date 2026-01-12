@@ -9,7 +9,32 @@
 
 import { storage } from './storage-factory';
 import { logInfo, logError } from './errors';
+import { sanitizeInput } from './sanitize';
 import type { InsertNotification, NotificationType, Notification } from '@shared/schema';
+
+/**
+ * Validate that a URL is an internal application path
+ * Returns sanitized URL if valid, undefined if invalid
+ */
+function validateInternalUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+
+  // Sanitize the input first
+  const sanitized = sanitizeInput(url, 500);
+
+  // Only allow internal paths starting with /app/ or relative paths
+  if (sanitized.startsWith('/app/') || sanitized.startsWith('/')) {
+    // Additional check: ensure no protocol or domain
+    if (sanitized.includes('://') || sanitized.includes('//')) {
+      logError('validateInternalUrl', new Error('External URL not allowed'), { url: sanitized });
+      return undefined;
+    }
+    return sanitized;
+  }
+
+  logError('validateInternalUrl', new Error('Invalid internal URL'), { url: sanitized });
+  return undefined;
+}
 
 /**
  * Notification Service Class
@@ -53,7 +78,10 @@ export class NotificationService {
   /**
    * Check if a notification type is enabled in user preferences
    */
-  private isNotificationTypeEnabled(type: NotificationType, preferences: any): boolean {
+  private isNotificationTypeEnabled(
+    type: NotificationType,
+    preferences: import('@shared/schema').NotificationPreferences
+  ): boolean {
     switch (type) {
       case 'assignment':
         return preferences.assignments ?? true;
@@ -203,14 +231,21 @@ export class NotificationService {
         break;
     }
 
+    // Validate and sanitize inputs
+    const sanitizedMessage = sanitizeInput(options.message, 1000);
+    const validatedActionUrl = validateInternalUrl(options.actionUrl);
+    const sanitizedActionLabel = options.actionLabel
+      ? sanitizeInput(options.actionLabel, 50)
+      : 'Take Action';
+
     const notification: InsertNotification = {
       userId,
       tenantId,
       type: 'reminder',
       title,
-      message: options.message,
-      actionUrl: options.actionUrl,
-      actionLabel: options.actionLabel || 'Take Action',
+      message: sanitizedMessage,
+      actionUrl: validatedActionUrl,
+      actionLabel: sanitizedActionLabel,
       metadata: {
         reminderType: options.reminderType,
         ...options.metadata,

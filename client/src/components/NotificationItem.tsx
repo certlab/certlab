@@ -58,6 +58,13 @@ export function NotificationItem({ notification, onDismiss, onRead }: Notificati
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   const handleDismiss = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDismiss(notification.id);
@@ -69,6 +76,10 @@ export function NotificationItem({ notification, onDismiss, onRead }: Notificati
         !notification.isRead ? 'ring-2 ring-primary ring-offset-2' : ''
       }`}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`${notification.title}: ${notification.message}`}
     >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>

@@ -46,6 +46,7 @@ import {
   timestampToDate,
   where,
   orderBy,
+  limit,
 } from './firestore-service';
 import { logError, logInfo } from './errors';
 import { doc, deleteDoc } from 'firebase/firestore';
@@ -4441,17 +4442,17 @@ class FirestoreStorage implements IClientStorage {
       // Sort by creation date (newest first)
       constraints.push(orderBy('createdAt', 'desc'));
 
+      // Apply limit at query level if specified
+      if (options?.limit && options.limit > 0) {
+        constraints.push(limit(options.limit));
+      }
+
       // Get notifications from user collection
-      let notifications = await getUserDocuments<import('@shared/schema').Notification>(
+      const notifications = await getUserDocuments<import('@shared/schema').Notification>(
         userId,
         'notifications',
         constraints
       );
-
-      // Apply limit if specified
-      if (options?.limit && options.limit > 0) {
-        notifications = notifications.slice(0, options.limit);
-      }
 
       // Convert timestamps
       return notifications.map((notif) =>
