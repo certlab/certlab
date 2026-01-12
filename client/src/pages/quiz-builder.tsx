@@ -40,10 +40,14 @@ import {
   ChevronDown,
   Loader2,
   AlertCircle,
+  BookTemplate,
+  Download,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { QuizVersionHistory } from '@/components/QuizVersionHistory';
 import { CollaborativeEditors } from '@/components/CollaborativeEditors';
+import { TemplateBrowserDialog } from '@/components/TemplateBrowserDialog';
+import { SaveAsTemplateDialog } from '@/components/SaveAsTemplateDialog';
 import PreviewQuizInterface from '@/components/PreviewQuizInterface';
 import { DraggableList } from '@/components/DraggableList';
 import type {
@@ -56,6 +60,8 @@ import type {
   CustomQuestion,
   DocumentLock,
   EditorPresence,
+  QuizTemplateLibrary,
+  TemplateLibraryItem,
 } from '@shared/schema';
 
 export default function QuizBuilder() {
@@ -145,6 +151,8 @@ export default function QuizBuilder() {
   const [currentPreviewQuestion, setCurrentPreviewQuestion] = useState(0);
   const [showRealisticPreview, setShowRealisticPreview] = useState(false);
   const [previewKey, setPreviewKey] = useState(0); // Key for forcing preview remount
+  const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
 
   // Update presence when active tab changes
   // Note: updatePresence is a stable callback from useCollaborativeEditing hook
@@ -634,6 +642,102 @@ export default function QuizBuilder() {
     }
   };
 
+  // Template library handlers
+  const handleLoadFromTemplate = (template: TemplateLibraryItem) => {
+    if (template.templateType !== 'quiz') return;
+
+    const quizTemplate = template as QuizTemplateLibrary;
+
+    // Load template data into form
+    setTitle(quizTemplate.title);
+    setDescription(quizTemplate.description);
+    setTags(quizTemplate.tags.join(', '));
+    setInstructions(quizTemplate.instructions);
+    setSelectedCategories(quizTemplate.categoryIds);
+    setSelectedSubcategories(quizTemplate.subcategoryIds);
+    setTimeLimit(quizTemplate.timeLimit?.toString() || '30');
+    setPassingScore(quizTemplate.passingScore.toString());
+    setMaxAttempts(quizTemplate.maxAttempts?.toString() || '0');
+    setDifficultyLevel(quizTemplate.difficultyLevel.toString());
+    setCustomQuestions(quizTemplate.customQuestions);
+
+    // Load advanced configuration
+    if (quizTemplate.randomizeQuestions !== undefined) {
+      setRandomizeQuestions(quizTemplate.randomizeQuestions);
+    }
+    if (quizTemplate.randomizeAnswers !== undefined) {
+      setRandomizeAnswers(quizTemplate.randomizeAnswers);
+    }
+    if (quizTemplate.timeLimitPerQuestion !== undefined) {
+      setTimeLimitPerQuestion(quizTemplate.timeLimitPerQuestion?.toString() || '0');
+    }
+    if (quizTemplate.feedbackMode) {
+      setFeedbackMode(quizTemplate.feedbackMode);
+    }
+    if (quizTemplate.questionWeights) {
+      setQuestionWeights(quizTemplate.questionWeights);
+    }
+    if (quizTemplate.isAdvancedConfig) {
+      setShowAdvancedConfig(true);
+    }
+
+    // Increment usage count
+    if (quizTemplate.id) {
+      storage.incrementTemplateUsage(quizTemplate.id, 'quiz').catch(() => {
+        // Non-critical error
+      });
+    }
+
+    toast({
+      title: 'Template Loaded',
+      description: `Loaded "${quizTemplate.title}" from template library`,
+    });
+  };
+
+  const handleSaveAsTemplate = () => {
+    if (!validateQuiz()) return;
+    setShowSaveTemplate(true);
+  };
+
+  const getCurrentTemplateData = (): Omit<
+    QuizTemplateLibrary,
+    'id' | 'createdAt' | 'updatedAt' | 'usageCount' | 'visibility'
+  > | null => {
+    if (!user) return null;
+
+    const sanitizedTags = sanitizeArray(
+      tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean),
+      50
+    );
+
+    return {
+      templateType: 'quiz',
+      userId: user.id,
+      tenantId: user.tenantId,
+      title,
+      description,
+      tags: sanitizedTags,
+      instructions,
+      categoryIds: selectedCategories,
+      subcategoryIds: selectedSubcategories,
+      customQuestions,
+      questionCount: customQuestions.length,
+      timeLimit: timeLimit ? parseInt(timeLimit) : null,
+      passingScore: parseInt(passingScore),
+      maxAttempts: maxAttempts ? parseInt(maxAttempts) : null,
+      difficultyLevel: parseInt(difficultyLevel),
+      randomizeQuestions,
+      randomizeAnswers,
+      timeLimitPerQuestion: timeLimitPerQuestion ? parseInt(timeLimitPerQuestion) : null,
+      questionWeights,
+      feedbackMode,
+      isAdvancedConfig: showAdvancedConfig,
+    };
+  };
+
   /**
    * Creates a Quiz object from the current builder state for preview mode.
    * This converts the quiz builder's form state into a Quiz interface that
@@ -767,6 +871,25 @@ export default function QuizBuilder() {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowTemplateBrowser(true)}
+              title="Load from template library"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Load Template
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSaveAsTemplate}
+              disabled={customQuestions.length === 0}
+              title="Save to template library"
+            >
+              <BookTemplate className="h-4 w-4 mr-2" />
+              Save as Template
+            </Button>
             {templateId && (
               <QuizVersionHistory
                 quizId={parseInt(templateId, 10)}
@@ -1745,6 +1868,29 @@ export default function QuizBuilder() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Template Library Dialogs */}
+        <TemplateBrowserDialog
+          open={showTemplateBrowser}
+          onOpenChange={setShowTemplateBrowser}
+          templateType="quiz"
+          onSelect={handleLoadFromTemplate}
+        />
+
+        {getCurrentTemplateData() && (
+          <SaveAsTemplateDialog
+            open={showSaveTemplate}
+            onOpenChange={setShowSaveTemplate}
+            templateType="quiz"
+            templateData={getCurrentTemplateData()!}
+            onSuccess={() => {
+              toast({
+                title: 'Success',
+                description: 'Quiz saved to template library',
+              });
+            }}
+          />
+        )}
       </div>
     </div>
   );
