@@ -1657,6 +1657,216 @@ export interface CustomQuestion {
 }
 
 // ============================================================================
+// Template Library System
+// ============================================================================
+
+/**
+ * Visibility levels for templates
+ */
+export type TemplateVisibility = 'private' | 'org' | 'public';
+
+/**
+ * Base interface for all templates
+ */
+export interface BaseTemplate {
+  id?: number;
+  userId: string; // Creator/author
+  tenantId: number;
+  title: string;
+  description: string;
+  tags: string[];
+  visibility: TemplateVisibility;
+  sharedWithUsers?: string[]; // User IDs for 'org' visibility
+  sharedWithGroups?: number[]; // Group IDs for 'org' visibility
+  usageCount: number; // Track how many times template has been used
+  createdAt: Date;
+  updatedAt: Date;
+  // Search and indexing
+  searchText?: string; // Denormalized search text for performance
+  categoryIds?: number[]; // For filtering by category
+}
+
+/**
+ * Quiz Template for template library
+ * Extends QuizTemplate with library-specific fields
+ */
+export interface QuizTemplateLibrary extends BaseTemplate {
+  templateType: 'quiz';
+  // Quiz-specific fields
+  instructions: string;
+  categoryIds: number[];
+  subcategoryIds: number[];
+  customQuestions: CustomQuestion[];
+  questionCount: number;
+  timeLimit: number | null;
+  passingScore: number;
+  maxAttempts: number | null;
+  difficultyLevel: number;
+  // Advanced Configuration
+  randomizeQuestions?: boolean;
+  randomizeAnswers?: boolean;
+  timeLimitPerQuestion?: number | null;
+  questionWeights?: Record<number, number>;
+  feedbackMode?: 'instant' | 'delayed' | 'final';
+  isAdvancedConfig?: boolean;
+}
+
+/**
+ * Material Template for template library
+ * Reusable lecture/study material configurations
+ */
+export interface MaterialTemplateLibrary extends BaseTemplate {
+  templateType: 'material';
+  // Material-specific fields
+  contentType: 'text' | 'video' | 'pdf' | 'interactive' | 'code';
+  content: string;
+  categoryId: number;
+  subcategoryId?: number;
+  difficultyLevel: number;
+  topics: string[];
+  prerequisites?: { quizIds?: number[]; lectureIds?: number[] };
+  // Content type specific fields
+  videoUrl?: string;
+  videoProvider?: 'youtube' | 'vimeo' | 'upload';
+  videoDuration?: number;
+  pdfUrl?: string;
+  pdfPages?: number;
+  interactiveUrl?: string;
+  interactiveType?: 'code' | 'widget' | 'quiz';
+  codeLanguage?: string;
+  codeContent?: string;
+  hasCodeHighlighting?: boolean;
+  thumbnailUrl?: string;
+  fileSize?: number;
+  accessibilityFeatures?: {
+    hasTranscript?: boolean;
+    hasClosedCaptions?: boolean;
+    hasAudioDescription?: boolean;
+    altText?: string;
+  };
+}
+
+/**
+ * Union type for all template types
+ */
+export type TemplateLibraryItem = QuizTemplateLibrary | MaterialTemplateLibrary;
+
+/**
+ * Zod schemas for template validation
+ */
+export const templateVisibilitySchema = z.enum(['private', 'org', 'public']);
+
+export const baseTemplateSchema = z.object({
+  id: z.number().optional(),
+  userId: z.string(),
+  tenantId: z.number(),
+  title: z.string().min(1).max(200),
+  description: z.string().max(2000),
+  tags: z.array(z.string()).max(50),
+  visibility: templateVisibilitySchema,
+  sharedWithUsers: z.array(z.string()).optional(),
+  sharedWithGroups: z.array(z.number()).optional(),
+  usageCount: z.number().default(0),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  searchText: z.string().optional(),
+  categoryIds: z.array(z.number()).optional(),
+});
+
+export const quizTemplateLibrarySchema = baseTemplateSchema.extend({
+  templateType: z.literal('quiz'),
+  instructions: z.string(),
+  categoryIds: z.array(z.number()),
+  subcategoryIds: z.array(z.number()),
+  customQuestions: z.array(z.any()), // Use any for now, can be more specific
+  questionCount: z.number(),
+  timeLimit: z.number().nullable(),
+  passingScore: z.number(),
+  maxAttempts: z.number().nullable(),
+  difficultyLevel: z.number().min(1).max(5),
+  randomizeQuestions: z.boolean().optional(),
+  randomizeAnswers: z.boolean().optional(),
+  timeLimitPerQuestion: z.number().nullable().optional(),
+  questionWeights: z.record(z.string(), z.number()).optional(),
+  feedbackMode: z.enum(['instant', 'delayed', 'final']).optional(),
+  isAdvancedConfig: z.boolean().optional(),
+});
+
+export const materialTemplateLibrarySchema = baseTemplateSchema.extend({
+  templateType: z.literal('material'),
+  contentType: z.enum(['text', 'video', 'pdf', 'interactive', 'code']),
+  content: z.string(),
+  categoryId: z.number(),
+  subcategoryId: z.number().optional(),
+  difficultyLevel: z.number().min(1).max(5),
+  topics: z.array(z.string()),
+  prerequisites: z
+    .object({
+      quizIds: z.array(z.number()).optional(),
+      lectureIds: z.array(z.number()).optional(),
+    })
+    .optional(),
+  videoUrl: z.string().optional(),
+  videoProvider: z.enum(['youtube', 'vimeo', 'upload']).optional(),
+  videoDuration: z.number().optional(),
+  pdfUrl: z.string().optional(),
+  pdfPages: z.number().optional(),
+  interactiveUrl: z.string().optional(),
+  interactiveType: z.enum(['code', 'widget', 'quiz']).optional(),
+  codeLanguage: z.string().optional(),
+  codeContent: z.string().optional(),
+  hasCodeHighlighting: z.boolean().optional(),
+  thumbnailUrl: z.string().optional(),
+  fileSize: z.number().optional(),
+  accessibilityFeatures: z
+    .object({
+      hasTranscript: z.boolean().optional(),
+      hasClosedCaptions: z.boolean().optional(),
+      hasAudioDescription: z.boolean().optional(),
+      altText: z.string().optional(),
+    })
+    .optional(),
+});
+
+/**
+ * Insert schemas (omit auto-generated fields)
+ */
+export const insertQuizTemplateLibrarySchema = quizTemplateLibrarySchema.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  usageCount: true,
+});
+
+export const insertMaterialTemplateLibrarySchema = materialTemplateLibrarySchema.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  usageCount: true,
+});
+
+/**
+ * TypeScript types derived from schemas
+ */
+export type InsertQuizTemplateLibrary = z.infer<typeof insertQuizTemplateLibrarySchema>;
+export type InsertMaterialTemplateLibrary = z.infer<typeof insertMaterialTemplateLibrarySchema>;
+
+/**
+ * Template search filters
+ */
+export interface TemplateSearchFilters {
+  templateType?: 'quiz' | 'material';
+  visibility?: TemplateVisibility;
+  categoryIds?: number[];
+  tags?: string[];
+  difficultyLevel?: number;
+  searchQuery?: string;
+  userId?: string; // Filter by creator
+  sortBy?: 'recent' | 'popular' | 'title';
+  limit?: number;
+}
+
+// ============================================================================
 // Collaborative Editing - Presence and Session Management
 // ============================================================================
 
