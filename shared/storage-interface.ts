@@ -56,6 +56,10 @@ import type {
   Group,
   GroupMember,
   AccessCheckResult,
+  QuizTemplateLibrary,
+  MaterialTemplateLibrary,
+  TemplateLibraryItem,
+  TemplateSearchFilters,
 } from './schema';
 
 /**
@@ -1130,4 +1134,96 @@ export interface IClientStorage extends IStorageAdapter {
 
   /** Get all groups (for admins or searching) */
   getAllGroups(tenantId?: number): Promise<Group[]>;
+
+  // ==========================================
+  // Template Library
+  // ==========================================
+
+  /** Create a new quiz template in the library */
+  createQuizTemplateLibrary(
+    template: Omit<
+      import('./schema').QuizTemplateLibrary,
+      'id' | 'createdAt' | 'updatedAt' | 'usageCount'
+    >
+  ): Promise<import('./schema').QuizTemplateLibrary>;
+
+  /** Create a new material template in the library */
+  createMaterialTemplateLibrary(
+    template: Omit<
+      import('./schema').MaterialTemplateLibrary,
+      'id' | 'createdAt' | 'updatedAt' | 'usageCount'
+    >
+  ): Promise<import('./schema').MaterialTemplateLibrary>;
+
+  /** Get a quiz template from the library by ID */
+  getQuizTemplateLibrary(
+    templateId: number,
+    userId: string
+  ): Promise<import('./schema').QuizTemplateLibrary | null>;
+
+  /** Get a material template from the library by ID */
+  getMaterialTemplateLibrary(
+    templateId: number,
+    userId: string
+  ): Promise<import('./schema').MaterialTemplateLibrary | null>;
+
+  /** Search and filter templates in the library */
+  searchTemplateLibrary(
+    filters: import('./schema').TemplateSearchFilters,
+    userId: string,
+    tenantId: number
+  ): Promise<import('./schema').TemplateLibraryItem[]>;
+
+  /** Update a quiz template in the library */
+  updateQuizTemplateLibrary(
+    templateId: number,
+    updates: Partial<import('./schema').QuizTemplateLibrary>,
+    userId: string
+  ): Promise<import('./schema').QuizTemplateLibrary>;
+
+  /** Update a material template in the library */
+  updateMaterialTemplateLibrary(
+    templateId: number,
+    updates: Partial<import('./schema').MaterialTemplateLibrary>,
+    userId: string
+  ): Promise<import('./schema').MaterialTemplateLibrary>;
+
+  /** Delete a template from the library (only owner or admin) */
+  deleteTemplateLibrary(
+    templateId: number,
+    templateType: 'quiz' | 'material',
+    userId: string
+  ): Promise<void>;
+
+  /** Increment usage count when template is used */
+  incrementTemplateUsage(templateId: number, templateType: 'quiz' | 'material'): Promise<void>;
+
+  /** Check for duplicate templates (by title and content similarity) */
+  checkTemplateDuplicate(
+    title: string,
+    templateType: 'quiz' | 'material',
+    userId: string,
+    tenantId: number
+  ): Promise<{ isDuplicate: boolean; existingTemplateId?: number }>;
+
+  /** Get templates created by a specific user */
+  getUserTemplates(
+    userId: string,
+    templateType?: 'quiz' | 'material',
+    tenantId?: number
+  ): Promise<import('./schema').TemplateLibraryItem[]>;
+
+  /** Get popular templates (by usage count) */
+  getPopularTemplates(
+    templateType?: 'quiz' | 'material',
+    limit?: number,
+    tenantId?: number
+  ): Promise<import('./schema').TemplateLibraryItem[]>;
+
+  /** Get recent templates */
+  getRecentTemplates(
+    templateType?: 'quiz' | 'material',
+    limit?: number,
+    tenantId?: number
+  ): Promise<import('./schema').TemplateLibraryItem[]>;
 }
