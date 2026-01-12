@@ -342,7 +342,9 @@ export default function MyMaterials() {
                         </div>
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          <span className="text-xs">{formatDate(lecture.createdAt)}</span>
+                          <span className="text-xs">
+                            {lecture.createdAt ? formatDate(lecture.createdAt) : 'N/A'}
+                          </span>
                         </div>
                       </div>
 

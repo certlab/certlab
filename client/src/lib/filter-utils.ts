@@ -5,8 +5,8 @@ import type { Quiz, Lecture, QuizTemplate } from '@shared/schema';
  * Unified item type for filtering quizzes, lectures, and templates
  */
 export type FilterableItem = (Quiz | Lecture | QuizTemplate) & {
-  authorName?: string;
-  visibility?: string;
+  authorName?: string | null;
+  visibility?: string | null;
 };
 
 /**
@@ -119,7 +119,7 @@ export function matchesCompletionStatus(item: FilterableItem, status: string): b
     case 'passed':
       return !!quiz.isPassing;
     case 'failed':
-      return quiz.completedAt && !quiz.isPassing;
+      return !!quiz.completedAt && quiz.isPassing === false;
     default:
       return true;
   }
