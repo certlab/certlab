@@ -1,14 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-provider';
 import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
-import { usePagination } from '@/hooks/use-pagination';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -25,8 +23,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { PaginationControls } from '@/components/ui/pagination-controls';
-import { Plus, Edit2, Copy, Search, FileText, Clock, BookOpen, Lock, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Copy, FileText, Clock, BookOpen, Lock, Trash2 } from 'lucide-react';
+import { SearchAndFilter, type SearchAndFilterState } from '@/components/SearchAndFilter';
+import { Pagination } from '@/components/Pagination';
+import { QUIZ_FILTER_CONFIG } from '@/lib/filter-config';
+import {
+  filterAndSortItems,
+  paginateItems,
+  calculateTotalPages,
+  extractUniqueTags,
+  extractUniqueAuthors,
+  getFilterStats,
+} from '@/lib/filter-utils';
 import type { QuizTemplate } from '@shared/schema';
 import { canEdit, canDelete, logPermissionCheck } from '@/lib/permissions';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -37,16 +45,12 @@ export default function MyQuizzes() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState<SearchAndFilterState | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<QuizTemplate | null>(null);
-
-  // Pagination hook with URL sync
-  const { currentPage, pageSize, setCurrentPage, setPageSize, resetPagination } = usePagination({
-    initialPageSize: 10,
-    syncWithUrl: true,
-  });
 
   // Fetch user's quiz templates
   const {
@@ -62,29 +66,46 @@ export default function MyQuizzes() {
     enabled: !!user?.id,
   });
 
-  // Filter templates by search query
-  const filteredTemplates = templates.filter((template) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      template.title.toLowerCase().includes(query) ||
-      template.description?.toLowerCase().includes(query) ||
-      template.tags?.some((tag) => tag.toLowerCase().includes(query))
-    );
-  });
+  // Extract available filter options
+  const availableTags = useMemo(() => extractUniqueTags(templates), [templates]);
+  const availableAuthors = useMemo(() => extractUniqueAuthors(templates), [templates]);
 
-  // Paginate filtered results
-  const totalPages = Math.ceil(filteredTemplates.length / pageSize);
-  const paginatedTemplates = filteredTemplates.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  // Apply filters and sorting
+  const filteredAndSortedTemplates = useMemo(() => {
+    if (!filters) return templates;
+    return filterAndSortItems(templates, filters, 'template');
+  }, [templates, filters]);
 
-  // Reset to page 1 when search query changes
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    resetPagination();
-  };
+  // Paginate results
+  const paginatedTemplates = useMemo(() => {
+    return paginateItems(filteredAndSortedTemplates, currentPage, pageSize);
+  }, [filteredAndSortedTemplates, currentPage, pageSize]);
+
+  const totalPages = useMemo(() => {
+    return calculateTotalPages(filteredAndSortedTemplates.length, pageSize);
+  }, [filteredAndSortedTemplates.length, pageSize]);
+
+  const filterStats = useMemo(() => {
+    return getFilterStats(templates, filteredAndSortedTemplates);
+  }, [templates, filteredAndSortedTemplates]);
+
+  // Handle filter changes
+  const handleFilterChange = useCallback((newFilters: SearchAndFilterState) => {
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, []);
+
+  // Handle page changes
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Handle page size changes
+  const handlePageSizeChange = useCallback((newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when page size changes
+  }, []);
 
   // Duplicate quiz mutation
   const duplicateMutation = useMutation({
@@ -259,34 +280,41 @@ export default function MyQuizzes() {
             </Button>
           </div>
 
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search quizzes by title, description, or tags..."
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+          {/* Search and Filter */}
+          <SearchAndFilter
+            onFilterChange={handleFilterChange}
+            availableTags={availableTags}
+            availableAuthors={availableAuthors}
+            {...QUIZ_FILTER_CONFIG}
+          />
+
+          {/* Results Summary */}
+          {filterStats.filtered < filterStats.total && (
+            <div className="mt-3 text-sm text-muted-foreground">
+              Showing {filterStats.filtered} of {filterStats.total} quizzes (
+              {filterStats.percentage}
+              %)
+            </div>
+          )}
         </div>
 
         {/* Templates List */}
-        {filteredTemplates.length === 0 ? (
+        {filteredAndSortedTemplates.length === 0 ? (
           <Card>
             <CardContent className="py-12">
               <div className="text-center">
                 <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <h3 className="text-lg font-semibold mb-2">
-                  {searchQuery ? 'No quizzes found' : 'No quizzes yet'}
+                  {filters && (filters.searchText || filters.tags.length > 0)
+                    ? 'No quizzes found'
+                    : 'No quizzes yet'}
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchQuery
-                    ? 'Try adjusting your search terms'
+                  {filters && (filters.searchText || filters.tags.length > 0)
+                    ? 'Try adjusting your search terms or filters'
                     : 'Create your first custom quiz to get started'}
                 </p>
-                {!searchQuery && (
+                {(!filters || (!filters.searchText && filters.tags.length === 0)) && (
                   <Button onClick={handleCreateNew}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create Your First Quiz
@@ -296,135 +324,138 @@ export default function MyQuizzes() {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {filteredTemplates.length} Quiz{filteredTemplates.length !== 1 ? 'zes' : ''}
-              </CardTitle>
-              <CardDescription>
-                Your custom quiz templates - edit, duplicate, or create new ones
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Questions</TableHead>
-                      <TableHead>Difficulty</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedTemplates.map((template) => (
-                      <TableRow key={template.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{template.title}</div>
-                            {template.description && (
-                              <div className="text-sm text-muted-foreground line-clamp-1">
-                                {template.description}
-                              </div>
-                            )}
-                            {template.tags && template.tags.length > 0 && (
-                              <div className="flex gap-1 mt-1">
-                                {template.tags.slice(0, 3).map((tag, idx) => (
-                                  <Badge key={idx} variant="outline" className="text-xs">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                                {template.tags.length > 3 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{template.tags.length - 3}
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={template.isDraft ? 'secondary' : 'default'}>
-                            {template.isDraft ? 'Draft' : 'Published'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <BookOpen className="h-4 w-4 text-muted-foreground" />
-                            <span>
-                              {template.questionCount || template.customQuestions?.length || 0}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">Level {template.difficultyLevel || 1}</Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDate(template.createdAt)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-end gap-2">
-                            {canEdit(template, user) && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEdit(template)}
-                                  title="Edit quiz"
-                                  disabled={!template.id}
-                                >
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteClick(template)}
-                                  title="Delete quiz"
-                                  className="text-destructive hover:text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDuplicateClick(template)}
-                              title="Duplicate quiz"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                            {!canEdit(template, user) && (
-                              <Alert className="py-2">
-                                <Lock className="h-4 w-4" />
-                                <AlertDescription className="text-xs ml-2">
-                                  View only
-                                </AlertDescription>
-                              </Alert>
-                            )}
-                          </div>
-                        </TableCell>
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {filteredAndSortedTemplates.length} Quiz
+                  {filteredAndSortedTemplates.length !== 1 ? 'zes' : ''}
+                </CardTitle>
+                <CardDescription>
+                  Your custom quiz templates - edit, duplicate, or create new ones
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Questions</TableHead>
+                        <TableHead>Difficulty</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              {/* Pagination */}
-              <PaginationControls
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedTemplates.map((template) => (
+                        <TableRow key={template.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{template.title}</div>
+                              {template.description && (
+                                <div className="text-sm text-muted-foreground line-clamp-1">
+                                  {template.description}
+                                </div>
+                              )}
+                              {template.tags && template.tags.length > 0 && (
+                                <div className="flex gap-1 mt-1">
+                                  {template.tags.slice(0, 3).map((tag, idx) => (
+                                    <Badge key={idx} variant="outline" className="text-xs">
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                  {template.tags.length > 3 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{template.tags.length - 3}
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={template.isDraft ? 'secondary' : 'default'}>
+                              {template.isDraft ? 'Draft' : 'Published'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <BookOpen className="h-4 w-4 text-muted-foreground" />
+                              <span>
+                                {template.questionCount || template.customQuestions?.length || 0}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">Level {template.difficultyLevel || 1}</Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {formatDate(template.createdAt)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-end gap-2">
+                              {canEdit(template, user) && (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEdit(template)}
+                                    title="Edit quiz"
+                                    disabled={!template.id}
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteClick(template)}
+                                    title="Delete quiz"
+                                    className="text-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDuplicateClick(template)}
+                                title="Duplicate quiz"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              {!canEdit(template, user) && (
+                                <Alert className="py-2">
+                                  <Lock className="h-4 w-4" />
+                                  <AlertDescription className="text-xs ml-2">
+                                    View only
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pagination */}
+            {filteredAndSortedTemplates.length > 0 && (
+              <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
                 pageSize={pageSize}
-                totalItems={filteredTemplates.length}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={setPageSize}
-                showPageSizeSelector={true}
-                showJumpToPage={true}
-                showFirstLastButtons={true}
+                totalItems={filteredAndSortedTemplates.length}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
               />
-            </CardContent>
-          </Card>
+            )}
+          </>
         )}
 
         {/* Duplicate Confirmation Dialog */}
