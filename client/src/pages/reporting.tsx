@@ -40,9 +40,6 @@ import {
   Bar,
   LineChart,
   Line,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -53,21 +50,17 @@ import {
 import {
   Download,
   Printer,
-  FileSpreadsheet,
   Users,
   TrendingUp,
   Activity,
   Target,
   Calendar as CalendarIcon,
   Filter,
-  BarChart3,
   Award,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import type { Quiz, User, MasteryScore, UserProgress, Category } from '@shared/schema';
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+import type { Quiz, User, MasteryScore } from '@shared/schema';
 
 export default function ReportingDashboard() {
   const { user } = useAuth();
@@ -95,16 +88,12 @@ export default function ReportingDashboard() {
     enabled: isAdmin,
   });
 
-  const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: queryKeys.categories.all(),
-  });
-
   // Build filters
   const filters: ReportFilters = useMemo(
     () => ({
       dateFrom,
       dateTo,
-      materialType: materialType as any,
+      materialType: materialType as 'quiz' | 'challenge' | 'lecture' | 'all',
       categoryIds: selectedCategories.length > 0 ? selectedCategories : undefined,
     }),
     [dateFrom, dateTo, materialType, selectedCategories]

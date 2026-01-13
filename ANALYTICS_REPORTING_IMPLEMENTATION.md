@@ -22,8 +22,13 @@ Key Methods:
 - `generateLearnerProgressReport()` - Individual learner metrics
 - `generateQuizPerformanceReport()` - Quiz-level analytics
 - `generateEngagementMetrics()` - Platform engagement metrics
-- `exportToCSV()` - Export any dataset to CSV format
-- `openPrintView()` - Generate print-friendly HTML reports
+- `exportToCSV()` - Export any dataset to CSV format with CSV injection protection
+- `openPrintView()` - Generate print-friendly HTML reports with XSS protection
+
+**Security Features:**
+- **CSV Injection Prevention**: Values starting with `=`, `+`, `-`, or `@` are prefixed with a single quote to prevent formula execution
+- **XSS Protection**: All user-controlled data is HTML-escaped before rendering in print views
+- **Memory Leak Prevention**: Object URLs are properly revoked after download
 
 ### 2. Reporting Dashboard UI
 
@@ -150,11 +155,16 @@ These methods aggregate data from all users by:
 2. Iterating through users to fetch their quizzes/mastery scores
 3. Combining into a single array
 
-**Note**: For production with many users, consider:
+**Security Considerations**:
+- These methods should only be called by authenticated admin users
+- Firestore security rules must enforce admin-only access to cross-user data
+- Client-side permission checks are implemented but server-side enforcement is critical
+
+**Performance Note**: For production with many users, consider:
 - Pagination
 - Firestore collection group queries
-- Server-side aggregation
-- Caching strategies
+- Server-side aggregation with caching
+- Rate limiting admin queries
 
 ### Routes Added
 
@@ -218,6 +228,36 @@ Tested and compatible with:
 3. **No Real-Time Updates**: Charts update on page refresh/query refetch (not live)
 4. **Limited Cohort Analysis**: Study group integration is framework only
 5. **No Feedback Analysis**: Feedback breakdown feature not implemented (no feedback data in schema)
+
+## Security
+
+### Access Control
+- **Route Protection**: Admin-only route with conditional rendering (`{isAdmin && <Route.../>}`)
+- **Client-Side Checks**: Permission verification in ReportingDashboard component
+- **Page-Level Guards**: Access denied UI for non-admin users
+
+**IMPORTANT - Server-Side Security Required**:
+The current implementation includes client-side permission checks, but **Firestore security rules must enforce admin-only access** to prevent unauthorized data access:
+
+```javascript
+// Example Firestore Security Rules
+match /users/{userId}/quizzes/{quizId} {
+  allow read: if request.auth != null && 
+    (request.auth.uid == userId || 
+     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+}
+
+match /users/{userId}/masteryScores/{scoreId} {
+  allow read: if request.auth != null && 
+    (request.auth.uid == userId || 
+     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+}
+```
+
+### Data Protection
+- **CSV Injection Prevention**: Values starting with `=`, `+`, `-`, or `@` are prefixed with a single quote to prevent formula execution in spreadsheet applications
+- **XSS Protection**: All user-controlled data is HTML-escaped before rendering in print views to prevent script injection
+- **Memory Management**: Object URLs are properly revoked after downloads to prevent memory leaks
 
 ## Future Enhancements
 
