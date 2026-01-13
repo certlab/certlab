@@ -47,6 +47,8 @@ import {
   where,
   orderBy,
   limit,
+  getCountFromServer,
+  query,
 } from './firestore-service';
 import { logError, logInfo } from './errors';
 import { doc, deleteDoc } from 'firebase/firestore';
@@ -4475,11 +4477,22 @@ class FirestoreStorage implements IClientStorage {
    */
   async getUnreadNotificationCount(userId: string): Promise<number> {
     try {
-      const notifications = await this.getUserNotifications(userId, {
-        includeRead: false,
-        includeDismissed: false,
-      });
-      return notifications.length;
+      const db = getFirestoreInstance();
+      if (!db) throw new Error('Firestore not initialized');
+
+      const { collection } = await import('firebase/firestore');
+      const notificationsRef = collection(db, `users/${userId}/notifications`);
+
+      // Build query to count unread, non-dismissed notifications
+      const q = query(
+        notificationsRef,
+        where('isRead', '==', false),
+        where('isDismissed', '==', false)
+      );
+
+      // Use Firestore count aggregation for efficiency
+      const snapshot = await getCountFromServer(q);
+      return snapshot.data().count;
     } catch (error) {
       logError('getUnreadNotificationCount', error, { userId });
       return 0;
@@ -4536,19 +4549,46 @@ class FirestoreStorage implements IClientStorage {
   }
 
   /**
-   * Mark all notifications as read
+   * Mark all notifications as read using batch operations
    */
   async markAllNotificationsAsRead(userId: string): Promise<void> {
     try {
+      const db = getFirestoreInstance();
+      if (!db) throw new Error('Firestore not initialized');
+
+      const { collection, writeBatch, doc } = await import('firebase/firestore');
+
+      // Get unread notifications
       const notifications = await this.getUserNotifications(userId, {
         includeRead: false,
         includeDismissed: false,
       });
 
-      await Promise.all(
-        notifications.map((notif) => this.markNotificationAsRead(notif.id, userId))
-      );
+      if (notifications.length === 0) {
+        logInfo('markAllNotificationsAsRead', { userId, count: 0 });
+        return;
+      }
 
+      // Use batch writes for efficiency (max 500 per batch)
+      const batchSize = 500;
+      const batches = [];
+
+      for (let i = 0; i < notifications.length; i += batchSize) {
+        const batch = writeBatch(db);
+        const chunk = notifications.slice(i, i + batchSize);
+
+        chunk.forEach((notif) => {
+          const notifRef = doc(db, `users/${userId}/notifications/${notif.id}`);
+          batch.update(notifRef, {
+            isRead: true,
+            readAt: new Date(),
+          });
+        });
+
+        batches.push(batch.commit());
+      }
+
+      await Promise.all(batches);
       logInfo('markAllNotificationsAsRead', { userId, count: notifications.length });
     } catch (error) {
       logError('markAllNotificationsAsRead', error, { userId });
@@ -4576,30 +4616,46 @@ class FirestoreStorage implements IClientStorage {
   }
 
   /**
-   * Delete expired notifications
+   * Delete expired notifications using query filter and batch operations
    */
   async deleteExpiredNotifications(userId: string): Promise<void> {
     try {
       const db = getFirestoreInstance();
       if (!db) throw new Error('Firestore not initialized');
 
+      const { collection, getDocs, writeBatch, doc } = await import('firebase/firestore');
       const now = new Date();
-      const notifications = await this.getUserNotifications(userId, {
-        includeRead: true,
-        includeDismissed: true,
-      });
 
-      const expiredNotifications = notifications.filter(
-        (notif) => notif.expiresAt && notif.expiresAt <= now
-      );
+      const notificationsRef = collection(db, `users/${userId}/notifications`);
 
-      await Promise.all(
-        expiredNotifications.map(async (notif) => {
-          await deleteUserDocument(userId, 'notifications', notif.id);
-        })
-      );
+      // Query for expired notifications directly
+      const q = query(notificationsRef, where('expiresAt', '<=', Timestamp.fromDate(now)));
 
-      logInfo('deleteExpiredNotifications', { userId, count: expiredNotifications.length });
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        logInfo('deleteExpiredNotifications', { userId, count: 0 });
+        return;
+      }
+
+      // Use batch deletes for efficiency (max 500 per batch)
+      const batchSize = 500;
+      const docs = snapshot.docs;
+      const batches = [];
+
+      for (let i = 0; i < docs.length; i += batchSize) {
+        const batch = writeBatch(db);
+        const chunk = docs.slice(i, i + batchSize);
+
+        chunk.forEach((docSnapshot) => {
+          batch.delete(docSnapshot.ref);
+        });
+
+        batches.push(batch.commit());
+      }
+
+      await Promise.all(batches);
+      logInfo('deleteExpiredNotifications', { userId, count: docs.length });
     } catch (error) {
       logError('deleteExpiredNotifications', error, { userId });
       throw error;
@@ -4620,8 +4676,8 @@ class FirestoreStorage implements IClientStorage {
       );
 
       if (!prefs) {
-        // Return default preferences
-        return {
+        // Create and persist default preferences
+        const defaultPrefs: import('@shared/schema').NotificationPreferences = {
           userId,
           assignments: true,
           completions: true,
@@ -4632,6 +4688,10 @@ class FirestoreStorage implements IClientStorage {
           smsEnabled: false,
           updatedAt: new Date(),
         };
+
+        // Persist defaults to Firestore for future use
+        await setUserDocument(userId, 'notificationPreferences', 'preferences', defaultPrefs);
+        return defaultPrefs;
       }
 
       return convertTimestamps<import('@shared/schema').NotificationPreferences>(prefs);

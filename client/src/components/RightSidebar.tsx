@@ -14,6 +14,7 @@ import { queryKeys } from '@/lib/queryClient';
 import { storage } from '@/lib/storage-factory';
 import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 import { NotificationItem } from '@/components/NotificationItem';
+import type { Notification } from '@shared/schema';
 
 interface BadgeData {
   id: number;
@@ -50,8 +51,23 @@ function NotificationsPanel() {
     refetchInterval: 5000,
   });
 
-  // Get general notifications using the enhanced hook
-  const { notifications, unreadNotificationCount } = useUnreadNotifications();
+  // Get general notifications using the enhanced hook (gets count only)
+  const { unreadNotificationCount } = useUnreadNotifications();
+
+  // Fetch actual notifications for display
+  const { data: notifications = [] } = useQuery<Notification[]>({
+    queryKey: ['notifications', currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser?.id) return [];
+      return storage.getUserNotifications(currentUser.id, {
+        includeRead: false,
+        includeDismissed: false,
+        limit: 50,
+      });
+    },
+    enabled: !!currentUser?.id,
+    refetchInterval: 5000,
+  });
 
   // Get unnotified badges
   const unnotifiedBadges = achievements?.badges?.filter((b) => !b.isNotified) || [];

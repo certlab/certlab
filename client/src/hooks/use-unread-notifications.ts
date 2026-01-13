@@ -36,17 +36,13 @@ export function useUnreadNotifications() {
     refetchInterval: 5000, // 5 seconds
   });
 
-  // Get general notifications
-  const { data: notifications, isLoading: isLoadingNotifications } = useQuery<Notification[]>({
-    queryKey: ['notifications', currentUser?.id],
+  // Get general notifications (only count, not full data)
+  const { data: unreadNotificationCount, isLoading: isLoadingNotifications } = useQuery<number>({
+    queryKey: ['notifications', 'unreadCount', currentUser?.id],
     queryFn: async () => {
-      if (!currentUser?.id) return [];
+      if (!currentUser?.id) return 0;
       const { storage } = await import('@/lib/storage-factory');
-      return storage.getUserNotifications(currentUser.id, {
-        includeRead: false,
-        includeDismissed: false,
-        limit: 50,
-      });
+      return storage.getUnreadNotificationCount(currentUser.id);
     },
     enabled: !!currentUser?.id,
     refetchInterval: 5000, // 5 seconds
@@ -57,17 +53,17 @@ export function useUnreadNotifications() {
   const unreadBadgeCount = badges.filter((b) => !b.isNotified).length;
 
   // Count unread notifications from notification system
-  const unreadNotificationCount = notifications?.length || 0;
+  const unreadNotificationCountValue = unreadNotificationCount || 0;
 
   // Total unread count
-  const unreadCount = unreadBadgeCount + unreadNotificationCount;
+  const unreadCount = unreadBadgeCount + unreadNotificationCountValue;
 
   return {
     unreadCount,
     unreadBadgeCount,
-    unreadNotificationCount,
+    unreadNotificationCount: unreadNotificationCountValue,
     achievements,
-    notifications: notifications || [],
+    notifications: [], // Notifications are not fetched in this hook to improve performance
     isLoading: isLoadingAchievements || isLoadingNotifications,
   };
 }

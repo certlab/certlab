@@ -43,6 +43,7 @@ import {
   orderBy,
   limit,
   Timestamp,
+  getCountFromServer,
   type Firestore,
   type DocumentData,
   type QueryConstraint,
@@ -512,4 +513,4 @@ export async function setUserSubcollectionDocument<T extends DocumentData>(
 }
 
 // Export Firestore utilities for use in other modules
-export { query, where, orderBy, limit, Timestamp, type QueryConstraint };
+export { query, where, orderBy, limit, getCountFromServer, Timestamp, type QueryConstraint };

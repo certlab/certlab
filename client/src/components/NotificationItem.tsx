@@ -55,6 +55,9 @@ export function NotificationItem({ notification, onDismiss, onRead }: Notificati
 
     if (notification.actionUrl) {
       navigate(notification.actionUrl);
+    } else {
+      // No action URL - dismiss the notification after marking as read
+      onDismiss(notification.id);
     }
   };
 

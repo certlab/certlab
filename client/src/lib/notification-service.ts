@@ -22,10 +22,10 @@ function validateInternalUrl(url: string | undefined): string | undefined {
   // Sanitize the input first
   const sanitized = sanitizeInput(url, 500);
 
-  // Only allow internal paths starting with /app/ or relative paths
+  // Only allow internal paths starting with /app/ or /
   if (sanitized.startsWith('/app/') || sanitized.startsWith('/')) {
-    // Additional check: ensure no protocol or domain
-    if (sanitized.includes('://') || sanitized.includes('//')) {
+    // Check for protocol patterns specifically (http://, https://, etc.)
+    if (sanitized.match(/^[a-z]+:\/\//i)) {
       logError('validateInternalUrl', new Error('External URL not allowed'), { url: sanitized });
       return undefined;
     }
