@@ -120,11 +120,11 @@ export function generateCertificateHtml(options: CertificateOptions): string {
   // Validate URLs to prevent javascript: or data: URL exploits
   if (!isValidImageUrl(certificate.logoUrl)) {
     console.warn('Invalid logo URL detected, skipping logo');
-    certificate.logoUrl = undefined;
+    certificate.logoUrl = null;
   }
   if (!isValidImageUrl(certificate.signatureUrl)) {
     console.warn('Invalid signature URL detected, skipping signature');
-    certificate.signatureUrl = undefined;
+    certificate.signatureUrl = null;
   }
 
   const borderStyle = getBorderStyle(finalTemplate);

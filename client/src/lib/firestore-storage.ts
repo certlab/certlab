@@ -1272,6 +1272,16 @@ class FirestoreStorage implements IClientStorage {
         sharedWithGroups: null,
         requiresPurchase: false,
         purchaseProductId: null,
+        // Distribution settings - default to open
+        distributionMethod: 'open',
+        availableFrom: null,
+        availableUntil: null,
+        enrollmentDeadline: null,
+        maxEnrollments: null,
+        requireApproval: false,
+        assignmentDueDate: null,
+        sendNotifications: true,
+        reminderDays: null,
       };
 
       await setUserDocument(userId, 'lectures', id.toString(), lecture);
@@ -4438,7 +4448,7 @@ class FirestoreStorage implements IClientStorage {
             ? newCertificate.completedAt
             : new Date(newCertificate.completedAt)
         ),
-        createdAt: Timestamp.fromDate(newCertificate.createdAt),
+        createdAt: Timestamp.fromDate(newCertificate.createdAt || new Date()),
       });
 
       logInfo('Certificate created', { certificateId: id, userId });
@@ -4633,8 +4643,8 @@ class FirestoreStorage implements IClientStorage {
 
       await setSharedDocument('certificateTemplates', id.toString(), {
         ...newTemplate,
-        createdAt: Timestamp.fromDate(newTemplate.createdAt),
-        updatedAt: Timestamp.fromDate(newTemplate.updatedAt),
+        createdAt: Timestamp.fromDate(newTemplate.createdAt || new Date()),
+        updatedAt: Timestamp.fromDate(newTemplate.updatedAt || new Date()),
       });
 
       logInfo('Certificate template created', { templateId: id });
@@ -4667,12 +4677,16 @@ class FirestoreStorage implements IClientStorage {
 
       // Ensure createdAt is a valid Date
       const createdAtDate =
-        existing.createdAt instanceof Date ? existing.createdAt : new Date(existing.createdAt);
+        existing.createdAt instanceof Date
+          ? existing.createdAt
+          : existing.createdAt
+            ? new Date(existing.createdAt)
+            : new Date();
 
       await setSharedDocument('certificateTemplates', templateId.toString(), {
         ...updatedTemplate,
         createdAt: Timestamp.fromDate(createdAtDate),
-        updatedAt: Timestamp.fromDate(updatedTemplate.updatedAt),
+        updatedAt: Timestamp.fromDate(updatedTemplate.updatedAt || new Date()),
       });
 
       logInfo('Certificate template updated', { templateId });
@@ -4696,6 +4710,426 @@ class FirestoreStorage implements IClientStorage {
       logError('deleteCertificateTemplate', error, { templateId });
       throw error;
     }
+  }
+
+  // ==========================================
+  // Notification Management (Stub Implementations)
+  // ==========================================
+
+  /**
+   * Get user notifications
+   * @throws {Error} Not implemented - notification system pending full implementation
+   */
+  async getUserNotifications(
+    userId: string,
+    options?: {
+      includeRead?: boolean;
+      includeDismissed?: boolean;
+      types?: import('@shared/schema').NotificationType[];
+      limit?: number;
+    }
+  ): Promise<import('@shared/schema').Notification[]> {
+    throw new Error(
+      'getUserNotifications: Notification system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Get unread notification count
+   * @throws {Error} Not implemented - notification system pending full implementation
+   */
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    throw new Error(
+      'getUnreadNotificationCount: Notification system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Create a new notification
+   * @throws {Error} Not implemented - notification system pending full implementation
+   */
+  async createNotification(
+    notification: import('@shared/schema').InsertNotification
+  ): Promise<import('@shared/schema').Notification> {
+    throw new Error(
+      'createNotification: Notification system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Mark notification as read
+   * @throws {Error} Not implemented - notification system pending full implementation
+   */
+  async markNotificationAsRead(notificationId: string, userId: string): Promise<void> {
+    throw new Error(
+      'markNotificationAsRead: Notification system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Mark all notifications as read
+   * @throws {Error} Not implemented - notification system pending full implementation
+   */
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    throw new Error(
+      'markAllNotificationsAsRead: Notification system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Dismiss a notification
+   * @throws {Error} Not implemented - notification system pending full implementation
+   */
+  async dismissNotification(notificationId: string, userId: string): Promise<void> {
+    throw new Error(
+      'dismissNotification: Notification system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Delete expired notifications
+   * @throws {Error} Not implemented - notification system pending full implementation
+   */
+  async deleteExpiredNotifications(userId: string): Promise<void> {
+    throw new Error(
+      'deleteExpiredNotifications: Notification system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Get user notification preferences
+   * @throws {Error} Not implemented - notification system pending full implementation
+   */
+  async getNotificationPreferences(
+    userId: string
+  ): Promise<import('@shared/schema').NotificationPreferences | null> {
+    throw new Error(
+      'getNotificationPreferences: Notification system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Update user notification preferences
+   * @throws {Error} Not implemented - notification system pending full implementation
+   */
+  async updateNotificationPreferences(
+    userId: string,
+    preferences: Partial<import('@shared/schema').NotificationPreferences>
+  ): Promise<import('@shared/schema').NotificationPreferences> {
+    throw new Error(
+      'updateNotificationPreferences: Notification system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  // ==========================================
+  // Enrollment Management (Stub Implementations)
+  // ==========================================
+
+  /**
+   * Enroll a user in a quiz or lecture (self-enrollment)
+   * @throws {Error} Not implemented - enrollment system pending full implementation
+   */
+  async enrollUser(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number,
+    tenantId: number,
+    requiresApproval?: boolean
+  ): Promise<import('@shared/schema').Enrollment> {
+    throw new Error('enrollUser: Enrollment system not yet fully implemented in Firestore storage');
+  }
+
+  /**
+   * Unenroll/withdraw a user from a quiz or lecture
+   * @throws {Error} Not implemented - enrollment system pending full implementation
+   */
+  async unenrollUser(enrollmentId: string): Promise<void> {
+    throw new Error(
+      'unenrollUser: Enrollment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Get all enrollments for a user
+   * @throws {Error} Not implemented - enrollment system pending full implementation
+   */
+  async getUserEnrollments(
+    userId: string,
+    tenantId: number,
+    resourceType?: 'quiz' | 'lecture' | 'template'
+  ): Promise<import('@shared/schema').Enrollment[]> {
+    throw new Error(
+      'getUserEnrollments: Enrollment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Get all enrollments for a specific resource
+   * @throws {Error} Not implemented - enrollment system pending full implementation
+   */
+  async getResourceEnrollments(
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<import('@shared/schema').Enrollment[]> {
+    throw new Error(
+      'getResourceEnrollments: Enrollment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Approve an enrollment (instructor/admin)
+   * @throws {Error} Not implemented - enrollment system pending full implementation
+   */
+  async approveEnrollment(
+    enrollmentId: string,
+    approvedBy: string
+  ): Promise<import('@shared/schema').Enrollment> {
+    throw new Error(
+      'approveEnrollment: Enrollment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Reject/deny an enrollment
+   * @throws {Error} Not implemented - enrollment system pending full implementation
+   */
+  async rejectEnrollment(enrollmentId: string): Promise<void> {
+    throw new Error(
+      'rejectEnrollment: Enrollment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Update enrollment progress
+   * @throws {Error} Not implemented - enrollment system pending full implementation
+   */
+  async updateEnrollmentProgress(
+    enrollmentId: string,
+    progress: number,
+    completed?: boolean
+  ): Promise<import('@shared/schema').Enrollment> {
+    throw new Error(
+      'updateEnrollmentProgress: Enrollment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Check if a user is enrolled in a resource
+   * @throws {Error} Not implemented - enrollment system pending full implementation
+   */
+  async isUserEnrolled(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<boolean> {
+    throw new Error(
+      'isUserEnrolled: Enrollment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Get pending enrollment approvals (instructor/admin)
+   * @throws {Error} Not implemented - enrollment system pending full implementation
+   */
+  async getPendingEnrollments(
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId?: number
+  ): Promise<import('@shared/schema').Enrollment[]> {
+    // Note: This method doesn't exist in IStorageAdapter, but was added for convenience
+    throw new Error(
+      'getPendingEnrollments: Enrollment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Assign a quiz or lecture to a user (instructor/admin)
+   * @throws {Error} Not implemented - assignment system pending full implementation
+   */
+  async assignToUser(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number,
+    assignedBy: string,
+    tenantId: number,
+    dueDate?: Date,
+    notes?: string
+  ): Promise<import('@shared/schema').Assignment> {
+    throw new Error(
+      'assignToUser: Assignment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Assign to multiple users at once
+   * @throws {Error} Not implemented - assignment system pending full implementation
+   */
+  async assignToUsers(
+    userIds: string[],
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number,
+    assignedBy: string,
+    tenantId: number,
+    dueDate?: Date,
+    notes?: string
+  ): Promise<import('@shared/schema').Assignment[]> {
+    throw new Error(
+      'assignToUsers: Assignment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Unassign a user from a quiz or lecture
+   * @throws {Error} Not implemented - assignment system pending full implementation
+   */
+  async unassignUser(assignmentId: string): Promise<void> {
+    throw new Error(
+      'unassignUser: Assignment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Get assignments for a user
+   * @throws {Error} Not implemented - assignment system pending full implementation
+   */
+  async getUserAssignments(
+    userId: string,
+    tenantId: number,
+    resourceType?: 'quiz' | 'lecture' | 'template',
+    status?: import('@shared/schema').AssignmentStatus
+  ): Promise<import('@shared/schema').Assignment[]> {
+    throw new Error(
+      'getUserAssignments: Assignment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Get assignments for a resource (instructor view)
+   * @throws {Error} Not implemented - assignment system pending full implementation
+   */
+  async getResourceAssignments(
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<import('@shared/schema').Assignment[]> {
+    throw new Error(
+      'getResourceAssignments: Assignment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Update assignment status
+   * @throws {Error} Not implemented - assignment system pending full implementation
+   */
+  async updateAssignmentStatus(
+    assignmentId: string,
+    status: import('@shared/schema').AssignmentStatus,
+    score?: number,
+    progress?: number
+  ): Promise<import('@shared/schema').Assignment> {
+    throw new Error(
+      'updateAssignmentStatus: Assignment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Update assignment progress
+   * @throws {Error} Not implemented - assignment system pending full implementation
+   */
+  async updateAssignmentProgress(
+    assignmentId: string,
+    progress: number,
+    started?: boolean
+  ): Promise<import('@shared/schema').Assignment> {
+    throw new Error(
+      'updateAssignmentProgress: Assignment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Complete an assignment
+   * @throws {Error} Not implemented - assignment system pending full implementation
+   */
+  async completeAssignment(
+    assignmentId: string,
+    score?: number
+  ): Promise<import('@shared/schema').Assignment> {
+    throw new Error(
+      'completeAssignment: Assignment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Check if a user has an assignment for a resource
+   * @throws {Error} Not implemented - assignment system pending full implementation
+   */
+  async hasAssignment(
+    userId: string,
+    resourceType: 'quiz' | 'lecture' | 'template',
+    resourceId: number
+  ): Promise<boolean> {
+    throw new Error(
+      'hasAssignment: Assignment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Send assignment notification
+   * @throws {Error} Not implemented - assignment system pending full implementation
+   */
+  async sendAssignmentNotification(assignmentId: string): Promise<void> {
+    throw new Error(
+      'sendAssignmentNotification: Assignment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Send assignment reminder
+   * @throws {Error} Not implemented - assignment system pending full implementation
+   */
+  async sendAssignmentReminder(assignmentId: string): Promise<void> {
+    throw new Error(
+      'sendAssignmentReminder: Assignment system not yet fully implemented in Firestore storage'
+    );
+  }
+
+  // ==========================================
+  // Prerequisite Checking
+  // ==========================================
+
+  /**
+   * Check if user meets prerequisites for a resource
+   * @throws {Error} Not implemented - prerequisite checking pending full implementation
+   */
+  async checkPrerequisites(
+    userId: string,
+    prerequisites: {
+      quizIds?: number[];
+      lectureIds?: number[];
+      minimumScores?: Record<number, number>;
+    }
+  ): Promise<import('@shared/schema').PrerequisiteCheckResult> {
+    throw new Error(
+      'checkPrerequisites: Prerequisite checking not yet fully implemented in Firestore storage'
+    );
+  }
+
+  /**
+   * Check availability window for a resource
+   * @throws {Error} Not implemented - availability checking pending full implementation
+   */
+  async checkAvailability(
+    availableFrom?: Date,
+    availableUntil?: Date,
+    enrollmentDeadline?: Date
+  ): Promise<{
+    available: boolean;
+    canEnroll: boolean;
+    reason?: 'not_started' | 'expired' | 'enrollment_closed';
+    availableFrom?: Date;
+    availableUntil?: Date;
+  }> {
+    throw new Error(
+      'checkAvailability: Availability checking not yet fully implemented in Firestore storage'
+    );
   }
 }
 
