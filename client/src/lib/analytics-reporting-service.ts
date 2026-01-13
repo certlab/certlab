@@ -408,6 +408,20 @@ export class AnalyticsReportingService {
   }
 
   /**
+   * Sanitize CSV value to prevent formula injection
+   * Values starting with =, +, -, @ are prefixed with a single quote
+   */
+  private sanitizeCSVValue(value: string): string {
+    if (typeof value === 'string' && value.length > 0) {
+      const firstChar = value.charAt(0);
+      if (firstChar === '=' || firstChar === '+' || firstChar === '-' || firstChar === '@') {
+        return `'${value}`;
+      }
+    }
+    return value;
+  }
+
+  /**
    * Export data to CSV format
    */
   exportToCSV(data: any[], filename: string): void {
@@ -424,10 +438,19 @@ export class AnalyticsReportingService {
           .map((header) => {
             const value = row[header];
             // Handle arrays, objects, and special characters
-            if (Array.isArray(value)) return `"${value.join('; ')}"`;
-            if (typeof value === 'object' && value !== null) return `"${JSON.stringify(value)}"`;
-            if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-              return `"${value.replace(/"/g, '""')}"`;
+            if (Array.isArray(value)) {
+              const sanitizedArray = value.map((v) => this.sanitizeCSVValue(String(v)));
+              return `"${sanitizedArray.join('; ')}"`;
+            }
+            if (typeof value === 'object' && value !== null) {
+              return `"${this.sanitizeCSVValue(JSON.stringify(value))}"`;
+            }
+            if (typeof value === 'string') {
+              const sanitized = this.sanitizeCSVValue(value);
+              if (sanitized.includes(',') || sanitized.includes('"')) {
+                return `"${sanitized.replace(/"/g, '""')}"`;
+              }
+              return sanitized;
             }
             return value ?? '';
           })
@@ -445,6 +468,22 @@ export class AnalyticsReportingService {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    // Clean up the object URL to prevent memory leaks
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * HTML escape to prevent XSS attacks
+   */
+  private escapeHTML(value: any): string {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   /**
@@ -452,12 +491,13 @@ export class AnalyticsReportingService {
    */
   generatePrintView(title: string, data: any[]): string {
     const headers = data.length > 0 ? Object.keys(data[0]) : [];
+    const escapedTitle = this.escapeHTML(title);
 
     return `
       <!DOCTYPE html>
       <html>
         <head>
-          <title>${title}</title>
+          <title>${escapedTitle}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 20px; }
             h1 { color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px; }
@@ -472,12 +512,12 @@ export class AnalyticsReportingService {
           </style>
         </head>
         <body>
-          <h1>${title}</h1>
-          <div class="print-date">Generated: ${new Date().toLocaleString()}</div>
+          <h1>${escapedTitle}</h1>
+          <div class="print-date">Generated: ${this.escapeHTML(new Date().toLocaleString())}</div>
           <table>
             <thead>
               <tr>
-                ${headers.map((h) => `<th>${h}</th>`).join('')}
+                ${headers.map((h) => `<th>${this.escapeHTML(h)}</th>`).join('')}
               </tr>
             </thead>
             <tbody>
@@ -488,10 +528,14 @@ export class AnalyticsReportingService {
                   ${headers
                     .map((h) => {
                       const value = row[h];
-                      if (Array.isArray(value)) return `<td>${value.join(', ')}</td>`;
-                      if (typeof value === 'object' && value !== null)
-                        return `<td>${JSON.stringify(value)}</td>`;
-                      return `<td>${value ?? ''}</td>`;
+                      if (Array.isArray(value)) {
+                        const escapedArray = value.map((v) => this.escapeHTML(v));
+                        return `<td>${escapedArray.join(', ')}</td>`;
+                      }
+                      if (typeof value === 'object' && value !== null) {
+                        return `<td>${this.escapeHTML(JSON.stringify(value))}</td>`;
+                      }
+                      return `<td>${this.escapeHTML(value)}</td>`;
                     })
                     .join('')}
                 </tr>

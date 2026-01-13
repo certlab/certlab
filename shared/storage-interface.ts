@@ -641,6 +641,12 @@ export interface IClientStorage extends IStorageAdapter {
   /** Get all users (for account selection) */
   getAllUsers(): Promise<User[]>;
 
+  /** Get all quizzes across all users (admin only, for reporting) */
+  getAllQuizzes(): Promise<Quiz[]>;
+
+  /** Get all mastery scores across all users (admin only, for reporting) */
+  getAllMasteryScores(): Promise<MasteryScore[]>;
+
   // ==========================================
   // Quiz Operations (Extended)
   // ==========================================
