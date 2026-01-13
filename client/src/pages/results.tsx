@@ -70,17 +70,19 @@ export default function Results() {
         completedAt: quiz.completedAt!,
         verificationId,
         issuedBy: 'CertLab',
-        organizationName: undefined,
-        logoUrl: undefined,
-        signatureUrl: undefined,
-        templateId: undefined,
+        organizationName: null,
+        logoUrl: null,
+        signatureUrl: null,
+        templateId: null,
       };
 
       return await storage.createCertificate(certificate);
     },
     onSuccess: (certificate) => {
       queryClient.invalidateQueries({ queryKey: ['certificate', 'quiz', quizId] });
-      queryClient.invalidateQueries({ queryKey: queryKeys.certificates.all(currentUser.id) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.certificates.all(currentUser?.id || ''),
+      });
       toast({
         title: 'Certificate Generated',
         description: 'Your certificate of completion has been created successfully!',
