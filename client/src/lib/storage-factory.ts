@@ -1619,17 +1619,6 @@ class StorageRouter implements IClientStorage {
     );
   }
 
-  async getPendingEnrollments(
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId?: number
-  ): Promise<import('@shared/schema').Enrollment[]> {
-    // Note: This method doesn't exist in IStorageAdapter, but was added for convenience
-    return this.executeStorageOperation(
-      (s) => (s as any).getPendingEnrollments(resourceType, resourceId),
-      'getPendingEnrollments'
-    );
-  }
-
   async assignToUser(
     userId: string,
     resourceType: 'quiz' | 'lecture' | 'template',

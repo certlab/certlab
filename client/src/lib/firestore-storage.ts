@@ -4928,20 +4928,6 @@ class FirestoreStorage implements IClientStorage {
   }
 
   /**
-   * Get pending enrollment approvals (instructor/admin)
-   * @throws {Error} Not implemented - enrollment system pending full implementation
-   */
-  async getPendingEnrollments(
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId?: number
-  ): Promise<import('@shared/schema').Enrollment[]> {
-    // Note: This method doesn't exist in IStorageAdapter, but was added for convenience
-    throw new Error(
-      'getPendingEnrollments: Enrollment system not yet fully implemented in Firestore storage'
-    );
-  }
-
-  /**
    * Assign a quiz or lecture to a user (instructor/admin)
    * @throws {Error} Not implemented - assignment system pending full implementation
    */
