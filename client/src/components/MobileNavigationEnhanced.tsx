@@ -21,6 +21,7 @@ import {
   FileText,
   Edit,
   List,
+  Award,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -92,6 +93,12 @@ export default function MobileNavigationEnhanced() {
       label: 'Study Notes',
       icon: <BookOpen className="w-5 h-5" />,
       href: '/app/study-notes',
+    },
+    {
+      id: 'certificates',
+      label: 'Certificates',
+      icon: <Award className="w-5 h-5" />,
+      href: '/app/certificates',
     },
     {
       id: 'marketplace',

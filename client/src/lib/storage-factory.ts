@@ -1159,7 +1159,11 @@ class StorageRouter implements IClientStorage {
     userId: string,
     resourceType: 'quiz' | 'lecture' | 'template',
     resourceId: number
-  ): Promise<import('@shared/schema').AccessCheckResult> {
+  ): Promise<{
+    allowed: boolean;
+    reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
+    productId?: string;
+  }> {
     return this.executeStorageOperation(
       (s) => s.checkAccess(userId, resourceType, resourceId),
       'checkAccess'
@@ -1363,309 +1367,95 @@ class StorageRouter implements IClientStorage {
   }
 
   // ==========================================
-  // Notification Management
+  // Certificates
   // ==========================================
 
-  async getUserNotifications(
-    userId: string,
-    options?: {
-      includeRead?: boolean;
-      includeDismissed?: boolean;
-      types?: import('@shared/schema').NotificationType[];
-      limit?: number;
-    }
-  ): Promise<import('@shared/schema').Notification[]> {
+  async createCertificate(
+    certificate: Omit<import('@shared/schema').Certificate, 'id' | 'createdAt'>
+  ): Promise<import('@shared/schema').Certificate> {
     return this.executeStorageOperation(
-      (s) => s.getUserNotifications(userId, options),
-      'getUserNotifications'
+      (s) => s.createCertificate(certificate),
+      'createCertificate'
     );
   }
 
-  async getUnreadNotificationCount(userId: string): Promise<number> {
-    return this.executeStorageOperation(
-      (s) => s.getUnreadNotificationCount(userId),
-      'getUnreadNotificationCount'
-    );
-  }
-
-  async createNotification(
-    notification: import('@shared/schema').InsertNotification
-  ): Promise<import('@shared/schema').Notification> {
-    return this.executeStorageOperation(
-      (s) => s.createNotification(notification),
-      'createNotification'
-    );
-  }
-
-  async markNotificationAsRead(notificationId: string, userId: string): Promise<void> {
-    return this.executeStorageOperation(
-      (s) => s.markNotificationAsRead(notificationId, userId),
-      'markNotificationAsRead'
-    );
-  }
-
-  async markAllNotificationsAsRead(userId: string): Promise<void> {
-    return this.executeStorageOperation(
-      (s) => s.markAllNotificationsAsRead(userId),
-      'markAllNotificationsAsRead'
-    );
-  }
-
-  async dismissNotification(notificationId: string, userId: string): Promise<void> {
-    return this.executeStorageOperation(
-      (s) => s.dismissNotification(notificationId, userId),
-      'dismissNotification'
-    );
-  }
-
-  async deleteExpiredNotifications(userId: string): Promise<void> {
-    return this.executeStorageOperation(
-      (s) => s.deleteExpiredNotifications(userId),
-      'deleteExpiredNotifications'
-    );
-  }
-
-  async getNotificationPreferences(
+  async getCertificate(
+    certificateId: number,
     userId: string
-  ): Promise<import('@shared/schema').NotificationPreferences | null> {
+  ): Promise<import('@shared/schema').Certificate | null> {
     return this.executeStorageOperation(
-      (s) => s.getNotificationPreferences(userId),
-      'getNotificationPreferences'
+      (s) => s.getCertificate(certificateId, userId),
+      'getCertificate'
     );
   }
 
-  async updateNotificationPreferences(
+  async getUserCertificates(
     userId: string,
-    preferences: Partial<import('@shared/schema').NotificationPreferences>
-  ): Promise<import('@shared/schema').NotificationPreferences> {
+    tenantId: number
+  ): Promise<import('@shared/schema').Certificate[]> {
     return this.executeStorageOperation(
-      (s) => s.updateNotificationPreferences(userId, preferences),
-      'updateNotificationPreferences'
+      (s) => s.getUserCertificates(userId, tenantId),
+      'getUserCertificates'
     );
   }
 
-  // ==========================================
-  // Enrollment Management
-  // ==========================================
-
-  async enrollUser(
-    userId: string,
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number,
-    tenantId: number,
-    requiresApproval = false
-  ): Promise<import('@shared/schema').Enrollment> {
+  async getCertificateByVerificationId(
+    verificationId: string
+  ): Promise<import('@shared/schema').Certificate | null> {
     return this.executeStorageOperation(
-      (s) => s.enrollUser(userId, resourceType, resourceId, tenantId, requiresApproval),
-      'enrollUser'
+      (s) => s.getCertificateByVerificationId(verificationId),
+      'getCertificateByVerificationId'
     );
   }
 
-  async unenrollUser(enrollmentId: string): Promise<void> {
-    return this.executeStorageOperation((s) => s.unenrollUser(enrollmentId), 'unenrollUser');
-  }
-
-  async getUserEnrollments(
-    userId: string,
-    tenantId: number,
-    resourceType?: 'quiz' | 'lecture' | 'template'
-  ): Promise<import('@shared/schema').Enrollment[]> {
+  async deleteCertificate(certificateId: number, userId: string): Promise<void> {
     return this.executeStorageOperation(
-      (s) => s.getUserEnrollments(userId, tenantId, resourceType),
-      'getUserEnrollments'
+      (s) => s.deleteCertificate(certificateId, userId),
+      'deleteCertificate'
     );
   }
 
-  async getResourceEnrollments(
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number
-  ): Promise<import('@shared/schema').Enrollment[]> {
+  async getCertificateTemplates(
+    tenantId: number
+  ): Promise<import('@shared/schema').CertificateTemplate[]> {
     return this.executeStorageOperation(
-      (s) => s.getResourceEnrollments(resourceType, resourceId),
-      'getResourceEnrollments'
+      (s) => s.getCertificateTemplates(tenantId),
+      'getCertificateTemplates'
     );
   }
 
-  async approveEnrollment(
-    enrollmentId: string,
-    approvedBy: string
-  ): Promise<import('@shared/schema').Enrollment> {
+  async getCertificateTemplate(
+    templateId: number
+  ): Promise<import('@shared/schema').CertificateTemplate | null> {
     return this.executeStorageOperation(
-      (s) => s.approveEnrollment(enrollmentId, approvedBy),
-      'approveEnrollment'
+      (s) => s.getCertificateTemplate(templateId),
+      'getCertificateTemplate'
     );
   }
 
-  async rejectEnrollment(enrollmentId: string): Promise<void> {
+  async createCertificateTemplate(
+    template: Omit<import('@shared/schema').CertificateTemplate, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<import('@shared/schema').CertificateTemplate> {
     return this.executeStorageOperation(
-      (s) => s.rejectEnrollment(enrollmentId),
-      'rejectEnrollment'
+      (s) => s.createCertificateTemplate(template),
+      'createCertificateTemplate'
     );
   }
 
-  async updateEnrollmentProgress(
-    enrollmentId: string,
-    progress: number,
-    completed = false
-  ): Promise<import('@shared/schema').Enrollment> {
+  async updateCertificateTemplate(
+    templateId: number,
+    updates: Partial<import('@shared/schema').CertificateTemplate>
+  ): Promise<import('@shared/schema').CertificateTemplate> {
     return this.executeStorageOperation(
-      (s) => s.updateEnrollmentProgress(enrollmentId, progress, completed),
-      'updateEnrollmentProgress'
+      (s) => s.updateCertificateTemplate(templateId, updates),
+      'updateCertificateTemplate'
     );
   }
 
-  async isUserEnrolled(
-    userId: string,
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number
-  ): Promise<boolean> {
+  async deleteCertificateTemplate(templateId: number): Promise<void> {
     return this.executeStorageOperation(
-      (s) => s.isUserEnrolled(userId, resourceType, resourceId),
-      'isUserEnrolled'
-    );
-  }
-
-  // ==========================================
-  // Assignment Management
-  // ==========================================
-
-  async assignToUser(
-    userId: string,
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number,
-    assignedBy: string,
-    tenantId: number,
-    dueDate?: Date,
-    notes?: string
-  ): Promise<import('@shared/schema').Assignment> {
-    return this.executeStorageOperation(
-      (s) => s.assignToUser(userId, resourceType, resourceId, assignedBy, tenantId, dueDate, notes),
-      'assignToUser'
-    );
-  }
-
-  async assignToUsers(
-    userIds: string[],
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number,
-    assignedBy: string,
-    tenantId: number,
-    dueDate?: Date,
-    notes?: string
-  ): Promise<import('@shared/schema').Assignment[]> {
-    return this.executeStorageOperation(
-      (s) =>
-        s.assignToUsers(userIds, resourceType, resourceId, assignedBy, tenantId, dueDate, notes),
-      'assignToUsers'
-    );
-  }
-
-  async unassignUser(assignmentId: string): Promise<void> {
-    return this.executeStorageOperation((s) => s.unassignUser(assignmentId), 'unassignUser');
-  }
-
-  async getUserAssignments(
-    userId: string,
-    tenantId: number,
-    resourceType?: 'quiz' | 'lecture' | 'template',
-    status?: import('@shared/schema').AssignmentStatus
-  ): Promise<import('@shared/schema').Assignment[]> {
-    return this.executeStorageOperation(
-      (s) => s.getUserAssignments(userId, tenantId, resourceType, status),
-      'getUserAssignments'
-    );
-  }
-
-  async getResourceAssignments(
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number
-  ): Promise<import('@shared/schema').Assignment[]> {
-    return this.executeStorageOperation(
-      (s) => s.getResourceAssignments(resourceType, resourceId),
-      'getResourceAssignments'
-    );
-  }
-
-  async updateAssignmentStatus(
-    assignmentId: string,
-    status: import('@shared/schema').AssignmentStatus,
-    score?: number,
-    progress?: number
-  ): Promise<import('@shared/schema').Assignment> {
-    return this.executeStorageOperation(
-      (s) => s.updateAssignmentStatus(assignmentId, status, score, progress),
-      'updateAssignmentStatus'
-    );
-  }
-
-  async updateAssignmentProgress(
-    assignmentId: string,
-    progress: number,
-    started = false
-  ): Promise<import('@shared/schema').Assignment> {
-    return this.executeStorageOperation(
-      (s) => s.updateAssignmentProgress(assignmentId, progress, started),
-      'updateAssignmentProgress'
-    );
-  }
-
-  async completeAssignment(
-    assignmentId: string,
-    score?: number
-  ): Promise<import('@shared/schema').Assignment> {
-    return this.executeStorageOperation(
-      (s) => s.completeAssignment(assignmentId, score),
-      'completeAssignment'
-    );
-  }
-
-  async hasAssignment(
-    userId: string,
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number
-  ): Promise<boolean> {
-    return this.executeStorageOperation(
-      (s) => s.hasAssignment(userId, resourceType, resourceId),
-      'hasAssignment'
-    );
-  }
-
-  async sendAssignmentNotification(assignmentId: string): Promise<void> {
-    return this.executeStorageOperation(
-      (s) => s.sendAssignmentNotification(assignmentId),
-      'sendAssignmentNotification'
-    );
-  }
-
-  async sendAssignmentReminder(assignmentId: string): Promise<void> {
-    return this.executeStorageOperation(
-      (s) => s.sendAssignmentReminder(assignmentId),
-      'sendAssignmentReminder'
-    );
-  }
-
-  async checkPrerequisites(
-    userId: string,
-    prerequisites: {
-      quizIds?: number[];
-      lectureIds?: number[];
-      minimumScores?: Record<number, number>;
-    }
-  ): Promise<import('@shared/schema').PrerequisiteCheckResult> {
-    return this.executeStorageOperation(
-      (s) => s.checkPrerequisites(userId, prerequisites),
-      'checkPrerequisites'
-    );
-  }
-
-  async checkAvailability(
-    availableFrom?: Date,
-    availableUntil?: Date,
-    enrollmentDeadline?: Date
-  ): Promise<{ available: boolean; canEnroll: boolean }> {
-    return this.executeStorageOperation(
-      (s) => s.checkAvailability(availableFrom, availableUntil, enrollmentDeadline),
-      'checkAvailability'
+      (s) => s.deleteCertificateTemplate(templateId),
+      'deleteCertificateTemplate'
     );
   }
 }

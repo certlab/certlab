@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -8,12 +8,20 @@ import DetailedResultsAnalysis from '@/components/DetailedResultsAnalysis';
 import { getScoreColor } from '@/lib/questions';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { queryKeys } from '@/lib/queryClient';
-import type { Quiz, Category } from '@shared/schema';
+import { storage } from '@/lib/storage-factory';
+import { useAuth } from '@/lib/auth-provider';
+import { generateVerificationId, printCertificate } from '@/lib/certificate-generator';
+import { useToast } from '@/hooks/use-toast';
+import { Award } from 'lucide-react';
+import type { Quiz, Category, Certificate } from '@shared/schema';
 
 export default function Results() {
   const params = useParams<{ id: string }>();
   const navigate = useNavigate();
   const quizId = params?.id ? parseInt(params.id) : 0;
+  const { user: currentUser, tenantId } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: quiz, isLoading } = useQuery<Quiz>({
     queryKey: queryKeys.quiz.detail(quizId),
@@ -23,6 +31,96 @@ export default function Results() {
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: queryKeys.categories.all(),
   });
+
+  const { data: existingCertificate } = useQuery<Certificate | null>({
+    queryKey: ['certificate', 'quiz', quizId],
+    queryFn: async () => {
+      if (!currentUser || !quiz?.completedAt || !quizId) return null;
+      // Check if certificate already exists for this quiz
+      const certs = await storage.getUserCertificates(currentUser.id, tenantId || 1);
+      return (
+        certs.find((c: Certificate) => c.resourceId === quizId && c.resourceType === 'quiz') || null
+      );
+    },
+    enabled: !!currentUser && !!quiz?.completedAt && !!quizId,
+  });
+
+  const generateCertificateMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentUser || !quiz) throw new Error('Missing required data');
+
+      const verificationId = generateVerificationId();
+      const userName =
+        `${currentUser.firstName ?? ''} ${currentUser.lastName ?? ''}`.trim() || currentUser.email;
+
+      // Validate score requirement
+      const quizScore = quiz.score || 0;
+      if (quizScore < 70) {
+        throw new Error('Certificate requires a score of 70% or higher');
+      }
+
+      const certificate: Omit<Certificate, 'id' | 'createdAt'> = {
+        userId: currentUser.id,
+        tenantId: tenantId || 1,
+        userName,
+        resourceType: 'quiz',
+        resourceId: quiz.id!,
+        resourceTitle: quiz.title,
+        score: quizScore,
+        completedAt: quiz.completedAt!,
+        verificationId,
+        issuedBy: 'CertLab',
+        organizationName: undefined,
+        logoUrl: undefined,
+        signatureUrl: undefined,
+        templateId: undefined,
+      };
+
+      return await storage.createCertificate(certificate);
+    },
+    onSuccess: (certificate) => {
+      queryClient.invalidateQueries({ queryKey: ['certificate', 'quiz', quizId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.certificates.all(currentUser.id) });
+      toast({
+        title: 'Certificate Generated',
+        description: 'Your certificate of completion has been created successfully!',
+      });
+      // Auto-download the certificate
+      printCertificate({ certificate }).catch((error) => {
+        console.error('Failed to print certificate:', error);
+        toast({
+          title: 'Download Failed',
+          description:
+            'Your certificate was created, but the automatic download failed. You can manually download it from your certificates page.',
+          variant: 'destructive',
+        });
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to generate certificate. Please try again.',
+        variant: 'destructive',
+      });
+      console.error('Certificate generation error:', error);
+    },
+  });
+
+  const handleDownloadCertificate = async () => {
+    if (existingCertificate) {
+      try {
+        await printCertificate({ certificate: existingCertificate });
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to download certificate. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    } else {
+      generateCertificateMutation.mutate();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -280,6 +378,22 @@ export default function Results() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              {quiz.mode === 'quiz' && quiz.score && quiz.score >= 70 && (
+                <Button
+                  onClick={handleDownloadCertificate}
+                  disabled={generateCertificateMutation.isPending}
+                  className="flex-1 bg-amber-600 text-white hover:bg-amber-700"
+                  size="sm"
+                  aria-label={
+                    existingCertificate
+                      ? 'Download your completion certificate'
+                      : 'Generate and download your completion certificate'
+                  }
+                >
+                  <Award className="h-4 w-4 mr-2" />
+                  {existingCertificate ? 'Download Certificate' : 'Generate Certificate'}
+                </Button>
+              )}
               <Button
                 onClick={() => navigate('/app')}
                 className="flex-1 bg-primary text-white hover:bg-primary/90"

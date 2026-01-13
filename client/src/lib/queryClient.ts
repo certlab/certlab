@@ -285,6 +285,14 @@ export const queryKeys = {
       ['/api', 'study-timer', userId, 'today-sessions'] as const,
     stats: (userId: string | undefined) => ['/api', 'study-timer', userId, 'stats'] as const,
   },
+
+  // Certificate queries
+  certificates: {
+    all: (userId: string | undefined) => ['/api', 'certificates', userId] as const,
+    detail: (certificateId: number | string | undefined) =>
+      ['/api', 'certificates', 'detail', certificateId] as const,
+    verify: (verificationId: string) => ['/api', 'certificates', 'verify', verificationId] as const,
+  },
 } as const;
 
 /**

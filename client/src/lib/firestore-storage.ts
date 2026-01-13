@@ -46,9 +46,6 @@ import {
   timestampToDate,
   where,
   orderBy,
-  limit,
-  getCountFromServer,
-  query,
 } from './firestore-service';
 import { logError, logInfo } from './errors';
 import { doc, deleteDoc } from 'firebase/firestore';
@@ -93,6 +90,8 @@ import type {
   InsertPurchase,
   Group,
   GroupMember,
+  Certificate,
+  CertificateTemplate,
 } from '@shared/schema';
 import type {
   IClientStorage,
@@ -1273,16 +1272,6 @@ class FirestoreStorage implements IClientStorage {
         sharedWithGroups: null,
         requiresPurchase: false,
         purchaseProductId: null,
-        // Distribution settings
-        distributionMethod: 'open',
-        availableFrom: null,
-        availableUntil: null,
-        enrollmentDeadline: null,
-        maxEnrollments: null,
-        requireApproval: false,
-        assignmentDueDate: null,
-        sendNotifications: true,
-        reminderDays: null,
       };
 
       await setUserDocument(userId, 'lectures', id.toString(), lecture);
@@ -3435,7 +3424,11 @@ class FirestoreStorage implements IClientStorage {
     userId: string,
     resourceType: 'quiz' | 'lecture' | 'template',
     resourceId: number
-  ): Promise<import('@shared/schema').AccessCheckResult> {
+  ): Promise<{
+    allowed: boolean;
+    reason?: 'purchase_required' | 'private_content' | 'not_shared_with_you' | 'access_denied';
+    productId?: string;
+  }> {
     try {
       // Get the resource to check visibility settings
       let resource: any;
@@ -4413,936 +4406,295 @@ class FirestoreStorage implements IClientStorage {
   }
 
   // ==========================================
-  // Notification Management
+  // Certificates
   // ==========================================
 
   /**
-   * Get user notifications
-   * Collection: /users/{userId}/notifications
+   * Create a new certificate
    */
-  async getUserNotifications(
-    userId: string,
-    options?: {
-      includeRead?: boolean;
-      includeDismissed?: boolean;
-      types?: import('@shared/schema').NotificationType[];
-      limit?: number;
-    }
-  ): Promise<import('@shared/schema').Notification[]> {
+  async createCertificate(
+    certificate: Omit<Certificate, 'id' | 'createdAt'>
+  ): Promise<Certificate> {
     try {
-      const constraints = [];
+      const userId = certificate.userId;
 
-      // Filter by dismissed status
-      if (!options?.includeDismissed) {
-        constraints.push(where('isDismissed', '==', false));
-      }
-
-      // Filter by read status
-      if (!options?.includeRead) {
-        constraints.push(where('isRead', '==', false));
-      }
-
-      // Filter by types
-      if (options?.types && options.types.length > 0) {
-        constraints.push(where('type', 'in', options.types));
-      }
-
-      // Sort by creation date (newest first)
-      constraints.push(orderBy('createdAt', 'desc'));
-
-      // Apply limit at query level if specified
-      if (options?.limit && options.limit > 0) {
-        constraints.push(limit(options.limit));
-      }
-
-      // Get notifications from user collection
-      const notifications = await getUserDocuments<import('@shared/schema').Notification>(
-        userId,
-        'notifications',
-        constraints
-      );
-
-      // Convert timestamps
-      return notifications.map((notif) =>
-        convertTimestamps<import('@shared/schema').Notification>(notif)
-      );
-    } catch (error) {
-      logError('getUserNotifications', error, { userId, options });
-      return [];
-    }
-  }
-
-  /**
-   * Get unread notification count
-   */
-  async getUnreadNotificationCount(userId: string): Promise<number> {
-    try {
+      // Use Firestore auto-generated ID to prevent collisions
       const db = getFirestoreInstance();
-      if (!db) throw new Error('Firestore not initialized');
+      const { collection, doc: docFn, setDoc } = await import('firebase/firestore');
+      const certificatesRef = collection(db, 'users', userId, 'certificates');
+      const newDocRef = docFn(certificatesRef);
+      const id = parseInt(newDocRef.id.substring(0, 8), 36); // Convert part of ID to number
 
-      const { collection } = await import('firebase/firestore');
-      const notificationsRef = collection(db, `users/${userId}/notifications`);
-
-      // Build query to count unread, non-dismissed notifications
-      const q = query(
-        notificationsRef,
-        where('isRead', '==', false),
-        where('isDismissed', '==', false)
-      );
-
-      // Use Firestore count aggregation for efficiency
-      const snapshot = await getCountFromServer(q);
-      return snapshot.data().count;
-    } catch (error) {
-      logError('getUnreadNotificationCount', error, { userId });
-      return 0;
-    }
-  }
-
-  /**
-   * Create a new notification
-   */
-  async createNotification(
-    notification: import('@shared/schema').InsertNotification
-  ): Promise<import('@shared/schema').Notification> {
-    try {
-      const id = generateId();
-      const now = new Date();
-
-      const newNotification: import('@shared/schema').Notification = {
+      const newCertificate: Certificate = {
+        ...certificate,
         id,
-        ...notification,
-        isRead: false,
-        isDismissed: false,
-        createdAt: now,
+        createdAt: new Date(),
       };
 
-      await setUserDocument(notification.userId, 'notifications', id, newNotification);
-
-      logInfo('createNotification', {
-        notificationId: id,
-        type: notification.type,
-      });
-      return convertTimestamps<import('@shared/schema').Notification>(newNotification);
-    } catch (error) {
-      logError('createNotification', error, { notification });
-      throw error;
-    }
-  }
-
-  /**
-   * Mark notification as read
-   */
-  async markNotificationAsRead(notificationId: string, userId: string): Promise<void> {
-    try {
-      const updates = {
-        isRead: true,
-        readAt: new Date(),
-      };
-
-      await updateUserDocument(userId, 'notifications', notificationId, updates);
-      logInfo('markNotificationAsRead', { notificationId, userId });
-    } catch (error) {
-      logError('markNotificationAsRead', error, { notificationId, userId });
-      throw error;
-    }
-  }
-
-  /**
-   * Mark all notifications as read using batch operations
-   */
-  async markAllNotificationsAsRead(userId: string): Promise<void> {
-    try {
-      const db = getFirestoreInstance();
-      if (!db) throw new Error('Firestore not initialized');
-
-      const { collection, writeBatch, doc } = await import('firebase/firestore');
-
-      // Get unread notifications
-      const notifications = await this.getUserNotifications(userId, {
-        includeRead: false,
-        includeDismissed: false,
+      await setDoc(newDocRef, {
+        ...newCertificate,
+        completedAt: Timestamp.fromDate(
+          newCertificate.completedAt instanceof Date
+            ? newCertificate.completedAt
+            : new Date(newCertificate.completedAt)
+        ),
+        createdAt: Timestamp.fromDate(newCertificate.createdAt),
       });
 
-      if (notifications.length === 0) {
-        logInfo('markAllNotificationsAsRead', { userId, count: 0 });
-        return;
-      }
-
-      // Use batch writes for efficiency (max 500 per batch)
-      const batchSize = 500;
-      const batches = [];
-
-      for (let i = 0; i < notifications.length; i += batchSize) {
-        const batch = writeBatch(db);
-        const chunk = notifications.slice(i, i + batchSize);
-
-        chunk.forEach((notif) => {
-          const notifRef = doc(db, `users/${userId}/notifications/${notif.id}`);
-          batch.update(notifRef, {
-            isRead: true,
-            readAt: new Date(),
-          });
-        });
-
-        batches.push(batch.commit());
-      }
-
-      await Promise.all(batches);
-      logInfo('markAllNotificationsAsRead', { userId, count: notifications.length });
+      logInfo('Certificate created', { certificateId: id, userId });
+      return newCertificate;
     } catch (error) {
-      logError('markAllNotificationsAsRead', error, { userId });
+      logError('createCertificate', error, { userId: certificate.userId });
       throw error;
     }
   }
 
   /**
-   * Dismiss a notification
+   * Get a certificate by ID
    */
-  async dismissNotification(notificationId: string, userId: string): Promise<void> {
+  async getCertificate(certificateId: number, userId: string): Promise<Certificate | null> {
     try {
-      const updates = {
-        isDismissed: true,
-        isRead: true,
-        readAt: new Date(),
-      };
+      const doc = await getUserDocument(userId, 'certificates', certificateId.toString());
+      if (!doc) return null;
 
-      await updateUserDocument(userId, 'notifications', notificationId, updates);
-      logInfo('dismissNotification', { notificationId, userId });
+      const docData = doc as any;
+      return {
+        ...docData,
+        completedAt: timestampToDate(docData.completedAt),
+        createdAt: timestampToDate(docData.createdAt),
+      } as Certificate;
     } catch (error) {
-      logError('dismissNotification', error, { notificationId, userId });
-      throw error;
-    }
-  }
-
-  /**
-   * Delete expired notifications using query filter and batch operations
-   */
-  async deleteExpiredNotifications(userId: string): Promise<void> {
-    try {
-      const db = getFirestoreInstance();
-      if (!db) throw new Error('Firestore not initialized');
-
-      const { collection, getDocs, writeBatch, doc } = await import('firebase/firestore');
-      const now = new Date();
-
-      const notificationsRef = collection(db, `users/${userId}/notifications`);
-
-      // Query for expired notifications directly
-      const q = query(notificationsRef, where('expiresAt', '<=', Timestamp.fromDate(now)));
-
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) {
-        logInfo('deleteExpiredNotifications', { userId, count: 0 });
-        return;
-      }
-
-      // Use batch deletes for efficiency (max 500 per batch)
-      const batchSize = 500;
-      const docs = snapshot.docs;
-      const batches = [];
-
-      for (let i = 0; i < docs.length; i += batchSize) {
-        const batch = writeBatch(db);
-        const chunk = docs.slice(i, i + batchSize);
-
-        chunk.forEach((docSnapshot) => {
-          batch.delete(docSnapshot.ref);
-        });
-
-        batches.push(batch.commit());
-      }
-
-      await Promise.all(batches);
-      logInfo('deleteExpiredNotifications', { userId, count: docs.length });
-    } catch (error) {
-      logError('deleteExpiredNotifications', error, { userId });
-      throw error;
-    }
-  }
-
-  /**
-   * Get user notification preferences
-   */
-  async getNotificationPreferences(
-    userId: string
-  ): Promise<import('@shared/schema').NotificationPreferences | null> {
-    try {
-      const prefs = await getUserDocument<import('@shared/schema').NotificationPreferences>(
-        userId,
-        'notificationPreferences',
-        'preferences'
-      );
-
-      if (!prefs) {
-        // Create and persist default preferences
-        const defaultPrefs: import('@shared/schema').NotificationPreferences = {
-          userId,
-          assignments: true,
-          completions: true,
-          results: true,
-          reminders: true,
-          achievements: true,
-          emailEnabled: false,
-          smsEnabled: false,
-          updatedAt: new Date(),
-        };
-
-        // Persist defaults to Firestore for future use
-        await setUserDocument(userId, 'notificationPreferences', 'preferences', defaultPrefs);
-        return defaultPrefs;
-      }
-
-      return convertTimestamps<import('@shared/schema').NotificationPreferences>(prefs);
-    } catch (error) {
-      logError('getNotificationPreferences', error, { userId });
+      logError('getCertificate', error, { certificateId, userId });
       return null;
     }
   }
 
   /**
-   * Update user notification preferences
+   * Get all certificates for a user
    */
-  async updateNotificationPreferences(
-    userId: string,
-    preferences: Partial<import('@shared/schema').NotificationPreferences>
-  ): Promise<import('@shared/schema').NotificationPreferences> {
+  async getUserCertificates(userId: string, tenantId: number): Promise<Certificate[]> {
     try {
-      const existingPrefs = await this.getNotificationPreferences(userId);
+      const docs = await getUserDocuments(userId, 'certificates', [
+        where('tenantId', '==', tenantId),
+        orderBy('createdAt', 'desc'),
+      ]);
 
-      const updatedPrefs: import('@shared/schema').NotificationPreferences = {
-        ...(existingPrefs || {
-          userId,
-          assignments: true,
-          completions: true,
-          results: true,
-          reminders: true,
-          achievements: true,
-          emailEnabled: false,
-          smsEnabled: false,
-          updatedAt: new Date(),
-        }),
-        ...preferences,
-        userId,
-        updatedAt: new Date(),
-      };
-
-      await setUserDocument(userId, 'notificationPreferences', 'preferences', updatedPrefs);
-      logInfo('updateNotificationPreferences', { userId });
-
-      return convertTimestamps<import('@shared/schema').NotificationPreferences>(updatedPrefs);
+      return docs.map((doc: any) => ({
+        ...doc,
+        completedAt: timestampToDate(doc.completedAt),
+        createdAt: timestampToDate(doc.createdAt),
+      })) as Certificate[];
     } catch (error) {
-      logError('updateNotificationPreferences', error, { userId, preferences });
-      throw error;
+      logError('getUserCertificates', error, { userId, tenantId });
+      return [];
     }
   }
 
-  // ==========================================
-  // Enrollment Management
-  // ==========================================
-
   /**
-   * Enroll a user in a quiz or lecture (self-enrollment)
+   * Get a certificate by verification ID
+   *
+   * PERFORMANCE WARNING: This implementation performs a full scan across all user collections,
+   * which results in O(n*m) time complexity where n = number of users and m = avg certificates per user.
+   *
+   * For production deployment with >100 users, you MUST implement a dedicated indexed collection:
+   * - Create `/certificates/{verificationId}` collection with userId reference
+   * - Update createCertificate to write to both locations (user collection + indexed collection)
+   * - Update this method to query the indexed collection for O(1) lookup
+   *
+   * Current implementation will cause:
+   * - Significant latency with moderate user base (>1000 users)
+   * - High Firestore read costs (1 read per user + 1 read per matching certificate)
+   * - Potential timeout issues on slower connections
+   *
+   * @see https://firebase.google.com/docs/firestore/query-data/queries for indexing strategies
    */
-  async enrollUser(
-    userId: string,
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number,
-    tenantId: number,
-    requiresApproval = false
-  ): Promise<import('@shared/schema').Enrollment> {
+  async getCertificateByVerificationId(verificationId: string): Promise<Certificate | null> {
     try {
-      // Get the resource to check enrollment limits and deadline
-      let resource: any;
-      if (resourceType === 'quiz') {
-        resource = await this.getQuiz(resourceId);
-      } else if (resourceType === 'lecture') {
-        resource = await this.getLecture(resourceId);
-      }
+      // TODO: CRITICAL - Replace with indexed collection before production deployment
+      // Current implementation scans all users (acceptable for small user base only)
+      const db = getFirestoreInstance();
+      const {
+        collection,
+        getDocs,
+        query,
+        where: whereFn,
+        limit,
+      } = await import('firebase/firestore');
 
-      if (!resource) {
-        throw new Error('Resource not found');
-      }
+      const usersRef = collection(db, 'users');
+      const usersSnapshot = await getDocs(usersRef);
 
-      // Check if enrollment deadline has passed
-      if (resource.enrollmentDeadline && new Date() > resource.enrollmentDeadline) {
-        throw new Error('Enrollment deadline has passed');
-      }
-
-      // Check if max enrollments reached
-      if (resource.maxEnrollments) {
-        const existingEnrollments = await this.getResourceEnrollments(resourceType, resourceId);
-        const activeEnrollments = existingEnrollments.filter(
-          (e) => e.status === 'enrolled' || e.status === 'completed'
+      // WARNING: This loop iterates through ALL users - O(n) operation
+      for (const userDoc of usersSnapshot.docs) {
+        const certificatesRef = collection(db, 'users', userDoc.id, 'certificates');
+        const certQuery = query(
+          certificatesRef,
+          whereFn('verificationId', '==', verificationId),
+          limit(1)
         );
-        if (activeEnrollments.length >= resource.maxEnrollments) {
-          throw new Error('Maximum enrollment limit reached');
+        const certSnapshot = await getDocs(certQuery);
+
+        if (!certSnapshot.empty) {
+          const docData = certSnapshot.docs[0].data();
+          return {
+            ...docData,
+            completedAt: timestampToDate(docData.completedAt),
+            createdAt: timestampToDate(docData.createdAt),
+          } as Certificate;
         }
       }
 
-      const enrollmentId = generateId();
-      const enrollment: import('@shared/schema').Enrollment = {
-        id: enrollmentId,
-        resourceType,
-        resourceId,
-        userId,
-        tenantId,
-        status: 'enrolled',
-        requiresApproval,
-        isApproved: !requiresApproval,
-        progress: 0,
-        enrolledAt: new Date(),
-        lastAccessedAt: new Date(),
-      };
-
-      await setSharedDocument('enrollments', enrollmentId, enrollment);
-      logInfo('enrollUser', { enrollmentId, userId, resourceType, resourceId });
-
-      return convertTimestamps(enrollment);
+      return null;
     } catch (error) {
-      logError('enrollUser', error, { userId, resourceType, resourceId });
+      logError('getCertificateByVerificationId', error, { verificationId });
+      return null;
+    }
+  }
+
+  /**
+   * Delete a certificate
+   *
+   * NOTE: This performs a hard delete, removing the certificate from the database.
+   * Once deleted, the verificationId becomes unverifiable.
+   *
+   * For production use, consider implementing soft delete/revocation:
+   * - Add 'isRevoked' and 'revokedAt' fields to Certificate schema
+   * - Modify this method to update those fields instead of deleting
+   * - Update verification endpoint to indicate "revoked" vs "not found"
+   * - This provides better transparency and audit trail
+   */
+  async deleteCertificate(certificateId: number, userId: string): Promise<void> {
+    try {
+      await deleteUserDocument(userId, 'certificates', certificateId.toString());
+      logInfo('Certificate deleted', { certificateId, userId });
+    } catch (error) {
+      logError('deleteCertificate', error, { certificateId, userId });
       throw error;
     }
   }
 
   /**
-   * Get all enrollments for a user
+   * Get certificate templates
    */
-  async getUserEnrollments(
-    userId: string,
-    tenantId: number,
-    resourceType?: 'quiz' | 'lecture' | 'template'
-  ): Promise<import('@shared/schema').Enrollment[]> {
+  async getCertificateTemplates(tenantId: number): Promise<CertificateTemplate[]> {
     try {
-      const constraints = [where('userId', '==', userId), where('tenantId', '==', tenantId)];
-      if (resourceType) {
-        constraints.push(where('resourceType', '==', resourceType));
-      }
+      const docs = await getSharedDocuments('certificateTemplates', [
+        where('tenantId', '==', tenantId),
+        where('isActive', '==', true),
+        orderBy('createdAt', 'desc'),
+      ]);
 
-      const enrollments = await getSharedDocuments<import('@shared/schema').Enrollment>(
-        'enrollments',
-        constraints
-      );
-      return enrollments.map((e) => convertTimestamps(e));
+      return docs.map((doc: any) => ({
+        ...doc,
+        createdAt: timestampToDate(doc.createdAt),
+        updatedAt: timestampToDate(doc.updatedAt),
+      })) as CertificateTemplate[];
     } catch (error) {
-      logError('getUserEnrollments', error, { userId, tenantId, resourceType });
+      logError('getCertificateTemplates', error, { tenantId });
       return [];
     }
   }
 
   /**
-   * Get all enrollments for a specific resource
+   * Get a certificate template by ID
    */
-  async getResourceEnrollments(
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number
-  ): Promise<import('@shared/schema').Enrollment[]> {
+  async getCertificateTemplate(templateId: number): Promise<CertificateTemplate | null> {
     try {
-      const enrollments = await getSharedDocuments<import('@shared/schema').Enrollment>(
-        'enrollments',
-        [where('resourceType', '==', resourceType), where('resourceId', '==', resourceId)]
-      );
-      return enrollments.map((e) => convertTimestamps(e));
+      const doc = await getSharedDocument('certificateTemplates', templateId.toString());
+      if (!doc) return null;
+
+      const docData = doc as any;
+      return {
+        ...docData,
+        createdAt: timestampToDate(docData.createdAt),
+        updatedAt: timestampToDate(docData.updatedAt),
+      } as CertificateTemplate;
     } catch (error) {
-      logError('getResourceEnrollments', error, { resourceType, resourceId });
-      return [];
+      logError('getCertificateTemplate', error, { templateId });
+      return null;
     }
   }
 
   /**
-   * Approve an enrollment (instructor/admin)
+   * Create a new certificate template
    */
-  async approveEnrollment(
-    enrollmentId: string,
-    approvedBy: string
-  ): Promise<import('@shared/schema').Enrollment> {
+  async createCertificateTemplate(
+    template: Omit<CertificateTemplate, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<CertificateTemplate> {
     try {
-      const enrollment = await getSharedDocument<import('@shared/schema').Enrollment>(
-        'enrollments',
-        enrollmentId
-      );
-      if (!enrollment) throw new Error('Enrollment not found');
+      const id = Date.now();
 
-      const updated = {
-        ...enrollment,
-        isApproved: true,
-        approvedBy,
-        approvedAt: new Date(),
-      };
-
-      await setSharedDocument('enrollments', enrollmentId, updated);
-      logInfo('approveEnrollment', { enrollmentId, approvedBy });
-
-      return convertTimestamps(updated);
-    } catch (error) {
-      logError('approveEnrollment', error, { enrollmentId, approvedBy });
-      throw error;
-    }
-  }
-
-  /**
-   * Update enrollment progress
-   */
-  async updateEnrollmentProgress(
-    enrollmentId: string,
-    progress: number,
-    completed = false
-  ): Promise<import('@shared/schema').Enrollment> {
-    try {
-      const enrollment = await getSharedDocument<import('@shared/schema').Enrollment>(
-        'enrollments',
-        enrollmentId
-      );
-      if (!enrollment) throw new Error('Enrollment not found');
-
-      const updated = {
-        ...enrollment,
-        progress: Math.min(100, Math.max(0, progress)),
-        status: completed ? ('completed' as const) : enrollment.status,
-        completedAt: completed ? new Date() : enrollment.completedAt,
-        lastAccessedAt: new Date(),
-      };
-
-      await setSharedDocument('enrollments', enrollmentId, updated);
-      return convertTimestamps(updated);
-    } catch (error) {
-      logError('updateEnrollmentProgress', error, { enrollmentId, progress, completed });
-      throw error;
-    }
-  }
-
-  /**
-   * Check if a user is enrolled in a resource
-   */
-  async isUserEnrolled(
-    userId: string,
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number
-  ): Promise<boolean> {
-    try {
-      const enrollments = await getSharedDocuments<import('@shared/schema').Enrollment>(
-        'enrollments',
-        [
-          where('userId', '==', userId),
-          where('resourceType', '==', resourceType),
-          where('resourceId', '==', resourceId),
-        ]
-      );
-      return enrollments.length > 0 && enrollments[0].status !== 'withdrawn';
-    } catch (error) {
-      logError('isUserEnrolled', error, { userId, resourceType, resourceId });
-      return false;
-    }
-  }
-
-  /**
-   * Unenroll a user (remove enrollment)
-   */
-  async unenrollUser(enrollmentId: string): Promise<void> {
-    try {
-      const db = getFirestoreInstance();
-      if (!db) throw new Error('Firestore not initialized');
-
-      const docRef = doc(db, 'enrollments', enrollmentId);
-      await deleteDoc(docRef);
-      logInfo('unenrollUser', { enrollmentId });
-    } catch (error) {
-      logError('unenrollUser', error, { enrollmentId });
-      throw error;
-    }
-  }
-
-  /**
-   * Reject/deny an enrollment
-   */
-  async rejectEnrollment(enrollmentId: string): Promise<void> {
-    try {
-      const enrollment = await getSharedDocument<import('@shared/schema').Enrollment>(
-        'enrollments',
-        enrollmentId
-      );
-      if (!enrollment) throw new Error('Enrollment not found');
-
-      const updated = {
-        ...enrollment,
-        isApproved: false,
-        status: 'withdrawn' as const,
-      };
-
-      await setSharedDocument('enrollments', enrollmentId, updated);
-      logInfo('rejectEnrollment', { enrollmentId });
-    } catch (error) {
-      logError('rejectEnrollment', error, { enrollmentId });
-      throw error;
-    }
-  }
-
-  /**
-   * Withdraw/drop from an enrollment
-   */
-  async withdrawEnrollment(enrollmentId: string): Promise<void> {
-    try {
-      const enrollment = await getSharedDocument<import('@shared/schema').Enrollment>(
-        'enrollments',
-        enrollmentId
-      );
-      if (!enrollment) throw new Error('Enrollment not found');
-
-      const updated = {
-        ...enrollment,
-        status: 'withdrawn' as const,
-        droppedAt: new Date(),
-      };
-
-      await setSharedDocument('enrollments', enrollmentId, updated);
-      logInfo('withdrawEnrollment', { enrollmentId });
-    } catch (error) {
-      logError('withdrawEnrollment', error, { enrollmentId });
-      throw error;
-    }
-  }
-
-  // ==========================================
-  // Assignment Management
-  // ==========================================
-
-  /**
-   * Assign a resource to a single user
-   */
-  async assignToUser(
-    userId: string,
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number,
-    assignedBy: string,
-    tenantId: number,
-    dueDate?: Date,
-    notes?: string
-  ): Promise<import('@shared/schema').Assignment> {
-    try {
-      const id = generateId();
-      const now = new Date();
-
-      const assignment: import('@shared/schema').Assignment = {
+      const newTemplate: CertificateTemplate = {
+        ...template,
         id,
-        resourceType,
-        resourceId,
-        userId,
-        assignedBy,
-        tenantId,
-        status: 'assigned',
-        assignedAt: now,
-        dueDate,
-        notes,
-        notificationSent: false,
-        remindersSent: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
-      await setSharedDocument('assignments', id, assignment);
-      logInfo('assignToUser', { assignmentId: id, userId, resourceType, resourceId });
+      await setSharedDocument('certificateTemplates', id.toString(), {
+        ...newTemplate,
+        createdAt: Timestamp.fromDate(newTemplate.createdAt),
+        updatedAt: Timestamp.fromDate(newTemplate.updatedAt),
+      });
 
-      return convertTimestamps(assignment);
+      logInfo('Certificate template created', { templateId: id });
+      return newTemplate;
     } catch (error) {
-      logError('assignToUser', error, { userId, resourceType, resourceId });
+      logError('createCertificateTemplate', error);
       throw error;
     }
   }
 
   /**
-   * Assign a resource to multiple users
+   * Update a certificate template
    */
-  async assignToUsers(
-    userIds: string[],
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number,
-    assignedBy: string,
-    tenantId: number,
-    dueDate?: Date,
-    notes?: string
-  ): Promise<import('@shared/schema').Assignment[]> {
+  async updateCertificateTemplate(
+    templateId: number,
+    updates: Partial<CertificateTemplate>
+  ): Promise<CertificateTemplate> {
     try {
-      const assignments = await Promise.all(
-        userIds.map((userId) =>
-          this.assignToUser(userId, resourceType, resourceId, assignedBy, tenantId, dueDate, notes)
-        )
-      );
-      return assignments;
+      const existing = await this.getCertificateTemplate(templateId);
+      if (!existing) {
+        throw new Error('Certificate template not found');
+      }
+
+      const updatedTemplate: CertificateTemplate = {
+        ...existing,
+        ...updates,
+        id: templateId,
+        updatedAt: new Date(),
+      };
+
+      // Ensure createdAt is a valid Date
+      const createdAtDate =
+        existing.createdAt instanceof Date ? existing.createdAt : new Date(existing.createdAt);
+
+      await setSharedDocument('certificateTemplates', templateId.toString(), {
+        ...updatedTemplate,
+        createdAt: Timestamp.fromDate(createdAtDate),
+        updatedAt: Timestamp.fromDate(updatedTemplate.updatedAt),
+      });
+
+      logInfo('Certificate template updated', { templateId });
+      return updatedTemplate;
     } catch (error) {
-      logError('assignToUsers', error, { userIds, resourceType, resourceId });
+      logError('updateCertificateTemplate', error, { templateId });
       throw error;
     }
   }
 
   /**
-   * Unassign a user from a resource
+   * Delete a certificate template
    */
-  async unassignUser(assignmentId: string): Promise<void> {
+  async deleteCertificateTemplate(templateId: number): Promise<void> {
     try {
       const db = getFirestoreInstance();
-      if (!db) throw new Error('Firestore not initialized');
-
-      const docRef = doc(db, 'assignments', assignmentId);
-      await deleteDoc(docRef);
-      logInfo('unassignUser', { assignmentId });
+      const { deleteDoc: deleteDocFn, doc: docFn } = await import('firebase/firestore');
+      await deleteDocFn(docFn(db, 'certificateTemplates', templateId.toString()));
+      logInfo('Certificate template deleted', { templateId });
     } catch (error) {
-      logError('unassignUser', error, { assignmentId });
+      logError('deleteCertificateTemplate', error, { templateId });
       throw error;
-    }
-  }
-
-  /**
-   * Get all assignments for a user
-   */
-  async getUserAssignments(
-    userId: string,
-    tenantId: number,
-    resourceType?: 'quiz' | 'lecture' | 'template',
-    status?: import('@shared/schema').AssignmentStatus
-  ): Promise<import('@shared/schema').Assignment[]> {
-    try {
-      const constraints = [where('userId', '==', userId), where('tenantId', '==', tenantId)];
-
-      if (resourceType) {
-        constraints.push(where('resourceType', '==', resourceType));
-      }
-      if (status) {
-        constraints.push(where('status', '==', status));
-      }
-
-      const assignments = await getSharedDocuments<import('@shared/schema').Assignment>(
-        'assignments',
-        constraints
-      );
-      return assignments.map((a) => convertTimestamps(a));
-    } catch (error) {
-      logError('getUserAssignments', error, { userId, tenantId, resourceType, status });
-      return [];
-    }
-  }
-
-  /**
-   * Get all assignments for a specific resource
-   */
-  async getResourceAssignments(
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number
-  ): Promise<import('@shared/schema').Assignment[]> {
-    try {
-      const assignments = await getSharedDocuments<import('@shared/schema').Assignment>(
-        'assignments',
-        [where('resourceType', '==', resourceType), where('resourceId', '==', resourceId)]
-      );
-      return assignments.map((a) => convertTimestamps(a));
-    } catch (error) {
-      logError('getResourceAssignments', error, { resourceType, resourceId });
-      return [];
-    }
-  }
-
-  /**
-   * Update assignment status
-   */
-  async updateAssignmentStatus(
-    assignmentId: string,
-    status: import('@shared/schema').AssignmentStatus,
-    score?: number,
-    progress?: number
-  ): Promise<import('@shared/schema').Assignment> {
-    try {
-      const assignment = await getSharedDocument<import('@shared/schema').Assignment>(
-        'assignments',
-        assignmentId
-      );
-      if (!assignment) throw new Error('Assignment not found');
-
-      const updated: import('@shared/schema').Assignment = {
-        ...assignment,
-        status,
-        score,
-        progress,
-        completedAt: status === 'completed' ? new Date() : assignment.completedAt,
-        lastAccessedAt: new Date(),
-      };
-
-      await setSharedDocument('assignments', assignmentId, updated);
-      logInfo('updateAssignmentStatus', { assignmentId, status });
-
-      return convertTimestamps(updated);
-    } catch (error) {
-      logError('updateAssignmentStatus', error, { assignmentId, status });
-      throw error;
-    }
-  }
-
-  /**
-   * Update assignment progress
-   */
-  async updateAssignmentProgress(
-    assignmentId: string,
-    progress: number,
-    started = false
-  ): Promise<import('@shared/schema').Assignment> {
-    try {
-      const assignment = await getSharedDocument<import('@shared/schema').Assignment>(
-        'assignments',
-        assignmentId
-      );
-      if (!assignment) throw new Error('Assignment not found');
-
-      const updated: import('@shared/schema').Assignment = {
-        ...assignment,
-        progress: Math.min(100, Math.max(0, progress)),
-        status: started && assignment.status === 'assigned' ? 'in_progress' : assignment.status,
-        startedAt: started && !assignment.startedAt ? new Date() : assignment.startedAt,
-        lastAccessedAt: new Date(),
-      };
-
-      await setSharedDocument('assignments', assignmentId, updated);
-      logInfo('updateAssignmentProgress', { assignmentId, progress });
-
-      return convertTimestamps(updated);
-    } catch (error) {
-      logError('updateAssignmentProgress', error, { assignmentId, progress });
-      throw error;
-    }
-  }
-
-  /**
-   * Complete an assignment
-   */
-  async completeAssignment(
-    assignmentId: string,
-    score?: number
-  ): Promise<import('@shared/schema').Assignment> {
-    try {
-      return await this.updateAssignmentStatus(assignmentId, 'completed', score, 100);
-    } catch (error) {
-      logError('completeAssignment', error, { assignmentId });
-      throw error;
-    }
-  }
-
-  /**
-   * Check if a user has an assignment for a resource
-   */
-  async hasAssignment(
-    userId: string,
-    resourceType: 'quiz' | 'lecture' | 'template',
-    resourceId: number
-  ): Promise<boolean> {
-    try {
-      const assignments = await getSharedDocuments<import('@shared/schema').Assignment>(
-        'assignments',
-        [
-          where('userId', '==', userId),
-          where('resourceType', '==', resourceType),
-          where('resourceId', '==', resourceId),
-        ]
-      );
-      return assignments.length > 0 && assignments[0].status !== 'completed';
-    } catch (error) {
-      logError('hasAssignment', error, { userId, resourceType, resourceId });
-      return false;
-    }
-  }
-
-  /**
-   * Send assignment notification
-   */
-  async sendAssignmentNotification(assignmentId: string): Promise<void> {
-    try {
-      const assignment = await getSharedDocument<import('@shared/schema').Assignment>(
-        'assignments',
-        assignmentId
-      );
-      if (!assignment) throw new Error('Assignment not found');
-
-      // Update notification sent flag
-      const updated = {
-        ...assignment,
-        notificationSent: true,
-      };
-
-      await setSharedDocument('assignments', assignmentId, updated);
-      logInfo('sendAssignmentNotification', { assignmentId });
-    } catch (error) {
-      logError('sendAssignmentNotification', error, { assignmentId });
-      throw error;
-    }
-  }
-
-  /**
-   * Send assignment reminder
-   */
-  async sendAssignmentReminder(assignmentId: string): Promise<void> {
-    try {
-      const assignment = await getSharedDocument<import('@shared/schema').Assignment>(
-        'assignments',
-        assignmentId
-      );
-      if (!assignment) throw new Error('Assignment not found');
-
-      // Add reminder timestamp
-      const updated = {
-        ...assignment,
-        remindersSent: [...assignment.remindersSent, Date.now()],
-      };
-
-      await setSharedDocument('assignments', assignmentId, updated);
-      logInfo('sendAssignmentReminder', { assignmentId });
-    } catch (error) {
-      logError('sendAssignmentReminder', error, { assignmentId });
-      throw error;
-    }
-  }
-
-  /**
-   * Check if user meets prerequisites for a resource
-   */
-  async checkPrerequisites(
-    userId: string,
-    prerequisites: {
-      quizIds?: number[];
-      lectureIds?: number[];
-      minimumScores?: Record<number, number>;
-    }
-  ): Promise<import('@shared/schema').PrerequisiteCheckResult> {
-    try {
-      // TODO: Implement proper prerequisite checking once quiz results are available
-      // For now, return met: true as a placeholder
-      if (
-        (!prerequisites.quizIds || prerequisites.quizIds.length === 0) &&
-        (!prerequisites.lectureIds || prerequisites.lectureIds.length === 0)
-      ) {
-        return { met: true };
-      }
-
-      // Placeholder - always return true for now
-      return { met: true };
-    } catch (error) {
-      logError('checkPrerequisites', error, { userId, prerequisites });
-      return { met: false };
-    }
-  }
-
-  /**
-   * Check resource availability and enrollment eligibility
-   */
-  async checkAvailability(
-    availableFrom?: Date,
-    availableUntil?: Date,
-    enrollmentDeadline?: Date
-  ): Promise<{ available: boolean; canEnroll: boolean }> {
-    try {
-      const now = new Date();
-      const available =
-        (!availableFrom || now >= availableFrom) && (!availableUntil || now <= availableUntil);
-      const canEnroll = !enrollmentDeadline || now <= enrollmentDeadline;
-
-      return { available, canEnroll };
-    } catch (error) {
-      logError('checkAvailability', error, { availableFrom, availableUntil, enrollmentDeadline });
-      return { available: false, canEnroll: false };
     }
   }
 }

@@ -2239,6 +2239,110 @@ export interface AccessCheckResult {
 }
 
 // ============================================================================
+// Certificate System
+// ============================================================================
+
+/**
+ * Logical certificate model for completion certificates.
+ *
+ * Storage Architecture:
+ * - Firestore: Documents stored at /users/{userId}/certificates/{certificateId}
+ * - This pgTable definition provides TypeScript types and schema documentation
+ * - The table structure is NOT used to generate Firestore collections
+ * - Drizzle/PostgreSQL syntax is used for type-safety and developer familiarity
+ *
+ * Note: The .unique() constraint on verificationId is a logical constraint only.
+ * Firestore does not enforce uniqueness - application code must ensure UUID uniqueness.
+ */
+export const certificates = pgTable('certificates', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  userName: text('user_name').notNull(),
+  resourceType: text('resource_type').notNull(), // 'quiz' | 'course' | 'practiceTest'
+  resourceId: integer('resource_id').notNull(),
+  resourceTitle: text('resource_title').notNull(),
+  score: integer('score').notNull(), // Percentage score
+  completedAt: timestamp('completed_at').notNull(),
+  verificationId: text('verification_id').notNull().unique(), // UUID for verification
+  templateId: integer('template_id'), // Optional: custom template
+  issuedBy: text('issued_by').notNull().default('CertLab'),
+  organizationName: text('organization_name'),
+  logoUrl: text('logo_url'), // Custom logo URL
+  signatureUrl: text('signature_url'), // Custom signature image URL
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+/**
+ * Certificate template table for customizable certificate designs
+ * Stored in Firestore at: /certificateTemplates/{templateId}
+ */
+export const certificateTemplates = pgTable('certificate_templates', {
+  id: serial('id').primaryKey(),
+  tenantId: integer('tenant_id').notNull().default(1),
+  name: text('name').notNull(),
+  description: text('description'),
+  borderStyle: text('border_style').default('double'), // 'solid' | 'double' | 'dashed' | 'none'
+  borderColor: text('border_color').default('#0066cc'),
+  backgroundColor: text('background_color').default('#ffffff'),
+  textColor: text('text_color').default('#333333'),
+  accentColor: text('accent_color').default('#0066cc'),
+  fontFamily: text('font_family').default('Georgia'),
+  logoUrl: text('logo_url'),
+  signatureUrl: text('signature_url'),
+  isDefault: boolean('is_default').default(false),
+  isActive: boolean('is_active').default(true),
+  createdBy: varchar('created_by'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+/**
+ * Insert schemas for certificates
+ */
+export const insertCertificateSchema = createInsertSchema(certificates)
+  .omit({
+    id: true,
+    createdAt: true,
+  })
+  .extend({
+    userName: z.string().min(1).max(200),
+    resourceType: z.enum(['quiz', 'course', 'practiceTest']),
+    resourceTitle: z.string().min(1).max(500),
+    score: z.number().int().min(0).max(100),
+    verificationId: z.string().uuid(),
+    issuedBy: z.string().max(200).default('CertLab'),
+    organizationName: z.string().max(200).optional().nullable(),
+    logoUrl: z.string().url().max(1000).optional().nullable(),
+    signatureUrl: z.string().url().max(1000).optional().nullable(),
+  });
+
+export const insertCertificateTemplateSchema = createInsertSchema(certificateTemplates)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    name: z.string().min(1).max(200),
+    description: z.string().max(1000).optional().nullable(),
+    borderStyle: z.enum(['solid', 'double', 'dashed', 'none']).default('double'),
+    borderColor: z.string().max(20).default('#0066cc'),
+    backgroundColor: z.string().max(20).default('#ffffff'),
+    textColor: z.string().max(20).default('#333333'),
+    accentColor: z.string().max(20).default('#0066cc'),
+    fontFamily: z.string().max(100).default('Georgia'),
+    logoUrl: z.string().url().max(1000).optional().nullable(),
+    signatureUrl: z.string().url().max(1000).optional().nullable(),
+  });
+
+/**
+ * Types for certificates
+ */
+export type InsertCertificate = z.infer<typeof insertCertificateSchema>;
+export type Certificate = typeof certificates.$inferSelect;
+export type InsertCertificateTemplate = z.infer<typeof insertCertificateTemplateSchema>;
+export type CertificateTemplate = typeof certificateTemplates.$inferSelect;
 // Enhanced Distribution Methods
 // ============================================================================
 

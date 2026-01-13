@@ -28,6 +28,8 @@ const Lecture = lazy(() => import('@/pages/lecture'));
 const StudyNotesPage = lazy(() => import('@/pages/study-notes'));
 const EnhancedStudyNotesPage = lazy(() => import('@/pages/enhanced-study-notes'));
 const StudyTimerPage = lazy(() => import('@/pages/study-timer'));
+const CertificatesPage = lazy(() => import('@/pages/certificates'));
+const VerifyCertificatePage = lazy(() => import('@/pages/verify-certificate'));
 const Achievements = lazy(() => import('@/pages/achievements'));
 const Analytics = lazy(() => import('@/pages/analytics'));
 const DailyChallenges = lazy(() => import('@/pages/daily-challenges'));
@@ -115,6 +117,11 @@ function Router() {
                   <Route path="/app/study-notes" element={<StudyNotesPage />} />
                   <Route path="/app/enhanced-study-notes" element={<EnhancedStudyNotesPage />} />
                   <Route path="/app/study-timer" element={<StudyTimerPage />} />
+                  <Route path="/app/certificates" element={<CertificatesPage />} />
+                  <Route
+                    path="/app/verify-certificate/:verificationId?"
+                    element={<VerifyCertificatePage />}
+                  />
                   <Route path="/app/achievements" element={<Achievements />} />
                   <Route path="/app/analytics" element={<Analytics />} />
                   <Route path="/app/daily-challenges" element={<DailyChallenges />} />
@@ -141,7 +148,27 @@ function Router() {
     );
   }
 
-  // For all other paths (except root which is handled above), show 404
+  // For all other paths (except root which is handled above), handle public routes
+  // Public certificate verification - accessible without authentication
+  if (location.pathname.startsWith('/verify-certificate')) {
+    return (
+      <div className="min-h-screen bg-background">
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route
+                path="/verify-certificate/:verificationId?"
+                element={<VerifyCertificatePage />}
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    );
+  }
+
+  // For all other paths, show 404
   return (
     <div className="min-h-screen bg-background">
       <ErrorBoundary>
