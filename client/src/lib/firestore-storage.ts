@@ -190,7 +190,7 @@ class FirestoreStorage implements IClientStorage {
       const allScores: MasteryScore[] = [];
 
       for (const user of users) {
-        const userScores = await this.getCertificationMasteryScores(user.id, user.tenantId || 1);
+        const userScores = await this.getUserMasteryScores(user.id, user.tenantId || 1);
         allScores.push(...userScores);
       }
 
