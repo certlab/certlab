@@ -1791,34 +1791,45 @@ export const baseTemplateSchema = z.object({
   searchText: z.string().optional(),
 });
 
-export const quizTemplateLibrarySchema = baseTemplateSchema
-  .extend({
-    templateType: z.literal('quiz'),
-    instructions: z.string(),
-    categoryIds: z.array(z.number()),
-    subcategoryIds: z.array(z.number()),
-    customQuestions: z.array(z.any()), // Use any for now, can be more specific
-    questionCount: z.number(),
-    timeLimit: z.number().nullable(),
-    passingScore: z.number(),
-    maxAttempts: z.number().nullable(),
-    difficultyLevel: z.number().min(1).max(5),
-    randomizeQuestions: z.boolean().optional(),
-    randomizeAnswers: z.boolean().optional(),
-    timeLimitPerQuestion: z.number().nullable().optional(),
-    questionWeights: z.record(z.string(), z.number()).optional(),
-    feedbackMode: z.enum(['instant', 'delayed', 'final']).optional(),
-    isAdvancedConfig: z.boolean().optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.questionCount !== data.customQuestions.length) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['questionCount'],
-        message: 'questionCount must match the number of items in customQuestions',
-      });
-    }
-  });
+/**
+ * Insert schemas (omit auto-generated fields)
+ * Note: Must be created before superRefine is applied to base schema
+ */
+const quizTemplateLibrarySchemaBase = baseTemplateSchema.extend({
+  templateType: z.literal('quiz'),
+  instructions: z.string(),
+  categoryIds: z.array(z.number()),
+  subcategoryIds: z.array(z.number()),
+  customQuestions: z.array(z.any()), // Use any for now, can be more specific
+  questionCount: z.number(),
+  timeLimit: z.number().nullable(),
+  passingScore: z.number(),
+  maxAttempts: z.number().nullable(),
+  difficultyLevel: z.number().min(1).max(5),
+  randomizeQuestions: z.boolean().optional(),
+  randomizeAnswers: z.boolean().optional(),
+  timeLimitPerQuestion: z.number().nullable().optional(),
+  questionWeights: z.record(z.string(), z.number()).optional(),
+  feedbackMode: z.enum(['instant', 'delayed', 'final']).optional(),
+  isAdvancedConfig: z.boolean().optional(),
+});
+
+export const quizTemplateLibrarySchema = quizTemplateLibrarySchemaBase.superRefine((data, ctx) => {
+  if (data.questionCount !== data.customQuestions.length) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['questionCount'],
+      message: 'questionCount must match the number of items in customQuestions',
+    });
+  }
+});
+
+export const insertQuizTemplateLibrarySchema = quizTemplateLibrarySchemaBase.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  usageCount: true,
+});
 
 export const materialTemplateLibrarySchema = baseTemplateSchema.extend({
   templateType: z.literal('material'),
@@ -1854,16 +1865,6 @@ export const materialTemplateLibrarySchema = baseTemplateSchema.extend({
       altText: z.string().optional(),
     })
     .optional(),
-});
-
-/**
- * Insert schemas (omit auto-generated fields)
- */
-export const insertQuizTemplateLibrarySchema = quizTemplateLibrarySchema.omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  usageCount: true,
 });
 
 export const insertMaterialTemplateLibrarySchema = materialTemplateLibrarySchema.omit({

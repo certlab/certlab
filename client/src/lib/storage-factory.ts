@@ -187,6 +187,14 @@ class StorageRouter implements IClientStorage {
     return this.executeStorageOperation((s) => s.getAllUsers(), 'getAllUsers');
   }
 
+  async getAllQuizzes(): Promise<any[]> {
+    return this.executeStorageOperation((s) => s.getAllQuizzes(), 'getAllQuizzes');
+  }
+
+  async getAllMasteryScores(): Promise<any[]> {
+    return this.executeStorageOperation((s) => s.getAllMasteryScores(), 'getAllMasteryScores');
+  }
+
   // ==========================================
   // Tenant Management
   // ==========================================
