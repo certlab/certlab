@@ -631,6 +631,7 @@ class FirestoreStorage implements IClientStorage {
         author: quiz.author || userId,
         authorName: quiz.authorName || null,
         prerequisites: quiz.prerequisites || null,
+        requireApproval: quiz.requireApproval || false,
         createdAt: new Date(),
         updatedAt: null,
         ...quiz,
