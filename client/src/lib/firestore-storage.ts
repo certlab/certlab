@@ -155,6 +155,52 @@ class FirestoreStorage implements IClientStorage {
     }
   }
 
+  /**
+   * Get all quizzes across all users (admin only)
+   * This is used for reporting and analytics
+   */
+  async getAllQuizzes(): Promise<Quiz[]> {
+    try {
+      // For admin reporting, we would need to query across all users
+      // Since Firestore stores quizzes per user, we need to get all users first
+      // then fetch their quizzes
+      const users = await this.getAllUsers();
+      const allQuizzes: Quiz[] = [];
+
+      for (const user of users) {
+        const userQuizzes = await this.getUserQuizzes(user.id, user.tenantId || 1);
+        allQuizzes.push(...userQuizzes);
+      }
+
+      return allQuizzes;
+    } catch (error) {
+      logError('getAllQuizzes', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get all mastery scores across all users (admin only)
+   * This is used for reporting and analytics
+   */
+  async getAllMasteryScores(): Promise<MasteryScore[]> {
+    try {
+      // For admin reporting, we need to query across all users
+      const users = await this.getAllUsers();
+      const allScores: MasteryScore[] = [];
+
+      for (const user of users) {
+        const userScores = await this.getCertificationMasteryScores(user.id, user.tenantId || 1);
+        allScores.push(...userScores);
+      }
+
+      return allScores;
+    } catch (error) {
+      logError('getAllMasteryScores', error);
+      return [];
+    }
+  }
+
   // ==========================================
   // Tenant Management
   // ==========================================

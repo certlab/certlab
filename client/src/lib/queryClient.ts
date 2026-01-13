@@ -293,6 +293,19 @@ export const queryKeys = {
       ['/api', 'certificates', 'detail', certificateId] as const,
     verify: (verificationId: string) => ['/api', 'certificates', 'verify', verificationId] as const,
   },
+
+  // Reporting queries (for admins/authors)
+  quizzes: {
+    all: () => ['/api', 'quizzes', 'all'] as const,
+  },
+
+  users: {
+    all: () => ['/api', 'users', 'all'] as const,
+  },
+
+  mastery: {
+    all: () => ['/api', 'mastery', 'all'] as const,
+  },
 } as const;
 
 /**
@@ -760,6 +773,22 @@ export function getQueryFn<T>(options: { on401: UnauthorizedBehavior }): QueryFu
         if (path.includes('/stats')) {
           return (await storage.getStudyTimerStats(userId)) as T;
         }
+      }
+
+      // Handle reporting queries (admin only)
+      if (path === '/api/quizzes/all') {
+        // This would need admin permissions check in production
+        return (await storage.getAllQuizzes()) as T;
+      }
+
+      if (path === '/api/users/all') {
+        // This would need admin permissions check in production
+        return (await storage.getAllUsers()) as T;
+      }
+
+      if (path === '/api/mastery/all') {
+        // This would need admin permissions check in production
+        return (await storage.getAllMasteryScores()) as T;
       }
 
       // Default: return null for unsupported queries
