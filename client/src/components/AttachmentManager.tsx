@@ -83,7 +83,7 @@ export function AttachmentManager({
       if (!user?.id) throw new Error('Not authenticated');
 
       // Find the attachment to get storage path
-      const attachment = attachments.find((a) => a.id === attachmentId);
+      const attachment = attachments.find((a: Attachment) => a.id === attachmentId);
       if (!attachment) throw new Error('Attachment not found');
 
       // Delete from Firebase Storage if it's a file (not external link)

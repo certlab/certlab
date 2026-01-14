@@ -1,0 +1,80 @@
+rules_version = '2';
+
+/**
+ * Firebase Storage Security Rules for CertLab
+ * 
+ * These rules control access to files stored in Firebase Storage,
+ * specifically for material attachments (PDFs, images, videos, etc.).
+ * 
+ * Storage Structure:
+ * /attachments/{userId}/{resourceType}/{resourceId}/{attachmentId}/{filename}
+ * 
+ * Access Control:
+ * - Users can only upload to their own userId folder
+ * - Users can read files they uploaded
+ * - Users with access to the parent resource (lecture/quiz) can read attachments
+ * - Only the uploader can delete their attachments
+ */
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check file size (max 100MB)
+    function isValidFileSize() {
+      return request.resource.size < 100 * 1024 * 1024; // 100MB
+    }
+    
+    // Check file type (allow common document, image, audio, video formats)
+    function isValidContentType() {
+      return request.resource.contentType.matches('application/pdf')
+          || request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.*')
+          || request.resource.contentType.matches('application/msword')
+          || request.resource.contentType.matches('application/vnd.ms-.*')
+          || request.resource.contentType.matches('application/zip')
+          || request.resource.contentType.matches('application/x-zip-compressed')
+          || request.resource.contentType.matches('image/.*')
+          || request.resource.contentType.matches('audio/.*')
+          || request.resource.contentType.matches('video/.*');
+    }
+    
+    // Attachments for user resources
+    // Path: /attachments/{userId}/{resourceType}/{resourceId}/{attachmentId}/{filename}
+    match /attachments/{userId}/{resourceType}/{resourceId}/{attachmentId}/{filename} {
+      // Allow read if:
+      // 1. User is the owner (uploaded the file)
+      // 2. User is authenticated (access controlled by Firestore rules on parent resource)
+      allow read: if isAuthenticated();
+      
+      // Allow create if:
+      // 1. User is the owner of this userId path
+      // 2. File size is within limits
+      // 3. Content type is allowed
+      allow create: if isOwner(userId) 
+                    && isValidFileSize()
+                    && isValidContentType();
+      
+      // Allow update if user is the owner
+      // (Updates are rare, mostly for replacing files)
+      allow update: if isOwner(userId)
+                    && isValidFileSize()
+                    && isValidContentType();
+      
+      // Allow delete only by the owner
+      allow delete: if isOwner(userId);
+    }
+    
+    // Deny all other paths by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

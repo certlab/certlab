@@ -1833,6 +1833,67 @@ class StorageRouter implements IClientStorage {
   async getUserRank(userId: string, tenantId: number = 1): Promise<number> {
     return this.executeStorageOperation((s) => s.getUserRank(userId, tenantId), 'getUserRank');
   }
+
+  // ==========================================
+  // Material Attachments
+  // ==========================================
+
+  async getResourceAttachments(
+    userId: string,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number
+  ): Promise<import('@shared/schema').Attachment[]> {
+    return this.executeStorageOperation(
+      (s) => s.getResourceAttachments(userId, resourceType, resourceId),
+      'getResourceAttachments'
+    );
+  }
+
+  async addAttachment(
+    userId: string,
+    attachment: import('@shared/schema').InsertAttachment
+  ): Promise<import('@shared/schema').Attachment> {
+    return this.executeStorageOperation(
+      (s) => s.addAttachment(userId, attachment),
+      'addAttachment'
+    );
+  }
+
+  async updateAttachment(
+    userId: string,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number,
+    attachmentId: string,
+    updates: Partial<import('@shared/schema').Attachment>
+  ): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.updateAttachment(userId, resourceType, resourceId, attachmentId, updates),
+      'updateAttachment'
+    );
+  }
+
+  async deleteAttachment(
+    userId: string,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number,
+    attachmentId: string
+  ): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.deleteAttachment(userId, resourceType, resourceId, attachmentId),
+      'deleteAttachment'
+    );
+  }
+
+  async deleteResourceAttachments(
+    userId: string,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number
+  ): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.deleteResourceAttachments(userId, resourceType, resourceId),
+      'deleteResourceAttachments'
+    );
+  }
 }
 
 // Export the storage router as the default storage interface

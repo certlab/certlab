@@ -8,6 +8,7 @@ import { ContentSkeleton } from '@/components/ui/content-skeleton';
 import { queryKeys } from '@/lib/queryClient';
 import { MetadataDisplay } from '@/components/MetadataDisplay';
 import { ContentRenderer } from '@/components/ContentRenderer';
+import { AttachmentManager } from '@/components/AttachmentManager';
 import { useAuth } from '@/lib/auth-provider';
 import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
@@ -155,6 +156,17 @@ export default function LecturePage() {
 
         {/* Study Guide Content with Multiple Content Type Support */}
         <ContentRenderer lecture={lecture} />
+
+        {/* Attachments Section */}
+        {lecture.id && (
+          <div className="mt-6">
+            <AttachmentManager
+              resourceType="lecture"
+              resourceId={lecture.id}
+              readonly={!canEdit(lecture, user)}
+            />
+          </div>
+        )}
 
         {/* Permission Check and Actions */}
         {!canEdit(lecture, user) && (

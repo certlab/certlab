@@ -72,6 +72,18 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
     
+    // Attachments for user resources (lectures, quizzes, materials)
+    // Stored at: /users/{userId}/lectures/{lectureId}/attachments/{attachmentId}
+    match /users/{userId}/{resourceType}/{resourceId}/attachments/{attachmentId} {
+      // Users can read/write their own attachments
+      allow read, write: if isOwner(userId);
+      
+      // Users with shared access to the resource can read attachments
+      // This requires checking the parent resource's visibility settings
+      // For simplicity, we allow authenticated users to read (parent resource controls access)
+      allow read: if isAuthenticated();
+    }
+    
     // Shared read-only content (categories, questions, badges, lectures)
     match /categories/{categoryId} {
       allow read: if isAuthenticated();

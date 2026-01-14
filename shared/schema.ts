@@ -2900,11 +2900,11 @@ export const ATTACHMENT_CONFIG = {
 export function getAttachmentTypeFromMimeType(mimeType: string): AttachmentType {
   const lowerMime = mimeType.toLowerCase();
 
-  if (ATTACHMENT_CONFIG.allowedMimeTypes.pdf.includes(lowerMime)) return 'pdf';
-  if (ATTACHMENT_CONFIG.allowedMimeTypes.docx.includes(lowerMime)) return 'docx';
-  if (ATTACHMENT_CONFIG.allowedMimeTypes.pptx.includes(lowerMime)) return 'pptx';
-  if (ATTACHMENT_CONFIG.allowedMimeTypes.xlsx.includes(lowerMime)) return 'xlsx';
-  if (ATTACHMENT_CONFIG.allowedMimeTypes.zip.includes(lowerMime)) return 'zip';
+  if (ATTACHMENT_CONFIG.allowedMimeTypes.pdf.some((type) => type === lowerMime)) return 'pdf';
+  if (ATTACHMENT_CONFIG.allowedMimeTypes.docx.some((type) => type === lowerMime)) return 'docx';
+  if (ATTACHMENT_CONFIG.allowedMimeTypes.pptx.some((type) => type === lowerMime)) return 'pptx';
+  if (ATTACHMENT_CONFIG.allowedMimeTypes.xlsx.some((type) => type === lowerMime)) return 'xlsx';
+  if (ATTACHMENT_CONFIG.allowedMimeTypes.zip.some((type) => type === lowerMime)) return 'zip';
 
   if (lowerMime.startsWith('image/')) return 'image';
   if (lowerMime.startsWith('audio/')) return 'audio';
@@ -2918,7 +2918,7 @@ export function getAttachmentTypeFromMimeType(mimeType: string): AttachmentType 
  */
 export function isValidAttachmentType(mimeType: string): boolean {
   const lowerMime = mimeType.toLowerCase();
-  const allAllowedTypes = Object.values(ATTACHMENT_CONFIG.allowedMimeTypes).flat();
+  const allAllowedTypes: string[] = Object.values(ATTACHMENT_CONFIG.allowedMimeTypes).flat();
 
   return (
     allAllowedTypes.includes(lowerMime) ||

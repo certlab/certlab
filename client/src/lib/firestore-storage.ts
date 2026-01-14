@@ -5471,10 +5471,7 @@ class FirestoreStorage implements IClientStorage {
         newAttachment
       );
 
-      logInfo(
-        'addAttachment',
-        `Added attachment ${attachmentId} to ${attachment.resourceType} ${attachment.resourceId}`
-      );
+      logInfo('addAttachment', `Added attachment to ${attachment.resourceType}`);
       return newAttachment;
     } catch (error) {
       logError('addAttachment', error);
@@ -5504,7 +5501,7 @@ class FirestoreStorage implements IClientStorage {
         attachmentId
       );
       await setDoc(docRef, updates, { merge: true });
-      logInfo('updateAttachment', `Updated attachment ${attachmentId}`);
+      logInfo('updateAttachment', 'Updated attachment successfully');
     } catch (error) {
       logError('updateAttachment', error);
       throw error;
@@ -5532,7 +5529,7 @@ class FirestoreStorage implements IClientStorage {
         attachmentId
       );
       await deleteDoc(docRef);
-      logInfo('deleteAttachment', `Deleted attachment ${attachmentId}`);
+      logInfo('deleteAttachment', 'Deleted attachment successfully');
     } catch (error) {
       logError('deleteAttachment', error);
       throw error;
