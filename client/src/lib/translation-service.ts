@@ -93,7 +93,7 @@ export async function saveTranslation(
       }
     }
   } catch (error) {
-    logError(error, { context: 'saveTranslation', entityType, entityId, languageCode });
+    logError('saveTranslation', error, { entityType, entityId, languageCode });
     throw error;
   }
 }
@@ -134,7 +134,7 @@ export async function getTranslation(
       updatedBy: data.updatedBy,
     } as Translation;
   } catch (error) {
-    logError(error, { context: 'getTranslation', entityType, entityId, languageCode });
+    logError('getTranslation', error, { entityType, entityId, languageCode });
     return null;
   }
 }
@@ -175,7 +175,7 @@ export async function getAllTranslations(
 
     return translations as Record<SupportedLanguage, Translation>;
   } catch (error) {
-    logError(error, { context: 'getAllTranslations', entityType, entityId });
+    logError('getAllTranslations', error, { entityType, entityId });
     return {} as Record<SupportedLanguage, Translation>;
   }
 }
@@ -199,7 +199,7 @@ export async function hasTranslation(
     const translationDoc = await getDoc(translationRef);
     return translationDoc.exists();
   } catch (error) {
-    logError(error, { context: 'hasTranslation', entityType, entityId, languageCode });
+    logError('hasTranslation', error, { entityType, entityId, languageCode });
     return false;
   }
 }
@@ -232,7 +232,7 @@ export async function deleteTranslation(
       availableLanguages: remainingLanguages,
     });
   } catch (error) {
-    logError(error, { context: 'deleteTranslation', entityType, entityId, languageCode });
+    logError('deleteTranslation', error, { entityType, entityId, languageCode });
     throw error;
   }
 }
