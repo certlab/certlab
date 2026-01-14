@@ -283,9 +283,9 @@ function QuizDisplay({ quiz }) {
 ### Dependencies Added
 ```json
 {
-  "i18next": "^23.x",
-  "react-i18next": "^14.x",
-  "i18next-browser-languagedetector": "^7.x"
+  "i18next": "^25.7.4",
+  "react-i18next": "^16.5.3",
+  "i18next-browser-languagedetector": "^8.2.0"
 }
 ```
 

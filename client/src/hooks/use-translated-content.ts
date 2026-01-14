@@ -5,7 +5,7 @@
  * Automatically falls back to English if translation is not available.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getTranslation } from '@/lib/translation-service';
 import type { Translation, SupportedLanguage } from '@shared/schema';
@@ -28,12 +28,20 @@ export function useTranslatedContent<T extends Record<string, any>>(
   const { i18n } = useTranslation();
   const [translatedContent, setTranslatedContent] = useState<T>(baseContent);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasTranslation, setHasTranslation] = useState(false);
   const currentLanguage = i18n.language as SupportedLanguage;
+  const baseContentRef = useRef(baseContent);
+
+  // Update baseContentRef when baseContent changes
+  useEffect(() => {
+    baseContentRef.current = baseContent;
+  }, [baseContent]);
 
   useEffect(() => {
     // If English or no entity ID, use base content
     if (currentLanguage === 'en' || !entityId) {
-      setTranslatedContent(baseContent);
+      setTranslatedContent(baseContentRef.current);
+      setHasTranslation(false);
       return;
     }
 
@@ -46,28 +54,31 @@ export function useTranslatedContent<T extends Record<string, any>>(
         if (translation) {
           // Merge translation with base content
           setTranslatedContent({
-            ...baseContent,
+            ...baseContentRef.current,
             ...translation,
           });
+          setHasTranslation(true);
         } else {
           // Fallback to base content if no translation
-          setTranslatedContent(baseContent);
+          setTranslatedContent(baseContentRef.current);
+          setHasTranslation(false);
         }
       } catch (error) {
         console.error('Error fetching translation:', error);
-        setTranslatedContent(baseContent);
+        setTranslatedContent(baseContentRef.current);
+        setHasTranslation(false);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchTranslation();
-  }, [entityType, entityId, currentLanguage, baseContent, userId]);
+  }, [entityType, entityId, currentLanguage, userId]);
 
   return {
     content: translatedContent,
     isLoading,
-    isTranslated: currentLanguage !== 'en' && translatedContent !== baseContent,
+    isTranslated: currentLanguage !== 'en' && hasTranslation,
     currentLanguage,
   };
 }
@@ -91,11 +102,17 @@ export function useTranslatedField(
   const { i18n } = useTranslation();
   const [value, setValue] = useState<string>(defaultValue);
   const currentLanguage = i18n.language as SupportedLanguage;
+  const defaultValueRef = useRef(defaultValue);
+
+  // Update defaultValueRef when defaultValue changes
+  useEffect(() => {
+    defaultValueRef.current = defaultValue;
+  }, [defaultValue]);
 
   useEffect(() => {
     // If English or no entity ID, use default value
     if (currentLanguage === 'en' || !entityId) {
-      setValue(defaultValue);
+      setValue(defaultValueRef.current);
       return;
     }
 
@@ -107,16 +124,16 @@ export function useTranslatedField(
         if (translation && translation[field]) {
           setValue(translation[field] as string);
         } else {
-          setValue(defaultValue);
+          setValue(defaultValueRef.current);
         }
       } catch (error) {
         console.error('Error fetching translation field:', error);
-        setValue(defaultValue);
+        setValue(defaultValueRef.current);
       }
     };
 
     fetchTranslation();
-  }, [entityType, entityId, field, currentLanguage, defaultValue, userId]);
+  }, [entityType, entityId, field, currentLanguage, userId]);
 
   return value;
 }
