@@ -22,6 +22,13 @@ import {
   Edit,
   List,
   Award,
+  Wallet,
+  Timer,
+  Languages,
+  Heart,
+  Folder,
+  Database,
+  Sparkles,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -95,6 +102,18 @@ export default function MobileNavigationEnhanced() {
       href: '/app/study-notes',
     },
     {
+      id: 'enhanced-study-notes',
+      label: 'Enhanced Notes',
+      icon: <Sparkles className="w-5 h-5" />,
+      href: '/app/enhanced-study-notes',
+    },
+    {
+      id: 'study-timer',
+      label: 'Study Timer',
+      icon: <Timer className="w-5 h-5" />,
+      href: '/app/study-timer',
+    },
+    {
       id: 'certificates',
       label: 'Certificates',
       icon: <Award className="w-5 h-5" />,
@@ -105,6 +124,24 @@ export default function MobileNavigationEnhanced() {
       label: 'Study Materials',
       icon: <ShoppingCart className="w-5 h-5" />,
       href: '/app/marketplace',
+    },
+    {
+      id: 'my-materials',
+      label: 'My Materials',
+      icon: <Folder className="w-5 h-5" />,
+      href: '/app/my-materials',
+    },
+    {
+      id: 'question-bank',
+      label: 'Question Bank',
+      icon: <Database className="w-5 h-5" />,
+      href: '/app/question-bank',
+    },
+    {
+      id: 'wallet',
+      label: 'Wallet',
+      icon: <Wallet className="w-5 h-5" />,
+      href: '/app/wallet',
       dividerAfter: !isAdmin,
     },
     // Admin section - only shown to admin users
@@ -115,6 +152,18 @@ export default function MobileNavigationEnhanced() {
             label: 'Admin Dashboard',
             icon: <Building className="w-5 h-5" />,
             href: '/admin',
+          } as NavigationItem,
+          {
+            id: 'i18n-demo',
+            label: 'I18n Demo',
+            icon: <Languages className="w-5 h-5" />,
+            href: '/app/i18n-demo',
+          } as NavigationItem,
+          {
+            id: 'credits',
+            label: 'Credits',
+            icon: <Heart className="w-5 h-5" />,
+            href: '/app/credits',
             dividerAfter: true,
           } as NavigationItem,
         ]

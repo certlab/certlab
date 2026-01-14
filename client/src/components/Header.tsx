@@ -54,6 +54,11 @@ import {
   PlusCircle,
   List,
   Award,
+  Wallet,
+  Timer,
+  Languages,
+  Heart,
+  Folder,
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme-provider';
 import { themes } from '@/lib/theme-constants';
@@ -483,6 +488,96 @@ export default function Header() {
                                 Browse and purchase study materials
                               </p>
                             </NavigationMenuLink>
+                            <NavigationMenuLink
+                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                isActivePath('/app/my-materials')
+                                  ? 'bg-primary/10 border-2 border-primary'
+                                  : 'hover:bg-accent/10'
+                              }`}
+                              onClick={() => navigate('/app/my-materials')}
+                            >
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <Folder className="w-3 h-3 text-primary" />
+                                </div>
+                                My Materials
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                View and manage purchased materials
+                              </p>
+                            </NavigationMenuLink>
+                            <NavigationMenuLink
+                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                isActivePath('/app/enhanced-study-notes')
+                                  ? 'bg-primary/10 border-2 border-primary'
+                                  : 'hover:bg-accent/10'
+                              }`}
+                              onClick={() => navigate('/app/enhanced-study-notes')}
+                            >
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <Sparkles className="w-3 h-3 text-primary" />
+                                </div>
+                                Enhanced Notes
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                Advanced note-taking with AI features
+                              </p>
+                            </NavigationMenuLink>
+                            <NavigationMenuLink
+                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                isActivePath('/app/study-timer')
+                                  ? 'bg-primary/10 border-2 border-primary'
+                                  : 'hover:bg-accent/10'
+                              }`}
+                              onClick={() => navigate('/app/study-timer')}
+                            >
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <Timer className="w-3 h-3 text-primary" />
+                                </div>
+                                Study Timer
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                Track study time and sessions
+                              </p>
+                            </NavigationMenuLink>
+                            <NavigationMenuLink
+                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                isActivePath('/app/question-bank')
+                                  ? 'bg-primary/10 border-2 border-primary'
+                                  : 'hover:bg-accent/10'
+                              }`}
+                              onClick={() => navigate('/app/question-bank')}
+                            >
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <Database className="w-3 h-3 text-primary" />
+                                </div>
+                                Question Bank
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                Browse and filter question library
+                              </p>
+                            </NavigationMenuLink>
+                            <NavigationMenuLink
+                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                isActivePath('/app/wallet')
+                                  ? 'bg-primary/10 border-2 border-primary'
+                                  : 'hover:bg-accent/10'
+                              }`}
+                              onClick={() => navigate('/app/wallet')}
+                            >
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <Wallet className="w-3 h-3 text-primary" />
+                                </div>
+                                Wallet
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                Manage tokens and purchases
+                              </p>
+                            </NavigationMenuLink>
                           </div>
                         </div>
 
@@ -546,6 +641,42 @@ export default function Header() {
                                 </div>
                                 <p className="text-xs leading-relaxed text-muted-foreground pl-8">
                                   Interactive application architecture
+                                </p>
+                              </NavigationMenuLink>
+                              <NavigationMenuLink
+                                className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                  isActivePath('/app/i18n-demo')
+                                    ? 'bg-primary/10 border-2 border-primary'
+                                    : 'hover:bg-accent/10'
+                                }`}
+                                onClick={() => navigate('/app/i18n-demo')}
+                              >
+                                <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                  <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                    <Languages className="w-3 h-3 text-primary" />
+                                  </div>
+                                  I18n Demo
+                                </div>
+                                <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                  Internationalization demo page
+                                </p>
+                              </NavigationMenuLink>
+                              <NavigationMenuLink
+                                className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                  isActivePath('/app/credits')
+                                    ? 'bg-primary/10 border-2 border-primary'
+                                    : 'hover:bg-accent/10'
+                                }`}
+                                onClick={() => navigate('/app/credits')}
+                              >
+                                <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                  <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                    <Heart className="w-3 h-3 text-primary" />
+                                  </div>
+                                  Credits
+                                </div>
+                                <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                  Acknowledgments and attributions
                                 </p>
                               </NavigationMenuLink>
                             </div>
