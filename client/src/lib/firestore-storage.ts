@@ -5420,6 +5420,145 @@ class FirestoreStorage implements IClientStorage {
     const snapshot = await getDocs(q);
     return snapshot.size + 1; // User's rank is one more than the count of higher scores
   }
+
+  // ==========================================
+  // Material Attachments
+  // ==========================================
+
+  /**
+   * Get attachments for a resource (lecture, quiz, material)
+   */
+  async getResourceAttachments(
+    userId: string,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number
+  ): Promise<import('@shared/schema').Attachment[]> {
+    try {
+      const attachments = await getUserSubcollectionDocuments<import('@shared/schema').Attachment>(
+        userId,
+        `${resourceType}s`, // lectures, quizzes, materials
+        resourceId.toString(),
+        'attachments'
+      );
+      return attachments.map((a) => convertTimestamps<import('@shared/schema').Attachment>(a));
+    } catch (error) {
+      logError('getResourceAttachments', error);
+      return [];
+    }
+  }
+
+  /**
+   * Add an attachment to a resource
+   */
+  async addAttachment(
+    userId: string,
+    attachment: import('@shared/schema').InsertAttachment
+  ): Promise<import('@shared/schema').Attachment> {
+    try {
+      const attachmentId = generateId();
+      const newAttachment: import('@shared/schema').Attachment = {
+        ...attachment,
+        id: attachmentId,
+        uploadedAt: new Date(),
+      };
+
+      await setUserSubcollectionDocument(
+        userId,
+        `${attachment.resourceType}s`,
+        attachment.resourceId.toString(),
+        'attachments',
+        attachmentId,
+        newAttachment
+      );
+
+      logInfo(
+        'addAttachment',
+        `Added attachment ${attachmentId} to ${attachment.resourceType} ${attachment.resourceId}`
+      );
+      return newAttachment;
+    } catch (error) {
+      logError('addAttachment', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update an attachment
+   */
+  async updateAttachment(
+    userId: string,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number,
+    attachmentId: string,
+    updates: Partial<import('@shared/schema').Attachment>
+  ): Promise<void> {
+    try {
+      const db = getFirestoreInstance();
+      const docRef = firestoreDoc(
+        db,
+        'users',
+        userId,
+        `${resourceType}s`,
+        resourceId.toString(),
+        'attachments',
+        attachmentId
+      );
+      await setDoc(docRef, updates, { merge: true });
+      logInfo('updateAttachment', `Updated attachment ${attachmentId}`);
+    } catch (error) {
+      logError('updateAttachment', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete an attachment
+   */
+  async deleteAttachment(
+    userId: string,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number,
+    attachmentId: string
+  ): Promise<void> {
+    try {
+      const db = getFirestoreInstance();
+      const docRef = firestoreDoc(
+        db,
+        'users',
+        userId,
+        `${resourceType}s`,
+        resourceId.toString(),
+        'attachments',
+        attachmentId
+      );
+      await deleteDoc(docRef);
+      logInfo('deleteAttachment', `Deleted attachment ${attachmentId}`);
+    } catch (error) {
+      logError('deleteAttachment', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete all attachments for a resource
+   */
+  async deleteResourceAttachments(
+    userId: string,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number
+  ): Promise<void> {
+    try {
+      const attachments = await this.getResourceAttachments(userId, resourceType, resourceId);
+      const deletePromises = attachments.map((attachment) =>
+        this.deleteAttachment(userId, resourceType, resourceId, attachment.id)
+      );
+      await Promise.all(deletePromises);
+      logInfo('deleteResourceAttachments', `Deleted ${attachments.length} attachments`);
+    } catch (error) {
+      logError('deleteResourceAttachments', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

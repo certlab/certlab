@@ -304,6 +304,13 @@ export const queryKeys = {
     verify: (verificationId: string) => ['/api', 'certificates', 'verify', verificationId] as const,
   },
 
+  // Attachment queries
+  attachments: (
+    userId: string | undefined,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number
+  ) => ['/api', 'attachments', userId, resourceType, resourceId] as const,
+
   // Reporting queries (for admins/authors)
   quizzes: {
     all: () => ['/api', 'quizzes', 'all'] as const,
