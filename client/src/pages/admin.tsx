@@ -26,10 +26,20 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PlusCircle, Edit, Trash2, Users, FileText, FolderOpen, Building } from 'lucide-react';
+import {
+  PlusCircle,
+  Edit,
+  Trash2,
+  Users,
+  FileText,
+  FolderOpen,
+  Building,
+  Palette,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import type { Tenant } from '@shared/schema';
+import { OrganizationBrandingSettings } from '@/components/OrganizationBrandingSettings';
 
 interface Category {
   id: number;
@@ -596,6 +606,10 @@ export default function AdminDashboard() {
                 <TabsTrigger value="categories">Categories</TabsTrigger>
                 <TabsTrigger value="questions">Questions</TabsTrigger>
                 <TabsTrigger value="users">Users</TabsTrigger>
+                <TabsTrigger value="branding">
+                  <Palette className="w-4 h-4 mr-2" />
+                  Branding
+                </TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
               </TabsList>
 
@@ -900,6 +914,10 @@ export default function AdminDashboard() {
 
               <TabsContent value="users">
                 <UserManagement selectedTenant={selectedTenant} />
+              </TabsContent>
+
+              <TabsContent value="branding" className="space-y-6">
+                <OrganizationBrandingSettings />
               </TabsContent>
 
               <TabsContent value="settings" className="space-y-6">
