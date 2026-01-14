@@ -1431,3 +1431,144 @@
   max-width: 100%;
   height: auto;
 }
+
+/* ========================================
+   Print-Specific Styles
+   ======================================== */
+@media print {
+  /* Hide navigation and UI chrome */
+  nav, 
+  header, 
+  footer, 
+  .no-print,
+  .print-hide,
+  [data-print-hide="true"] {
+    display: none !important;
+  }
+  
+  /* Optimize typography for print */
+  body {
+    font-size: 12pt;
+    line-height: 1.6;
+    color: #000;
+    background: #fff;
+  }
+  
+  /* Ensure content takes full width */
+  .max-w-4xl,
+  .max-w-7xl {
+    max-width: 100%;
+  }
+  
+  /* Remove shadows and borders for cleaner print */
+  .shadow,
+  .shadow-md,
+  .shadow-lg,
+  .shadow-xl {
+    box-shadow: none !important;
+  }
+  
+  /* Page break utilities */
+  .page-break {
+    page-break-after: always;
+    break-after: page;
+  }
+  
+  .avoid-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Keep headings with content */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  
+  /* Links - show URL in parentheses */
+  a {
+    color: #000;
+    text-decoration: none;
+  }
+  
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+  
+  /* Don't show URLs for internal links or buttons */
+  a[href^="#"]:after,
+  a[href^="/"]:after,
+  .print-no-url:after {
+    content: "";
+  }
+  
+  /* Optimize cards and containers for print */
+  .card,
+  [class*="card"] {
+    border: 1px solid #ddd;
+    box-shadow: none !important;
+    margin-bottom: 1em;
+  }
+  
+  /* Better table printing */
+  table {
+    page-break-inside: avoid;
+  }
+  
+  thead {
+    display: table-header-group;
+  }
+  
+  /* Images */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+  
+  /* Code blocks */
+  pre, code {
+    border: 1px solid #ddd;
+    page-break-inside: avoid;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  
+  /* Remove backgrounds to save ink */
+  .bg-primary,
+  .bg-secondary,
+  .bg-accent,
+  .bg-muted,
+  [class*="bg-"] {
+    background: transparent !important;
+    color: #000 !important;
+  }
+  
+  /* Ensure important text is visible */
+  .text-muted-foreground,
+  .text-gray-500,
+  .text-gray-600 {
+    color: #444 !important;
+  }
+  
+  /* Badge and label styling for print */
+  .badge,
+  [class*="badge"] {
+    border: 1px solid #000;
+    padding: 2px 6px;
+  }
+  
+  /* Print-specific utilities */
+  .print-only {
+    display: block !important;
+  }
+  
+  /* Hide interactive elements */
+  button:not(.print-show),
+  input[type="button"],
+  input[type="submit"],
+  .interactive {
+    display: none !important;
+  }
+}

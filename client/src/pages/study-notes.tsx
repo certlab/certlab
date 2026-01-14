@@ -40,7 +40,9 @@ import {
   Target,
   Filter,
   FileText,
+  Printer,
 } from 'lucide-react';
+import PrintButton from '@/components/PrintButton';
 import { useAuth } from '@/lib/auth-provider';
 import { queryKeys } from '@/lib/queryClient';
 import { storage } from '@/lib/storage-factory';
@@ -294,6 +296,17 @@ export default function StudyNotesPage() {
                     <Button variant="outline" size="sm" onClick={() => handleExportPDF(note)}>
                       <Download className="h-4 w-4" />
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        handleViewNote(note);
+                        // Small delay to ensure dialog is open before printing
+                        setTimeout(() => window.print(), 100);
+                      }}
+                    >
+                      <Printer className="h-4 w-4" />
+                    </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="outline" size="sm" className="text-destructive">
@@ -412,6 +425,7 @@ export default function StudyNotesPage() {
               >
                 Copy to Clipboard
               </Button>
+              <PrintButton content="notes" label="Print" variant="outline" />
               <Button
                 variant="outline"
                 onClick={() => selectedNote && handleExportPDF(selectedNote)}

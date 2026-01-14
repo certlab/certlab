@@ -9,6 +9,7 @@ import { queryKeys } from '@/lib/queryClient';
 import { MetadataDisplay } from '@/components/MetadataDisplay';
 import { ContentRenderer } from '@/components/ContentRenderer';
 import { AttachmentManager } from '@/components/AttachmentManager';
+import PrintButton from '@/components/PrintButton';
 import { useAuth } from '@/lib/auth-provider';
 import { storage } from '@/lib/storage-factory';
 import { useToast } from '@/hooks/use-toast';
@@ -181,9 +182,7 @@ export default function LecturePage() {
 
         {/* Action Buttons */}
         <div className="mt-6 flex gap-4">
-          <Button variant="outline" onClick={() => window.print()} className="flex-1">
-            Print Study Guide
-          </Button>
+          <PrintButton content="lecture" label="Print Study Guide" className="flex-1" />
           {canEdit(lecture, user) && (
             <>
               <Button

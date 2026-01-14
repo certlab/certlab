@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DetailedResultsAnalysis from '@/components/DetailedResultsAnalysis';
+import PrintButton from '@/components/PrintButton';
 import { getScoreColor } from '@/lib/questions';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { queryKeys } from '@/lib/queryClient';
@@ -396,6 +397,7 @@ export default function Results() {
                   {existingCertificate ? 'Download Certificate' : 'Generate Certificate'}
                 </Button>
               )}
+              <PrintButton content="results" label="Print Results" className="flex-1" size="sm" />
               <Button
                 onClick={() => navigate('/app')}
                 className="flex-1 bg-primary text-white hover:bg-primary/90"
@@ -412,7 +414,11 @@ export default function Results() {
                 <i className="fas fa-eye mr-2"></i>
                 Review Answers
               </Button>
-              <Button variant="outline" onClick={() => navigate('/app')} className="flex-1">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/app')}
+                className="flex-1 no-print"
+              >
                 <i className="fas fa-redo mr-2"></i>
                 Take Another Quiz
               </Button>
