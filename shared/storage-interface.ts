@@ -1531,4 +1531,45 @@ export interface IClientStorage extends IStorageAdapter {
 
   /** Get user's rank in global leaderboard */
   getUserRank(userId: string, tenantId?: number): Promise<number>;
+
+  // ==========================================
+  // Attachments
+  // ==========================================
+
+  /** Get attachments for a resource (lecture, quiz, material) */
+  getResourceAttachments(
+    userId: string,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number
+  ): Promise<import('./schema').Attachment[]>;
+
+  /** Add an attachment to a resource */
+  addAttachment(
+    userId: string,
+    attachment: import('./schema').InsertAttachment
+  ): Promise<import('./schema').Attachment>;
+
+  /** Update an attachment */
+  updateAttachment(
+    userId: string,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number,
+    attachmentId: string,
+    updates: Partial<import('./schema').Attachment>
+  ): Promise<void>;
+
+  /** Delete an attachment */
+  deleteAttachment(
+    userId: string,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number,
+    attachmentId: string
+  ): Promise<void>;
+
+  /** Delete all attachments for a resource */
+  deleteResourceAttachments(
+    userId: string,
+    resourceType: 'lecture' | 'quiz' | 'material',
+    resourceId: number
+  ): Promise<void>;
 }

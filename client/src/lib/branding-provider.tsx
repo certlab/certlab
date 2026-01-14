@@ -13,7 +13,7 @@
  * @module branding-provider
  */
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { storage } from './storage-factory';
 import type { OrganizationBranding } from '@shared/schema';
 import { logError, logInfo } from './errors';
@@ -38,7 +38,7 @@ export function BrandingProvider({ children, tenantId = 1 }: BrandingProviderPro
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const loadBranding = async () => {
+  const loadBranding = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -57,7 +57,7 @@ export function BrandingProvider({ children, tenantId = 1 }: BrandingProviderPro
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [tenantId]);
 
   const updateBranding = async (newBranding: OrganizationBranding) => {
     try {
@@ -72,14 +72,14 @@ export function BrandingProvider({ children, tenantId = 1 }: BrandingProviderPro
     }
   };
 
-  const refreshBranding = async () => {
+  const refreshBranding = useCallback(async () => {
     await loadBranding();
-  };
+  }, [loadBranding]);
 
   // Load branding on mount and when tenantId changes
   useEffect(() => {
     loadBranding();
-  }, [tenantId]);
+  }, [loadBranding]);
 
   const value: BrandingContextValue = {
     branding,

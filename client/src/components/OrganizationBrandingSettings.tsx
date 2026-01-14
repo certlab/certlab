@@ -35,8 +35,17 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Palette, Type, Image as ImageIcon, Save, RotateCcw } from 'lucide-react';
+import {
+  Loader2,
+  Palette,
+  Type,
+  Image as ImageIcon,
+  Save,
+  RotateCcw,
+  AlertCircle,
+} from 'lucide-react';
 import type { OrganizationBranding } from '@shared/schema';
+import { organizationBrandingSchema } from '@shared/schema';
 import { themes } from '@/lib/theme-constants';
 
 export function OrganizationBrandingSettings() {
@@ -112,6 +121,21 @@ export function OrganizationBrandingSettings() {
         updatedBy: user.id,
       };
 
+      // Validate with Zod schema before saving
+      const validation = organizationBrandingSchema.safeParse(brandingData);
+
+      if (!validation.success) {
+        const errors = validation.error.issues
+          .map((err: any) => `${err.path.join('.')}: ${err.message}`)
+          .join(', ');
+        toast({
+          title: 'Validation Error',
+          description: `Please fix the following errors: ${errors}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       await updateBranding(brandingData);
 
       toast({
@@ -122,7 +146,10 @@ export function OrganizationBrandingSettings() {
       console.error('Failed to save branding:', error);
       toast({
         title: 'Error',
-        description: 'Failed to save branding settings. Please try again.',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to save branding settings. Please try again.',
         variant: 'destructive',
       });
     } finally {
