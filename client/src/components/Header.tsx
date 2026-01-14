@@ -779,36 +779,58 @@ export default function Header() {
                       <DropdownMenuLabel className="text-xs text-muted-foreground px-2 py-1.5">
                         Choose your theme
                       </DropdownMenuLabel>
-                      {themes.map((themeOption) => {
-                        const Icon = themeOption.icon;
-                        const isSelected = theme === themeOption.value;
-                        return (
-                          <DropdownMenuItem
-                            key={themeOption.value}
-                            onClick={() => setTheme(themeOption.value)}
-                            className="cursor-pointer rounded-md py-2.5 px-3"
-                          >
-                            <div className="flex items-center gap-3 w-full">
-                              <div
-                                className={`flex aspect-square size-6 items-center justify-center rounded-lg ${
-                                  isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                                }`}
-                              >
-                                <Icon className="size-3.5" />
+                      {themes
+                        .filter((themeOption) => {
+                          // Filter based on org branding settings
+                          if (!branding?.allowUserThemeSelection) {
+                            // If user theme selection is disabled, only show the default theme
+                            return themeOption.value === (branding?.defaultTheme || 'light');
+                          }
+                          // If enabled themes list is empty or undefined, show all themes
+                          if (!branding?.enabledThemes || branding.enabledThemes.length === 0) {
+                            return true;
+                          }
+                          // Otherwise, only show enabled themes
+                          return branding.enabledThemes.includes(themeOption.value);
+                        })
+                        .map((themeOption) => {
+                          const Icon = themeOption.icon;
+                          const isSelected = theme === themeOption.value;
+                          return (
+                            <DropdownMenuItem
+                              key={themeOption.value}
+                              onClick={() => setTheme(themeOption.value)}
+                              className="cursor-pointer rounded-md py-2.5 px-3"
+                            >
+                              <div className="flex items-center gap-3 w-full">
+                                <div
+                                  className={`flex aspect-square size-6 items-center justify-center rounded-lg ${
+                                    isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                                  }`}
+                                >
+                                  <Icon className="size-3.5" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{themeOption.name}</p>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {themeOption.description}
+                                  </p>
+                                </div>
+                                {isSelected && (
+                                  <Check className="size-4 text-primary flex-shrink-0" />
+                                )}
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{themeOption.name}</p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {themeOption.description}
-                                </p>
-                              </div>
-                              {isSelected && (
-                                <Check className="size-4 text-primary flex-shrink-0" />
-                              )}
-                            </div>
-                          </DropdownMenuItem>
-                        );
-                      })}
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      {(!branding?.allowUserThemeSelection ||
+                        (branding?.enabledThemes && branding.enabledThemes.length > 0)) && (
+                        <div className="px-3 py-2 text-xs text-muted-foreground border-t mt-1">
+                          {!branding?.allowUserThemeSelection
+                            ? 'Theme selection is managed by your organization'
+                            : `${branding?.enabledThemes?.length || 0} theme(s) available`}
+                        </div>
+                      )}
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
 
