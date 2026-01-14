@@ -1881,6 +1881,10 @@ class StorageRouter implements IClientStorage {
     return this.executeStorageOperation(
       (s) => (s as any).updateUserThemePreferences(userId, updates),
       'updateUserThemePreferences'
+    );
+  }
+
+  // ==========================================
   // Material Attachments
   // ==========================================
 
