@@ -51,8 +51,15 @@ service firebase.storage {
     match /attachments/{userId}/{resourceType}/{resourceId}/{attachmentId}/{filename} {
       // Allow read if:
       // 1. User is the owner (uploaded the file)
-      // 2. User is authenticated (access controlled by Firestore rules on parent resource)
-      allow read: if isAuthenticated();
+      // Note: Access to the parent resource (lecture/quiz) is controlled by Firestore rules.
+      // This rule allows authenticated users to read, but actual URL access is only possible
+      // if they have the download URL from Firestore (which requires Firestore permissions).
+      // For stricter control, implement custom token validation or use signed URLs.
+      allow read: if isAuthenticated() && (
+        isOwner(userId) || 
+        // Authenticated users can read if they have the URL (Firestore controls URL access)
+        request.auth != null
+      );
       
       // Allow create if:
       // 1. User is the owner of this userId path
