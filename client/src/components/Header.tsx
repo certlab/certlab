@@ -1,4 +1,5 @@
 import { useAuth } from '@/lib/auth-provider';
+import { useBranding } from '@/lib/branding-provider';
 import { Button } from '@/components/ui/button';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -65,6 +66,7 @@ export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user: currentUser, logout } = useAuth();
+  const { branding } = useBranding();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const isAdminArea = location.pathname.startsWith('/admin');
@@ -141,10 +143,25 @@ export default function Header() {
           {/* Logo and Credit Balance */}
           <div className="flex items-center space-x-4 flex-shrink-0">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-xl font-semibold text-foreground tracking-tight">Cert Lab</h1>
+              {/* Logo - use org branding if available */}
+              {branding?.logoUrl ? (
+                <img
+                  src={branding.logoUrl}
+                  alt={branding.organizationName || 'Logo'}
+                  className="object-contain"
+                  style={{
+                    width: `${branding.logoWidth || 40}px`,
+                    height: `${branding.logoHeight || 40}px`,
+                  }}
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
+                  <Shield className="w-6 h-6 text-white" />
+                </div>
+              )}
+              <h1 className="text-xl font-semibold text-foreground tracking-tight">
+                {branding?.organizationName || 'Cert Lab'}
+              </h1>
               {/* Token Balance Display - Hidden on medium screens to save space */}
               {tokenData && currentUser && (
                 <Badge
