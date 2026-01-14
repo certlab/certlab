@@ -41,7 +41,7 @@ interface TranslationEditorProps {
 
 export function TranslationEditor({ entityType, entityId, fields }: TranslationEditorProps) {
   const { user } = useAuth();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>('es');

@@ -19,6 +19,7 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
   Timestamp,
   arrayUnion,
 } from 'firebase/firestore';
@@ -221,11 +222,12 @@ export async function deleteTranslation(
     const translationRef = doc(collection(docRef, 'translations'), languageCode);
 
     // Delete the translation document
-    await setDoc(translationRef, { _deleted: true });
+    await deleteDoc(translationRef);
 
-    // Update parent document
-    const allTranslations = await getAllTranslations(entityType, entityId, userId);
-    const remainingLanguages = Object.keys(allTranslations).filter((lang) => lang !== languageCode);
+    // Update parent document's translation metadata using availableLanguages
+    const parentDoc = await getDoc(docRef);
+    const currentLanguages: SupportedLanguage[] = parentDoc.data()?.availableLanguages || [];
+    const remainingLanguages = currentLanguages.filter((lang) => lang !== languageCode);
 
     await updateDoc(docRef, {
       hasTranslations: remainingLanguages.length > 0,
