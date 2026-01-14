@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { uploadFile, validateFile, type UploadProgress } from '@/lib/firebase-storage';
+import { generateId } from '@/lib/firestore-storage';
 import { ATTACHMENT_CONFIG } from '@shared/schema';
 import type { AttachmentType } from '@shared/schema';
 
@@ -58,8 +59,8 @@ export function FileUpload({
 
   const handleUpload = useCallback(
     async (file: File) => {
-      // Generate unique attachment ID
-      const attachmentId = crypto.randomUUID();
+      // Generate unique attachment ID using shared utility
+      const attachmentId = generateId();
 
       // Validate file
       const validation = validateFile(file);

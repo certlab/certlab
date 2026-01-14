@@ -113,8 +113,22 @@ import type {
 /**
  * Generates a unique identifier
  */
-function generateId(): string {
+export function generateId(): string {
   return crypto.randomUUID();
+}
+
+/**
+ * Convert resource type to plural collection name
+ */
+function getCollectionName(resourceType: 'lecture' | 'quiz' | 'material'): string {
+  switch (resourceType) {
+    case 'lecture':
+      return 'lectures';
+    case 'quiz':
+      return 'quizzes';
+    case 'material':
+      return 'materials';
+  }
 }
 
 /**
@@ -5436,7 +5450,7 @@ class FirestoreStorage implements IClientStorage {
     try {
       const attachments = await getUserSubcollectionDocuments<import('@shared/schema').Attachment>(
         userId,
-        `${resourceType}s`, // lectures, quizzes, materials
+        getCollectionName(resourceType),
         resourceId.toString(),
         'attachments'
       );
@@ -5464,7 +5478,7 @@ class FirestoreStorage implements IClientStorage {
 
       await setUserSubcollectionDocument(
         userId,
-        `${attachment.resourceType}s`,
+        getCollectionName(attachment.resourceType),
         attachment.resourceId.toString(),
         'attachments',
         attachmentId,
@@ -5495,7 +5509,7 @@ class FirestoreStorage implements IClientStorage {
         db,
         'users',
         userId,
-        `${resourceType}s`,
+        getCollectionName(resourceType),
         resourceId.toString(),
         'attachments',
         attachmentId
@@ -5523,7 +5537,7 @@ class FirestoreStorage implements IClientStorage {
         db,
         'users',
         userId,
-        `${resourceType}s`,
+        getCollectionName(resourceType),
         resourceId.toString(),
         'attachments',
         attachmentId

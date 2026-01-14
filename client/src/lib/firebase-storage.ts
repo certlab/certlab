@@ -53,7 +53,7 @@ export interface UploadResult {
  * Get Firebase Storage instance
  */
 export function getStorageInstance() {
-  const db = getFirestoreInstance(); // This ensures Firebase is initialized
+  getFirestoreInstance(); // This ensures Firebase is initialized
   return getStorage();
 }
 
@@ -214,18 +214,27 @@ export async function deleteResourceAttachments(
     const folderPath = `${ATTACHMENT_CONFIG.storageBasePath}/${userId}/${resourceType}/${resourceId}`;
     const folderRef = ref(storage, folderPath);
 
-    // List all files in the folder
+    // List all files and folders
     const listResult = await listAll(folderRef);
 
-    // Delete all files
-    const deletePromises = listResult.items.map((itemRef) => deleteObject(itemRef));
-    await Promise.all(deletePromises);
+    // Delete all files directly in this folder
+    const deleteFilePromises = listResult.items.map((itemRef) => deleteObject(itemRef));
+
+    // Recursively delete all subfolders (attachmentId folders)
+    const deleteSubfolderPromises = listResult.prefixes.map(async (folderRef) => {
+      const subFolderResult = await listAll(folderRef);
+      const deletePromises = subFolderResult.items.map((itemRef) => deleteObject(itemRef));
+      await Promise.all(deletePromises);
+    });
+
+    await Promise.all([...deleteFilePromises, ...deleteSubfolderPromises]);
 
     console.log('[Firebase Storage] Deleted all attachments for resource:', {
       userId,
       resourceType,
       resourceId,
-      count: listResult.items.length,
+      filesDeleted: listResult.items.length,
+      foldersProcessed: listResult.prefixes.length,
     });
   } catch (error: any) {
     // If folder doesn't exist, that's fine

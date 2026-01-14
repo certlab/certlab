@@ -96,7 +96,7 @@ export function AttachmentList({
   };
 
   const formatDate = (date: Date): string => {
-    return new Date(date).toLocaleDateString('en-US', {
+    return new Date(date).toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

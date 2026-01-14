@@ -2895,6 +2895,11 @@ export const ATTACHMENT_CONFIG = {
 } as const;
 
 /**
+ * Pre-computed flattened array of all allowed MIME types for performance
+ */
+const ALL_ALLOWED_MIME_TYPES: string[] = Object.values(ATTACHMENT_CONFIG.allowedMimeTypes).flat();
+
+/**
  * Helper function to get attachment type from MIME type
  */
 export function getAttachmentTypeFromMimeType(mimeType: string): AttachmentType {
@@ -2918,10 +2923,9 @@ export function getAttachmentTypeFromMimeType(mimeType: string): AttachmentType 
  */
 export function isValidAttachmentType(mimeType: string): boolean {
   const lowerMime = mimeType.toLowerCase();
-  const allAllowedTypes: string[] = Object.values(ATTACHMENT_CONFIG.allowedMimeTypes).flat();
 
   return (
-    allAllowedTypes.includes(lowerMime) ||
+    ALL_ALLOWED_MIME_TYPES.includes(lowerMime) ||
     lowerMime.startsWith('image/') ||
     lowerMime.startsWith('audio/') ||
     lowerMime.startsWith('video/')
