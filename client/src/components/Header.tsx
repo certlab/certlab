@@ -581,6 +581,52 @@ export default function Header() {
                           </div>
                         </div>
 
+                        {/* Other Features Section - Available to all users */}
+                        <div>
+                          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4" />
+                            Other Features
+                          </h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            <NavigationMenuLink
+                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                isActivePath('/app/i18n-demo')
+                                  ? 'bg-primary/10 border-2 border-primary'
+                                  : 'hover:bg-accent/10'
+                              }`}
+                              onClick={() => navigate('/app/i18n-demo')}
+                            >
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <Languages className="w-3 h-3 text-primary" />
+                                </div>
+                                I18n Demo
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                Internationalization demo page
+                              </p>
+                            </NavigationMenuLink>
+                            <NavigationMenuLink
+                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                isActivePath('/app/credits')
+                                  ? 'bg-primary/10 border-2 border-primary'
+                                  : 'hover:bg-accent/10'
+                              }`}
+                              onClick={() => navigate('/app/credits')}
+                            >
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <Heart className="w-3 h-3 text-primary" />
+                                </div>
+                                Credits
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                Acknowledgments and attributions
+                              </p>
+                            </NavigationMenuLink>
+                          </div>
+                        </div>
+
                         {/* Tools Section - Only for Admin */}
                         {isAdmin && (
                           <div>
@@ -641,42 +687,6 @@ export default function Header() {
                                 </div>
                                 <p className="text-xs leading-relaxed text-muted-foreground pl-8">
                                   Interactive application architecture
-                                </p>
-                              </NavigationMenuLink>
-                              <NavigationMenuLink
-                                className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                                  isActivePath('/app/i18n-demo')
-                                    ? 'bg-primary/10 border-2 border-primary'
-                                    : 'hover:bg-accent/10'
-                                }`}
-                                onClick={() => navigate('/app/i18n-demo')}
-                              >
-                                <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                                  <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                    <Languages className="w-3 h-3 text-primary" />
-                                  </div>
-                                  I18n Demo
-                                </div>
-                                <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                                  Internationalization demo page
-                                </p>
-                              </NavigationMenuLink>
-                              <NavigationMenuLink
-                                className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                                  isActivePath('/app/credits')
-                                    ? 'bg-primary/10 border-2 border-primary'
-                                    : 'hover:bg-accent/10'
-                                }`}
-                                onClick={() => navigate('/app/credits')}
-                              >
-                                <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                                  <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                    <Heart className="w-3 h-3 text-primary" />
-                                  </div>
-                                  Credits
-                                </div>
-                                <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                                  Acknowledgments and attributions
                                 </p>
                               </NavigationMenuLink>
                             </div>

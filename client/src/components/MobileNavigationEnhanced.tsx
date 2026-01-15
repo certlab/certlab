@@ -142,6 +142,18 @@ export default function MobileNavigationEnhanced() {
       label: 'Wallet',
       icon: <Wallet className="w-5 h-5" />,
       href: '/app/wallet',
+    },
+    {
+      id: 'i18n-demo',
+      label: 'I18n Demo',
+      icon: <Languages className="w-5 h-5" />,
+      href: '/app/i18n-demo',
+    },
+    {
+      id: 'credits',
+      label: 'Credits',
+      icon: <Heart className="w-5 h-5" />,
+      href: '/app/credits',
       dividerAfter: !isAdmin,
     },
     // Admin section - only shown to admin users
@@ -152,18 +164,6 @@ export default function MobileNavigationEnhanced() {
             label: 'Admin Dashboard',
             icon: <Building className="w-5 h-5" />,
             href: '/admin',
-          } as NavigationItem,
-          {
-            id: 'i18n-demo',
-            label: 'I18n Demo',
-            icon: <Languages className="w-5 h-5" />,
-            href: '/app/i18n-demo',
-          } as NavigationItem,
-          {
-            id: 'credits',
-            label: 'Credits',
-            icon: <Heart className="w-5 h-5" />,
-            href: '/app/credits',
             dividerAfter: true,
           } as NavigationItem,
         ]
