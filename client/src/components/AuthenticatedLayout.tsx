@@ -118,7 +118,7 @@ function AuthenticatedHeader() {
                 )}
               >
                 <Icon className="h-4 w-4" />
-                <span className="hidden lg:inline">{item.title}</span>
+                <span>{item.title}</span>
               </Button>
             );
           })}
