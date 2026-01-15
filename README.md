@@ -456,6 +456,13 @@ Comprehensive documentation is available in the [docs/](docs/) directory:
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
 - **[Known Issues](docs/known-issues.md)** - Current limitations and planned improvements
 
+### Privacy, Compliance & Administration
+- **[Privacy Policy](PRIVACY_POLICY.md)** - Comprehensive privacy and data protection policy
+- **[Compliance Report](COMPLIANCE_REPORT.md)** - Audit readiness and regulatory compliance
+- **[Admin Guide](ADMIN_GUIDE.md)** - Administrator and deployment guide
+- **[QA Checklist](QA_CHECKLIST.md)** - Quality assurance testing procedures
+- **[Release Checklist](RELEASE_CHECKLIST.md)** - Release readiness verification
+
 ## ⚠️ Limitations
 
 ### Current Limitations
