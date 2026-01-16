@@ -330,7 +330,7 @@ export default function Header() {
             ) : (
               <NavigationMenu>
                 <NavigationMenuList>
-                  {/* Dashboard */}
+                  {/* Dashboard - Keep as direct link */}
                   <NavigationMenuItem>
                     <Button
                       variant="ghost"
@@ -346,143 +346,230 @@ export default function Header() {
                     </Button>
                   </NavigationMenuItem>
 
-                  {/* Achievements */}
+                  {/* Learning Mega Menu */}
                   <NavigationMenuItem>
-                    <Button
-                      variant="ghost"
-                      onClick={() => navigate('/app/achievements')}
+                    <NavigationMenuTrigger
                       className={`h-10 px-3 py-2 ${
-                        isActivePath('/app/achievements')
-                          ? 'text-primary font-semibold border-b-2 border-primary rounded-b-none'
+                        isActivePath('/app/daily-challenges') ||
+                        isActivePath('/app/performance') ||
+                        isActivePath('/app/practice-tests') ||
+                        isActivePath('/app/question-bank') ||
+                        isActivePath('/app/study-timer')
+                          ? 'text-primary font-semibold'
                           : 'text-muted-foreground hover:text-primary'
                       }`}
                     >
-                      <Trophy className="w-4 h-4 mr-2" />
-                      {t('nav.achievements')}
-                    </Button>
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Learning
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <div className="grid gap-3 p-6 w-[500px] bg-card">
+                        <div className="grid grid-cols-2 gap-3">
+                          <NavigationMenuLink
+                            className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                              isActivePath('/app/daily-challenges')
+                                ? 'bg-primary/10 border-2 border-primary'
+                                : 'hover:bg-accent/10'
+                            }`}
+                            onClick={() => navigate('/app/daily-challenges')}
+                          >
+                            <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                <Target className="w-3 h-3 text-primary" />
+                              </div>
+                              Daily Challenges
+                              <Badge variant="secondary" className="ml-2 text-xs">
+                                NEW
+                              </Badge>
+                            </div>
+                            <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                              Complete daily and quick challenges
+                            </p>
+                          </NavigationMenuLink>
+                          <NavigationMenuLink
+                            className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                              isActivePath('/app/performance')
+                                ? 'bg-primary/10 border-2 border-primary'
+                                : 'hover:bg-accent/10'
+                            }`}
+                            onClick={() => navigate('/app/performance')}
+                          >
+                            <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                <BarChart3 className="w-3 h-3 text-primary" />
+                              </div>
+                              Performance
+                            </div>
+                            <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                              Track your learning progress
+                            </p>
+                          </NavigationMenuLink>
+                          <NavigationMenuLink
+                            className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                              isActivePath('/app/practice-tests')
+                                ? 'bg-primary/10 border-2 border-primary'
+                                : 'hover:bg-accent/10'
+                            }`}
+                            onClick={() => navigate('/app/practice-tests')}
+                          >
+                            <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                <FileText className="w-3 h-3 text-primary" />
+                              </div>
+                              Practice Tests
+                            </div>
+                            <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                              Take full-length practice exams
+                            </p>
+                          </NavigationMenuLink>
+                          <NavigationMenuLink
+                            className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                              isActivePath('/app/question-bank')
+                                ? 'bg-primary/10 border-2 border-primary'
+                                : 'hover:bg-accent/10'
+                            }`}
+                            onClick={() => navigate('/app/question-bank')}
+                          >
+                            <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                <Database className="w-3 h-3 text-primary" />
+                              </div>
+                              Question Bank
+                            </div>
+                            <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                              Browse and filter question library
+                            </p>
+                          </NavigationMenuLink>
+                          <NavigationMenuLink
+                            className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                              isActivePath('/app/study-timer')
+                                ? 'bg-primary/10 border-2 border-primary'
+                                : 'hover:bg-accent/10'
+                            }`}
+                            onClick={() => navigate('/app/study-timer')}
+                          >
+                            <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                <Timer className="w-3 h-3 text-primary" />
+                              </div>
+                              Study Timer
+                            </div>
+                            <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                              Track study time and sessions
+                            </p>
+                          </NavigationMenuLink>
+                          <NavigationMenuLink
+                            className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                              isActivePath('/app/analytics')
+                                ? 'bg-primary/10 border-2 border-primary'
+                                : 'hover:bg-accent/10'
+                            }`}
+                            onClick={() => navigate('/app/analytics')}
+                          >
+                            <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                <BarChart3 className="w-3 h-3 text-primary" />
+                              </div>
+                              Analytics
+                            </div>
+                            <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                              Deep insights into learning patterns
+                            </p>
+                          </NavigationMenuLink>
+                        </div>
+                      </div>
+                    </NavigationMenuContent>
                   </NavigationMenuItem>
 
-                  {/* Leaderboard */}
+                  {/* Community Mega Menu */}
                   <NavigationMenuItem>
-                    <Button
-                      variant="ghost"
-                      onClick={() => navigate('/app/leaderboard')}
+                    <NavigationMenuTrigger
                       className={`h-10 px-3 py-2 ${
-                        isActivePath('/app/leaderboard')
-                          ? 'text-primary font-semibold border-b-2 border-primary rounded-b-none'
+                        isActivePath('/app/achievements') || isActivePath('/app/leaderboard')
+                          ? 'text-primary font-semibold'
                           : 'text-muted-foreground hover:text-primary'
                       }`}
                     >
                       <Award className="w-4 h-4 mr-2" />
-                      {t('nav.leaderboard')}
-                    </Button>
+                      Community
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <div className="grid gap-3 p-6 w-[400px] bg-card">
+                        <div className="grid grid-cols-2 gap-3">
+                          <NavigationMenuLink
+                            className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                              isActivePath('/app/achievements')
+                                ? 'bg-primary/10 border-2 border-primary'
+                                : 'hover:bg-accent/10'
+                            }`}
+                            onClick={() => navigate('/app/achievements')}
+                          >
+                            <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                <Trophy className="w-3 h-3 text-primary" />
+                              </div>
+                              {t('nav.achievements')}
+                            </div>
+                            <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                              View earned badges and certifications
+                            </p>
+                          </NavigationMenuLink>
+                          <NavigationMenuLink
+                            className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                              isActivePath('/app/leaderboard')
+                                ? 'bg-primary/10 border-2 border-primary'
+                                : 'hover:bg-accent/10'
+                            }`}
+                            onClick={() => navigate('/app/leaderboard')}
+                          >
+                            <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                <Award className="w-3 h-3 text-primary" />
+                              </div>
+                              {t('nav.leaderboard')}
+                            </div>
+                            <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                              Compare rankings and compete
+                            </p>
+                          </NavigationMenuLink>
+                          <NavigationMenuLink
+                            className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                              isActivePath('/app/certificates')
+                                ? 'bg-primary/10 border-2 border-primary'
+                                : 'hover:bg-accent/10'
+                            }`}
+                            onClick={() => navigate('/app/certificates')}
+                          >
+                            <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                <Award className="w-3 h-3 text-primary" />
+                              </div>
+                              Certificates
+                            </div>
+                            <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                              View and download certificates
+                            </p>
+                          </NavigationMenuLink>
+                        </div>
+                      </div>
+                    </NavigationMenuContent>
                   </NavigationMenuItem>
 
-                  {/* Daily Challenges - NEW */}
-                  <NavigationMenuItem>
-                    <Button
-                      variant="ghost"
-                      onClick={() => navigate('/app/daily-challenges')}
-                      className={`h-10 px-3 py-2 whitespace-nowrap ${
-                        isActivePath('/app/daily-challenges')
-                          ? 'text-primary font-semibold border-b-2 border-primary rounded-b-none'
-                          : 'text-muted-foreground hover:text-primary'
-                      }`}
-                    >
-                      <Target className="w-4 h-4 mr-2 flex-shrink-0" />
-                      <span className="hidden lg:inline">Daily Challenges</span>
-                      <span className="lg:hidden">Challenges</span>
-                      <Badge variant="secondary" className="ml-2 text-xs flex-shrink-0">
-                        NEW
-                      </Badge>
-                    </Button>
-                  </NavigationMenuItem>
-
-                  {/* Performance */}
-                  <NavigationMenuItem>
-                    <Button
-                      variant="ghost"
-                      onClick={() => navigate('/app/performance')}
-                      className={`h-10 px-3 py-2 ${
-                        isActivePath('/app/performance')
-                          ? 'text-primary font-semibold border-b-2 border-primary rounded-b-none'
-                          : 'text-muted-foreground hover:text-primary'
-                      }`}
-                    >
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      Performance
-                    </Button>
-                  </NavigationMenuItem>
-
-                  {/* Tools & Features */}
+                  {/* Tools & Resources Mega Menu */}
                   <NavigationMenuItem>
                     <NavigationMenuTrigger className="text-muted-foreground hover:text-primary h-10 px-3 py-2">
                       <Settings className="w-4 h-4 mr-2" />
-                      Tools & Features
+                      Tools & Resources
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
                       <div className="grid gap-6 p-6 w-[600px] bg-card">
-                        {/* Learning Section */}
+                        {/* Study Tools Section */}
                         <div>
                           <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                             <BookOpen className="w-4 h-4" />
-                            Learning Features
+                            Study Tools
                           </h3>
                           <div className="grid grid-cols-4 gap-3">
-                            <NavigationMenuLink
-                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                                isActivePath('/app/achievements')
-                                  ? 'bg-primary/10 border-2 border-primary'
-                                  : 'hover:bg-accent/10'
-                              }`}
-                              onClick={() => navigate('/app/achievements')}
-                            >
-                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                  <Trophy className="w-3 h-3 text-primary" />
-                                </div>
-                                Achievements
-                              </div>
-                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                                View earned badges and certifications
-                              </p>
-                            </NavigationMenuLink>
-                            <NavigationMenuLink
-                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                                isActivePath('/app/analytics')
-                                  ? 'bg-primary/10 border-2 border-primary'
-                                  : 'hover:bg-accent/10'
-                              }`}
-                              onClick={() => navigate('/app/analytics')}
-                            >
-                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                  <BarChart3 className="w-3 h-3 text-primary" />
-                                </div>
-                                Analytics
-                              </div>
-                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                                Deep insights into learning patterns
-                              </p>
-                            </NavigationMenuLink>
-                            <NavigationMenuLink
-                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                                isActivePath('/app/practice-tests')
-                                  ? 'bg-primary/10 border-2 border-primary'
-                                  : 'hover:bg-accent/10'
-                              }`}
-                              onClick={() => navigate('/app/practice-tests')}
-                            >
-                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                  <FileText className="w-3 h-3 text-primary" />
-                                </div>
-                                Practice Tests
-                              </div>
-                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                                Take full-length practice exams
-                              </p>
-                            </NavigationMenuLink>
                             <NavigationMenuLink
                               className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
                                 isActivePath('/app/study-notes')
@@ -503,20 +590,20 @@ export default function Header() {
                             </NavigationMenuLink>
                             <NavigationMenuLink
                               className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                                isActivePath('/app/certificates')
+                                isActivePath('/app/enhanced-study-notes')
                                   ? 'bg-primary/10 border-2 border-primary'
                                   : 'hover:bg-accent/10'
                               }`}
-                              onClick={() => navigate('/app/certificates')}
+                              onClick={() => navigate('/app/enhanced-study-notes')}
                             >
                               <div className="flex items-center text-sm font-medium leading-none text-foreground">
                                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                  <Award className="w-3 h-3 text-primary" />
+                                  <Sparkles className="w-3 h-3 text-primary" />
                                 </div>
-                                Certificates
+                                Enhanced Notes
                               </div>
                               <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                                View and download your certificates
+                                Advanced note-taking with AI features
                               </p>
                             </NavigationMenuLink>
                             <NavigationMenuLink
@@ -555,6 +642,16 @@ export default function Header() {
                                 Manage and duplicate your quiz templates
                               </p>
                             </NavigationMenuLink>
+                          </div>
+                        </div>
+
+                        {/* Marketplace & Resources Section */}
+                        <div>
+                          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                            <ShoppingCart className="w-4 h-4" />
+                            Marketplace & Resources
+                          </h3>
+                          <div className="grid grid-cols-3 gap-3">
                             <NavigationMenuLink
                               className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
                                 isActivePath('/app/marketplace')
@@ -593,60 +690,6 @@ export default function Header() {
                             </NavigationMenuLink>
                             <NavigationMenuLink
                               className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                                isActivePath('/app/enhanced-study-notes')
-                                  ? 'bg-primary/10 border-2 border-primary'
-                                  : 'hover:bg-accent/10'
-                              }`}
-                              onClick={() => navigate('/app/enhanced-study-notes')}
-                            >
-                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                  <Sparkles className="w-3 h-3 text-primary" />
-                                </div>
-                                Enhanced Notes
-                              </div>
-                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                                Advanced note-taking with AI features
-                              </p>
-                            </NavigationMenuLink>
-                            <NavigationMenuLink
-                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                                isActivePath('/app/study-timer')
-                                  ? 'bg-primary/10 border-2 border-primary'
-                                  : 'hover:bg-accent/10'
-                              }`}
-                              onClick={() => navigate('/app/study-timer')}
-                            >
-                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                  <Timer className="w-3 h-3 text-primary" />
-                                </div>
-                                Study Timer
-                              </div>
-                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                                Track study time and sessions
-                              </p>
-                            </NavigationMenuLink>
-                            <NavigationMenuLink
-                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                                isActivePath('/app/question-bank')
-                                  ? 'bg-primary/10 border-2 border-primary'
-                                  : 'hover:bg-accent/10'
-                              }`}
-                              onClick={() => navigate('/app/question-bank')}
-                            >
-                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                  <Database className="w-3 h-3 text-primary" />
-                                </div>
-                                Question Bank
-                              </div>
-                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                                Browse and filter question library
-                              </p>
-                            </NavigationMenuLink>
-                            <NavigationMenuLink
-                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
                                 isActivePath('/app/wallet')
                                   ? 'bg-primary/10 border-2 border-primary'
                                   : 'hover:bg-accent/10'
@@ -672,7 +715,25 @@ export default function Header() {
                             <Sparkles className="w-4 h-4" />
                             Other Features
                           </h3>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-3 gap-3">
+                            <NavigationMenuLink
+                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                isActivePath('/app/data-import')
+                                  ? 'bg-primary/10 border-2 border-primary'
+                                  : 'hover:bg-accent/10'
+                              }`}
+                              onClick={() => navigate('/app/data-import')}
+                            >
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <Database className="w-3 h-3 text-primary" />
+                                </div>
+                                Import Sample Data
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                Load 500+ practice questions per certification
+                              </p>
+                            </NavigationMenuLink>
                             <NavigationMenuLink
                               className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
                                 isActivePath('/app/i18n-demo')
@@ -805,32 +866,6 @@ export default function Header() {
                             </NavigationMenuLink>
                           </div>
                         )}
-
-                        {/* Data Import Section - Available to all users */}
-                        <div>
-                          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                            <Database className="w-4 h-4" />
-                            Data Management
-                          </h3>
-                          <NavigationMenuLink
-                            className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                              isActivePath('/app/data-import')
-                                ? 'bg-primary/10 border-2 border-primary'
-                                : 'hover:bg-accent/10'
-                            }`}
-                            onClick={() => navigate('/app/data-import')}
-                          >
-                            <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                <Database className="w-3 h-3 text-primary" />
-                              </div>
-                              Import Sample Data
-                            </div>
-                            <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                              Load 500+ practice questions per certification
-                            </p>
-                          </NavigationMenuLink>
-                        </div>
                       </div>
                     </NavigationMenuContent>
                   </NavigationMenuItem>
