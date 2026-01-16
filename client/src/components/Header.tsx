@@ -329,7 +329,7 @@ export default function Header() {
               </div>
             ) : (
               <NavigationMenu>
-                <NavigationMenuList className="space-x-0 gap-1">
+                <NavigationMenuList className="gap-1">
                   {/* Dashboard */}
                   <NavigationMenuItem>
                     <Button
