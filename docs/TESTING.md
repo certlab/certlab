@@ -206,7 +206,18 @@ mockUseAuth.mockReturnValue({
 });
 ```
 
-### Mocking React Router
+### Routing in Tests (`react-router-dom`) vs Production (`wouter`)
+
+In production code, CertLab uses **[Wouter](https://github.com/molefrog/wouter)** for client-side routing.  
+**Do not** import or use `react-router-dom` in application/source components.
+
+In **tests only**, you may use `react-router-dom`'s `MemoryRouter` (or a similar test router) to:
+
+- Simulate navigation and URL changes
+- Provide route parameters to the component under test
+- Keep tests self-contained without relying on the app's real routing setup
+
+Example: wrapping a page component with `MemoryRouter` in a test:
 
 ```typescript
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -229,6 +240,8 @@ render(<QuizPage />, { wrapper });
 Configured in `vitest.config.ts`:
 
 ```typescript
+// Partial excerpt from vitest.config.ts; other fields (e.g. provider, reporter)
+// are defined in the full configuration and omitted here for brevity.
 coverage: {
   thresholds: {
     lines: 60,
@@ -468,20 +481,20 @@ Tests run automatically on:
 
 ## Test Suite Status
 
-Current test metrics (as of latest update):
-- **Test Files**: 57 
-- **Total Tests**: 628+
-- **Coverage**: Meeting 60% threshold
-- **Passing Rate**: 98% (14 pre-existing failures in accessibility tests)
+Current test metrics are approximate and will change as the project evolves. For up-to-date numbers:
+- Run `npm run test:run` to see the current number of passing/failing tests.
+- Run `npm run test:coverage` to view the latest coverage report.
+
+The suite includes tests across services, components, pages, hooks, utilities, and storage layers.
 
 ### Test Coverage by Area
 
 | Area | Coverage | Status |
 |------|----------|--------|
-| Services | ✅ Good | achievement-service, gamification-service |
+| Services | ⚠️ Needs Work | achievement-service, gamification-service (tests temporarily removed; coverage to be restored) |
 | Components | ✅ Good | UI components, quiz interface, timers |
-| Pages | ✅ Good | quiz, results, marketplace, dashboard |
-| Hooks | ⚠️ Partial | useQuizState, use-toast, use-pagination |
+| Pages | ✅ Good | quiz, marketplace, dashboard |
+| Hooks | ❌ None | useQuizState, use-toast, use-pagination (no current tests) |
 | Utilities | ✅ Excellent | All utility modules covered |
 | Storage | ⚠️ Needs Work | Firestore operations need mocking improvements |
 
