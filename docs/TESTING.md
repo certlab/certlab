@@ -206,12 +206,11 @@ mockUseAuth.mockReturnValue({
 });
 ```
 
-### Routing in Tests (`react-router-dom`) vs Production (`wouter`)
+### Routing in Tests and Production
 
-In production code, CertLab uses **[Wouter](https://github.com/molefrog/wouter)** for client-side routing.  
-**Do not** import or use `react-router-dom` in application/source components.
+CertLab uses **[React Router](https://reactrouter.com/)** for client-side routing in both production and tests.
 
-In **tests only**, you may use `react-router-dom`'s `MemoryRouter` (or a similar test router) to:
+In **tests**, you can use `react-router-dom`'s `MemoryRouter` to:
 
 - Simulate navigation and URL changes
 - Provide route parameters to the component under test
