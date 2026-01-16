@@ -102,7 +102,7 @@ CertLab is a **cloud-first Single-Page Application (SPA)** designed for certific
 | TailwindCSS | 3.4.x | Styling |
 | Radix UI | Latest | Component primitives |
 | TanStack Query | 5.x | Async state management |
-| Wouter | 3.x | Client-side routing |
+| React Router | 7.x | Client-side routing |
 | Dynatrace RUM | Latest | Real user monitoring and observability |
 
 ### Component Organization
@@ -313,16 +313,55 @@ See `hooks/useQuizState.ts` and `components/quiz/quizReducer.ts` for implementat
 
 ## Routing
 
-### Client-Side Routing with Wouter
+### Client-Side Routing with React Router
+
+CertLab uses React Router for declarative, dynamic routing throughout the application.
 
 ```typescript
 // Route definitions (App.tsx)
-<Route path="/" component={Landing} />
-<Route path="/app" component={Dashboard} />
-<Route path="/app/quiz/:id" component={Quiz} />
-<Route path="/app/results/:id" component={Results} />
-<Route path="/app/achievements" component={Achievements} />
-// ... more routes
+<BrowserRouter basename={BASE_PATH}>
+  <Routes>
+    <Route path="/" element={<Landing />} />
+    <Route path="/app" element={<Dashboard />} />
+    <Route path="/app/quiz/:id" element={<Quiz />} />
+    <Route path="/app/results/:id" element={<Results />} />
+    <Route path="/app/achievements" element={<Achievements />} />
+    {/* ... more routes */}
+  </Routes>
+</BrowserRouter>
+```
+
+### Navigation Hooks
+
+React Router provides hooks for navigation and accessing route information:
+
+```typescript
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+
+// Navigate programmatically
+const navigate = useNavigate();
+navigate('/app/dashboard');
+
+// Access route parameters
+const { id } = useParams<{ id: string }>();
+
+// Access current location
+const location = useLocation();
+```
+
+### Protected Routes
+
+The application uses a `ProtectedRoute` component to handle authentication:
+
+```typescript
+<ProtectedRoute>
+  <AuthenticatedLayout>
+    <Routes>
+      <Route path="/app" element={<Dashboard />} />
+      {/* Protected routes */}
+    </Routes>
+  </AuthenticatedLayout>
+</ProtectedRoute>
 ```
 
 ### Base Path Configuration
@@ -473,7 +512,7 @@ The build uses manual chunks for optimal loading:
 | `vendor-react` | React, React DOM |
 | `vendor-ui` | Radix UI components |
 | `vendor-charts` | Recharts |
-| `vendor-utils` | date-fns, clsx, wouter |
+| `vendor-utils` | date-fns, clsx, react-router-dom |
 | `index` | Main application code |
 | Page chunks | Lazy-loaded page components |
 
