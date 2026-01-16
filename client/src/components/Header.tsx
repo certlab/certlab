@@ -8,8 +8,10 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { CloudSyncIndicator } from '@/components/CloudSyncIndicator';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatNotificationCount } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatNotificationCount, cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
+import { calculateLevelFromPoints, calculatePointsForLevel } from '@/lib/level-utils';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -59,6 +61,7 @@ import {
   Languages,
   Heart,
   Folder,
+  Flame,
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme-provider';
 import { themes } from '@/lib/theme-constants';
@@ -94,6 +97,25 @@ export default function Header() {
 
   // Get unread notifications count using custom hook
   const { unreadCount } = useUnreadNotifications();
+
+  // Calculate level from totalPoints using defensive programming pattern
+  // This prevents display bugs if gameStats.level becomes out of sync with totalPoints
+  // Same pattern used in LevelProgress component for consistency
+  const totalPoints = gameStats?.totalPoints || 0;
+  const level = calculateLevelFromPoints(totalPoints);
+
+  // Calculate XP progress for current level
+  // Each level N requires (N * 100) points to complete
+  const currentLevelStartPoints = calculatePointsForLevel(level);
+  const pointsInCurrentLevel = totalPoints - currentLevelStartPoints;
+  const pointsNeededForLevel = level * 100;
+
+  // For display: current XP and XP goal
+  const currentXP = pointsInCurrentLevel;
+  const xpGoal = pointsNeededForLevel;
+
+  // Calculate streak from game stats
+  const dayStreak = gameStats?.currentStreak || 0;
 
   const handleSignOut = async () => {
     // Navigate to home page BEFORE logout to prevent 404 flash
@@ -192,6 +214,68 @@ export default function Header() {
                   <span className="font-medium">{tokenData.balance}</span>
                   <span className="ml-1 text-xs text-muted-foreground">tokens</span>
                 </Badge>
+              )}
+              {/* Level Badge - Visually Enhanced (Extra Large screens only) */}
+              {currentUser && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge className="hidden xl:flex ml-2 items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 hover:from-purple-500/20 hover:to-blue-500/20 transition-all cursor-help">
+                      <Trophy className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                      <span className="text-xs font-bold text-foreground">Level {level}</span>
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-xs">
+                      <p className="font-semibold">Level {level}</p>
+                      <p className="text-muted-foreground">
+                        {currentXP} / {xpGoal} XP
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              {/* Streak Badge - Visually Enhanced (Extra Large screens only) */}
+              {currentUser && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      className={cn(
+                        'hidden xl:flex ml-2 items-center gap-1.5 px-3 py-1.5 border transition-all cursor-help',
+                        dayStreak === 0
+                          ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600'
+                          : dayStreak < 7
+                            ? 'bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-500/20 hover:from-orange-500/20 hover:to-red-500/20'
+                            : 'bg-gradient-to-r from-red-500/10 to-pink-500/10 border-red-500/20 hover:from-red-500/20 hover:to-pink-500/20'
+                      )}
+                    >
+                      <Flame
+                        className={cn(
+                          'w-3.5 h-3.5',
+                          dayStreak === 0
+                            ? 'text-gray-400'
+                            : dayStreak < 7
+                              ? 'text-orange-500 dark:text-orange-400'
+                              : 'text-red-500 dark:text-red-400 animate-pulse'
+                        )}
+                      />
+                      <span className="text-xs font-bold text-foreground">{dayStreak}d</span>
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-xs">
+                      <p className="font-semibold">
+                        {dayStreak === 0 ? 'Start your streak!' : `${dayStreak} day streak`}
+                      </p>
+                      <p className="text-muted-foreground">
+                        {dayStreak === 0
+                          ? 'Complete a quiz today'
+                          : dayStreak < 7
+                            ? 'Keep going!'
+                            : 'Amazing dedication!'}
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               )}
               {/* Streak Freeze Indicator */}
               {gameStats &&
