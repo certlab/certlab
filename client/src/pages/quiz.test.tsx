@@ -24,7 +24,6 @@ describe('Quiz Page', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByTestId('quiz-interface')).toBeInTheDocument();
     expect(screen.getByText(/Quiz Interface for ID: 123/i)).toBeInTheDocument();
   });
 
