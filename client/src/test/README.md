@@ -106,18 +106,24 @@ const mockUser = createMockFirebaseUser({
 
 #### Custom Auth State Changes
 
+**Note:** Due to Vitest hoisting, you cannot use helper functions like `mockFirebase()` directly inside `vi.mock()`. Instead, define mocks inline:
+
 ```typescript
-import { mockFirebase, createMockFirebaseUser } from '@/test/mocks';
+import { createMockFirebaseUser } from '@/test/mocks';
 
 const user = createMockFirebaseUser();
 let authCallback: ((user: any) => void) | null = null;
 
-vi.mock('@/lib/firebase', () => mockFirebase({
-  onAuthStateChanged: (callback) => {
+vi.mock('@/lib/firebase', () => ({
+  isFirebaseConfigured: vi.fn().mockReturnValue(true),
+  initializeFirebase: vi.fn().mockReturnValue(true),
+  onFirebaseAuthStateChanged: vi.fn((callback) => {
     authCallback = callback;
     setTimeout(() => callback(user), 0);
     return () => {};
-  },
+  }),
+  signOutFromGoogle: vi.fn().mockResolvedValue(undefined),
+  getCurrentFirebaseUser: vi.fn().mockReturnValue(user),
 }));
 
 // Later in your test, trigger auth state change
@@ -194,14 +200,18 @@ render(
 
 ```typescript
 import { vi } from 'vitest';
-import { createMockUseAuth } from '@/test/mocks';
+
+// Create mock function at module level (before vi.mock)
+const mockUseAuth = vi.fn(() => ({
+  isAuthenticated: true,
+  isLoading: false,
+  user: { id: 'test-user', email: 'test@example.com' },
+  signInWithGoogle: vi.fn().mockResolvedValue(undefined),
+  logout: vi.fn().mockResolvedValue(undefined),
+}));
 
 vi.mock('@/lib/auth-provider', () => ({
-  useAuth: createMockUseAuth({
-    isAuthenticated: true,
-    isLoading: false,
-    user: { id: 'test-user', email: 'test@example.com' },
-  }),
+  useAuth: mockUseAuth,
 }));
 ```
 
@@ -219,24 +229,6 @@ import {
   mockAnalyticsService 
 } from '@/test/mocks';
 
-vi.mock('@/lib/achievement-service', () => ({
-  default: mockAchievementService(),
-}));
-
-vi.mock('@/lib/notification-service', () => ({
-  default: mockNotificationService(),
-}));
-```
-
-#### Service Mocks
-
-Individual service mocks must be defined inline at the top level of your test file:
-
-```typescript
-import { vi } from 'vitest';
-import { mockAchievementService, mockNotificationService } from '@/test/mocks';
-
-// Define service mocks at top level
 vi.mock('@/lib/achievement-service', () => ({
   default: mockAchievementService(),
 }));
