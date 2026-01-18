@@ -362,6 +362,26 @@ Use conventional commit format:
 - Address review comments promptly
 - Keep PRs focused and small when possible
 
+### Branch Protection and Status Checks
+
+The `main` branch is protected with the following requirements:
+
+- ✅ **Test workflow** must pass (`test.yml`)
+- ✅ **Type check workflow** must pass (`type-check.yml`)
+- ✅ **Lint workflow** must pass (`lint.yml`)
+- ✅ At least one approving review required
+- ✅ Up-to-date with base branch before merging
+
+These protections ensure code quality and prevent broken code from reaching production.
+
+**For repository administrators**: Branch protection rules are configured in:
+- GitHub Repository → Settings → Branches → Branch protection rules
+- Rule for `main` branch should require:
+  - Status checks: `test`, `type-check`, `lint`
+  - Require approving reviews: 1
+  - Dismiss stale reviews when new commits are pushed
+  - Require branches to be up to date before merging
+
 ## Dependency Management
 
 ### Dependabot Integration
