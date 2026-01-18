@@ -2,7 +2,7 @@
 
 ## Overview
 
-This PR implements comprehensive testing and documentation for the CertLab data import feature, which allows administrators to import certification questions from YAML files into Firestore.
+This PR implements comprehensive testing and documentation for the CertLab data import feature, which allows administrators to import certification questions from YAML files into Cloud Firestore. CertLab now uses Cloud Firestore exclusively for data storage (with built-in offline persistence), and standalone IndexedDB storage is no longer supported.
 
 ## Deliverables
 
@@ -244,7 +244,7 @@ npm run test:coverage
 
 ### Batch Processing
 - Batch size: 50 questions per batch
-- Empirically chosen for IndexedDB performance
+- Empirically chosen for Firestore performance and client-side responsiveness
 - Prevents UI freezes during large imports
 - Provides good throughput without transaction limits
 
