@@ -47,7 +47,7 @@ describe('Storage Factory', () => {
     });
 
     it('should handle Firebase user provided as parameter', async () => {
-      const mockUser = { uid: 'test-user-123', email: 'test@example.com' };
+      const mockUser = { uid: 'test-user-123', email: 'test@example.com' } as any;
       vi.mocked(firestoreService.initializeFirestoreService).mockResolvedValue(true);
 
       await storageFactory.initializeStorage(mockUser);
@@ -63,7 +63,7 @@ describe('Storage Factory', () => {
       vi.mocked(firebase.getCurrentFirebaseUser).mockReturnValue({
         uid: 'test-user-456',
         email: 'user@example.com',
-      });
+      } as any);
 
       await storageFactory.initializeStorage();
 
