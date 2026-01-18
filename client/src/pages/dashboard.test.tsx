@@ -1,74 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import type { Quiz } from '@shared/schema';
 import { POINTS_CONFIG } from '@/lib/achievement-service';
+import { createQuiz } from '@/test/factories';
 
 /**
  * Test suite for dashboard learning velocity calculation
+ * Uses shared test factories to reduce duplication
  */
 describe('Dashboard Learning Velocity Calculation', () => {
-  // Helper function to create a mock quiz
-  const createMockQuiz = (
-    completedAt: Date,
-    correctAnswers: number,
-    totalQuestions: number,
-    score: number
-  ): Quiz => ({
-    id: 1,
-    userId: 'test-user',
-    tenantId: 1,
-    title: 'Test Quiz',
-    description: null,
-    tags: null,
-    categoryIds: [1],
-    questionIds: [],
-    totalQuestions,
-    correctAnswers,
-    score,
-    isPassing: score >= 85,
-    completedAt,
-    startedAt: new Date(),
-    createdAt: new Date(),
-    updatedAt: null,
-    mode: 'study',
-    questionCount: totalQuestions,
-    timeLimit: null,
-    answers: null,
-    isAdaptive: false,
-    adaptiveMetrics: null,
-    difficultyLevel: 1,
-    difficultyFilter: null,
-    missedTopics: null,
-    subcategoryIds: null,
-    author: null,
-    authorName: null,
-    prerequisites: null,
-    // Advanced Configuration Options
-    randomizeQuestions: null,
-    randomizeAnswers: null,
-    timeLimitPerQuestion: null,
-    questionWeights: null,
-    feedbackMode: null,
-    passingScore: null,
-    maxAttempts: null,
-    isAdvancedConfig: null,
-    // Access control fields
-    visibility: 'private',
-    sharedWithUsers: null,
-    sharedWithGroups: null,
-    requiresPurchase: false,
-    purchaseProductId: null,
-    // Distribution fields
-    distributionMethod: 'open',
-    availableFrom: null,
-    availableUntil: null,
-    enrollmentDeadline: null,
-    maxEnrollments: null,
-    requireApproval: false,
-    assignmentDueDate: null,
-    sendNotifications: true,
-    reminderDays: null,
-  });
-
   // Function to calculate points for a quiz (matching dashboard logic)
   const calculateQuizPoints = (quiz: Quiz): number => {
     if (!quiz.completedAt || quiz.score === null) {
@@ -91,22 +30,36 @@ describe('Dashboard Learning Velocity Calculation', () => {
   };
 
   it('should calculate zero points for incomplete quiz', () => {
-    const quiz = createMockQuiz(new Date(), 0, 10, 0);
-    quiz.completedAt = null;
+    const quiz = createQuiz({
+      completedAt: null,
+      correctAnswers: 0,
+      totalQuestions: 10,
+      score: null,
+    });
 
     const points = calculateQuizPoints(quiz);
     expect(points).toBe(0);
   });
 
   it('should calculate base points for quiz completion', () => {
-    const quiz = createMockQuiz(new Date(), 0, 10, 50);
+    const quiz = createQuiz({
+      completedAt: new Date(),
+      correctAnswers: 0,
+      totalQuestions: 10,
+      score: 50,
+    });
 
     const points = calculateQuizPoints(quiz);
     expect(points).toBe(10); // Base completion points only
   });
 
   it('should calculate points with correct answers', () => {
-    const quiz = createMockQuiz(new Date(), 5, 10, 50);
+    const quiz = createQuiz({
+      completedAt: new Date(),
+      correctAnswers: 5,
+      totalQuestions: 10,
+      score: 50,
+    });
 
     const points = calculateQuizPoints(quiz);
     // 10 (base) + 5*5 (correct answers) = 35
@@ -114,7 +67,13 @@ describe('Dashboard Learning Velocity Calculation', () => {
   });
 
   it('should add passing bonus for 85% or higher', () => {
-    const quiz = createMockQuiz(new Date(), 9, 10, 90);
+    const quiz = createQuiz({
+      completedAt: new Date(),
+      correctAnswers: 9,
+      totalQuestions: 10,
+      score: 90,
+      isPassing: true,
+    });
 
     const points = calculateQuizPoints(quiz);
     // 10 (base) + 9*5 (correct) + 25 (passing) = 80
@@ -122,7 +81,13 @@ describe('Dashboard Learning Velocity Calculation', () => {
   });
 
   it('should add perfect score bonus for 100%', () => {
-    const quiz = createMockQuiz(new Date(), 10, 10, 100);
+    const quiz = createQuiz({
+      completedAt: new Date(),
+      correctAnswers: 10,
+      totalQuestions: 10,
+      score: 100,
+      isPassing: true,
+    });
 
     const points = calculateQuizPoints(quiz);
     // 10 (base) + 10*5 (correct) + 25 (passing) + 50 (perfect) = 135
@@ -139,10 +104,21 @@ describe('Dashboard Learning Velocity Calculation', () => {
     startDate.setDate(today.getDate() - 9);
 
     // Create quizzes for January 1 and January 5 (both within last 10 days)
-    const jan1Quiz = createMockQuiz(new Date(startDate), 5, 10, 50);
+    const jan1Quiz = createQuiz({
+      completedAt: new Date(startDate),
+      correctAnswers: 5,
+      totalQuestions: 10,
+      score: 50,
+    });
     const jan5 = new Date(startDate);
     jan5.setDate(startDate.getDate() + 4);
-    const jan5Quiz = createMockQuiz(jan5, 10, 10, 100);
+    const jan5Quiz = createQuiz({
+      completedAt: jan5,
+      correctAnswers: 10,
+      totalQuestions: 10,
+      score: 100,
+      isPassing: true,
+    });
 
     const quizzes = [jan1Quiz, jan5Quiz];
 

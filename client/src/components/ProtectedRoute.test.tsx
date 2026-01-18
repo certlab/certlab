@@ -13,7 +13,30 @@ vi.mock('@/lib/auth-provider', async () => {
   };
 });
 
-// Mock other dependencies
+// Mock other dependencies using inline mocks (avoid hoisting issues)
+vi.mock('@/lib/firebase', () => ({
+  isFirebaseConfigured: vi.fn().mockReturnValue(true),
+  initializeFirebase: vi.fn().mockReturnValue(true),
+  onFirebaseAuthStateChanged: vi.fn((callback) => {
+    setTimeout(() => callback(null), 0);
+    return () => {};
+  }),
+  signOutFromGoogle: vi.fn().mockResolvedValue(undefined),
+  getCurrentFirebaseUser: vi.fn().mockReturnValue(null),
+}));
+
+vi.mock('@/lib/storage-factory', () => ({
+  initializeStorage: vi.fn().mockResolvedValue(undefined),
+  setStorageMode: vi.fn().mockResolvedValue(undefined),
+  isCloudSyncAvailable: vi.fn().mockReturnValue(false),
+  storage: {
+    getUser: vi.fn().mockResolvedValue(null),
+    createUser: vi.fn().mockResolvedValue(null),
+    setCurrentUserId: vi.fn().mockResolvedValue(undefined),
+    clearCurrentUser: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 vi.mock('@/lib/client-auth', () => ({
   clientAuth: {
     getCurrentUser: vi.fn().mockResolvedValue(null),
