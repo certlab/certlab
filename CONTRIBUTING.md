@@ -338,7 +338,9 @@ All of these checks must pass for your PR to be approved and merged.
    - ✅ Tests must pass
    - ✅ Type checking must pass
    - ✅ Linting must pass
-   - ✅ Build must succeed
+
+   > Note: The production build runs only in the `firebase-deploy.yml` workflow after code is merged to the `main` branch. It is **not** part of the pull request CI checks, but you should still ensure `npm run build` succeeds locally before opening or updating a PR.
+
 5. **Review CI artifacts** if tests fail:
    - Check test results artifact for failure details
    - Download coverage reports to see coverage changes
