@@ -6,10 +6,12 @@ This guide explains how to configure the CI/CD pipeline and branch protection ru
 
 CertLab uses GitHub Actions for continuous integration and deployment with the following workflows:
 
-- **test.yml**: Runs tests and generates coverage reports on all PRs and pushes to main
+- **test.yml**: Runs tests and generates coverage reports on all PRs to main
 - **type-check.yml**: Validates TypeScript types on all PRs and pushes to main
 - **lint.yml**: Checks code style and formatting on all PRs and pushes to main
-- **firebase-deploy.yml**: Deploys to Firebase Hosting when code is pushed to main (after tests pass)
+- **firebase-deploy.yml**: Runs tests and deploys to Firebase Hosting when code is pushed to main
+
+**Note**: On main branch pushes, firebase-deploy.yml runs tests before deployment. The separate test.yml workflow only runs on PRs to avoid duplicate test execution.
 
 ## Branch Protection Rules
 
@@ -53,6 +55,8 @@ To enforce quality gates and prevent broken code from reaching production, branc
 
 **Status Check Name**: `test`
 
+**Runs on**: Pull requests to main
+
 This workflow:
 - Runs all unit, integration, and component tests
 - Generates code coverage reports
@@ -64,6 +68,8 @@ This workflow:
 - Functions: 60%
 - Branches: 60%
 - Statements: 60%
+
+**Note**: On main branch pushes, tests are run by the firebase-deploy.yml workflow instead to avoid duplication.
 
 ### Type Check Workflow (type-check.yml)
 
@@ -85,12 +91,17 @@ This workflow:
 
 ### Firebase Deploy Workflow (firebase-deploy.yml)
 
-This workflow only runs on the `main` branch and:
-1. Runs all tests first (blocks deployment if tests fail)
+**Runs on**: Push to main branch only
+
+This workflow:
+1. **Runs all tests first** (blocks deployment if tests fail)
 2. Validates TypeScript types
 3. Validates Firebase configuration
 4. Builds the application
 5. Deploys to Firebase Hosting
+6. Uploads test results and coverage as artifacts
+
+**Important**: This workflow includes test execution to ensure deployments are blocked by test failures. The separate test.yml workflow only runs on PRs to avoid duplicate test runs.
 
 ## Testing Branch Protection
 

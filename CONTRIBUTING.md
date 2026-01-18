@@ -270,17 +270,18 @@ All code changes are automatically tested in CI/CD pipelines before deployment:
 #### Automated Test Workflows
 
 1. **Test Workflow** (`.github/workflows/test.yml`)
-   - Runs on: Push to `main` and all pull requests
+   - Runs on: All pull requests to `main`
    - Executes all unit, integration, and component tests
    - Generates coverage reports
    - Uploads test results and coverage as artifacts
    - **Must pass** for PRs to be mergeable
 
 2. **Firebase Deploy Workflow** (`.github/workflows/firebase-deploy.yml`)
-   - Runs on: Push to `main` branch
-   - **Prerequisites**: All tests must pass before deployment
-   - Runs type checking, configuration validation, and build
+   - Runs on: Push to `main` branch only
+   - **First runs all tests** (blocking deployment if they fail)
+   - Then runs type checking, configuration validation, and build
    - Deploys to Firebase Hosting only if all checks pass
+   - Uploads test results and coverage as artifacts
 
 #### Coverage Requirements
 
