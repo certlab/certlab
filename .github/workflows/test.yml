@@ -35,8 +35,7 @@ jobs:
         if: always()
         with:
           name: coverage-reports
-          path: |
-            coverage/
+          path: coverage/
           retention-days: 30
 
       - name: Upload test results
@@ -44,6 +43,5 @@ jobs:
         if: always()
         with:
           name: test-results
-          path: |
-            test-results.json
+          path: test-results.json
           retention-days: 30
