@@ -486,29 +486,26 @@ questions:
   });
 
   it('should handle batch import of 50+ questions', async () => {
-    const questions = Array.from({ length: 55 }, (_, i) => ({
-      text: `Question ${i}?`,
-      options: [
-        { id: 0, text: 'A' },
-        { id: 1, text: 'B' },
-      ],
-      correctAnswer: 0,
-      explanation: 'Explanation',
-      difficultyLevel: 1,
-      tags: [],
-      subcategory: 'Security',
-    }));
+    const questions = Array.from(
+      { length: 55 },
+      (_, i) => `
+  - text: "Question ${i}?"
+    options:
+      - id: 0
+        text: "A"
+      - id: 1
+        text: "B"
+    correctAnswer: 0
+    explanation: "Explanation"
+    difficultyLevel: 1
+    tags: []
+    subcategory: "Security"`
+    ).join('');
 
-    const yamlData: YAMLImportData = {
-      category: 'CISSP',
-      questions,
-    };
-
-    const yamlContent = JSON.stringify(yamlData);
-    // Mock yaml.load to return our data
-    vi.doMock('js-yaml', () => ({
-      load: vi.fn(() => yamlData),
-    }));
+    const yamlContent = `
+category: CISSP
+questions:${questions}
+`;
 
     const result = await importQuestionsFromYAML(yamlContent);
 

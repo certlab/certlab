@@ -83,7 +83,7 @@ Tests the main `importQuestionsFromYAML` function with various scenarios.
 
 **Key Findings**:
 - ✅ Import process handles new and existing data correctly
-- ✅ Batch processing works with batches of 50 questions
+- ✅ Batch processing uses batches of 50 questions, empirically chosen for optimal Firestore performance
 - ✅ Progress callbacks provide real-time updates
 - ✅ Invalid questions are skipped, valid ones imported
 - ✅ Error handling is robust for storage and parsing failures
