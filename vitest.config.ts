@@ -16,6 +16,10 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./client/src/test/setup.ts'],
     include: ['client/src/**/*.{test,spec}.{ts,tsx}', 'shared/**/*.{test,spec}.{ts,tsx}'],
+    reporters: ['default', 'json'],
+    outputFile: {
+      json: './test-results.json',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

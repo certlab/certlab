@@ -45,5 +45,5 @@ jobs:
         with:
           name: test-results
           path: |
-            **/*.test-results.json
+            test-results.json
           retention-days: 30

@@ -35,9 +35,18 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-reports
+          name: coverage-reports-deploy
           path: |
             coverage/
+          retention-days: 30
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-deploy
+          path: |
+            test-results.json
           retention-days: 30
 
   build-and-deploy:
