@@ -144,7 +144,7 @@ export const setupFirebaseMocks = (mockOptions?: {
 }) => {
   // This function is kept for documentation purposes but should not be used
   // in vi.mock() calls due to hoisting issues
-  console.warn(
+  throw new Error(
     'setupFirebaseMocks should not be used in vi.mock() calls. ' +
       'Use inline mock definitions instead. See the function documentation for details.'
   );

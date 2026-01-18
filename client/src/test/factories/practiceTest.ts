@@ -10,6 +10,7 @@ import type {
 
 /**
  * Default practice test for testing
+ * Note: Uses current date/time for timestamps. Override as needed for time-sensitive tests.
  */
 const DEFAULT_PRACTICE_TEST: PracticeTest = {
   id: 1,
@@ -25,8 +26,8 @@ const DEFAULT_PRACTICE_TEST: PracticeTest = {
   questionPool: null,
   createdBy: null,
   isActive: true,
-  createdAt: new Date('2024-01-01T00:00:00Z'),
-  updatedAt: new Date('2024-01-01T00:00:00Z'),
+  createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 14 days ago
+  updatedAt: new Date(),
 };
 
 /**
@@ -138,6 +139,7 @@ export function createInsertPracticeTest(
 
 /**
  * Default practice test attempt for testing
+ * Note: Uses current date/time for timestamps. Override as needed for time-sensitive tests.
  */
 const DEFAULT_PRACTICE_TEST_ATTEMPT: PracticeTestAttempt = {
   id: 1,
@@ -148,8 +150,8 @@ const DEFAULT_PRACTICE_TEST_ATTEMPT: PracticeTestAttempt = {
   score: 75,
   isPassed: true,
   timeSpent: 5400, // 90 minutes
-  startedAt: new Date('2024-01-01T10:00:00Z'),
-  completedAt: new Date('2024-01-01T11:30:00Z'),
+  startedAt: new Date(Date.now() - 90 * 60 * 1000), // 90 minutes ago
+  completedAt: new Date(),
 };
 
 /**

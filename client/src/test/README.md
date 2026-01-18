@@ -140,7 +140,7 @@ import { TestProviders } from '@/test/mocks';
 import MyComponent from './MyComponent';
 
 render(
-  <TestProviders initialRoute="/app/dashboard">
+  <TestProviders>
     <MyComponent />
   </TestProviders>
 );
@@ -152,15 +152,37 @@ Use this for components that need authentication (requires Firebase mocks):
 
 ```typescript
 import { render } from '@testing-library/react';
-import { TestProvidersWithAuth, setupFirebaseMocks, createMockFirebaseUser } from '@/test/mocks';
+import { TestProvidersWithAuth, createMockFirebaseUser } from '@/test/mocks';
+import { createUser } from '@/test/factories';
 import MyComponent from './MyComponent';
 
-// Setup Firebase mocks first
-setupFirebaseMocks({
-  currentUser: createMockFirebaseUser(),
-  storageUser: { id: 'test-user-1', email: 'test@example.com' },
+// Setup Firebase mocks inline at top level (outside of test function)
+const mockFirebaseUser = createMockFirebaseUser({ email: 'test@example.com' });
+const mockStorageUser = createUser({ 
+  id: mockFirebaseUser.uid, 
+  email: mockFirebaseUser.email 
 });
 
+vi.mock('@/lib/firebase', () => ({
+  isFirebaseConfigured: vi.fn().mockReturnValue(true),
+  initializeFirebase: vi.fn().mockReturnValue(true),
+  onFirebaseAuthStateChanged: vi.fn((callback) => {
+    setTimeout(() => callback(mockFirebaseUser), 0);
+    return () => {};
+  }),
+  signOutFromGoogle: vi.fn().mockResolvedValue(undefined),
+  getCurrentFirebaseUser: vi.fn().mockReturnValue(mockFirebaseUser),
+}));
+
+vi.mock('@/lib/storage-factory', () => ({
+  initializeStorage: vi.fn().mockResolvedValue(undefined),
+  storage: {
+    getUser: vi.fn().mockResolvedValue(mockStorageUser),
+    // ... other storage methods
+  },
+}));
+
+// In your test
 render(
   <TestProvidersWithAuth>
     <MyComponent />
@@ -206,14 +228,22 @@ vi.mock('@/lib/notification-service', () => ({
 }));
 ```
 
-#### Setup All Service Mocks
+#### Service Mocks
+
+Individual service mocks must be defined inline at the top level of your test file:
 
 ```typescript
-import { setupServiceMocks } from '@/test/mocks';
+import { vi } from 'vitest';
+import { mockAchievementService, mockNotificationService } from '@/test/mocks';
 
-beforeEach(() => {
-  setupServiceMocks();
-});
+// Define service mocks at top level
+vi.mock('@/lib/achievement-service', () => ({
+  default: mockAchievementService(),
+}));
+
+vi.mock('@/lib/notification-service', () => ({
+  default: mockNotificationService(),
+}));
 ```
 
 ## Data Factories

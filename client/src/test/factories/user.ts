@@ -6,6 +6,7 @@ import type { User, InsertUser } from '@shared/schema';
 
 /**
  * Default user for testing
+ * Note: Uses current date/time for timestamps. Override as needed for time-sensitive tests.
  */
 const DEFAULT_USER: User = {
   id: 'test-user-1',
@@ -21,8 +22,8 @@ const DEFAULT_USER: User = {
   skillsAssessment: null,
   polarCustomerId: null,
   tokenBalance: 100,
-  createdAt: new Date('2024-01-01T00:00:00Z'),
-  updatedAt: new Date('2024-01-01T00:00:00Z'),
+  createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+  updatedAt: new Date(),
 };
 
 /**

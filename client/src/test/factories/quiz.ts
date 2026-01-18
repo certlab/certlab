@@ -6,6 +6,7 @@ import type { Quiz, InsertQuiz } from '@shared/schema';
 
 /**
  * Default quiz for testing
+ * Note: Uses current date/time for timestamps. Override as needed for time-sensitive tests.
  */
 const DEFAULT_QUIZ: Quiz = {
   id: 1,
@@ -19,8 +20,8 @@ const DEFAULT_QUIZ: Quiz = {
   questionIds: [1, 2, 3, 4, 5],
   questionCount: 5,
   timeLimit: null,
-  startedAt: new Date('2024-01-01T10:00:00Z'),
-  completedAt: new Date('2024-01-01T10:15:00Z'),
+  startedAt: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
+  completedAt: new Date(), // Now
   score: 80,
   correctAnswers: 4,
   totalQuestions: 5,
@@ -35,7 +36,7 @@ const DEFAULT_QUIZ: Quiz = {
   author: null,
   authorName: null,
   prerequisites: null,
-  createdAt: new Date('2024-01-01T10:00:00Z'),
+  createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
   updatedAt: null,
   randomizeQuestions: false,
   randomizeAnswers: false,

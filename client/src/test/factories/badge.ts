@@ -5,6 +5,7 @@ import type { Badge, InsertBadge, UserBadge, InsertUserBadge } from '@shared/sch
 
 /**
  * Default badge for testing
+ * Note: Uses current date/time for timestamps. Override as needed for time-sensitive tests.
  */
 const DEFAULT_BADGE: Badge = {
   id: 1,
@@ -17,7 +18,7 @@ const DEFAULT_BADGE: Badge = {
   rarity: 'common',
   tier: 'bronze',
   points: 10,
-  createdAt: new Date('2024-01-01T00:00:00Z'),
+  createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
 };
 
 /**

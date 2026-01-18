@@ -106,17 +106,15 @@ export const mockPermissionsService = () => ({
 
 /**
  * Sets up all common service mocks
+ *
+ * @deprecated This function contains vi.mock() calls which are hoisted by Vitest
+ * and cannot be called at runtime. Define mocks inline at the top level of your
+ * test file instead. See the mock utility functions above for reference implementations.
  */
 export const setupServiceMocks = () => {
-  vi.mock('@/lib/achievement-service', () => ({
-    default: mockAchievementService(),
-  }));
-
-  vi.mock('@/lib/notification-service', () => ({
-    default: mockNotificationService(),
-  }));
-
-  vi.mock('@/hooks/use-toast', () => ({
-    useToast: () => mockToast(),
-  }));
+  throw new Error(
+    'setupServiceMocks should not be used. ' +
+      'Vitest hoists vi.mock() calls, so they cannot be called inside a function. ' +
+      'Define mocks inline at the top level of your test file instead.'
+  );
 };
