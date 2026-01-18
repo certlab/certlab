@@ -134,13 +134,14 @@ export function createInsertBadge(overrides?: Partial<InsertBadge>): InsertBadge
 
 /**
  * Default user badge for testing
+ * Note: Uses current date/time for timestamps. Override as needed for time-sensitive tests.
  */
 const DEFAULT_USER_BADGE: UserBadge = {
   id: 1,
   userId: 'test-user-1',
   tenantId: 1,
   badgeId: 1,
-  earnedAt: new Date('2024-01-01T10:00:00Z'),
+  earnedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
   progress: 100,
   isNotified: false,
 };
