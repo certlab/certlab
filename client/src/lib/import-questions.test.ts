@@ -739,7 +739,7 @@ questions:
     });
 
     const storageModule = await import('./storage-factory');
-    const mockStorage = storageModule.storage;
+    const mockStorage = storageModule.storage as any;
     mockStorage.getCategories.mockResolvedValue([]);
     mockStorage.createCategory.mockResolvedValue({ id: 1, name: 'CISSP' });
     mockStorage.getSubcategories.mockResolvedValue([]);
@@ -775,7 +775,7 @@ questions:
     });
 
     const storageModule = await import('./storage-factory');
-    const mockStorage = storageModule.storage;
+    const mockStorage = storageModule.storage as any;
     mockStorage.getCategories.mockResolvedValue([]);
     mockStorage.createCategory.mockResolvedValue({ id: 1, name: 'CISM' });
     mockStorage.getSubcategories.mockResolvedValue([]);
@@ -834,7 +834,7 @@ questions:
     });
 
     const storageModule = await import('./storage-factory');
-    const mockStorage = storageModule.storage;
+    const mockStorage = storageModule.storage as any;
     mockStorage.getCategories.mockResolvedValue([]);
     mockStorage.createCategory.mockResolvedValue({ id: 1, name: 'CISSP' });
     mockStorage.getSubcategories.mockResolvedValue([]);
