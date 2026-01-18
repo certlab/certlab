@@ -17,6 +17,7 @@ vi.mock('./firestore-storage', () => ({
     getUserQuizzes: vi.fn(),
     createQuiz: vi.fn(),
     getQuiz: vi.fn(),
+    setCurrentUserId: vi.fn().mockResolvedValue(undefined),
   },
 }));
 vi.mock('./errors', () => ({
