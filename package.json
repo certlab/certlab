@@ -43,6 +43,12 @@
     "test:integration": "vitest run client/src/test/integration",
     "test:unit": "vitest run --exclude 'client/src/test/integration/**'",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:codegen": "playwright codegen http://localhost:5173",
     "deploy:firebase": "npm run build:firebase && firebase deploy --only hosting",
     "deploy:firestore:rules": "firebase deploy --only firestore:rules",
     "deploy:firestore:indexes": "firebase deploy --only firestore:indexes",
@@ -138,6 +144,7 @@
   "devDependencies": {
     "@axe-core/react": "^4.11.0",
     "@eslint/js": "^9.39.2",
+    "@playwright/test": "^1.57.0",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.18",
     "@testing-library/jest-dom": "^6.9.1",
@@ -173,7 +180,8 @@
     "typescript-eslint": "^8.53.0",
     "vite": "^7.3.1",
     "vitest": "^4.0.14",
-    "vitest-axe": "^0.1.0"
+    "vitest-axe": "^0.1.0",
+    "wait-on": "^9.0.3"
   },
   "optionalDependencies": {
     "bufferutil": "^4.1.0"

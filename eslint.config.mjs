@@ -17,6 +17,9 @@ export default tseslint.config(
       '*.config.mjs',
       'scripts/**',
       'tools/**',
+      'e2e/**',
+      'playwright-report/**',
+      'test-results/**',
     ],
   },
   // Base JavaScript recommended rules

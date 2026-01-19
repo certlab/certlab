@@ -65,7 +65,8 @@ Open http://localhost:5000 and sign in with Google to get started!
 | `npm run dev` | Start development server at http://localhost:5000 |
 | `npm run build` | Build production bundle to `./dist` |
 | `npm run check` | Run TypeScript type checking |
-| `npm test` | Run test suite |
+| `npm test` | Run unit/integration tests |
+| `npm run test:e2e` | Run end-to-end tests with Playwright |
 | `npm run deploy:firebase` | Build and deploy to Firebase Hosting |
 
 📖 **Detailed Information**:
@@ -109,6 +110,7 @@ Comprehensive documentation is available in the [docs/](docs/) directory:
 - **[Firebase Setup](docs/setup/firebase.md)** - Configure authentication and cloud storage
 - **[Dynatrace Setup](docs/setup/dynatrace.md)** - Configure observability and monitoring
 - **[Deployment Guide](docs/setup/deployment.md)** - Deploy to Firebase Hosting or other platforms
+- **[E2E Testing Guide](docs/E2E_TESTING.md)** - End-to-end test automation with Playwright
 
 ### Project Information
 - **[Features](FEATURES.md)** - Complete list of all implemented features
