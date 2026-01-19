@@ -58,6 +58,8 @@ vi.mock('@/lib/storage-factory', () => {
     getChallenges: vi.fn().mockResolvedValue([]),
     getStudyGroups: vi.fn().mockResolvedValue([]),
     getPracticeTests: vi.fn().mockResolvedValue([]),
+    getUserThemePreferences: vi.fn().mockResolvedValue(null),
+    getOrganizationBranding: vi.fn().mockResolvedValue(null),
   };
 
   return {

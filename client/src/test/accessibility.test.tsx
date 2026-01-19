@@ -6,6 +6,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { createTestQueryClient } from '@/test/mocks/providers';
 import { ThemeProvider } from '@/lib/theme-provider';
 import { AuthProvider } from '@/lib/auth-provider';
+import { BrandingProvider } from '@/lib/branding-provider';
 
 // Test pages
 import Landing from '@/pages/landing';
@@ -23,9 +24,11 @@ function AuthenticatedWrapper({ children }: { children: React.ReactNode }) {
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-            {children}
-          </ThemeProvider>
+          <BrandingProvider>
+            <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+              {children}
+            </ThemeProvider>
+          </BrandingProvider>
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
@@ -39,9 +42,13 @@ function PublicWrapper({ children }: { children: React.ReactNode }) {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-          {children}
-        </ThemeProvider>
+        <AuthProvider>
+          <BrandingProvider>
+            <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+              {children}
+            </ThemeProvider>
+          </BrandingProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
   );
