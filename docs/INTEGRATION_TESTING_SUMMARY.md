@@ -102,9 +102,10 @@ This document summarizes the integration testing infrastructure added to CertLab
 - ✅ Created comprehensive integration testing guide (`docs/INTEGRATION_TESTING.md`)
 - ✅ Documented mock strategies and testing patterns
 
+- ✅ Integration tests run cleanly in CI (mock import issues resolved, TypeScript compilation passes)
+
 **Pending:**
-- ⏳ Ensure integration tests run cleanly in CI (tests are implemented but have mock import issues to resolve)
-- ⏳ Generate coverage reports for integration scenarios
+- ⏳ Add automated coverage reports for integration scenarios in CI
 
 ### ⏭️ Phase 4: Cloud Sync Integration Tests
 
