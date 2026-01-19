@@ -49,12 +49,6 @@ jobs:
             echo "Tests timed out after 5 minutes"
             kill -9 $TEST_PID 2>/dev/null || true
             TIMED_OUT=true
-          else
-            # Process exited during or after loop - ensure we have its exit code
-            if [ "$EXIT_CODE" -eq 0 ] && [ "$i" -eq 300 ]; then
-              # Loop completed naturally, check if process just exited
-              wait $TEST_PID 2>/dev/null || EXIT_CODE=$?
-            fi
           fi
           
           # Exit with appropriate code
