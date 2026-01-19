@@ -6,7 +6,7 @@ This guide explains how to configure the CI/CD pipeline and branch protection ru
 
 CertLab uses GitHub Actions for continuous integration and deployment with the following workflows:
 
-- **test.yml**: Runs tests and generates coverage reports on all PRs to main
+- **test.yml**: Runs the test suite on all PRs to main
 - **type-check.yml**: Validates TypeScript types on all PRs and pushes to main
 - **lint.yml**: Checks code style and formatting on all PRs and pushes to main
 - **firebase-deploy.yml**: Runs tests and deploys to Firebase Hosting when code is pushed to main
