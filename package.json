@@ -40,6 +40,8 @@
     "format:check": "prettier --check \"client/src/**/*.{ts,tsx}\" \"shared/**/*.{ts,tsx}\"",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:integration": "vitest run client/src/test/integration",
+    "test:unit": "vitest run --exclude 'client/src/test/integration/**'",
     "test:coverage": "vitest run --coverage",
     "deploy:firebase": "npm run build:firebase && firebase deploy --only hosting",
     "deploy:firestore:rules": "firebase deploy --only firestore:rules",

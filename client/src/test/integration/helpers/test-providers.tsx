@@ -109,5 +109,7 @@ export function getIntegrationMockState() {
 
 /**
  * Export mocks for direct manipulation in tests
+ * Note: These are re-exported from the mock modules for convenience
  */
-export { firebaseMock, firestoreMock };
+export { firebaseMock } from '../mocks/firebase-mock';
+export { firestoreMock } from '../mocks/firestore-mock';
