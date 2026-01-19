@@ -271,9 +271,9 @@ All code changes are automatically tested in CI/CD pipelines before deployment:
 
 1. **Test Workflow** (`.github/workflows/test.yml`)
    - Runs on: All pull requests to `main`
-   - Executes all unit, integration, and component tests
-   - Generates coverage reports
-   - Uploads test results and coverage as artifacts
+   - Executes the Vitest suite via `npm run test:run`
+   - Does **not** currently generate coverage reports in CI (see [Coverage in CI](#coverage-in-ci))
+   - Does **not** upload coverage artifacts at this time
    - **Must pass** for PRs to be mergeable
 
 2. **Firebase Deploy Workflow** (`.github/workflows/firebase-deploy.yml`)

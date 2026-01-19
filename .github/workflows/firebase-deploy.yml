@@ -31,6 +31,7 @@ jobs:
           npm run test:run &
           TEST_PID=$!
           EXIT_CODE=0
+          TIMED_OUT=false
           
           # Wait for up to 5 minutes
           for i in {1..300}; do
@@ -43,15 +44,25 @@ jobs:
             sleep 1
           done
           
-          # If still running after 5 minutes, force kill and fail
+          # Check if loop completed without process exiting (timeout scenario)
           if kill -0 $TEST_PID 2>/dev/null; then
             echo "Tests timed out after 5 minutes"
             kill -9 $TEST_PID 2>/dev/null || true
-            exit 1
+            TIMED_OUT=true
+          else
+            # Process exited during or after loop - ensure we have its exit code
+            if [ "$EXIT_CODE" -eq 0 ] && [ "$i" -eq 300 ]; then
+              # Loop completed naturally, check if process just exited
+              wait $TEST_PID 2>/dev/null || EXIT_CODE=$?
+            fi
           fi
           
-          # Exit with the test process exit code
-          exit $EXIT_CODE
+          # Exit with appropriate code
+          if [ "$TIMED_OUT" = true ]; then
+            exit 1
+          else
+            exit $EXIT_CODE
+          fi
         timeout-minutes: 10
 
   build-and-deploy:

@@ -58,9 +58,10 @@ To enforce quality gates and prevent broken code from reaching production, branc
 **Runs on**: Pull requests to main
 
 This workflow:
-- Runs all unit, integration, and component tests
+- Runs all unit, integration, and component tests via `npm run test:run`
 - Uses a bash timeout wrapper to prevent hanging (5-minute hard timeout)
 - Fails if any tests fail or timeout
+- Does **not** generate coverage reports or upload artifacts
 
 **Note on Coverage**: Coverage generation has been temporarily disabled due to technical issues (hanging CI jobs). Tests run with `npm run test:run` which does not produce coverage reports. Coverage can still be generated locally with `npm run test:coverage`.
 
