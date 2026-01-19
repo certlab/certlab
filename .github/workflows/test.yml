@@ -1,6 +1,9 @@
 name: Test
 
 on:
+  # This workflow intentionally runs only on pull requests to main.
+  # Tests also run as part of firebase-deploy.yml on pushes to main, so
+  # limiting this workflow to PRs avoids duplicate test runs.
   pull_request:
     branches:
       - main
@@ -8,6 +11,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -53,4 +57,6 @@ jobs:
           else
             exit $EXIT_CODE
           fi
+        # Note: The bash wrapper enforces a 5-minute timeout for quicker feedback,
+        # while this step-level timeout (10 minutes) acts as a hard upper bound.
         timeout-minutes: 10
