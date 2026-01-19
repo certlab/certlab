@@ -24,11 +24,3 @@ jobs:
       - name: Run tests
         run: npm run test:run
         timeout-minutes: 10
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: test-results
-          path: test-results.json
-          retention-days: 30
