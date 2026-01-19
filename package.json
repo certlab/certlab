@@ -148,7 +148,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/react-katex": "^3.0.4",
     "@vitejs/plugin-react": "^5.1.2",
-    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/coverage-v8": "^4.0.17",
     "autoprefixer": "^10.4.23",
     "axe-core": "^4.11.1",
     "cross-env": "^10.1.0",
