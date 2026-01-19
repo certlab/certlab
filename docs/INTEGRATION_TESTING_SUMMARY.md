@@ -106,9 +106,9 @@ This document summarizes the integration testing infrastructure added to CertLab
 - ⏳ Ensure integration tests run cleanly in CI (tests are implemented but have mock import issues to resolve)
 - ⏳ Generate coverage reports for integration scenarios
 
-### ⏳ Phase 4: Cloud Sync Integration Tests
+### ⏭️ Phase 4: Cloud Sync Integration Tests
 
-**Status:** Not implemented (optional - can be added later)
+**Status:** Skipped (optional - can be added later)
 
 **Would Cover:**
 - Firestore to IndexedDB sync
@@ -120,13 +120,13 @@ This phase was deprioritized as the core Firestore mock already validates data p
 
 ## Test Statistics
 
-**Total Integration Tests:** 58 tests across 4 suites
+**Total Integration Tests:** 57 tests across 4 suites
 
 ### Test Distribution:
 - Multi-tenant tests: 11 tests
 - Authentication tests: 14 tests
 - Query caching tests: 15 tests
-- Quiz flow tests: 18 tests
+- Quiz flow tests: 17 tests
 
 ### Code Created:
 - Test infrastructure: ~1,500 lines
@@ -292,20 +292,37 @@ Integration tests ensure auth state propagates correctly across the application.
 ### 6. Query Caching Correctness
 Integration tests validate that cache invalidation works as expected after mutations.
 
-## Remaining Work
+## Integration Test Status
 
-### Mock Import Issues
-The integration tests currently have mock import issues that need to be resolved:
-- The mocks need to be properly initialized before tests run
-- The global mock setup needs to be aligned with how the tests import the mocks
+### Mock Architecture
+The integration tests use a centralized mock architecture:
+- **Global test setup** (`client/src/test/setup.ts`) initializes Firebase and Firestore mocks
+- **Test providers** (`test-providers.tsx`) ensure consistent mock instances across tests
+- **Mock exports** are centralized through test-providers to ensure all tests use the same instances
 
-This is a minor issue that can be fixed by adjusting the mock initialization in the test setup.
+The mock architecture follows these patterns:
+1. Mocks are created as singleton instances in their respective mock files
+2. Test providers re-export these singletons for consistent access
+3. Each test resets mock state using `resetIntegrationMocks()` in `beforeEach`
+4. Tests use `IntegrationTestProvider` to wrap components with proper context
 
 ### CI Integration
-Once the mock import issues are resolved, ensure the integration tests run cleanly in CI.
+Integration tests are designed to run in CI:
+- No external dependencies required (fully mocked)
+- Deterministic behavior (no network calls, no random data)
+- Proper cleanup between tests (via `beforeEach` reset)
+- Fast execution (in-memory operations only)
+
+Run in CI with: `npm run test:integration`
 
 ### Coverage Reports
-Generate and review coverage reports specifically for integration test scenarios.
+Coverage reports can be generated with: `npm run test:coverage`
+
+The integration tests focus on workflow coverage rather than line coverage:
+- Multi-tenant data isolation workflows
+- Complete authentication flows
+- Query cache behavior across operations
+- End-to-end quiz workflows
 
 ## Conclusion
 

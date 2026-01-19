@@ -190,6 +190,7 @@ describe('Query Caching and Invalidation Integration Tests', () => {
       );
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(result.current.data).toBeDefined();
       expect(Array.isArray(result.current.data)).toBe(true);
     });
   });
@@ -333,6 +334,12 @@ describe('Query Caching and Invalidation Integration Tests', () => {
       // Invalidate and refetch
       await queryClient.invalidateQueries({ queryKey: queryKeys.quiz.detail(1) });
       await waitForAsync(100);
+
+      // Verify the quiz state was updated
+      const updatedDoc = await firestoreMock.getDocument('users/user1/quizzes', '1');
+      expect(updatedDoc).toBeDefined();
+      expect(updatedDoc!.data.completedAt).toBeDefined();
+      expect(updatedDoc!.data.score).toBe(85);
     });
 
     it('should cascade invalidations correctly', async () => {

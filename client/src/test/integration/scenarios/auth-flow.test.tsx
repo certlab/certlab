@@ -313,12 +313,16 @@ describe('Authentication Flow Integration Tests', () => {
   });
 
   describe('Authentication Error Scenarios', () => {
-    it('should handle network errors during sign-in', async () => {
-      // This would be tested with more sophisticated mock
-      // For now, verify basic error handling exists
-      expect(async () => {
-        await signInTestUser();
-      }).not.toThrow();
+    it('should handle sign-in with missing parameters', async () => {
+      // Sign in without required parameters should create a user with defaults
+      const user = await signInTestUser();
+
+      // Verify user was created with generated ID
+      expect(user.uid).toBeDefined();
+      expect(user.uid).toMatch(/^test-user-\d+$/);
+      
+      // Verify Firebase mock has the user
+      expect(firebaseMock.getUser()).toBeDefined();
     });
 
     it('should handle invalid credentials', async () => {
