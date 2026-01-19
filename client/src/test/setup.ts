@@ -80,17 +80,8 @@ vi.mock('@/lib/client-auth', () => ({
   },
 }));
 
-// Mock errors module
-vi.mock('@/lib/errors', () => ({
-  logError: vi.fn(),
-  ErrorCategory: {
-    AUTHENTICATION: 'authentication',
-    STORAGE: 'storage',
-    NETWORK: 'network',
-    VALIDATION: 'validation',
-    UNKNOWN: 'unknown',
-  },
-}));
+// Note: errors module is NOT mocked globally because many tests need the real implementation
+// Tests that need logError mocked should do so individually
 
 // Mock dynatrace module
 vi.mock('@/lib/dynatrace', () => ({
