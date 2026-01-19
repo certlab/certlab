@@ -303,7 +303,19 @@ describe('Query Caching and Invalidation Integration Tests', () => {
             queryKey: queryKeys.quiz.detail(1),
             queryFn: async () => {
               const doc = await firestoreMock.getDocument('users/user1/quizzes', '1');
-              return doc ? { id: doc.id, ...doc.data } : null;
+              return doc
+                ? ({
+                    id: doc.id,
+                    ...doc.data,
+                  } as {
+                    id: string | number;
+                    userId?: string;
+                    name?: string;
+                    tenantId?: number;
+                    completedAt: string | null;
+                    score: number | null;
+                  })
+                : null;
             },
           }),
         { wrapper }

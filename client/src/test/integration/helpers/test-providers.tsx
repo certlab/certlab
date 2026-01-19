@@ -85,7 +85,7 @@ interface IntegrationTestProviderProps {
 export function IntegrationTestProvider({
   children,
   queryClient,
-}: IntegrationTestProviderProps): JSX.Element {
+}: IntegrationTestProviderProps): React.JSX.Element {
   const testQueryClient = queryClient || createTestQueryClient();
 
   return <QueryClientProvider client={testQueryClient}>{children}</QueryClientProvider>;
