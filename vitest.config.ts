@@ -23,7 +23,7 @@ export default defineConfig({
     fileParallelism: false,
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'html'],
       include: ['client/src/**/*.{ts,tsx}', 'shared/**/*.{ts,tsx}'],
       exclude: [
         'client/src/**/*.test.{ts,tsx}',

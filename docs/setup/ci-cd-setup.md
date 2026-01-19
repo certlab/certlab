@@ -59,15 +59,10 @@ To enforce quality gates and prevent broken code from reaching production, branc
 
 This workflow:
 - Runs all unit, integration, and component tests
-- Generates code coverage reports
-- Uploads coverage and test results as artifacts
-- Fails if any tests fail or coverage drops below thresholds
+- Uses a bash timeout wrapper to prevent hanging (5-minute hard timeout)
+- Fails if any tests fail or timeout
 
-**Coverage Thresholds**:
-- Lines: 60%
-- Functions: 60%
-- Branches: 60%
-- Statements: 60%
+**Note on Coverage**: Coverage generation has been temporarily disabled due to technical issues (hanging CI jobs). Tests run with `npm run test:run` which does not produce coverage reports. Coverage can still be generated locally with `npm run test:coverage`.
 
 **Note**: On main branch pushes, tests are run by the firebase-deploy.yml workflow instead to avoid duplication.
 
@@ -99,9 +94,10 @@ This workflow:
 3. Validates Firebase configuration
 4. Builds the application
 5. Deploys to Firebase Hosting
-6. Uploads test results and coverage as artifacts
 
 **Important**: This workflow includes test execution to ensure deployments are blocked by test failures. The separate test.yml workflow only runs on PRs to avoid duplicate test runs.
+
+**Note on Artifacts**: Test artifacts are not currently uploaded due to coverage being disabled. See the Test Workflow section for details.
 
 ## Testing Branch Protection
 
@@ -193,25 +189,16 @@ If status checks don't appear on your PR:
 
 ## Artifacts
 
-After each CI run, the following artifacts are available for download:
+**Current Status**: CI artifacts are not currently available.
 
-### Test Workflow Artifacts
+Due to technical issues with vitest hanging when generating coverage, both coverage generation and artifact uploads have been **temporarily disabled**:
+- Tests run with `npm run test:run` (no coverage)
+- No artifacts are uploaded to GitHub Actions
+- Test results are visible in the job logs
 
-- **coverage-reports**: HTML, JSON, and text coverage reports
-- **test-results**: JSON file with detailed test execution results
+**Local Coverage**: You can still generate coverage reports locally using `npm run test:coverage`. The generated reports will be in the `coverage/` directory.
 
-### Firebase Deploy Workflow Artifacts
-
-- **coverage-reports-deploy**: Coverage reports from deployment test run
-- **test-results-deploy**: Test results from deployment test run
-
-**To download artifacts**:
-1. Go to the **Actions** tab on GitHub
-2. Click on a completed workflow run
-3. Scroll down to the **Artifacts** section
-4. Click on an artifact name to download
-
-Artifacts are retained for 30 days.
+**Future**: Artifacts will be re-enabled once the vitest hanging issue is resolved.
 
 ## Updating Status Checks
 

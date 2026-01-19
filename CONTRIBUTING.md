@@ -281,36 +281,30 @@ All code changes are automatically tested in CI/CD pipelines before deployment:
    - **First runs all tests** (blocking deployment if they fail)
    - Then runs type checking, configuration validation, and build
    - Deploys to Firebase Hosting only if all checks pass
-   - Uploads test results and coverage as artifacts
 
-#### Coverage Requirements
+#### Coverage in CI
 
-The project enforces minimum code coverage thresholds:
-- **Lines**: 60%
-- **Functions**: 60%
-- **Branches**: 60%
-- **Statements**: 60%
+Due to technical issues (hanging CI jobs when generating coverage), coverage collection has been **temporarily disabled in CI**:
+- Tests run with `npm run test:run`, which does **not** produce coverage reports
+- Coverage thresholds are **not currently enforced** as part of the CI gate
+- Coverage reports are **not** uploaded as CI artifacts at this time
 
-Coverage reports are generated with every test run and available as CI artifacts.
+You can still generate coverage reports **locally** for your own reference:
 
-#### Test Artifacts
+```bash
+# (Optional) Generate a local coverage report
+npm run test:coverage
+```
 
-After each CI run, the following artifacts are available:
-- **coverage-reports**: HTML and JSON coverage reports (retained for 30 days)
-- **test-results**: Detailed test execution results (retained for 30 days)
-
-You can download these artifacts from the GitHub Actions run page to review test results and coverage locally.
+**Note**: The vitest.config.ts file defines coverage thresholds (60% for lines, functions, branches, and statements), but these are only enforced when you run `npm run test:coverage` locally, not in CI.
 
 #### Local Testing Before Push
 
 To ensure your changes will pass CI, run these commands locally:
 
 ```bash
-# Run tests
+# Run tests (matches CI behavior)
 npm run test:run
-
-# Generate coverage report
-npm run test:coverage
 
 # Run type checking
 npm run check
@@ -341,9 +335,9 @@ All of these checks must pass for your PR to be approved and merged.
 
    > Note: The production build runs only in the `firebase-deploy.yml` workflow after code is merged to the `main` branch. It is **not** part of the pull request CI checks, but you should still ensure `npm run build` succeeds locally before opening or updating a PR.
 
-5. **Review CI artifacts** if tests fail:
-   - Check test results artifact for failure details
-   - Download coverage reports to see coverage changes
+5. **Review CI logs** if tests fail:
+   - Open the failing GitHub Actions job and inspect the logs for failure details
+   - If you need coverage information, run `npm run test:coverage` locally and review the generated report
 
 ### PR Title Format
 
@@ -358,7 +352,6 @@ Use conventional commit format:
 
 - **Automated checks** must pass before manual review
   - All tests must pass
-  - Coverage thresholds must be met
   - Type checking must succeed
   - Linting must succeed
 - PRs require review before merging

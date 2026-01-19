@@ -26,18 +26,26 @@ jobs:
           # Run tests with a hard timeout to ensure exit
           npm run test:run &
           TEST_PID=$!
+          EXIT_CODE=0
           
           # Wait for up to 5 minutes
           for i in {1..300}; do
             if ! kill -0 $TEST_PID 2>/dev/null; then
+              # Process has exited, capture its exit code
               wait $TEST_PID
-              exit $?
+              EXIT_CODE=$?
+              break
             fi
             sleep 1
           done
           
           # If still running after 5 minutes, force kill and fail
-          echo "Tests timed out after 5 minutes"
-          kill -9 $TEST_PID 2>/dev/null || true
-          exit 1
+          if kill -0 $TEST_PID 2>/dev/null; then
+            echo "Tests timed out after 5 minutes"
+            kill -9 $TEST_PID 2>/dev/null || true
+            exit 1
+          fi
+          
+          # Exit with the test process exit code
+          exit $EXIT_CODE
         timeout-minutes: 10
