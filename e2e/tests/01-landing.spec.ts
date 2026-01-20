@@ -96,25 +96,36 @@ test.describe('Navigation', () => {
     if (buttonExists) {
       await signInButton.click();
 
-      // Wait for login component to load (it's lazy loaded)
+      // Wait for login component to load (it's lazy loaded via React.lazy())
       // The landing page conditionally renders the Login component when showLogin is true
-      await page.waitForLoadState('domcontentloaded');
+      // We need to wait for the actual Login component content to appear
+      await page.waitForLoadState('networkidle');
 
       // Verify login UI appeared by waiting for either the heading or Google button
       // Look for login page heading (h1 with "Welcome to Cert Lab")
+      // The Login component should now be in the DOM
       const loginHeading = page.getByRole('heading', { level: 1, name: /welcome/i });
       const googleSignInButton = page.getByRole('button', { name: /google|sign in with google/i });
 
       // Wait for at least one element to be visible (with longer timeout for lazy loading)
-      const loginHeadingVisible = await loginHeading
-        .isVisible({ timeout: 10000 })
-        .catch(() => false);
-      const googleButtonVisible = await googleSignInButton
-        .isVisible({ timeout: 10000 })
-        .catch(() => false);
+      // Try heading first, then button
+      let loginUIVisible = false;
+      
+      try {
+        await loginHeading.waitFor({ state: 'visible', timeout: 10000 });
+        loginUIVisible = true;
+      } catch {
+        // Heading not found, try Google button
+        try {
+          await googleSignInButton.waitFor({ state: 'visible', timeout: 5000 });
+          loginUIVisible = true;
+        } catch {
+          // Neither found
+        }
+      }
 
       // At least one of these should be visible
-      expect(loginHeadingVisible || googleButtonVisible).toBeTruthy();
+      expect(loginUIVisible).toBeTruthy();
     } else {
       test.skip(true, 'Sign in button not found on landing page');
     }

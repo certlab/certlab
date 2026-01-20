@@ -22,7 +22,8 @@ import {
 test.describe('Authentication Flow', () => {
   test('should display login UI when accessing protected routes without auth', async ({ page }) => {
     // Try to access dashboard without authentication
-    await page.goto('/dashboard');
+    // The actual protected route is /app/dashboard, not /dashboard
+    await page.goto('/app/dashboard');
 
     // Should be redirected to landing page (ProtectedRoute redirects to "/" not "/login")
     await page.waitForLoadState('networkidle');
@@ -31,7 +32,8 @@ test.describe('Authentication Flow', () => {
     const currentUrl = page.url();
     
     // Should be redirected to landing page (/)
-    expect(currentUrl).toMatch(/\/$/);
+    // The URL will be baseURL + "/" which ends with the port and /
+    expect(currentUrl).toMatch(/\/$|^http:\/\/localhost:\d+\/$/);
     
     // Should see the Get Started button on landing page (not auto-shown login UI)
     const getStartedButton = page.getByRole('button', { name: /get started/i }).first();
