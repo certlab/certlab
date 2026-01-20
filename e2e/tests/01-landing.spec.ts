@@ -20,8 +20,10 @@ test.describe('Landing Page', () => {
     // Verify page loaded
     await expect(page).toHaveTitle(/CertLab|Certification/i);
 
-    // Verify key elements are visible
-    await verifyHeading(page, /CertLab|Certification Study/i);
+    // Verify main h1 heading is visible (use level option to ensure we only get h1)
+    const mainHeading = page.getByRole('heading', { level: 1 });
+    await expect(mainHeading).toBeVisible();
+    await expect(mainHeading).toContainText(/Master Your|Certifications/i);
   });
 
   test('should display main features on landing page', async ({ page }) => {
@@ -99,7 +101,8 @@ test.describe('Navigation', () => {
       await page.waitForLoadState('networkidle');
 
       // Verify login UI appeared (either new page or modal)
-      const loginHeading = page.getByRole('heading', { name: /sign in|login/i });
+      // Look for login page heading (h1 with "Welcome to Cert Lab")
+      const loginHeading = page.getByRole('heading', { level: 1, name: /welcome/i });
       const googleSignInButton = page.getByRole('button', { name: /google|sign in with google/i });
 
       const loginHeadingVisible = await loginHeading
