@@ -87,10 +87,10 @@ export default function Login() {
               <i className="fas fa-shield-alt text-2xl"></i>
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold bg-[linear-gradient(to_right,#f87aff,#fb93d0,#ffdd99,#c3f0b2,#2fd8fe)] bg-clip-text text-transparent">
-            Welcome to Cert Lab
-          </CardTitle>
-          <p className="text-white/70">
+          <h1 className="text-2xl font-bold bg-[linear-gradient(to_right,#f87aff,#fb93d0,#ffdd99,#c3f0b2,#2fd8fe)] bg-clip-text text-transparent">
+            Sign In to Cert Lab
+          </h1>
+          <p className="text-white/70 mt-2">
             Master certifications with Helen's AI-powered learning lab
           </p>
         </CardHeader>
