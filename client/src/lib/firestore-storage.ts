@@ -121,14 +121,18 @@ export function generateId(): string {
  * Generates a 32-bit safe numeric ID for categories and subcategories.
  * PostgreSQL integer type has a max value of 2^31-1 (2147483647).
  * Uses a sequential counter that stays within 32-bit range.
+ *
+ * Note: This is client-side code that runs in a single-threaded environment.
+ * Firestore document IDs (stored as strings) provide uniqueness guarantees.
+ * The random starting point provides good distribution across application instances.
  */
 const MAX_32BIT_INT = 2147483647;
 let idCounter = Math.floor(Math.random() * 1000000000); // Start with random base to avoid collisions
 
 export function generateSafeNumericId(): number {
   // Simple incrementing counter that stays within 32-bit range
-  // Wraps around if it reaches the max value
-  idCounter = (idCounter + 1) % MAX_32BIT_INT;
+  // Wraps around if it reaches the max value, utilizing full 0-2147483647 range
+  idCounter = (idCounter + 1) % (MAX_32BIT_INT + 1);
 
   // Ensure we never return 0 (skip if counter wraps to 0)
   if (idCounter === 0) {
