@@ -216,9 +216,10 @@ test.describe('Color Contrast and Visual Accessibility', () => {
     const html = page.locator('html');
     await expect(html).toBeVisible();
 
-    // Reset zoom
+    // Reset zoom (clear transform styles applied above)
     await page.evaluate(() => {
-      document.body.style.zoom = '1';
+      document.body.style.transform = '';
+      document.body.style.transformOrigin = '';
     });
   });
 });
