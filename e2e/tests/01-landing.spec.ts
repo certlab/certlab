@@ -96,19 +96,21 @@ test.describe('Navigation', () => {
     if (buttonExists) {
       await signInButton.click();
 
-      // Wait for navigation or modal to appear
-      await page.waitForLoadState('networkidle');
+      // Wait for login component to load (it's lazy loaded)
+      // The landing page conditionally renders the Login component when showLogin is true
+      await page.waitForLoadState('domcontentloaded');
 
-      // Verify login UI appeared (either new page or modal)
+      // Verify login UI appeared by waiting for either the heading or Google button
       // Look for login page heading (h1 with "Welcome to Cert Lab")
       const loginHeading = page.getByRole('heading', { level: 1, name: /welcome/i });
       const googleSignInButton = page.getByRole('button', { name: /google|sign in with google/i });
 
+      // Wait for at least one element to be visible (with longer timeout for lazy loading)
       const loginHeadingVisible = await loginHeading
-        .isVisible({ timeout: 3000 })
+        .isVisible({ timeout: 10000 })
         .catch(() => false);
       const googleButtonVisible = await googleSignInButton
-        .isVisible({ timeout: 3000 })
+        .isVisible({ timeout: 10000 })
         .catch(() => false);
 
       // At least one of these should be visible

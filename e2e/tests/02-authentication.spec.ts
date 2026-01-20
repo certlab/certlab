@@ -24,24 +24,20 @@ test.describe('Authentication Flow', () => {
     // Try to access dashboard without authentication
     await page.goto('/dashboard');
 
-    // Should be redirected to login or see login modal
+    // Should be redirected to landing page (ProtectedRoute redirects to "/" not "/login")
     await page.waitForLoadState('networkidle');
 
-    // Check if we're on landing/login page or see login UI
+    // Check current URL - should be redirected to landing page
     const currentUrl = page.url();
-    const isOnDashboard = currentUrl.includes('/dashboard');
-
-    if (isOnDashboard) {
-      // If on dashboard, there should be login UI visible
-      const loginButton = page.getByRole('button', { name: /sign in|login|google/i });
-      const loginVisible = await loginButton.isVisible({ timeout: 3000 }).catch(() => false);
-
-      // Either redirected away from dashboard OR login UI is visible
-      expect(loginVisible).toBeTruthy();
-    } else {
-      // Should be redirected to landing or login page
-      expect(currentUrl).toMatch(/\/login|\/$/);
-    }
+    
+    // Should be redirected to landing page (/)
+    expect(currentUrl).toMatch(/\/$/);
+    
+    // Should see the Get Started button on landing page (not auto-shown login UI)
+    const getStartedButton = page.getByRole('button', { name: /get started/i }).first();
+    const buttonVisible = await getStartedButton.isVisible({ timeout: 3000 }).catch(() => false);
+    
+    expect(buttonVisible).toBeTruthy();
   });
 
   test.skip('should login successfully with Google OAuth', async ({ page }) => {
