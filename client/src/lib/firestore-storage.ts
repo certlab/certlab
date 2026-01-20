@@ -118,6 +118,26 @@ export function generateId(): string {
 }
 
 /**
+ * Generates a 32-bit safe numeric ID for categories and subcategories.
+ * PostgreSQL integer type has a max value of 2^31-1 (2147483647).
+ * Uses a counter-based approach to avoid timestamp overflow.
+ */
+let idCounter = 0;
+const MAX_32BIT_INT = 2147483647;
+const ID_BASE = Math.floor(Date.now() / 1000); // Use seconds instead of milliseconds
+
+export function generateSafeNumericId(): number {
+  // Generate ID using seconds since epoch + counter
+  // This ensures IDs stay within 32-bit range
+  const baseId = ID_BASE % 1000000000; // Keep first 9 digits of seconds
+  idCounter = (idCounter + 1) % 1000; // Counter cycles 0-999
+  const id = baseId * 1000 + idCounter;
+
+  // Ensure we never exceed the max 32-bit integer
+  return Math.min(id, MAX_32BIT_INT);
+}
+
+/**
  * Convert resource type to plural collection name
  */
 function getCollectionName(resourceType: 'lecture' | 'quiz' | 'material'): string {
@@ -251,7 +271,8 @@ class FirestoreStorage implements IClientStorage {
 
   async createTenant(tenant: Partial<Tenant>): Promise<Tenant> {
     try {
-      const id = Date.now();
+      // Use safe numeric ID generator to avoid exceeding 32-bit integer limit
+      const id = generateSafeNumericId();
       const newTenant: Tenant = {
         id,
         name: tenant.name || 'New Tenant',
@@ -416,7 +437,8 @@ class FirestoreStorage implements IClientStorage {
         throw new Error(`Category validation failed: ${errors}`);
       }
 
-      const id = Date.now();
+      // Use safe numeric ID generator to avoid exceeding 32-bit integer limit
+      const id = generateSafeNumericId();
       const newCategory: Category = {
         ...category,
         id,
@@ -485,7 +507,8 @@ class FirestoreStorage implements IClientStorage {
 
   async createSubcategory(subcategory: Partial<Subcategory>): Promise<Subcategory> {
     try {
-      const id = Date.now();
+      // Use safe numeric ID generator to avoid exceeding 32-bit integer limit
+      const id = generateSafeNumericId();
       const newSubcategory: Subcategory = {
         id,
         name: subcategory.name || '',
@@ -608,7 +631,8 @@ class FirestoreStorage implements IClientStorage {
         throw new Error(`Question validation failed: ${errors}`);
       }
 
-      const id = Date.now();
+      // Use safe numeric ID generator to avoid exceeding 32-bit integer limit
+      const id = generateSafeNumericId();
       const newQuestion: Question = {
         ...question,
         id,
@@ -677,7 +701,8 @@ class FirestoreStorage implements IClientStorage {
       const userId = quiz.userId || this.currentUserId;
       if (!userId) throw new Error('User ID required');
 
-      const id = Date.now();
+      // Use safe numeric ID generator to avoid exceeding 32-bit integer limit
+      const id = generateSafeNumericId();
       const newQuiz: Quiz = {
         id,
         userId,
@@ -1302,7 +1327,7 @@ class FirestoreStorage implements IClientStorage {
     tenantId?: number
   ): Promise<Lecture> {
     try {
-      const id = Date.now();
+      const id = generateSafeNumericId();
       const lecture: Lecture = {
         id,
         userId,
@@ -1556,7 +1581,7 @@ class FirestoreStorage implements IClientStorage {
       const userId = userBadge.userId || this.currentUserId;
       if (!userId) throw new Error('User ID required');
 
-      const id = Date.now();
+      const id = generateSafeNumericId();
       const newBadge: UserBadge = {
         id,
         userId,
@@ -1664,7 +1689,7 @@ class FirestoreStorage implements IClientStorage {
 
   async createChallenge(challenge: Partial<Challenge>): Promise<Challenge> {
     try {
-      const id = Date.now();
+      const id = generateSafeNumericId();
       const newChallenge: Challenge = {
         id,
         userId: challenge.userId || '',
@@ -1709,7 +1734,7 @@ class FirestoreStorage implements IClientStorage {
       const userId = attempt.userId || this.currentUserId;
       if (!userId) throw new Error('User ID required');
 
-      const id = Date.now();
+      const id = generateSafeNumericId();
       const newAttempt: ChallengeAttempt = {
         id,
         userId,
@@ -1755,7 +1780,7 @@ class FirestoreStorage implements IClientStorage {
 
   async createStudyGroup(group: Partial<StudyGroup>): Promise<StudyGroup> {
     try {
-      const id = Date.now();
+      const id = generateSafeNumericId();
       const newGroup: StudyGroup = {
         id,
         tenantId: group.tenantId || 1,
@@ -1861,7 +1886,7 @@ class FirestoreStorage implements IClientStorage {
 
   async createPracticeTest(test: Partial<PracticeTest>): Promise<PracticeTest> {
     try {
-      const id = Date.now();
+      const id = generateSafeNumericId();
       const newTest: PracticeTest = {
         id,
         tenantId: test.tenantId || 1,
@@ -1907,7 +1932,7 @@ class FirestoreStorage implements IClientStorage {
       const userId = attempt.userId || this.currentUserId;
       if (!userId) throw new Error('User ID required');
 
-      const id = Date.now();
+      const id = generateSafeNumericId();
       const newAttempt: PracticeTestAttempt = {
         id,
         tenantId: attempt.tenantId || 1,
@@ -3959,7 +3984,7 @@ class FirestoreStorage implements IClientStorage {
     >
   ): Promise<import('@shared/schema').QuizTemplateLibrary> {
     try {
-      const id = Date.now();
+      const id = generateSafeNumericId();
       const now = new Date();
 
       // Build search text for indexing
@@ -4001,7 +4026,7 @@ class FirestoreStorage implements IClientStorage {
     >
   ): Promise<import('@shared/schema').MaterialTemplateLibrary> {
     try {
-      const id = Date.now();
+      const id = generateSafeNumericId();
       const now = new Date();
 
       // Build search text for indexing
@@ -4703,7 +4728,7 @@ class FirestoreStorage implements IClientStorage {
     template: Omit<CertificateTemplate, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<CertificateTemplate> {
     try {
-      const id = Date.now();
+      const id = generateSafeNumericId();
 
       const newTemplate: CertificateTemplate = {
         ...template,
