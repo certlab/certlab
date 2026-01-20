@@ -1,41 +1,11 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Badge component snapshots > renders Badge with custom className 1`] = `
-<div
-  class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 custom-class"
->
-  Custom Badge
-</div>
-`;
+exports[`Badge component snapshots > renders Badge with custom className 1`] = `<div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 custom-class">Custom Badge</div>`;
 
-exports[`Badge component snapshots > renders Badge with default variant 1`] = `
-<div
-  class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80"
->
-  Default Badge
-</div>
-`;
+exports[`Badge component snapshots > renders Badge with default variant 1`] = `<div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80">Default Badge</div>`;
 
-exports[`Badge component snapshots > renders Badge with destructive variant 1`] = `
-<div
-  class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80"
->
-  Destructive Badge
-</div>
-`;
+exports[`Badge component snapshots > renders Badge with destructive variant 1`] = `<div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80">Destructive Badge</div>`;
 
-exports[`Badge component snapshots > renders Badge with outline variant 1`] = `
-<div
-  class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground"
->
-  Outline Badge
-</div>
-`;
+exports[`Badge component snapshots > renders Badge with outline variant 1`] = `<div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground">Outline Badge</div>`;
 
-exports[`Badge component snapshots > renders Badge with secondary variant 1`] = `
-<div
-  class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80"
->
-  Secondary Badge
-</div>
-`;
+exports[`Badge component snapshots > renders Badge with secondary variant 1`] = `<div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">Secondary Badge</div>`;

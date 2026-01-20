@@ -1,37 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Avatar component snapshots > renders Avatar with custom className 1`] = `
-<span
-  class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full custom-avatar"
->
-  <span
-    class="flex h-full w-full items-center justify-center rounded-full bg-muted"
-  >
-    CD
-  </span>
-</span>
-`;
+exports[`Avatar component snapshots > renders Avatar with custom className 1`] = `<span class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full custom-avatar"><span class="flex h-full w-full items-center justify-center rounded-full bg-muted">CD</span></span>`;
 
-exports[`Avatar component snapshots > renders Avatar with fallback only 1`] = `
-<span
-  class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full"
->
-  <span
-    class="flex h-full w-full items-center justify-center rounded-full bg-muted"
-  >
-    AB
-  </span>
-</span>
-`;
+exports[`Avatar component snapshots > renders Avatar with fallback only 1`] = `<span class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full"><span class="flex h-full w-full items-center justify-center rounded-full bg-muted">AB</span></span>`;
 
-exports[`Avatar component snapshots > renders Avatar with image 1`] = `
-<span
-  class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full"
->
-  <span
-    class="flex h-full w-full items-center justify-center rounded-full bg-muted"
-  >
-    JD
-  </span>
-</span>
-`;
+exports[`Avatar component snapshots > renders Avatar with image and fallback 1`] = `<span class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full"><span class="flex h-full w-full items-center justify-center rounded-full bg-muted">JD</span></span>`;

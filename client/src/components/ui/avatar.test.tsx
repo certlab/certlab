@@ -4,7 +4,7 @@ import { render } from '@testing-library/react';
 import { Avatar, AvatarImage, AvatarFallback } from './avatar';
 
 describe('Avatar component snapshots', () => {
-  it('renders Avatar with image', () => {
+  it('renders Avatar with image and fallback', () => {
     const { container } = render(
       <Avatar>
         <AvatarImage src="https://example.com/avatar.jpg" alt="User" />

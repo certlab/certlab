@@ -33,6 +33,9 @@ describe('QuestionNavigator component snapshots', () => {
     currentQuestionIndex: 0,
     answers: {},
     flaggedQuestions: new Set(),
+    selectedAnswer: undefined,
+    showFeedback: false,
+    isCorrect: false,
     isReviewingFlagged: false,
     currentFlaggedIndex: 0,
     flaggedQuestionIndices: [],
@@ -48,7 +51,7 @@ describe('QuestionNavigator component snapshots', () => {
   it('renders QuestionNavigator with answered questions', () => {
     const stateWithAnswers: QuizState = {
       ...mockState,
-      answers: { 1: 'A', 2: 'B' },
+      answers: { 1: 0, 2: 1 },
     };
     const { container } = render(
       <QuestionNavigator questions={mockQuestions} state={stateWithAnswers} onNavigate={vi.fn()} />
@@ -71,8 +74,11 @@ describe('QuestionNavigator component snapshots', () => {
   it('renders QuestionNavigator with mixed states', () => {
     const complexState: QuizState = {
       currentQuestionIndex: 1,
-      answers: { 1: 'A' },
+      answers: { 1: 0 },
       flaggedQuestions: new Set([3]),
+      selectedAnswer: undefined,
+      showFeedback: false,
+      isCorrect: false,
       isReviewingFlagged: false,
       currentFlaggedIndex: 0,
       flaggedQuestionIndices: [2],

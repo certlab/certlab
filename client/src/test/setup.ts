@@ -7,7 +7,59 @@
  */
 
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { vi, expect } from 'vitest';
+
+// Custom snapshot serializer to normalize Radix UI generated IDs in DOM snapshots
+expect.addSnapshotSerializer({
+  test: (val) => {
+    return val && val instanceof HTMLElement;
+  },
+  serialize: (val, config, indentation, depth, refs, printer) => {
+    // Clone the element to avoid modifying the original
+    const clone = val.cloneNode(true) as HTMLElement;
+
+    // Find all elements with Radix IDs and normalize them
+    const walker = document.createTreeWalker(clone, NodeFilter.SHOW_ELEMENT, null);
+
+    const elements = [clone];
+    let node;
+    while ((node = walker.nextNode())) {
+      elements.push(node as HTMLElement);
+    }
+
+    elements.forEach((el) => {
+      if (el instanceof HTMLElement) {
+        // Normalize id attribute
+        if (el.id && el.id.match(/^radix-/)) {
+          el.id = el.id.replace(/radix-[^-]+-/g, 'radix-STABLE-ID-');
+        }
+        // Normalize aria-controls attribute
+        if (el.hasAttribute('aria-controls')) {
+          const ariaControls = el.getAttribute('aria-controls') || '';
+          if (ariaControls.match(/^radix-/)) {
+            el.setAttribute(
+              'aria-controls',
+              ariaControls.replace(/radix-[^-]+-/g, 'radix-STABLE-ID-')
+            );
+          }
+        }
+        // Normalize aria-labelledby attribute
+        if (el.hasAttribute('aria-labelledby')) {
+          const ariaLabelledby = el.getAttribute('aria-labelledby') || '';
+          if (ariaLabelledby.match(/^radix-/)) {
+            el.setAttribute(
+              'aria-labelledby',
+              ariaLabelledby.replace(/radix-[^-]+-/g, 'radix-STABLE-ID-')
+            );
+          }
+        }
+      }
+    });
+
+    // Use the default HTML serialization
+    return clone.outerHTML.replace(/\s+/g, ' ').replace(/>\s+</g, '>\n<').trim();
+  },
+});
 
 // Mock Firebase configuration to avoid real connections
 vi.mock('@/lib/firebase', () => ({

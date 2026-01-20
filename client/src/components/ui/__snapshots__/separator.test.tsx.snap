@@ -1,25 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Separator component snapshots > renders Separator with custom className 1`] = `
-<div
-  class="shrink-0 bg-border h-[1px] w-full custom-class"
-  data-orientation="horizontal"
-  role="none"
-/>
-`;
+exports[`Separator component snapshots > renders Separator with custom className 1`] = `<div data-orientation="horizontal" role="none" class="shrink-0 bg-border h-[1px] w-full custom-class"></div>`;
 
-exports[`Separator component snapshots > renders horizontal Separator 1`] = `
-<div
-  class="shrink-0 bg-border h-[1px] w-full"
-  data-orientation="horizontal"
-  role="none"
-/>
-`;
+exports[`Separator component snapshots > renders horizontal Separator 1`] = `<div data-orientation="horizontal" role="none" class="shrink-0 bg-border h-[1px] w-full"></div>`;
 
-exports[`Separator component snapshots > renders vertical Separator 1`] = `
-<div
-  class="shrink-0 bg-border h-full w-[1px]"
-  data-orientation="vertical"
-  role="none"
-/>
-`;
+exports[`Separator component snapshots > renders vertical Separator 1`] = `<div data-orientation="vertical" role="none" class="shrink-0 bg-border h-full w-[1px]"></div>`;

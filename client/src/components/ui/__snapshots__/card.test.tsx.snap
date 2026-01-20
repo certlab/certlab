@@ -1,92 +1,17 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Card component snapshots > renders Card with custom className 1`] = `
-<div
-  class="rounded-xl bg-card text-card-foreground shadow-lg border-none transition-all duration-300 hover:shadow-xl custom-class"
->
-  Card content
-</div>
-`;
+exports[`Card component snapshots > renders Card with custom className 1`] = `<div class="rounded-xl bg-card text-card-foreground shadow-lg border-none transition-all duration-300 hover:shadow-xl custom-class">Card content</div>`;
 
-exports[`Card component snapshots > renders Card with default props 1`] = `
-<div
-  class="rounded-xl bg-card text-card-foreground shadow-lg border-none transition-all duration-300 hover:shadow-xl"
->
-  Card content
-</div>
-`;
+exports[`Card component snapshots > renders Card with default props 1`] = `<div class="rounded-xl bg-card text-card-foreground shadow-lg border-none transition-all duration-300 hover:shadow-xl">Card content</div>`;
 
-exports[`Card component snapshots > renders CardContent 1`] = `
-<div
-  class="p-6 pt-0"
->
-  Content
-</div>
-`;
+exports[`Card component snapshots > renders CardContent 1`] = `<div class="p-6 pt-0">Content</div>`;
 
-exports[`Card component snapshots > renders CardDescription 1`] = `
-<div
-  class="text-sm text-muted-foreground"
->
-  Description
-</div>
-`;
+exports[`Card component snapshots > renders CardDescription 1`] = `<div class="text-sm text-muted-foreground">Description</div>`;
 
-exports[`Card component snapshots > renders CardFooter 1`] = `
-<div
-  class="flex items-center p-6 pt-0"
->
-  Footer
-</div>
-`;
+exports[`Card component snapshots > renders CardFooter 1`] = `<div class="flex items-center p-6 pt-0">Footer</div>`;
 
-exports[`Card component snapshots > renders CardHeader 1`] = `
-<div
-  class="flex flex-col space-y-1.5 p-6"
->
-  Header content
-</div>
-`;
+exports[`Card component snapshots > renders CardHeader 1`] = `<div class="flex flex-col space-y-1.5 p-6">Header content</div>`;
 
-exports[`Card component snapshots > renders CardTitle 1`] = `
-<div
-  class="text-2xl font-semibold leading-none tracking-tight"
->
-  Title
-</div>
-`;
+exports[`Card component snapshots > renders CardTitle 1`] = `<div class="text-2xl font-semibold leading-none tracking-tight">Title</div>`;
 
-exports[`Card component snapshots > renders complete Card structure 1`] = `
-<div
-  class="rounded-xl bg-card text-card-foreground shadow-lg border-none transition-all duration-300 hover:shadow-xl"
->
-  <div
-    class="flex flex-col space-y-1.5 p-6"
-  >
-    <div
-      class="text-2xl font-semibold leading-none tracking-tight"
-    >
-      Card Title
-    </div>
-    <div
-      class="text-sm text-muted-foreground"
-    >
-      Card Description
-    </div>
-  </div>
-  <div
-    class="p-6 pt-0"
-  >
-    <p>
-      This is the card content.
-    </p>
-  </div>
-  <div
-    class="flex items-center p-6 pt-0"
-  >
-    <button>
-      Action
-    </button>
-  </div>
-</div>
-`;
+exports[`Card component snapshots > renders complete Card structure 1`] = `<div class="rounded-xl bg-card text-card-foreground shadow-lg border-none transition-all duration-300 hover:shadow-xl"><div class="flex flex-col space-y-1.5 p-6"><div class="text-2xl font-semibold leading-none tracking-tight">Card Title</div><div class="text-sm text-muted-foreground">Card Description</div></div><div class="p-6 pt-0"><p>This is the card content.</p></div><div class="flex items-center p-6 pt-0"><button>Action</button></div></div>`;

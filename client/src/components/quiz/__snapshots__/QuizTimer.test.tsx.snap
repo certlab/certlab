@@ -1,52 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`QuizTimer component snapshots > renders QuizTimer with low time remaining 1`] = `
-<div
-  class="text-center sm:text-right"
->
-  <div
-    class="text-xl sm:text-2xl font-bold text-accent"
-  >
-    0:30
-  </div>
-  <div
-    class="text-xs sm:text-sm text-muted-foreground"
-  >
-    Time Remaining
-  </div>
-</div>
-`;
+exports[`QuizTimer component snapshots > renders QuizTimer with low time remaining 1`] = `<div class="text-center sm:text-right"><div class="text-xl sm:text-2xl font-bold text-accent">0:30</div><div class="text-xs sm:text-sm text-muted-foreground">Time Remaining</div></div>`;
 
-exports[`QuizTimer component snapshots > renders QuizTimer with time remaining 1`] = `
-<div
-  class="text-center sm:text-right"
->
-  <div
-    class="text-xl sm:text-2xl font-bold text-accent"
-  >
-    10:00
-  </div>
-  <div
-    class="text-xs sm:text-sm text-muted-foreground"
-  >
-    Time Remaining
-  </div>
-</div>
-`;
+exports[`QuizTimer component snapshots > renders QuizTimer with time remaining 1`] = `<div class="text-center sm:text-right"><div class="text-xl sm:text-2xl font-bold text-accent">10:00</div><div class="text-xs sm:text-sm text-muted-foreground">Time Remaining</div></div>`;
 
-exports[`QuizTimer component snapshots > renders QuizTimer with zero time 1`] = `
-<div
-  class="text-center sm:text-right"
->
-  <div
-    class="text-xl sm:text-2xl font-bold text-accent"
-  >
-    0:00
-  </div>
-  <div
-    class="text-xs sm:text-sm text-muted-foreground"
-  >
-    Time Remaining
-  </div>
-</div>
-`;
+exports[`QuizTimer component snapshots > renders QuizTimer with zero time 1`] = `<div class="text-center sm:text-right"><div class="text-xl sm:text-2xl font-bold text-accent">0:00</div><div class="text-xs sm:text-sm text-muted-foreground">Time Remaining</div></div>`;

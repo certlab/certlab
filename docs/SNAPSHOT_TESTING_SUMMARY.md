@@ -15,21 +15,19 @@ This document summarizes the snapshot testing implementation for CertLab's UI co
 
 ### 2. Component Coverage
 
-**Total Coverage**: 100 snapshot tests across 18 component files
+**Total Coverage**: 66 snapshot tests across 16 component files
 
-#### UI Components (16 files, 86 tests)
+#### UI Components (14 files, 59 tests)
 
 | Component | Tests | Snapshot File Location |
 |-----------|-------|----------------------|
 | Alert | 5 | `client/src/components/ui/__snapshots__/alert.test.tsx.snap` |
 | Avatar | 3 | `client/src/components/ui/__snapshots__/avatar.test.tsx.snap` |
 | Badge | 5 | `client/src/components/ui/__snapshots__/badge.test.tsx.snap` |
-| Button | 7 | Pre-existing |
 | Card | 8 | `client/src/components/ui/__snapshots__/card.test.tsx.snap` |
 | Checkbox | 4 | `client/src/components/ui/__snapshots__/checkbox.test.tsx.snap` |
 | Input | 6 | `client/src/components/ui/__snapshots__/input.test.tsx.snap` |
 | Label | 3 | `client/src/components/ui/__snapshots__/label.test.tsx.snap` |
-| Pagination Controls | 26 | Pre-existing |
 | Progress | 4 | `client/src/components/ui/__snapshots__/progress.test.tsx.snap` |
 | Separator | 3 | `client/src/components/ui/__snapshots__/separator.test.tsx.snap` |
 | Skeleton | 3 | `client/src/components/ui/__snapshots__/skeleton.test.tsx.snap` |
@@ -38,7 +36,7 @@ This document summarizes the snapshot testing implementation for CertLab's UI co
 | Tabs | 3 | `client/src/components/ui/__snapshots__/tabs.test.tsx.snap` |
 | Textarea | 5 | `client/src/components/ui/__snapshots__/textarea.test.tsx.snap` |
 
-#### Quiz Components (2 files, 8 tests)
+#### Quiz Components (2 files, 7 tests)
 
 | Component | Tests | Snapshot File Location |
 |-----------|-------|----------------------|
@@ -70,13 +68,13 @@ Tests       279 passed (279)
 ```
 
 This includes:
-- 100 new snapshot tests
-- 179 existing tests (unit, integration, and logic tests)
+- 66 new snapshot tests
+- 213 existing tests (unit, integration, and logic tests)
 
 ### Snapshot Test Performance
 
 ```
-Duration    16.08s (for snapshot tests only)
+Duration    ~16s (for snapshot tests only)
 ```
 
 Snapshot tests are fast and efficient, adding minimal overhead to the test suite.
@@ -104,6 +102,7 @@ The snapshot tests integrate seamlessly with the existing CI workflow at `.githu
 - Automatically catches unintended UI changes
 - Detects styling regressions that logic tests miss
 - Provides immediate feedback on component structure changes
+- Custom snapshot serializer normalizes volatile Radix UI IDs for stable snapshots
 
 ### 2. Documentation as Code
 
@@ -119,9 +118,10 @@ The snapshot tests integrate seamlessly with the existing CI workflow at `.githu
 
 ### 4. Comprehensive Coverage
 
-- 100 tests across 18 critical UI components
+- 66 tests across 16 critical UI and quiz components
 - Multiple variants tested per component (states, props, variants)
 - Both atomic components (Button, Badge) and composite components (Card, Table)
+- Radix UI components handled with custom serializer for stable snapshots
 
 ## Usage Examples
 
@@ -153,6 +153,11 @@ When a snapshot test fails:
 
 The following UI components could benefit from snapshot tests:
 
+**Currently have unit tests but no snapshots:**
+- Button (has 7 unit tests testing functionality)
+- Pagination Controls (has 26 unit tests testing behavior)
+
+**Other components without snapshot coverage:**
 - Accordion
 - Alert Dialog
 - Calendar
@@ -230,11 +235,12 @@ Additional quiz components to snapshot test:
 
 The snapshot testing implementation successfully delivers:
 
-✅ **100 snapshot tests** covering critical UI and quiz components  
+✅ **66 snapshot tests** covering critical UI and quiz components  
 ✅ **Comprehensive documentation** for the team  
 ✅ **CI integration** with no configuration changes  
 ✅ **Zero regressions** - all existing tests continue to pass  
 ✅ **Fast execution** - minimal overhead to test suite  
 ✅ **Easy to maintain** - clear workflow for updating snapshots  
+✅ **Stable snapshots** - custom serializer handles Radix UI volatile IDs  
 
 The implementation provides a solid foundation for catching visual regressions and can be expanded to cover additional components as needed.

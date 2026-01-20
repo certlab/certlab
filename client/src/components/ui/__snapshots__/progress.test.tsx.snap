@@ -1,73 +1,9 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Progress component snapshots > renders Progress with 50% value 1`] = `
-<div
-  aria-valuemax="100"
-  aria-valuemin="0"
-  class="relative h-4 w-full overflow-hidden rounded-full bg-secondary"
-  data-max="100"
-  data-state="indeterminate"
-  role="progressbar"
->
-  <div
-    class="h-full w-full flex-1 bg-primary transition-all"
-    data-max="100"
-    data-state="indeterminate"
-    style="transform: translateX(-50%);"
-  />
-</div>
-`;
+exports[`Progress component snapshots > renders Progress with 50% value 1`] = `<div aria-valuemax="100" aria-valuemin="0" role="progressbar" data-state="indeterminate" data-max="100" class="relative h-4 w-full overflow-hidden rounded-full bg-secondary"><div data-state="indeterminate" data-max="100" class="h-full w-full flex-1 bg-primary transition-all" style="transform: translateX(-50%);"></div></div>`;
 
-exports[`Progress component snapshots > renders Progress with 100% value 1`] = `
-<div
-  aria-valuemax="100"
-  aria-valuemin="0"
-  class="relative h-4 w-full overflow-hidden rounded-full bg-secondary"
-  data-max="100"
-  data-state="indeterminate"
-  role="progressbar"
->
-  <div
-    class="h-full w-full flex-1 bg-primary transition-all"
-    data-max="100"
-    data-state="indeterminate"
-    style="transform: translateX(-0%);"
-  />
-</div>
-`;
+exports[`Progress component snapshots > renders Progress with 100% value 1`] = `<div aria-valuemax="100" aria-valuemin="0" role="progressbar" data-state="indeterminate" data-max="100" class="relative h-4 w-full overflow-hidden rounded-full bg-secondary"><div data-state="indeterminate" data-max="100" class="h-full w-full flex-1 bg-primary transition-all" style="transform: translateX(-0%);"></div></div>`;
 
-exports[`Progress component snapshots > renders Progress with custom className 1`] = `
-<div
-  aria-valuemax="100"
-  aria-valuemin="0"
-  class="relative h-4 w-full overflow-hidden rounded-full bg-secondary custom-class"
-  data-max="100"
-  data-state="indeterminate"
-  role="progressbar"
->
-  <div
-    class="h-full w-full flex-1 bg-primary transition-all"
-    data-max="100"
-    data-state="indeterminate"
-    style="transform: translateX(-25%);"
-  />
-</div>
-`;
+exports[`Progress component snapshots > renders Progress with custom className 1`] = `<div aria-valuemax="100" aria-valuemin="0" role="progressbar" data-state="indeterminate" data-max="100" class="relative h-4 w-full overflow-hidden rounded-full bg-secondary custom-class"><div data-state="indeterminate" data-max="100" class="h-full w-full flex-1 bg-primary transition-all" style="transform: translateX(-25%);"></div></div>`;
 
-exports[`Progress component snapshots > renders Progress with default value 1`] = `
-<div
-  aria-valuemax="100"
-  aria-valuemin="0"
-  class="relative h-4 w-full overflow-hidden rounded-full bg-secondary"
-  data-max="100"
-  data-state="indeterminate"
-  role="progressbar"
->
-  <div
-    class="h-full w-full flex-1 bg-primary transition-all"
-    data-max="100"
-    data-state="indeterminate"
-    style="transform: translateX(-100%);"
-  />
-</div>
-`;
+exports[`Progress component snapshots > renders Progress with default value 1`] = `<div aria-valuemax="100" aria-valuemin="0" role="progressbar" data-state="indeterminate" data-max="100" class="relative h-4 w-full overflow-hidden rounded-full bg-secondary"><div data-state="indeterminate" data-max="100" class="h-full w-full flex-1 bg-primary transition-all" style="transform: translateX(-100%);"></div></div>`;

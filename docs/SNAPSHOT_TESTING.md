@@ -118,13 +118,14 @@ it('renders with custom className', () => {
 ## Best Practices
 
 ### DO:
-- ✅ Create snapshots for all UI components in `client/src/components/ui/`
+- ✅ Create snapshots for stable, critical UI components
 - ✅ Create snapshots for quiz components with different states
 - ✅ Review snapshot diffs carefully before updating
 - ✅ Commit snapshot files to version control
 - ✅ Use descriptive test names that explain what's being tested
 - ✅ Test multiple variants and states of components
 - ✅ Keep snapshots focused on specific component scenarios
+- ✅ Be aware that Radix UI components have volatile IDs (handled by custom serializer)
 
 ### DON'T:
 - ❌ Blindly update snapshots without reviewing changes
@@ -143,12 +144,10 @@ The following components have snapshot tests:
 - ✅ Alert (5 tests)
 - ✅ Avatar (3 tests)
 - ✅ Badge (5 tests)
-- ✅ Button (7 tests)
 - ✅ Card (8 tests)
 - ✅ Checkbox (4 tests)
 - ✅ Input (6 tests)
 - ✅ Label (3 tests)
-- ✅ Pagination Controls (26 tests)
 - ✅ Progress (4 tests)
 - ✅ Separator (3 tests)
 - ✅ Skeleton (3 tests)
@@ -159,9 +158,11 @@ The following components have snapshot tests:
 
 **Quiz Components (`client/src/components/quiz/`):**
 - ✅ QuestionNavigator (4 tests)
-- ✅ QuizTimer (4 tests)
+- ✅ QuizTimer (3 tests)
 
-**Total: 100 snapshot tests across 18 component files**
+**Total: 66 snapshot tests across 16 component files**
+
+**Note:** Button and Pagination Controls have unit tests but do not currently have snapshot tests. Consider adding snapshots for these components as they are critical UI primitives.
 
 ### Adding Snapshot Tests for New Components
 
@@ -205,6 +206,12 @@ If snapshot tests fail in CI:
 **Cause**: Different Node.js versions or operating systems may produce slightly different output.
 
 **Solution**: Ensure CI and local environments use the same Node.js version (v20.x for CertLab).
+
+### Radix UI component snapshots have volatile IDs
+
+**Cause**: Radix UI generates unique IDs (e.g., `radix-_r_0_...`) that change between renders.
+
+**Solution**: CertLab uses a custom snapshot serializer in `client/src/test/setup.ts` that normalizes these IDs to `radix-STABLE-ID` for consistent snapshots.
 
 ### Too many snapshot updates
 
