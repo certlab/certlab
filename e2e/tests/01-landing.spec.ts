@@ -9,7 +9,6 @@ import { test, expect } from '../fixtures/base';
 import {
   goToLandingPage,
   waitForAppReady,
-  verifyHeading,
   checkBasicAccessibility,
 } from '../utils/test-helpers';
 

@@ -302,8 +302,8 @@ test.describe('Screen Reader Support', () => {
     await goToLandingPage(page);
 
     // Look for aria-live regions
-    // Note: This uses a comma-separated CSS selector which is valid in Playwright.
-    // It matches elements with aria-live, role="alert", or role="status".
+    // Note: This uses standard CSS syntax with comma-separated selectors, which Playwright
+    // supports in locators. It matches elements with aria-live, role="alert", or role="status".
     const liveRegions = page.locator('[aria-live], [role="alert"], [role="status"]');
     const regionCount = await liveRegions.count();
 
