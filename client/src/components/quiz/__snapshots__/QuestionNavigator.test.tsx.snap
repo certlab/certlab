@@ -1,0 +1,361 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`QuestionNavigator component snapshots > renders QuestionNavigator with answered questions 1`] = `
+<div
+  class="rounded-xl text-card-foreground border-none transition-all duration-300 hover:shadow-xl shadow-lg border-0 p-3 sm:p-4 bg-card"
+>
+  <h4
+    class="font-medium text-foreground mb-3 text-sm sm:text-base"
+    id="question-navigator-heading"
+  >
+    Question Navigator
+  </h4>
+  <div
+    aria-labelledby="question-navigator-heading"
+    class="grid grid-cols-8 sm:grid-cols-10 gap-1.5 sm:gap-2"
+    role="navigation"
+  >
+    <button
+      aria-current="step"
+      aria-label="Go to question 1, current question"
+      class="quiz-nav-button quiz-nav-current"
+    >
+      1
+    </button>
+    <button
+      aria-label="Go to question 2, answered"
+      class="quiz-nav-button quiz-nav-answered"
+    >
+      2
+    </button>
+    <button
+      aria-label="Go to question 3, not answered"
+      class="quiz-nav-button quiz-nav-unanswered"
+    >
+      3
+    </button>
+  </div>
+  <div
+    class="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-3 sm:gap-x-6 mt-3 sm:mt-4 text-[10px] sm:text-xs"
+  >
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-primary rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Current
+      </span>
+    </div>
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-secondary rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Answered
+      </span>
+    </div>
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-accent rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Flagged
+      </span>
+    </div>
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-muted rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Not Answered
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`QuestionNavigator component snapshots > renders QuestionNavigator with flagged questions 1`] = `
+<div
+  class="rounded-xl text-card-foreground border-none transition-all duration-300 hover:shadow-xl shadow-lg border-0 p-3 sm:p-4 bg-card"
+>
+  <h4
+    class="font-medium text-foreground mb-3 text-sm sm:text-base"
+    id="question-navigator-heading"
+  >
+    Question Navigator
+  </h4>
+  <div
+    aria-labelledby="question-navigator-heading"
+    class="grid grid-cols-8 sm:grid-cols-10 gap-1.5 sm:gap-2"
+    role="navigation"
+  >
+    <button
+      aria-label="Go to question 1, flagged for review"
+      class="quiz-nav-button quiz-nav-flagged"
+    >
+      1
+    </button>
+    <button
+      aria-current="step"
+      aria-label="Go to question 2, current question"
+      class="quiz-nav-button quiz-nav-current"
+    >
+      2
+    </button>
+    <button
+      aria-label="Go to question 3, flagged for review"
+      class="quiz-nav-button quiz-nav-flagged"
+    >
+      3
+    </button>
+  </div>
+  <div
+    class="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-3 sm:gap-x-6 mt-3 sm:mt-4 text-[10px] sm:text-xs"
+  >
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-primary rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Current
+      </span>
+    </div>
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-secondary rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Answered
+      </span>
+    </div>
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-accent rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Flagged
+      </span>
+    </div>
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-muted rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Not Answered
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`QuestionNavigator component snapshots > renders QuestionNavigator with mixed states 1`] = `
+<div
+  class="rounded-xl text-card-foreground border-none transition-all duration-300 hover:shadow-xl shadow-lg border-0 p-3 sm:p-4 bg-card"
+>
+  <h4
+    class="font-medium text-foreground mb-3 text-sm sm:text-base"
+    id="question-navigator-heading"
+  >
+    Question Navigator
+  </h4>
+  <div
+    aria-labelledby="question-navigator-heading"
+    class="grid grid-cols-8 sm:grid-cols-10 gap-1.5 sm:gap-2"
+    role="navigation"
+  >
+    <button
+      aria-label="Go to question 1, answered"
+      class="quiz-nav-button quiz-nav-answered"
+    >
+      1
+    </button>
+    <button
+      aria-current="step"
+      aria-label="Go to question 2, current question"
+      class="quiz-nav-button quiz-nav-current"
+    >
+      2
+    </button>
+    <button
+      aria-label="Go to question 3, flagged for review"
+      class="quiz-nav-button quiz-nav-flagged"
+    >
+      3
+    </button>
+  </div>
+  <div
+    class="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-3 sm:gap-x-6 mt-3 sm:mt-4 text-[10px] sm:text-xs"
+  >
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-primary rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Current
+      </span>
+    </div>
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-secondary rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Answered
+      </span>
+    </div>
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-accent rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Flagged
+      </span>
+    </div>
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-muted rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Not Answered
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`QuestionNavigator component snapshots > renders QuestionNavigator with unanswered questions 1`] = `
+<div
+  class="rounded-xl text-card-foreground border-none transition-all duration-300 hover:shadow-xl shadow-lg border-0 p-3 sm:p-4 bg-card"
+>
+  <h4
+    class="font-medium text-foreground mb-3 text-sm sm:text-base"
+    id="question-navigator-heading"
+  >
+    Question Navigator
+  </h4>
+  <div
+    aria-labelledby="question-navigator-heading"
+    class="grid grid-cols-8 sm:grid-cols-10 gap-1.5 sm:gap-2"
+    role="navigation"
+  >
+    <button
+      aria-current="step"
+      aria-label="Go to question 1, current question"
+      class="quiz-nav-button quiz-nav-current"
+    >
+      1
+    </button>
+    <button
+      aria-label="Go to question 2, not answered"
+      class="quiz-nav-button quiz-nav-unanswered"
+    >
+      2
+    </button>
+    <button
+      aria-label="Go to question 3, not answered"
+      class="quiz-nav-button quiz-nav-unanswered"
+    >
+      3
+    </button>
+  </div>
+  <div
+    class="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-3 sm:gap-x-6 mt-3 sm:mt-4 text-[10px] sm:text-xs"
+  >
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-primary rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Current
+      </span>
+    </div>
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-secondary rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Answered
+      </span>
+    </div>
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-accent rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Flagged
+      </span>
+    </div>
+    <div
+      class="flex items-center space-x-1.5 sm:space-x-2"
+    >
+      <div
+        class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-muted rounded quiz-legend-dot"
+      />
+      <span
+        class="text-muted-foreground"
+      >
+        Not Answered
+      </span>
+    </div>
+  </div>
+</div>
+`;

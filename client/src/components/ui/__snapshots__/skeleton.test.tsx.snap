@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Skeleton component snapshots > renders Skeleton with custom className 1`] = `
+<div
+  class="animate-pulse rounded-md bg-muted w-full h-12"
+/>
+`;
+
+exports[`Skeleton component snapshots > renders Skeleton with default props 1`] = `
+<div
+  class="animate-pulse rounded-md bg-muted"
+/>
+`;
+
+exports[`Skeleton component snapshots > renders multiple Skeleton elements 1`] = `
+<div>
+  <div
+    class="animate-pulse rounded-md bg-muted h-4 w-full mb-2"
+  />
+  <div
+    class="animate-pulse rounded-md bg-muted h-4 w-3/4 mb-2"
+  />
+  <div
+    class="animate-pulse rounded-md bg-muted h-4 w-1/2"
+  />
+</div>
+`;

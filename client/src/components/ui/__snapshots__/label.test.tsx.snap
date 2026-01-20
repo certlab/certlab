@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Label component snapshots > renders Label with custom className 1`] = `
+<label
+  class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 custom-class"
+>
+  Custom label
+</label>
+`;
+
+exports[`Label component snapshots > renders Label with default props 1`] = `
+<label
+  class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+>
+  Label text
+</label>
+`;
+
+exports[`Label component snapshots > renders Label with htmlFor 1`] = `
+<label
+  class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+  for="input-id"
+>
+  Label for input
+</label>
+`;
