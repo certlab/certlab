@@ -120,21 +120,22 @@ export function generateId(): string {
 /**
  * Generates a 32-bit safe numeric ID for categories and subcategories.
  * PostgreSQL integer type has a max value of 2^31-1 (2147483647).
- * Uses a counter-based approach to avoid timestamp overflow.
+ * Uses a sequential counter that stays within 32-bit range.
  */
-let idCounter = 0;
 const MAX_32BIT_INT = 2147483647;
-const ID_BASE = Math.floor(Date.now() / 1000); // Use seconds instead of milliseconds
+let idCounter = Math.floor(Math.random() * 1000000000); // Start with random base to avoid collisions
 
 export function generateSafeNumericId(): number {
-  // Generate ID using seconds since epoch + counter
-  // This ensures IDs stay within 32-bit range
-  const baseId = ID_BASE % 1000000000; // Keep first 9 digits of seconds
-  idCounter = (idCounter + 1) % 1000; // Counter cycles 0-999
-  const id = baseId * 1000 + idCounter;
+  // Simple incrementing counter that stays within 32-bit range
+  // Wraps around if it reaches the max value
+  idCounter = (idCounter + 1) % MAX_32BIT_INT;
 
-  // Ensure we never exceed the max 32-bit integer
-  return Math.min(id, MAX_32BIT_INT);
+  // Ensure we never return 0 (skip if counter wraps to 0)
+  if (idCounter === 0) {
+    idCounter = 1;
+  }
+
+  return idCounter;
 }
 
 /**
