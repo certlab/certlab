@@ -265,7 +265,6 @@ export default function Landing() {
               <button
                 key={schemeKey}
                 type="button"
-                role="button"
                 onClick={() => setColorScheme(schemeKey)}
                 className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${scheme.buttonGradient} ${
                   isActive ? `ring-4 ${scheme.buttonRing} ring-offset-2` : ''
@@ -300,7 +299,6 @@ export default function Landing() {
             </div>
             <button
               type="button"
-              role="button"
               className={`${theme.cardBg} size-12 inline-flex justify-center items-center rounded-2xl md:hidden ${theme.shadow} hover:scale-105 transition-transform motion-reduce:transform-none`}
               aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={mobileMenuOpen}
@@ -316,7 +314,6 @@ export default function Landing() {
             <nav className={`${theme.textLight} items-center gap-8 hidden md:flex`}>
               <button
                 type="button"
-                role="button"
                 onClick={handleScrollToFeatures}
                 className={`${theme.text} hover:scale-105 transition-transform motion-reduce:transform-none font-bold text-lg`}
               >
@@ -324,7 +321,6 @@ export default function Landing() {
               </button>
               <button
                 type="button"
-                role="button"
                 onClick={handleScrollToFaq}
                 className={`${theme.text} hover:scale-105 transition-transform motion-reduce:transform-none font-bold text-lg`}
               >
@@ -333,7 +329,6 @@ export default function Landing() {
               {isAuthenticated ? (
                 <button
                   type="button"
-                  role="button"
                   onClick={handleGoToDashboard}
                   className={`${theme.primary} text-white py-3 px-8 rounded-3xl font-bold text-lg ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none`}
                   data-testid="dashboard-button"
@@ -343,7 +338,6 @@ export default function Landing() {
               ) : (
                 <button
                   type="button"
-                  role="button"
                   onClick={handleLogin}
                   className={`${theme.primary} text-white py-3 px-8 rounded-3xl font-bold text-lg ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none`}
                   data-testid="get-started-button"
@@ -359,7 +353,6 @@ export default function Landing() {
               <div className="flex flex-col gap-4">
                 <button
                   type="button"
-                  role="button"
                   onClick={handleScrollToFeatures}
                   className={`${theme.text} hover:scale-105 transition-transform motion-reduce:transform-none text-left font-bold text-lg`}
                 >
@@ -367,7 +360,6 @@ export default function Landing() {
                 </button>
                 <button
                   type="button"
-                  role="button"
                   onClick={handleScrollToFaq}
                   className={`${theme.text} hover:scale-105 transition-transform motion-reduce:transform-none text-left font-bold text-lg`}
                 >
@@ -376,7 +368,6 @@ export default function Landing() {
                 {isAuthenticated ? (
                   <button
                     type="button"
-                    role="button"
                     onClick={() => {
                       handleGoToDashboard();
                       setMobileMenuOpen(false);
@@ -388,7 +379,6 @@ export default function Landing() {
                 ) : (
                   <button
                     type="button"
-                    role="button"
                     onClick={() => {
                       handleLogin();
                       setMobileMenuOpen(false);
@@ -405,7 +395,7 @@ export default function Landing() {
       </nav>
 
       {/* Main Content */}
-      <main id="main-content" role="main">
+      <main id="main-content">
         {/* Hero Section */}
         <section className="relative py-24 md:py-32">
           <div className="container mx-auto px-4 relative">
@@ -445,7 +435,6 @@ export default function Landing() {
                     </p>
                     <button
                       type="button"
-                      role="button"
                       onClick={handleGoToDashboard}
                       className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none inline-flex items-center gap-3`}
                       data-testid="hero-dashboard-button"
@@ -458,7 +447,6 @@ export default function Landing() {
                   <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                     <button
                       type="button"
-                      role="button"
                       onClick={handleLogin}
                       className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none inline-flex items-center gap-3`}
                       data-testid="hero-get-started-button"
@@ -468,7 +456,6 @@ export default function Landing() {
                     </button>
                     <button
                       type="button"
-                      role="button"
                       onClick={handleScrollToFeatures}
                       className={`${theme.cardBg} ${theme.text} py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} hover:scale-105 transition-all motion-reduce:transform-none inline-flex items-center gap-3`}
                     >
@@ -618,7 +605,6 @@ export default function Landing() {
                 {isAuthenticated ? (
                   <button
                     type="button"
-                    role="button"
                     onClick={handleGoToDashboard}
                     className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none inline-flex items-center justify-center gap-3`}
                   >
@@ -628,7 +614,6 @@ export default function Landing() {
                 ) : (
                   <button
                     type="button"
-                    role="button"
                     onClick={handleLogin}
                     className={`${theme.primary} text-white py-5 px-12 rounded-full font-bold text-xl ${theme.shadow} ${theme.hoverShadow} hover:scale-105 transition-all motion-reduce:transform-none inline-flex items-center justify-center gap-3`}
                   >
@@ -713,7 +698,6 @@ export default function Landing() {
             <div className="flex flex-wrap gap-8">
               <button
                 type="button"
-                role="button"
                 onClick={handleScrollToFeatures}
                 className={`${theme.text} hover:scale-105 transition-transform motion-reduce:transform-none font-bold text-lg`}
               >
@@ -721,7 +705,6 @@ export default function Landing() {
               </button>
               <button
                 type="button"
-                role="button"
                 onClick={handleScrollToFaq}
                 className={`${theme.text} hover:scale-105 transition-transform motion-reduce:transform-none font-bold text-lg`}
               >
