@@ -25,7 +25,7 @@ test.describe('Authentication Flow', () => {
     await page.goto('/dashboard');
 
     // Should be redirected to login or see login modal
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Check if we're on landing/login page or see login UI
     const currentUrl = page.url();
@@ -88,7 +88,7 @@ test.describe('Authentication Flow', () => {
     await logoutButton.click();
 
     // Wait for logout to complete
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Verify we're logged out
     const authAfter = await isAuthenticated(page);
@@ -135,7 +135,7 @@ test.describe('Authentication Flow', () => {
     // Logout
     const logoutButton = page.getByRole('button', { name: /logout|sign out/i });
     await logoutButton.click();
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Try to access dashboard again
     await page.goto('/dashboard');
@@ -186,7 +186,7 @@ test.describe('Session Management', () => {
 
     // Reload page
     await page.reload();
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Should be logged out
     const authenticated = await isAuthenticated(page);

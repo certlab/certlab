@@ -70,7 +70,8 @@ test.describe('Theme Switching', () => {
       await themeButton.click();
 
       // Verify theme menu or toggle appeared
-      await page.waitForTimeout(500); // Wait for animation
+      // Wait for theme change to apply
+      await page.waitForLoadState('domcontentloaded');
 
       // Theme should have changed (verify by checking body class or data attribute)
       const bodyClasses = await page.locator('body').getAttribute('class');
@@ -95,7 +96,7 @@ test.describe('Navigation', () => {
       await signInButton.click();
 
       // Wait for navigation or modal to appear
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle');
 
       // Verify login UI appeared (either new page or modal)
       const loginHeading = page.getByRole('heading', { name: /sign in|login/i });

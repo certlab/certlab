@@ -33,7 +33,7 @@ test.describe('Quiz Creation Flow', () => {
     await createButton.click();
 
     // Wait for quiz configuration screen
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Select a category (e.g., CISSP)
     const cisspOption = page.getByText(/CISSP/i).first();
@@ -53,7 +53,7 @@ test.describe('Quiz Creation Flow', () => {
       await startQuizButton.click();
 
       // Verify navigated to quiz page
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState('networkidle');
       const currentUrl = page.url();
       expect(currentUrl).toMatch(/quiz|question/i);
     }
@@ -66,7 +66,7 @@ test.describe('Quiz Creation Flow', () => {
     // Navigate to quiz creation
     const createButton = page.getByRole('button', { name: /start learning|create quiz/i }).first();
     await createButton.click();
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Select multiple categories
     const cisspOption = page.getByText(/CISSP/i).first();
@@ -95,7 +95,7 @@ test.describe('Quiz Taking Flow', () => {
 
     // Assume we're on a quiz page
     await page.goto('/quiz');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Look for question text
     const questionText = page.locator('text=/What|Which|How|When|Where/i').first();
@@ -106,7 +106,10 @@ test.describe('Quiz Taking Flow', () => {
     }
 
     // Find answer options (usually radio buttons or clickable divs)
-    const answerOptions = page.locator('[role="radio"], .answer-option, [data-testid*="answer"]');
+    const answerOptions = page
+      .getByRole('radio')
+      .or(page.locator('.answer-option'))
+      .or(page.locator('[data-testid*="answer"]'));
     const optionCount = await answerOptions.count();
 
     if (optionCount > 0) {
@@ -119,7 +122,7 @@ test.describe('Quiz Taking Flow', () => {
 
       if (nextVisible) {
         await nextButton.click();
-        await page.waitForTimeout(1000);
+        await page.waitForLoadState('networkidle');
       }
     }
   });
@@ -127,7 +130,7 @@ test.describe('Quiz Taking Flow', () => {
   test.skip('should display progress indicator', async ({ page }) => {
     // Requires active quiz
     await page.goto('/quiz');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Look for progress indicator
     const progressText = page.locator('text=/Question \\d+ of \\d+|\\d+\\/\\d+/i');
@@ -141,7 +144,7 @@ test.describe('Quiz Taking Flow', () => {
   test.skip('should allow flagging questions for review', async ({ page }) => {
     // Requires active quiz
     await page.goto('/quiz');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Look for flag button
     const flagButton = page.getByRole('button', { name: /flag|mark for review/i });
@@ -151,10 +154,10 @@ test.describe('Quiz Taking Flow', () => {
       await flagButton.click();
 
       // Verify flag is set (button state changes or indicator appears)
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('networkidle');
 
       // Button should now indicate flagged state
-      const flagIndicator = page.locator('[data-flagged="true"], .flagged, text=/flagged/i');
+      const flagIndicator = page.locator('[data-flagged="true"], .flagged').or(page.getByText(/flagged/i));
       const indicatorVisible = await flagIndicator.isVisible({ timeout: 2000 }).catch(() => false);
 
       if (indicatorVisible) {
@@ -166,10 +169,10 @@ test.describe('Quiz Taking Flow', () => {
   test.skip('should navigate between questions', async ({ page }) => {
     // Requires active quiz
     await page.goto('/quiz');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Answer first question
-    const answerOptions = page.locator('[role="radio"], .answer-option').first();
+    const answerOptions = page.getByRole('radio').or(page.locator('.answer-option')).first();
     const optionVisible = await answerOptions.isVisible({ timeout: 5000 }).catch(() => false);
 
     if (optionVisible) {
@@ -181,7 +184,7 @@ test.describe('Quiz Taking Flow', () => {
 
       if (nextVisible) {
         await nextButton.click();
-        await page.waitForTimeout(1000);
+        await page.waitForLoadState('networkidle');
 
         // Try to go back
         const backButton = page.getByRole('button', { name: /back|previous/i });
@@ -189,7 +192,7 @@ test.describe('Quiz Taking Flow', () => {
 
         if (backVisible) {
           await backButton.click();
-          await page.waitForTimeout(500);
+          await page.waitForLoadState('networkidle');
         }
       }
     }
@@ -200,7 +203,7 @@ test.describe('Quiz Results and Review', () => {
   test.skip('should display results after quiz completion', async ({ page }) => {
     // Requires completed quiz
     await page.goto('/results');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Look for score display
     const scoreDisplay = page.locator('text=/\\d+%|Score:|Your score/i');
@@ -222,7 +225,7 @@ test.describe('Quiz Results and Review', () => {
   test.skip('should allow reviewing answers', async ({ page }) => {
     // Requires completed quiz
     await page.goto('/results');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Look for review button
     const reviewButton = page.getByRole('button', { name: /review|see answers|view answers/i });
@@ -232,7 +235,7 @@ test.describe('Quiz Results and Review', () => {
       await reviewButton.click();
 
       // Should navigate to review page
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState('networkidle');
       const currentUrl = page.url();
       expect(currentUrl).toMatch(/review/i);
     }
@@ -241,10 +244,10 @@ test.describe('Quiz Results and Review', () => {
   test.skip('should show correct and incorrect answers in review', async ({ page }) => {
     // Requires review page
     await page.goto('/review');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Look for answer indicators
-    const correctIndicator = page.locator('text=/correct|✓|✔/i, [data-correct="true"]').first();
+    const correctIndicator = page.getByText(/correct|✓|✔/i).or(page.locator('[data-correct="true"]')).first();
     const incorrectIndicator = page
       .locator('text=/incorrect|✗|✘/i, [data-correct="false"]')
       .first();
@@ -261,7 +264,7 @@ test.describe('Quiz Results and Review', () => {
   test.skip('should display explanations in review', async ({ page }) => {
     // Requires review page
     await page.goto('/review');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Look for explanation section
     const explanation = page
@@ -281,10 +284,10 @@ test.describe('Study Mode', () => {
 
     // This test assumes quiz is in study mode
     await page.goto('/quiz');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Select an answer
-    const answerOption = page.locator('[role="radio"], .answer-option').first();
+    const answerOption = page.getByRole('radio').or(page.locator('.answer-option')).first();
     const optionVisible = await answerOption.isVisible({ timeout: 5000 }).catch(() => false);
 
     if (optionVisible) {
@@ -298,7 +301,7 @@ test.describe('Study Mode', () => {
         await checkButton.click();
 
         // Feedback should appear immediately
-        await page.waitForTimeout(1000);
+        await page.waitForLoadState('networkidle');
 
         const feedback = page.locator('text=/correct|incorrect|right|wrong/i');
         const feedbackVisible = await feedback.isVisible({ timeout: 3000 }).catch(() => false);

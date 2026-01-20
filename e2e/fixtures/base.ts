@@ -23,7 +23,6 @@ export const test = base.extend<CustomFixtures>({
    * Provides a page that is pre-authenticated
    * This fixture handles mock authentication for testing
    */
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   authenticatedPage: async ({ page }, use) => {
     // Since we're using Firebase auth which requires real credentials,
     // for E2E tests we'll navigate through the normal flow
@@ -75,19 +74,3 @@ export const testData = {
     },
   },
 };
-
-/**
- * Helper to save authentication state
- */
-export async function saveAuthState(_page: Page, _filePath: string) {
-  // Implementation would save auth state to file
-  // await page.context().storageState({ path: filePath });
-}
-
-/**
- * Helper to load authentication state
- */
-export async function loadAuthState(_page: Page, _filePath: string) {
-  // This would be used with browser.newContext({ storageState: filePath })
-  // See Playwright docs for storage state
-}

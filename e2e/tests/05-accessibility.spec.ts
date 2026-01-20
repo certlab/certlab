@@ -42,7 +42,7 @@ test.describe('Keyboard Navigation', () => {
 
         // Press Enter to activate
         await page.keyboard.press('Enter');
-        await page.waitForTimeout(1000);
+        await page.waitForLoadState('domcontentloaded');
 
         // Verify login UI appeared
         const loginButton = page.getByRole('button', { name: /google|sign in with google/i });
@@ -59,7 +59,7 @@ test.describe('Keyboard Navigation', () => {
   test.skip('should support keyboard navigation in quiz', async ({ page }) => {
     // Requires authentication and active quiz
     await page.goto('/quiz');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
     // Tab through answer options
     await testKeyboardNavigation(page, 4);
@@ -71,7 +71,7 @@ test.describe('Keyboard Navigation', () => {
     await page.keyboard.press('Tab');
     await page.keyboard.press('Enter');
 
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should support Escape key to close modals', async ({ page }) => {
@@ -83,11 +83,11 @@ test.describe('Keyboard Navigation', () => {
 
     if (buttonVisible) {
       await signInButton.click();
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('domcontentloaded');
 
       // Press Escape to close
       await page.keyboard.press('Escape');
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('domcontentloaded');
 
       // Modal should be closed (verify by checking if sign in button is still visible)
       const stillVisible = await signInButton.isVisible({ timeout: 2000 }).catch(() => false);
@@ -191,7 +191,7 @@ test.describe('Color Contrast and Visual Accessibility', () => {
 
     if (themeVisible) {
       await themeButton.click();
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('domcontentloaded');
 
       // Theme should have changed
       const bodyClass = await page.locator('body').getAttribute('class');
@@ -207,7 +207,7 @@ test.describe('Color Contrast and Visual Accessibility', () => {
       document.body.style.zoom = '2';
     });
 
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('domcontentloaded');
 
     // Verify layout doesn't break
     const html = page.locator('html');
@@ -272,7 +272,7 @@ test.describe('Screen Reader Support', () => {
     await goToLandingPage(page);
 
     // Check for button roles
-    const buttons = page.locator('[role="button"], button');
+    const buttons = page.getByRole('button');
     const buttonCount = await buttons.count();
     expect(buttonCount).toBeGreaterThan(0);
   });
@@ -302,6 +302,8 @@ test.describe('Screen Reader Support', () => {
     await goToLandingPage(page);
 
     // Look for aria-live regions
+    // Note: This uses a comma-separated CSS selector which is valid in Playwright.
+    // It matches elements with aria-live, role="alert", or role="status".
     const liveRegions = page.locator('[aria-live], [role="alert"], [role="status"]');
     const regionCount = await liveRegions.count();
 
