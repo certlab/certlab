@@ -155,13 +155,8 @@ let idCounter = INITIAL_ID_SEED === 0 ? 1 : INITIAL_ID_SEED;
 
 export function generateSafeNumericId(): number {
   // Simple incrementing counter that stays within 32-bit range.
-  // Wraps around if it reaches the max value, returning values in the range 1-2147483647
-  idCounter = (idCounter + 1) % (MAX_32BIT_INT + 1);
-
-  // Ensure we never return 0 (skip if counter wraps to 0).
-  if (idCounter === 0) {
-    idCounter = 1;
-  }
+  // Wraps around directly from MAX_32BIT_INT to 1, returning values in the range 1-2147483647
+  idCounter = idCounter >= MAX_32BIT_INT ? 1 : idCounter + 1;
 
   return idCounter;
 }
