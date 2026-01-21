@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createTestQueryClient } from '@/test/mocks/providers';
 import { useUnreadNotifications } from './use-unread-notifications';
 import * as authProvider from '@/lib/auth-provider';
 import type { ReactNode } from 'react';
@@ -26,15 +27,7 @@ describe('useUnreadNotifications', () => {
       signInWithGoogle: vi.fn(),
     } as any);
 
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          gcTime: 0,
-          staleTime: Infinity,
-        },
-      },
-    });
+    const queryClient = createTestQueryClient();
 
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -58,15 +51,7 @@ describe('useUnreadNotifications', () => {
       signInWithGoogle: vi.fn(),
     } as any);
 
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          gcTime: 0,
-          staleTime: Infinity,
-        },
-      },
-    });
+    const queryClient = createTestQueryClient();
 
     // Pre-populate the cache with empty badges
     queryClient.setQueryData(['/api', 'user', mockUser.id, 'achievements'], {
@@ -152,15 +137,7 @@ describe('useUnreadNotifications', () => {
       },
     ];
 
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          gcTime: 0,
-          staleTime: Infinity,
-        },
-      },
-    });
+    const queryClient = createTestQueryClient();
 
     // Pre-populate the cache
     queryClient.setQueryData(['/api', 'user', mockUser.id, 'achievements'], {
@@ -232,15 +209,7 @@ describe('useUnreadNotifications', () => {
       },
     ];
 
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          gcTime: 0,
-          staleTime: Infinity,
-        },
-      },
-    });
+    const queryClient = createTestQueryClient();
 
     queryClient.setQueryData(['/api', 'user', mockUser.id, 'achievements'], {
       badges: mockBadges,
@@ -274,15 +243,7 @@ describe('useUnreadNotifications', () => {
       signInWithGoogle: vi.fn(),
     } as any);
 
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          gcTime: 0,
-          staleTime: Infinity,
-        },
-      },
-    });
+    const queryClient = createTestQueryClient();
 
     // Don't set any data in the cache
     const wrapper = ({ children }: { children: ReactNode }) => (

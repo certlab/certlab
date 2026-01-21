@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createTestQueryClient } from '@/test/mocks/providers';
 import { StudyTimer } from './StudyTimer';
 import * as storageFactory from '@/lib/storage-factory';
 
@@ -162,13 +163,8 @@ describe('StudyTimer - Component Integration Tests', () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
-    // Create a new QueryClient for each test
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
+    // Create a new QueryClient for each test with default queryFn
+    queryClient = createTestQueryClient();
 
     // Reset all mocks
     vi.clearAllMocks();
