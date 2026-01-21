@@ -148,8 +148,7 @@ export function generateId(): string {
 const MAX_32BIT_INT = 2147483647;
 
 // Seed the counter using timestamp + randomness, masked into the 32-bit range.
-const INITIAL_ID_SEED =
-  (((Date.now() & MAX_32BIT_INT) ^ Math.floor(Math.random() * 1000000000)) >>> 0) & MAX_32BIT_INT;
+const INITIAL_ID_SEED = (Date.now() & MAX_32BIT_INT) ^ Math.floor(Math.random() * MAX_32BIT_INT);
 
 let idCounter = INITIAL_ID_SEED === 0 ? 1 : INITIAL_ID_SEED;
 
