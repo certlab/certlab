@@ -120,33 +120,45 @@ export function generateId(): string {
 /**
  * Generates a 32-bit safe numeric ID for all entities with numeric IDs.
  * Schema validation enforces 32-bit integer limit (max value 2^31-1 = 2147483647).
- * Uses a sequential counter that stays within 32-bit range.
+ * Uses a sequential counter that stays within the 32-bit range.
  *
  * Note: This is client-side code that runs in a single-threaded environment.
- * Firestore document IDs (stored as strings) provide uniqueness guarantees.
- * The random starting point provides good distribution across application instances.
+ * Firestore document IDs (stored as strings) provide the primary uniqueness guarantees.
+ *
+ * The counter is seeded using a combination of the current timestamp and randomness
+ * to reduce the probability of collisions across different application instances.
+ * The counter then increments and wraps within the 1-2147483647 range, skipping 0.
  *
  * HMR behavior:
  * - The counter is initialized at module load time.
  * - During development with Vite Hot Module Replacement (HMR), this module may be
  *   reloaded multiple times without a full page refresh, resetting the counter to a
- *   new random starting point each time.
+ *   new starting point each time.
  * - As a result, numeric IDs generated across different HMR reloads within the same
  *   browser session may collide.
  *
- * This behavior is acceptable for development since Firestore document IDs provide
- * the primary uniqueness guarantees. However, callers should not assume that
- * `generateSafeNumericId()` yields globally unique values across HMR reloads.
+ * This helper is suitable for development and moderate client-side usage where
+ * Firestore document IDs are the source of truth for uniqueness. For production
+ * systems that require globally unique, high-volume numeric IDs, use a more robust
+ * approach (for example, database sequences or distributed ID generation).
+ *
+ * Callers must not assume that `generateSafeNumericId()` yields globally unique
+ * values across all application instances and over unbounded lifetimes.
  */
 const MAX_32BIT_INT = 2147483647;
-let idCounter = Math.floor(Math.random() * 1000000000); // Start with random base to avoid collisions
+
+// Seed the counter using timestamp + randomness, masked into the 32-bit range.
+const INITIAL_ID_SEED =
+  (((Date.now() & MAX_32BIT_INT) ^ Math.floor(Math.random() * 1000000000)) >>> 0) & MAX_32BIT_INT;
+
+let idCounter = INITIAL_ID_SEED === 0 ? 1 : INITIAL_ID_SEED;
 
 export function generateSafeNumericId(): number {
-  // Simple incrementing counter that stays within 32-bit range
-  // Wraps around if it reaches the max value, utilizing full 0-2147483647 range
+  // Simple incrementing counter that stays within 32-bit range.
+  // Wraps around if it reaches the max value, returning values in the range 1-2147483647
   idCounter = (idCounter + 1) % (MAX_32BIT_INT + 1);
 
-  // Ensure we never return 0 (skip if counter wraps to 0)
+  // Ensure we never return 0 (skip if counter wraps to 0).
   if (idCounter === 0) {
     idCounter = 1;
   }

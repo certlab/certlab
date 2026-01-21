@@ -4,14 +4,13 @@
  * Tests for ID generation and other utility functions in firestore-storage.ts
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { generateSafeNumericId } from './firestore-storage';
 
 describe('generateSafeNumericId', () => {
-  // Reset module state between tests
-  beforeEach(() => {
-    vi.resetModules();
-  });
+  // Note: Tests share the same module-level counter state.
+  // The counter continues incrementing across all tests in this suite,
+  // which is acceptable since we're testing the behavior of the counter itself.
 
   it('should generate IDs within 32-bit integer range', () => {
     const MAX_32BIT_INT = 2147483647;
