@@ -76,7 +76,7 @@ describe('Multi-Tenant Integration Tests', () => {
       // Sign in as user1 (tenant 1)
       const user1 = createTestUser({ uid: 'user1', email: 'user1@tenant1.com' });
       await signInTestUser(user1);
-      await firestoreMock.setCurrentUserId('user1');
+      firestoreMock.setCurrentUserId('user1');
       await waitForAsync(50);
 
       // Get quizzes for user1
@@ -100,7 +100,8 @@ describe('Multi-Tenant Integration Tests', () => {
       // Sign in as user1 (tenant 1)
       const user1 = createTestUser({ uid: 'user1', email: 'user1@tenant1.com' });
       await signInTestUser(user1);
-      await firestoreMock.setCurrentUserId('user1');
+      firestoreMock.setCurrentUserId('user1');
+      await waitForAsync(50);
 
       // Get categories for tenant 1
       const tenant1Categories = await storage.getCategories(1);
@@ -125,12 +126,13 @@ describe('Multi-Tenant Integration Tests', () => {
       // Sign in as user1 (tenant 1)
       const user1 = createTestUser({ uid: 'user1', email: 'user1@tenant1.com' });
       await signInTestUser(user1);
-      await firestoreMock.setCurrentUserId('user1');
+      firestoreMock.setCurrentUserId('user1');
+      await waitForAsync(50);
 
       // Note: This test documents the security model rather than enforcing it.
       // The storage layer allows cross-tenant queries for flexibility, but
       // production Firestore security rules enforce tenant isolation.
-      
+
       // Application code should always query with the user's tenant ID
       const user = await storage.getUser('user1');
       const userTenantId = user?.tenantId;
@@ -150,7 +152,8 @@ describe('Multi-Tenant Integration Tests', () => {
       // Sign in as user1 (tenant 1)
       const user1 = createTestUser({ uid: 'user1', email: 'user1@tenant1.com' });
       await signInTestUser(user1);
-      await firestoreMock.setCurrentUserId('user1');
+      firestoreMock.setCurrentUserId('user1');
+      await waitForAsync(50);
 
       // Create user in Firestore with tenant 1
       await firestoreMock.setDocument('users', 'user1', {
@@ -186,7 +189,8 @@ describe('Multi-Tenant Integration Tests', () => {
       // Sign in as user1 (tenant 1)
       const user1 = createTestUser({ uid: 'user1', email: 'user1@tenant1.com' });
       await signInTestUser(user1);
-      await firestoreMock.setCurrentUserId('user1');
+      firestoreMock.setCurrentUserId('user1');
+      await waitForAsync(50);
 
       // Create user in Firestore
       await firestoreMock.setDocument('users', 'user1', {
@@ -216,7 +220,8 @@ describe('Multi-Tenant Integration Tests', () => {
       // Sign in as user
       const user = createTestUser({ uid: 'user1', email: 'user1@tenant1.com' });
       await signInTestUser(user);
-      await firestoreMock.setCurrentUserId('user1');
+      firestoreMock.setCurrentUserId('user1');
+      await waitForAsync(50);
 
       // Create user in tenant 1
       await firestoreMock.setDocument('users', 'user1', {
@@ -270,7 +275,7 @@ describe('Multi-Tenant Integration Tests', () => {
       expect(tenant1Users).toBeDefined();
       expect(Array.isArray(tenant1Users)).toBe(true);
       expect(tenant1Users.length).toBeGreaterThanOrEqual(2); // user1 and admin1
-      
+
       // Verify all returned users belong to tenant 1
       tenant1Users.forEach((user) => {
         expect(user.tenantId).toBe(1);

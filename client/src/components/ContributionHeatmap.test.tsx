@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createTestQueryClient } from '@/test/mocks/providers';
 import ContributionHeatmap from './ContributionHeatmap';
 
 // Mock dependencies
@@ -31,14 +32,8 @@ describe('ContributionHeatmap', () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
-    // Create a new QueryClient for each test
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-        },
-      },
-    });
+    // Create a new QueryClient for each test with default queryFn
+    queryClient = createTestQueryClient();
     vi.clearAllMocks();
   });
 

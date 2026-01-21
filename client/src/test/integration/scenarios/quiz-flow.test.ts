@@ -92,7 +92,8 @@ describe('Quiz Flow Integration Tests', () => {
     // Sign in test user
     const testUser = createTestUser({ uid: 'user1', email: 'user1@example.com' });
     await signInTestUser(testUser);
-    await firestoreMock.setCurrentUserId('user1');
+    firestoreMock.setCurrentUserId('user1');
+    await waitForAsync(50);
   });
 
   describe('Quiz Creation Workflow', () => {
@@ -190,6 +191,8 @@ describe('Quiz Flow Integration Tests', () => {
         userAnswer: null,
         isCorrect: null,
       });
+
+      await waitForAsync(50);
     });
 
     it('should start quiz and load questions', async () => {
@@ -357,6 +360,8 @@ describe('Quiz Flow Integration Tests', () => {
         correctAnswer: 'Public key cryptosystem',
         isCorrect: false,
       });
+
+      await waitForAsync(50);
     });
 
     it('should display quiz results', async () => {
@@ -434,10 +439,10 @@ describe('Quiz Flow Integration Tests', () => {
       await firestoreMock.setSubcollectionDocument('users', 'user1', 'quizzes', '1', quiz);
 
       // Simulate logout and login
-      await firestoreMock.clearCurrentUser();
+      firestoreMock.clearCurrentUser();
       await waitForAsync(50);
 
-      await firestoreMock.setCurrentUserId('user1');
+      firestoreMock.setCurrentUserId('user1');
       await waitForAsync(50);
 
       // Quiz should still exist
