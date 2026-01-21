@@ -739,6 +739,24 @@ export default function Header() {
                             </NavigationMenuLink>
                             <NavigationMenuLink
                               className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                isActivePath('/app/personal-import')
+                                  ? 'bg-primary/10 border-2 border-primary'
+                                  : 'hover:bg-accent/10'
+                              }`}
+                              onClick={() => navigate('/app/personal-import')}
+                            >
+                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                  <PlusCircle className="w-3 h-3 text-primary" />
+                                </div>
+                                Import Personal Questions
+                              </div>
+                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                Import your own questions from YAML files
+                              </p>
+                            </NavigationMenuLink>
+                            <NavigationMenuLink
+                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
                                 isActivePath('/app/i18n-demo')
                                   ? 'bg-primary/10 border-2 border-primary'
                                   : 'hover:bg-accent/10'

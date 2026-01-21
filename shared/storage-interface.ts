@@ -239,6 +239,34 @@ export interface IStorageAdapter {
   getQuestionsByTenant(tenantId: number): Promise<Question[]>;
 
   // ==========================================
+  // Personal Questions (User-specific)
+  // ==========================================
+
+  /** Get user's personal questions */
+  getPersonalQuestions(userId: string): Promise<Question[]>;
+
+  /** Get user's personal categories */
+  getPersonalCategories(userId: string): Promise<Category[]>;
+
+  /** Create a personal category for the user */
+  createPersonalCategory(userId: string, category: Partial<Category>): Promise<Category>;
+
+  /** Get user's personal subcategories for a category */
+  getPersonalSubcategories(userId: string, categoryId: number): Promise<Subcategory[]>;
+
+  /** Create a personal subcategory for the user */
+  createPersonalSubcategory(
+    userId: string,
+    subcategory: Partial<Subcategory>
+  ): Promise<Subcategory>;
+
+  /** Create a personal question for the user */
+  createPersonalQuestion(userId: string, question: Partial<Question>): Promise<Question>;
+
+  /** Delete a personal question */
+  deletePersonalQuestion(userId: string, id: number): Promise<void>;
+
+  // ==========================================
   // Quizzes
   // ==========================================
 

@@ -431,6 +431,59 @@ class StorageRouter implements IClientStorage {
   }
 
   // ==========================================
+  // Personal Questions (User-specific)
+  // ==========================================
+
+  async getPersonalQuestions(userId: string): Promise<any[]> {
+    return this.executeStorageOperation(
+      (s) => s.getPersonalQuestions(userId),
+      'getPersonalQuestions'
+    );
+  }
+
+  async getPersonalCategories(userId: string): Promise<any[]> {
+    return this.executeStorageOperation(
+      (s) => s.getPersonalCategories(userId),
+      'getPersonalCategories'
+    );
+  }
+
+  async createPersonalCategory(userId: string, category: any): Promise<any> {
+    return this.executeStorageOperation(
+      (s) => s.createPersonalCategory(userId, category),
+      'createPersonalCategory'
+    );
+  }
+
+  async getPersonalSubcategories(userId: string, categoryId: number): Promise<any[]> {
+    return this.executeStorageOperation(
+      (s) => s.getPersonalSubcategories(userId, categoryId),
+      'getPersonalSubcategories'
+    );
+  }
+
+  async createPersonalSubcategory(userId: string, subcategory: any): Promise<any> {
+    return this.executeStorageOperation(
+      (s) => s.createPersonalSubcategory(userId, subcategory),
+      'createPersonalSubcategory'
+    );
+  }
+
+  async createPersonalQuestion(userId: string, question: any): Promise<any> {
+    return this.executeStorageOperation(
+      (s) => s.createPersonalQuestion(userId, question),
+      'createPersonalQuestion'
+    );
+  }
+
+  async deletePersonalQuestion(userId: string, id: number): Promise<void> {
+    return this.executeStorageOperation(
+      (s) => s.deletePersonalQuestion(userId, id),
+      'deletePersonalQuestion'
+    );
+  }
+
+  // ==========================================
   // Quizzes
   // ==========================================
 

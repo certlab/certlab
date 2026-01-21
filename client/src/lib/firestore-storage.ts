@@ -716,6 +716,173 @@ class FirestoreStorage implements IClientStorage {
   }
 
   // ==========================================
+  // Personal Questions (User-specific)
+  // ==========================================
+
+  /**
+   * Get user's personal questions
+   */
+  async getPersonalQuestions(userId: string): Promise<Question[]> {
+    try {
+      const questions = await getUserDocuments<Question>(userId, 'personalQuestions');
+      return questions.map((q) => convertTimestamps<Question>(q));
+    } catch (error) {
+      logError('getPersonalQuestions', error, { userId });
+      return [];
+    }
+  }
+
+  /**
+   * Get user's personal categories
+   */
+  async getPersonalCategories(userId: string): Promise<Category[]> {
+    try {
+      const categories = await getUserDocuments<Category>(userId, 'personalCategories');
+      return categories.map((c) => convertTimestamps<Category>(c));
+    } catch (error) {
+      logError('getPersonalCategories', error, { userId });
+      return [];
+    }
+  }
+
+  /**
+   * Create a personal category for the user
+   */
+  async createPersonalCategory(userId: string, category: Partial<Category>): Promise<Category> {
+    try {
+      const id = generateSafeNumericId();
+      const newCategory: Category = {
+        id,
+        name: category.name || '',
+        description: category.description || null,
+        tenantId: category.tenantId || 1,
+        icon: category.icon || null,
+        createdAt: new Date(),
+      } as Category;
+
+      await setUserDocument(userId, 'personalCategories', id.toString(), newCategory);
+      return convertTimestamps(newCategory);
+    } catch (error) {
+      logError('createPersonalCategory', error, { userId, category });
+      throw error;
+    }
+  }
+
+  /**
+   * Get user's personal subcategories for a category
+   */
+  async getPersonalSubcategories(userId: string, categoryId: number): Promise<Subcategory[]> {
+    try {
+      const subcategories = await getUserDocuments<Subcategory>(userId, 'personalSubcategories');
+      return subcategories
+        .filter((s) => s.categoryId === categoryId)
+        .map((s) => convertTimestamps<Subcategory>(s));
+    } catch (error) {
+      logError('getPersonalSubcategories', error, { userId, categoryId });
+      return [];
+    }
+  }
+
+  /**
+   * Create a personal subcategory for the user
+   */
+  async createPersonalSubcategory(
+    userId: string,
+    subcategory: Partial<Subcategory>
+  ): Promise<Subcategory> {
+    try {
+      const id = generateSafeNumericId();
+      const newSubcategory: Subcategory = {
+        id,
+        name: subcategory.name || '',
+        categoryId: subcategory.categoryId || 0,
+        tenantId: subcategory.tenantId || 1,
+        createdAt: new Date(),
+        ...subcategory,
+      } as Subcategory;
+
+      await setUserDocument(userId, 'personalSubcategories', id.toString(), newSubcategory);
+      return convertTimestamps(newSubcategory);
+    } catch (error) {
+      logError('createPersonalSubcategory', error, { userId, subcategory });
+      throw error;
+    }
+  }
+
+  /**
+   * Create a personal question for the user
+   */
+  async createPersonalQuestion(userId: string, question: Partial<Question>): Promise<Question> {
+    try {
+      // Sanitize inputs
+      const sanitizedText = sanitizeInput(question.text || '', 2000);
+      const sanitizedExplanation = question.explanation
+        ? sanitizeInput(question.explanation, 5000)
+        : null;
+      const sanitizedOptions =
+        question.options?.map((opt) => ({
+          ...opt,
+          text: sanitizeInput(opt.text, 1000),
+        })) || [];
+      const sanitizedTags = question.tags ? sanitizeArray(question.tags as string[], 50) : [];
+
+      // Validate with Zod schema
+      const validationData = {
+        tenantId: question.tenantId || 1,
+        categoryId: question.categoryId,
+        subcategoryId: question.subcategoryId,
+        text: sanitizedText,
+        options: sanitizedOptions,
+        correctAnswer: question.correctAnswer,
+        explanation: sanitizedExplanation,
+        difficultyLevel: question.difficultyLevel,
+        tags: sanitizedTags.length > 0 ? sanitizedTags : null,
+      };
+
+      const validationResult = insertQuestionSchema.safeParse(validationData);
+      if (!validationResult.success) {
+        const errors = validationResult.error.issues
+          .map((e) => `${e.path.join('.')}: ${e.message}`)
+          .join('; ');
+        throw new Error(`Question validation failed: ${errors}`);
+      }
+
+      const id = generateSafeNumericId();
+      const newQuestion: Question = {
+        ...question,
+        id,
+        text: sanitizedText,
+        options: sanitizedOptions,
+        correctAnswer: question.correctAnswer || 0,
+        explanation: sanitizedExplanation,
+        categoryId: question.categoryId || 0,
+        subcategoryId: question.subcategoryId || null,
+        difficultyLevel: question.difficultyLevel || 1,
+        tenantId: question.tenantId || 1,
+        tags: sanitizedTags.length > 0 ? sanitizedTags : [],
+      } as Question;
+
+      await setUserDocument(userId, 'personalQuestions', id.toString(), newQuestion);
+      return convertTimestamps(newQuestion);
+    } catch (error) {
+      logError('createPersonalQuestion', error, { userId, question });
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a personal question
+   */
+  async deletePersonalQuestion(userId: string, id: number): Promise<void> {
+    try {
+      await deleteUserDocument(userId, 'personalQuestions', id.toString());
+    } catch (error) {
+      logError('deletePersonalQuestion', error, { userId, id });
+      throw error;
+    }
+  }
+
+  // ==========================================
   // Quizzes
   // ==========================================
 

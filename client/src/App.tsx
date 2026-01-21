@@ -44,6 +44,7 @@ const CreditsPage = lazy(() => import('@/pages/credits'));
 const ProfilePage = lazy(() => import('@/pages/profile'));
 const PracticeTests = lazy(() => import('@/pages/practice-tests'));
 const DataImportPage = lazy(() => import('@/pages/data-import'));
+const PersonalImportPage = lazy(() => import('@/pages/personal-import'));
 const MarketplacePage = lazy(() => import('@/pages/marketplace'));
 const ProductDetailPage = lazy(() => import('@/pages/product-detail'));
 const QuestionBankPage = lazy(() => import('@/pages/question-bank'));
@@ -140,6 +141,7 @@ function Router() {
                   <Route path="/app/i18n-demo" element={<I18nDemo />} />
                   <Route path="/app/credits" element={<CreditsPage />} />
                   <Route path="/app/data-import" element={<DataImportPage />} />
+                  <Route path="/app/personal-import" element={<PersonalImportPage />} />
                   <Route path="/app/question-bank" element={<QuestionBankPage />} />
                   <Route path="/app/quiz-builder" element={<QuizBuilderPage />} />
                   <Route path="/app/my-quizzes" element={<MyQuizzesPage />} />
