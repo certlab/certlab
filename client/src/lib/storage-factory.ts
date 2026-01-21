@@ -4,17 +4,18 @@
  * Provides a unified storage interface using Firestore for cloud storage.
  * Firebase and Firestore are MANDATORY for the application.
  *
- * ## Architecture
+ * ## Architecture - Online-First, Firebase-Only
  *
- * - **Primary storage**: Uses Firestore via firestore-storage.ts (REQUIRED)
- * - **Offline support**: Firestore SDK provides automatic offline persistence with IndexedDB cache
- * - **Cloud-first**: All data operations go through Firestore
+ * - **Storage**: Uses Firestore exclusively via firestore-storage.ts (REQUIRED)
+ * - **Online-first**: Requires active internet connection for all operations
+ * - **Cloud-only**: All data operations go through Firebase/Firestore
+ * - **No offline mode**: Application requires cloud connectivity to function
  *
  * ## Important Notes
  *
  * - **Firebase/Firestore is MANDATORY**: Application will not function without it.
- * - **No local fallback**: IndexedDB standalone storage has been removed.
- * - **Offline caching**: Firestore SDK manages IndexedDB caching automatically for offline support.
+ * - **Cloud connectivity required**: Application requires an active internet connection.
+ * - **No local fallback**: There is no standalone local storage or offline mode.
  *
  * ## Usage
  *

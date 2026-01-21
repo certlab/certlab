@@ -680,7 +680,7 @@ describe('ProtectedRoute', () => {
 - **Invalidate queries** after mutations that affect user data
 - **Use `enabled` option** in queries to wait for user availability
 - **Handle logout in components**, not in auth provider
-- **Use TanStack Query** for all IndexedDB data fetching
+- **Use TanStack Query** for all Firestore data fetching
 - **Use React Context** only for rarely-changing global state
 - **Validate permissions** at both route level and component level
 - **Log security events** for audit trails
@@ -991,7 +991,7 @@ export function TenantSwitcher() {
 | `client/src/lib/firebase.ts` | Firebase Authentication integration |
 | `client/src/components/ProtectedRoute.tsx` | Route protection HOC |
 | `client/src/lib/storage-factory.ts` | Storage abstraction layer |
-| `client/src/lib/client-storage.ts` | IndexedDB operations |
+| `client/src/lib/firestore-storage.ts` | Firestore operations |
 | `client/src/App.tsx` | Route definitions and structure |
 | `client/src/pages/login.tsx` | Login page implementation |
 

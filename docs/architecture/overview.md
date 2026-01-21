@@ -17,7 +17,7 @@ This document describes the technical architecture of CertLab, including the ove
 
 ## System Overview
 
-CertLab is a **cloud-first Single-Page Application (SPA)** designed for certification exam preparation. The application uses Firebase for authentication and cloud storage, with offline capability through Firestore's built-in caching.
+CertLab is an **online-first, cloud-native Single-Page Application (SPA)** designed for certification exam preparation. The application uses Firebase for authentication and Firestore for cloud storage, requiring an active internet connection to function.
 
 ### Key Characteristics
 
@@ -25,10 +25,10 @@ CertLab is a **cloud-first Single-Page Application (SPA)** designed for certific
 |--------|-------------|
 | **Type** | Single-Page Application (SPA) |
 | **Runtime** | Browser (Chrome, Firefox, Safari, Edge) |
-| **Storage** | Cloud Firestore (mandatory) with automatic IndexedDB caching |
+| **Storage** | Cloud Firestore (mandatory, online-first) |
 | **Authentication** | Firebase Authentication (Google Sign-In, mandatory) |
 | **Hosting** | Firebase Hosting |
-| **Offline Support** | Offline-first with automatic sync via Firestore SDK |
+| **Connectivity** | Requires active internet connection |
 
 ## Architecture Diagram
 
@@ -67,9 +67,9 @@ CertLab is a **cloud-first Single-Page Application (SPA)** designed for certific
 │  │  └─────────────────┘    └─────────────────┘      │                    │ │
 │  │                                                    │                    │ │
 │  │  ┌────────────────────────────────────────────────┘                    │ │
-│  │  │ IndexedDB Cache (Firestore SDK managed)                             │ │
-│  │  │ - Automatic offline persistence                                     │ │
-│  │  │ - Transparent sync when online                                      │ │
+│  │  │ Cloud Firestore (Firebase)                                          │ │
+│  │  │ - Online-first data storage                                         │ │
+│  │  │ - Requires internet connectivity                                    │ │
 │  │  └─────────────────────────────────────────────────────────────────────┘ │
 │                                      │                                      │
 │                                      │ Beacon (HTTPS)                       │
@@ -136,7 +136,7 @@ client/src/
 
 ### Firestore Collections
 
-All application data is stored in Cloud Firestore with automatic offline caching:
+All application data is stored in Cloud Firestore:
 
 **Shared Collections** (read: all authenticated users, write: admin only):
 | Collection | Purpose | Key Fields |
@@ -161,7 +161,7 @@ All application data is stored in Cloud Firestore with automatic offline caching
 | `users/{userId}/challengeAttempts/` | Challenge results | challengeId, score |
 | `users/{userId}/practiceTestAttempts/` | Test results | testId, score |
 
-**Note**: Firestore SDK automatically maintains an IndexedDB cache for offline access. This cache is managed entirely by the SDK and requires no application code.
+**Note**: All data is stored in Firestore. The application requires an active internet connection to function.
 
 ### Data Flow
 
@@ -548,13 +548,13 @@ Test configuration is in `vitest.config.ts` with jsdom environment for React com
 
 ## Key Design Decisions
 
-### Why Cloud-First with Firestore?
+### Why Online-First with Firestore?
 
 1. **Multi-Device Sync**: Access your data from any device
 2. **Scalability**: Google Cloud infrastructure handles growth
 3. **Security**: Industry-standard authentication and data isolation
-4. **Offline Support**: Automatic caching via Firestore SDK
-5. **Real-time**: Changes sync instantly across devices
+4. **Real-time**: Changes sync instantly across devices
+5. **Reliability**: Enterprise-grade cloud infrastructure
 
 ### Why TanStack Query?
 
