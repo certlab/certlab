@@ -72,7 +72,8 @@ describe('Query Caching and Invalidation Integration Tests', () => {
     // Sign in test user
     const testUser = createTestUser({ uid: 'user1', email: 'user1@example.com' });
     await signInTestUser(testUser);
-    await firestoreMock.setCurrentUserId('user1');
+    firestoreMock.setCurrentUserId('user1');
+    await waitForAsync(50);
   });
 
   describe('Query Caching Behavior', () => {

@@ -112,7 +112,7 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Sign in
       await signInTestUser(testUser);
-      await firestoreMock.setCurrentUserId(testUser.uid);
+      firestoreMock.setCurrentUserId(testUser.uid);
 
       // Wait for auth state to update
       await waitForAsync(100);
@@ -160,7 +160,7 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Sign in (should trigger profile sync)
       await signInTestUser(testUser);
-      await firestoreMock.setCurrentUserId(testUser.uid);
+      firestoreMock.setCurrentUserId(testUser.uid);
       await waitForAsync(100);
 
       // Get user from storage
@@ -190,7 +190,7 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Sign in
       await signInTestUser(testUser);
-      await firestoreMock.setCurrentUserId(testUser.uid);
+      firestoreMock.setCurrentUserId(testUser.uid);
       await waitForAsync(50);
 
       // Verify session is set
@@ -215,7 +215,7 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Sign in
       await signInTestUser(testUser);
-      await firestoreMock.setCurrentUserId(testUser.uid);
+      firestoreMock.setCurrentUserId(testUser.uid);
       await waitForAsync(50);
 
       // Verify signed in
@@ -248,7 +248,8 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Sign in
       await signInTestUser(testUser);
-      await firestoreMock.setCurrentUserId(testUser.uid);
+      firestoreMock.setCurrentUserId(testUser.uid);
+      await waitForAsync(50);
 
       // Verify session exists
       const userId = await storage.getCurrentUserId();
@@ -320,7 +321,7 @@ describe('Authentication Flow Integration Tests', () => {
       // Verify user was created with generated ID
       expect(user.uid).toBeDefined();
       expect(user.uid).toMatch(/^test-user-\d+$/);
-      
+
       // Verify Firebase mock has the user
       expect(firebaseMock.getUser()).toBeDefined();
     });
@@ -415,7 +416,7 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Sign in
       await signInTestUser(testUser);
-      await firestoreMock.setCurrentUserId(testUser.uid);
+      firestoreMock.setCurrentUserId(testUser.uid);
       await waitForAsync(100);
 
       // Should have transitioned through states
@@ -439,7 +440,7 @@ describe('Authentication Flow Integration Tests', () => {
       // Rapid sign-in and sign-out
       for (let i = 0; i < 3; i++) {
         await signInTestUser(testUser);
-        await firestoreMock.setCurrentUserId(testUser.uid);
+        firestoreMock.setCurrentUserId(testUser.uid);
         await waitForAsync(20);
 
         await signOutTestUser();
