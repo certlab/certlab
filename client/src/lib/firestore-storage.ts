@@ -118,13 +118,25 @@ export function generateId(): string {
 }
 
 /**
- * Generates a 32-bit safe numeric ID for categories and subcategories.
- * PostgreSQL integer type has a max value of 2^31-1 (2147483647).
+ * Generates a 32-bit safe numeric ID for all entities with numeric IDs.
+ * Schema validation enforces 32-bit integer limit (max value 2^31-1 = 2147483647).
  * Uses a sequential counter that stays within 32-bit range.
  *
  * Note: This is client-side code that runs in a single-threaded environment.
  * Firestore document IDs (stored as strings) provide uniqueness guarantees.
  * The random starting point provides good distribution across application instances.
+ *
+ * HMR behavior:
+ * - The counter is initialized at module load time.
+ * - During development with Vite Hot Module Replacement (HMR), this module may be
+ *   reloaded multiple times without a full page refresh, resetting the counter to a
+ *   new random starting point each time.
+ * - As a result, numeric IDs generated across different HMR reloads within the same
+ *   browser session may collide.
+ *
+ * This behavior is acceptable for development since Firestore document IDs provide
+ * the primary uniqueness guarantees. However, callers should not assume that
+ * `generateSafeNumericId()` yields globally unique values across HMR reloads.
  */
 const MAX_32BIT_INT = 2147483647;
 let idCounter = Math.floor(Math.random() * 1000000000); // Start with random base to avoid collisions
@@ -1161,7 +1173,7 @@ class FirestoreStorage implements IClientStorage {
       }
 
       // 3. Generate new ID
-      const newId = Date.now();
+      const newId = generateSafeNumericId();
 
       // 4. Create duplicate with modified fields
       const duplicate: QuizTemplate = {
@@ -1250,7 +1262,7 @@ class FirestoreStorage implements IClientStorage {
       const existing = await getUserDocument<UserProgress>(userId, 'progress', key);
 
       const updated: UserProgress = {
-        id: existing?.id || Date.now(),
+        id: existing?.id || generateSafeNumericId(),
         userId,
         categoryId,
         tenantId: tenantId || 1,
@@ -1485,7 +1497,7 @@ class FirestoreStorage implements IClientStorage {
       const existing = await getUserDocument<MasteryScore>(userId, 'masteryScores', key);
 
       const updated: MasteryScore = {
-        id: existing?.id || Date.now(),
+        id: existing?.id || generateSafeNumericId(),
         userId,
         tenantId: 1,
         categoryId,
@@ -1642,7 +1654,7 @@ class FirestoreStorage implements IClientStorage {
     try {
       const existing = await this.getUserGameStats(userId);
       const updated: UserGameStats = {
-        id: existing?.id || Date.now(),
+        id: existing?.id || generateSafeNumericId(),
         userId,
         tenantId: updates.tenantId ?? existing?.tenantId ?? 1,
         totalPoints: updates.totalPoints ?? existing?.totalPoints ?? 0,
@@ -1836,7 +1848,7 @@ class FirestoreStorage implements IClientStorage {
     try {
       const id = `${userId}_${groupId}`;
       const member: StudyGroupMember = {
-        id: Date.now(),
+        id: generateSafeNumericId(),
         groupId,
         userId,
         role: 'member',
@@ -2737,7 +2749,7 @@ class FirestoreStorage implements IClientStorage {
 
       // Create new title document with generated ID and timestamp-based numeric id
       const titleId = generateId();
-      const numericId = Date.now();
+      const numericId = generateSafeNumericId();
       await setUserDocument(userId, 'titles', titleId, {
         id: numericId,
         userId,
@@ -2912,7 +2924,7 @@ class FirestoreStorage implements IClientStorage {
       // Create claim record
       const claimId = generateId();
       const claim: UserDailyReward = {
-        id: Date.now(),
+        id: generateSafeNumericId(),
         userId,
         tenantId,
         day,
@@ -3005,7 +3017,7 @@ class FirestoreStorage implements IClientStorage {
         throw new Error('userId is required to create a study timer session');
       }
 
-      const numericId = Date.now();
+      const numericId = generateSafeNumericId();
       const sessionId = numericId.toString(); // Use numeric ID as string for Firestore document ID
       const newSession: StudyTimerSession = {
         id: numericId,
@@ -3707,9 +3719,9 @@ class FirestoreStorage implements IClientStorage {
    */
   async createGroup(group: Partial<Group>): Promise<Group> {
     try {
-      // Using timestamp-based ID generation
+      // Using 32-bit safe ID generation
       // Note: This may cause collisions in high-concurrency scenarios
-      const groupId = Date.now();
+      const groupId = generateSafeNumericId();
       const newGroup: Group = {
         ...group,
         id: groupId,
