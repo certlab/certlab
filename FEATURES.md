@@ -447,11 +447,27 @@ CertLab uses cloud-first storage with offline support:
   - Preview questions
   
 - **Question Import**
-  - CSV import
-  - JSON import
-  - Bulk import
-  - Validation and error reporting
-  - Scripts for authentic exam question imports
+  - **Admin Import** (Shared Questions)
+    - YAML format import for shared question bank
+    - 500+ sample questions per certification
+    - Batch import with progress tracking
+    - Validation and error reporting
+    - Admin-only access
+  
+  - **Personal Import** (NEW - Private Questions)
+    - YAML format import for personal question bank
+    - Questions private to importing user only
+    - Same validation as admin import
+    - Category and subcategory auto-creation
+    - Import progress and error feedback
+    - Available to all authenticated users
+    - Documentation: [PERSONAL_IMPORT_GUIDE.md](docs/PERSONAL_IMPORT_GUIDE.md)
+  
+  - **Legacy Import**
+    - CSV import (legacy)
+    - JSON import (legacy)
+    - Bulk import scripts
+    - Authentic exam question import scripts
 
 ### Data Seeding
 

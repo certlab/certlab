@@ -1,0 +1,78 @@
+category: PracticeSet
+description: User test questions for personal question bank
+questions:
+  - text: "What is the capital of France?"
+    options:
+      - id: 0
+        text: "London"
+      - id: 1
+        text: "Paris"
+      - id: 2
+        text: "Berlin"
+      - id: 3
+        text: "Rome"
+    correctAnswer: 1
+    explanation: "Paris is the capital and most populous city of France, located in the north-central part of the country."
+    difficultyLevel: 1
+    tags: ["geography", "easy", "capitals"]
+    subcategory: "European Capitals"
+  
+  - text: "What is 2 + 2?"
+    options:
+      - id: 0
+        text: "3"
+      - id: 1
+        text: "4"
+      - id: 2
+        text: "5"
+    correctAnswer: 1
+    explanation: "Basic arithmetic: 2 + 2 equals 4"
+    difficultyLevel: 1
+    tags: ["math", "arithmetic"]
+    subcategory: "Basic Math"
+  
+  - text: "Which programming language is known for its use in web development and runs in browsers?"
+    options:
+      - id: 0
+        text: "Python"
+      - id: 1
+        text: "JavaScript"
+      - id: 2
+        text: "C++"
+      - id: 3
+        text: "Java"
+    correctAnswer: 1
+    explanation: "JavaScript is the primary programming language for client-side web development and runs natively in web browsers."
+    difficultyLevel: 2
+    tags: ["programming", "web-development"]
+    subcategory: "Programming Languages"
+  
+  - text: "What does HTTP stand for?"
+    options:
+      - id: 0
+        text: "HyperText Transfer Protocol"
+      - id: 1
+        text: "High Transfer Text Protocol"
+      - id: 2
+        text: "HyperText Transmission Process"
+    correctAnswer: 0
+    explanation: "HTTP stands for HyperText Transfer Protocol, which is the foundation of data communication on the World Wide Web."
+    difficultyLevel: 2
+    tags: ["networking", "web", "protocols"]
+    subcategory: "Network Protocols"
+  
+  - text: "Which data structure follows the Last-In-First-Out (LIFO) principle?"
+    options:
+      - id: 0
+        text: "Queue"
+      - id: 1
+        text: "Stack"
+      - id: 2
+        text: "Array"
+      - id: 3
+        text: "Linked List"
+    correctAnswer: 1
+    explanation: "A Stack follows the Last-In-First-Out (LIFO) principle, where the last element added is the first one to be removed."
+    difficultyLevel: 2
+    tags: ["data-structures", "algorithms", "computer-science"]
+    subcategory: "Data Structures"

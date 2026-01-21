@@ -94,7 +94,8 @@ Open http://localhost:5000 and sign in with Google to get started!
 - **Data Management**: Export/import your data for backup
 
 📖 **Complete User Guide**: [docs/user-manual.md](docs/user-manual.md)  
-📖 **Data Import Guide**: [docs/DATA_IMPORT_GUIDE.md](docs/DATA_IMPORT_GUIDE.md)
+📖 **Data Import Guide (Admin)**: [docs/DATA_IMPORT_GUIDE.md](docs/DATA_IMPORT_GUIDE.md)  
+📖 **Personal Question Import (Users)**: [docs/PERSONAL_IMPORT_GUIDE.md](docs/PERSONAL_IMPORT_GUIDE.md)
 
 ## 📖 Documentation
 
