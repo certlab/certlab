@@ -6,6 +6,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// Unmock the dynatrace module to test the real implementation
+vi.unmock('@/lib/dynatrace');
+
 import {
   isDynatraceAvailable,
   trackAction,
