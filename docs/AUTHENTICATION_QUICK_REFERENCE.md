@@ -4,9 +4,8 @@
 
 ## Overview
 
-CertLab uses a **hybrid client-side authentication system** with:
-- Local PBKDF2 password hashing (100,000 iterations)
-- Optional Firebase Google Authentication
+CertLab uses a **cloud-based authentication system** with:
+- Firebase Authentication (Google Sign-In)
 - React Context for global auth state
 - TanStack Query for async data operations
 - ProtectedRoute HOC for route-level security

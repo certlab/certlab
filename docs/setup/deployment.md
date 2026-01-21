@@ -166,8 +166,8 @@ npx serve
 
 2. **Registration**
    - User creates account
-   - Credentials stored in IndexedDB
-   - SHA-256 password hashing
+   - Credentials stored in Firebase
+   - Firebase Authentication
 
 3. **Seed Data Auto-Loads**
    - 2 certification categories (CISSP, CISM)
@@ -184,10 +184,10 @@ npx serve
 ## Data Persistence
 
 ### Browser Storage
-- All data stored in IndexedDB
-- Persists across sessions
-- Cleared if browser data is cleared
-- Unique per browser/profile
+- All data stored in Firestore (cloud)
+- Requires Firebase connection
+- Accessible from any device
+- Persists across browsers
 
 ### Backup Strategy
 Users should export their data regularly:
@@ -208,7 +208,7 @@ const data = await clientStorage.exportData();
 
 ### Browser Console
 - Check for errors on first load
-- Verify IndexedDB is working
+- Verify Firebase connection is working
 - Check seed data version
 
 ## Troubleshooting
@@ -230,7 +230,7 @@ npm run build
 1. Clear browser cache
 2. Check browser console for errors
 3. Verify JavaScript is enabled
-4. Check IndexedDB is available
+4. Check Firebase connection
 
 ### Routes Not Working
 - Check Firebase hosting configuration (firebase.json)
@@ -238,8 +238,8 @@ npm run build
 - Check base path configuration
 
 ### Data Not Persisting
-1. Check browser privacy settings
-2. Verify IndexedDB quota
+1. Check Firebase connection
+2. Verify authentication is working
 3. Try different browser
 4. Check browser console errors
 
@@ -252,15 +252,15 @@ npm run build
 ✅ Edge 88+
 
 ### Required Features
-- IndexedDB
-- Web Crypto API (SHA-256)
+- Firebase connectivity
+- Web Crypto API
 - ES6+ JavaScript
 - LocalStorage (for settings)
 
 ### Not Supported
 ❌ IE 11 and older
-❌ Browsers with IndexedDB disabled
-❌ Private/Incognito mode (data won't persist)
+❌ Browsers without internet connectivity
+❌ Environments without Firebase access
 
 ## Performance
 
@@ -270,9 +270,9 @@ npm run build
 - < 1 second load time on good connection
 
 ### Runtime
-- All operations local (IndexedDB)
-- No network latency
-- Instant responses
+- All operations via Firestore (cloud)
+- Network latency depends on connection
+- Real-time data sync
 - Smooth UI transitions
 
 ### Optimization Tips

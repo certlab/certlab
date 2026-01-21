@@ -26,11 +26,11 @@ Firebase provides the production infrastructure for CertLab:
 **Current Status**: 
 - ✅ Firebase Authentication fully implemented with persistent login
 - ✅ Firestore storage fully integrated
-- ✅ Offline persistence with automatic IndexedDB caching via Firestore SDK
+- ✅ Online-first, cloud-native architecture
 - ✅ Firebase Hosting configured for deployment
 - ✅ Persistent login configured - users remain signed in across browser sessions
 
-**Note**: Firebase/Firestore is mandatory for all environments. The application will not function without proper Firebase configuration. Firestore SDK provides automatic offline support using IndexedDB caching - no separate fallback implementation is needed.
+**Note**: Firebase/Firestore is mandatory for all environments. The application will not function without proper Firebase configuration. An active internet connection is required for the application to operate.
 
 ## Prerequisites
 

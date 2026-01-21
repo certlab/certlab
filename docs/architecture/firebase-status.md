@@ -7,9 +7,10 @@ This document tracks the implementation progress of Firebase/Firestore integrati
 
 ## 🎯 Implementation Overview
 
-CertLab is transitioning from a local-only IndexedDB application to a hybrid model that supports:
-- **Local-only mode** (no account required, current behavior preserved)
-- **Cloud sync mode** (optional Firebase account for multi-device sync and backup)
+CertLab is an online-first, cloud-native application that uses Firebase/Firestore exclusively:
+- **Firebase/Firestore required**: All data is stored in the cloud
+- **Online-first**: Requires active internet connection for operation
+- **No local fallback**: Application does not support offline or local-only mode
 
 ## ✅ Completed Work
 
@@ -272,7 +273,7 @@ The core Firebase/Firestore integration is now complete and functional:
 
 - ✅ Firestore storage adapter with full IClientStorage implementation
 - ✅ Firebase authentication integration with automatic sync
-- ✅ Storage factory with hybrid routing and automatic fallback
+- ✅ Storage factory with Firestore-only routing
 - ✅ UI components for cloud sync status indication
 - ✅ All existing tests passing (76 tests)
 
@@ -340,19 +341,18 @@ client/src/lib/
 ├── firebase.ts              ✅ Auth (email/password/Google)
 ├── firestore-service.ts     ✅ Firestore CRUD operations
 ├── firestore-storage.ts     ✅ IClientStorage implementation
-├── client-storage.ts        ✅ IndexedDB implementation
-├── storage-factory.ts       ✅ Backend selection and routing
+├── storage-factory.ts       ✅ Firestore-only routing
 └── auth-provider.tsx        ✅ Firebase Auth integrated
 ```
 
 ### Key Design Decisions
 
-1. **Hybrid Storage**: Keep IndexedDB + Firestore (not replace)
-2. **Offline-First**: IndexedDB cache for instant access
-3. **Opt-In**: Cloud sync is optional for new users
-4. **Server Wins**: Firestore is source of truth for conflicts
+1. **Firebase-Only**: Uses Firestore exclusively for all data operations
+2. **Online-First**: Requires active internet connection to function
+3. **Authentication Required**: Users must authenticate to access the application
+4. **Cloud-Native**: All data stored in Firebase/Firestore
 5. **Per-User Collections**: `/users/{userId}/` structure in Firestore
-6. **No Data Migration**: Users start fresh with cloud sync (no migrating existing IndexedDB data)
+6. **No Local Storage**: No standalone IndexedDB or offline mode support
 
 ### Testing Strategy
 

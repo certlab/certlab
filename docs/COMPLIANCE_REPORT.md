@@ -557,7 +557,7 @@ See: [QA_CHECKLIST.md](QA_CHECKLIST.md) for detailed testing procedures.
 
 | Risk | Likelihood | Impact | Mitigation | Status |
 |------|------------|--------|------------|--------|
-| Firebase Service Outage | Low | High | Offline mode (IndexedDB fallback) | ✅ Mitigated |
+| Firebase Service Outage | Low | High | Application unavailable during outage | ⚠️ Accepted Risk |
 | Data Loss | Low | High | Firestore backups, export feature | ✅ Mitigated |
 | Performance Degradation | Medium | Medium | Performance monitoring, optimization | ✅ Mitigated |
 | Browser Compatibility | Low | Low | Cross-browser testing | ✅ Mitigated |

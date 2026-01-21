@@ -34,7 +34,7 @@ Use this flowchart to determine which state management approach to use:
                                │
                     ┌──────────▼──────────┐
                     │  Is it async data   │
-                    │  from IndexedDB?    │
+                    │  from Firestore?    │
                     └──────────┬──────────┘
                                │
               ┌────────────────┼────────────────┐
@@ -190,7 +190,7 @@ const [state, dispatch] = useReducer(quizReducer, initialQuizState);
 
 ### When to Use
 
-- Fetching data from IndexedDB (via clientStorage)
+- Fetching data from Firestore (via storage)
 - Caching asynchronous data
 - Handling loading, error, and success states
 - Mutations that update stored data
@@ -198,7 +198,7 @@ const [state, dispatch] = useReducer(quizReducer, initialQuizState);
 
 ### Characteristics
 
-- Data comes from an async source (IndexedDB in CertLab)
+- Data comes from an async source (Firestore in CertLab)
 - Data needs caching and stale management
 - Multiple components might need the same data
 - Need optimistic updates for better UX
@@ -406,8 +406,8 @@ function useQuizState({ quizId, quiz, questions }) {
 
 | State | Approach | Location | Reason |
 |-------|----------|----------|--------|
-| Quiz data | TanStack Query | QuizInterface.tsx | Async from IndexedDB |
-| Questions | TanStack Query | QuizInterface.tsx | Async from IndexedDB |
+| Quiz data | TanStack Query | QuizInterface.tsx | Async from Firestore |
+| Questions | TanStack Query | QuizInterface.tsx | Async from Firestore |
 | Current answer | useReducer | quizReducer.ts | Part of quiz state machine |
 | All answers | useReducer | quizReducer.ts | Multiple related values |
 | Flagged questions | useReducer | quizReducer.ts | Related to navigation |
@@ -419,9 +419,9 @@ function useQuizState({ quizId, quiz, questions }) {
 
 | State | Approach | Location | Reason |
 |-------|----------|----------|--------|
-| User stats | TanStack Query | dashboard.tsx | Async from IndexedDB |
+| User stats | TanStack Query | dashboard.tsx | Async from Firestore |
 | Categories | TanStack Query | dashboard.tsx | Async, cached |
-| Quiz history | TanStack Query | dashboard.tsx | Async from IndexedDB |
+| Quiz history | TanStack Query | dashboard.tsx | Async from Firestore |
 | Selected category | useState | dashboard.tsx | Simple selection |
 | Current user | Context | auth-provider.tsx | Global auth state |
 | Theme | Context | theme-provider.tsx | Global theme state |
@@ -451,12 +451,12 @@ const TimerContext = createContext({ seconds: 0 });
 const [seconds, setSeconds] = useState(0);
 ```
 
-### ❌ Don't: Bypass TanStack Query for IndexedDB Data
+### ❌ Don't: Bypass TanStack Query for Firestore Data
 
 ```typescript
-// Bad: Direct IndexedDB calls in components
+// Bad: Direct Firestore calls in components
 useEffect(() => {
-  clientStorage.getQuiz(id).then(setQuiz);
+  storage.getQuiz(id).then(setQuiz);
 }, [id]);
 
 // Good: Use TanStack Query for caching and consistency
@@ -498,7 +498,7 @@ const [isModalOpen, setIsModalOpen] = useState(false);
 When in doubt:
 1. Start with **useState** for simplicity
 2. Upgrade to **useReducer** when state becomes complex
-3. Use **TanStack Query** for all IndexedDB data
+3. Use **TanStack Query** for all Firestore data
 4. Reserve **Context** for truly global state (auth, theme)
 
 ## Related Documentation

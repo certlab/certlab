@@ -43,7 +43,7 @@ CertLab aims to be the **premier open-source certification study platform** that
 ## Current Status
 
 **Version**: 2.0.0  
-**Architecture**: Client-side SPA with hybrid storage (IndexedDB + optional Firestore)  
+**Architecture**: Client-side SPA with Firebase/Firestore (online-first, cloud-native)  
 **Status**: Production-ready with active development
 
 ### Recent Milestones
@@ -51,8 +51,8 @@ CertLab aims to be the **premier open-source certification study platform** that
 - ✅ **v2.0.0 Released** (January 2024)
   - Complete migration to client-side architecture
   - Multi-tenancy support
-  - Hybrid storage model (local + cloud)
-  - Firebase/Firestore integration (95% complete)
+  - Online-first, cloud-native architecture
+  - Firebase/Firestore integration (complete)
   - Comprehensive test suite (147+ tests)
   - Full accessibility compliance
 
