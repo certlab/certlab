@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-provider';
 import { storage } from '@/lib/storage-factory';
 import { setUserDocument } from '@/lib/firestore-service';
+import { generateSafeNumericId } from '@/lib/firestore-storage';
 import { queryKeys } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { sanitizeInput, sanitizeArray } from '@/lib/sanitize';
@@ -267,7 +268,7 @@ export default function QuizBuilder() {
       };
 
       // Store in Firestore as a user document
-      const id = templateId ? parseInt(templateId, 10) : Date.now();
+      const id = templateId ? parseInt(templateId, 10) : generateSafeNumericId();
       const templateData = {
         ...template,
         id,
