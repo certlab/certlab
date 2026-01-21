@@ -793,12 +793,12 @@ class FirestoreStorage implements IClientStorage {
     try {
       const id = generateSafeNumericId();
       const newSubcategory: Subcategory = {
+        ...subcategory,
         id,
         name: subcategory.name || '',
         categoryId: subcategory.categoryId || 0,
         tenantId: subcategory.tenantId || 1,
         createdAt: new Date(),
-        ...subcategory,
       } as Subcategory;
 
       await setUserDocument(userId, 'personalSubcategories', id.toString(), newSubcategory);
