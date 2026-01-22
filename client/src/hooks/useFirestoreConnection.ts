@@ -195,15 +195,19 @@ export function useFirestoreConnection(): FirestoreConnectionState {
 
       // Use refs to get current values and avoid stale closure
       const currentStatus = statusRef.current;
-      const currentAttempts = reconnectAttemptsRef.current;
 
       // Determine if we're reconnecting or have an error
       if (currentStatus === 'connected' || currentStatus === 'reconnecting') {
         setStatus('reconnecting');
         setReconnectAttempts((prev) => {
           const nextAttempt = prev + 1;
-          // Schedule a retry with exponential backoff (max 30s)
-          const retryDelay = Math.min(1000 * Math.pow(2, nextAttempt), 30000);
+          // Clear any existing retry timeout before scheduling a new one
+          if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+            reconnectTimeoutRef.current = null;
+          }
+          // Schedule a retry with exponential backoff starting at 1s (max 30s)
+          const retryDelay = Math.min(1000 * Math.pow(2, nextAttempt - 1), 30000);
           reconnectTimeoutRef.current = setTimeout(() => {
             checkConnection();
           }, retryDelay);
@@ -226,7 +230,8 @@ export function useFirestoreConnection(): FirestoreConnectionState {
       setIsOnline(true);
 
       // Browser came back online, check Firestore connection
-      if (status !== 'connected') {
+      // Only transition to reconnecting if cloud sync is enabled and Firestore is initialized
+      if (status !== 'connected' && isCloudSyncEnabled && isFirestoreInitialized()) {
         setStatus('reconnecting');
         checkConnection();
       }
@@ -260,12 +265,18 @@ export function useFirestoreConnection(): FirestoreConnectionState {
     // Skip if Firestore is not available
     if (!isCloudSyncEnabled || !isFirestoreInitialized()) {
       setStatus('disabled');
+      setError(null);
+      setIsSyncing(false);
+      setReconnectAttempts(0);
       return;
     }
 
     // Skip if browser is offline
     if (!navigator.onLine) {
       setStatus('offline');
+      setError(null);
+      setIsSyncing(false);
+      setReconnectAttempts(0);
       return;
     }
 
@@ -314,6 +325,11 @@ export function useFirestoreConnection(): FirestoreConnectionState {
 
           // Try to reconnect after a delay
           setReconnectAttempts((prev) => prev + 1);
+          // Clear any existing reconnect timeout before scheduling a new one
+          if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+            reconnectTimeoutRef.current = null;
+          }
           reconnectTimeoutRef.current = setTimeout(() => {
             setStatus('reconnecting');
             checkConnection();
