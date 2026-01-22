@@ -59,17 +59,121 @@ CertLab aims to be the **premier open-source certification study platform** that
 
 ### Current Focus Areas
 
-1. **Stability & Bug Fixes**: Addressing user-reported issues
-2. **Firebase Integration**: Completing remaining 5% of cloud sync
-3. **Documentation**: Keeping guides up-to-date
-4. **Performance**: Optimizing bundle size and load times
-5. **Mobile Experience**: Enhancing mobile UI/UX
+1. **Study Materials Marketplace** ⭐: Full setup, integration, and testing (highest priority critical path)
+2. **Admin Study Pack Import & Publishing**: Build admin tools for YAML import and marketplace publishing
+3. **Access Control Enforcement**: Purchase/assignment-based access verification for all study materials
+4. **Stability & Bug Fixes**: Addressing user-reported issues
+5. **Firebase Integration**: Completing remaining 5% of cloud sync
+6. **Documentation**: Keeping guides up-to-date
+7. **Performance**: Optimizing bundle size and load times
+8. **Mobile Experience**: Enhancing mobile UI/UX
 
 ---
 
 ## Implementation Phases
 
-This section outlines the strategic implementation roadmap for major platform features, organized into 10 phases based on dependencies and priority. Each phase builds on previous phases to ensure a stable, feature-rich learning platform.
+This section outlines the strategic implementation roadmap for major platform features, organized into 11 phases based on dependencies and priority. Each phase builds on previous phases to ensure a stable, feature-rich learning platform.
+
+### **Phase 0: Study Materials Marketplace & Access Control** (Highest Critical Path)
+
+These items are the **top priority** and must be completed before other phases can proceed effectively. They establish the marketplace infrastructure, admin publishing workflows, and robust access control that all content delivery depends on.
+
+1. **Study Materials Marketplace - Full Setup & Integration**
+   - End-to-end configuration and deployment of the marketplace
+   - Marketplace browsing, filtering, and purchasing workflows
+   - Data model alignment for study materials, products, and access/purchase records
+   - UI for displaying/managing user-owned and account-assigned study materials ("My Materials" section)
+   - **Dependencies**: None
+   - **Status**: Planned
+   - **Key Files**:
+     - [`client/src/pages/marketplace.tsx`](client/src/pages/marketplace.tsx) - Marketplace page UI
+     - [`client/src/data/study-materials.ts`](client/src/data/study-materials.ts) - Study materials data
+     - [`shared/schema.ts`](shared/schema.ts) - Product, Purchase, and AccessControl schemas
+     - [`client/src/pages/marketplace.test.tsx`](client/src/pages/marketplace.test.tsx) - Marketplace tests
+
+2. **Admin Study Pack Import & Publishing**
+   - Build admin-only UI to import YAML files as new "study packs"
+   - Allow admins to preview, validate, and batch-import questions
+   - Enable setting metadata for packs: title, description, tags, subject, author, visibility, price
+   - Publishing workflow: Packs publishable to marketplace and linked to products with correct resourceIds
+   - **Dependencies**: None
+   - **Status**: Planned
+   - **Key Files**:
+     - [`client/src/lib/import-questions.ts`](client/src/lib/import-questions.ts) - YAML import logic
+     - [`client/src/lib/question-import-validation.ts`](client/src/lib/question-import-validation.ts) - Import validation
+     - [`docs/DATA_IMPORT_TEST_PLAN.md`](docs/DATA_IMPORT_TEST_PLAN.md) - Import test plan
+   - **Code Example** (YAML parsing and validation):
+     ```typescript
+     // Parse YAML and validate structure
+     export function parseYAMLQuestions(yamlContent: string): YAMLImportData {
+       try {
+         const data = yaml.load(yamlContent) as YAMLImportData;
+         if (!data.category || !data.questions || !Array.isArray(data.questions)) {
+           throw new Error('Invalid YAML structure: must contain category and questions array');
+         }
+         return data;
+       } catch (error) {
+         throw new Error(
+           `Failed to parse YAML: ${error instanceof Error ? error.message : 'Unknown error'}`
+         );
+       }
+     }
+     ```
+
+3. **Study Pack → Marketplace Integration**
+   - Each study pack (grouped questions) must be publishable as a product/listing in the marketplace
+   - Publishing a pack links it to a marketplace product (with price, type, and visibility)
+   - Purchases of a pack update user account access accordingly
+   - **Dependencies**: #1, #2
+   - **Status**: Planned
+   - **Schema Reference** (from `shared/schema.ts`):
+     ```typescript
+     // Product table for study packs in marketplace
+     type: text('type').notNull(), // 'quiz' | 'material' | 'course' | 'bundle'
+     resourceIds: jsonb('resource_ids').$type<number[]>().notNull(), // Content in this product
+     price: integer('price').notNull(),
+     currency: text('currency').notNull().default('USD'),
+     requiresPurchase: boolean('requires_purchase').default(false),
+     purchaseProductId: text('purchase_product_id'), // Product ID for marketplace access
+     ```
+
+4. **Access Control: Purchasing & Assignment Enforcement**
+   - User access to materials and study packs checked against purchase/assignment records
+   - Implement/expand `checkMaterialAccess(material, userId)` to verify purchases, eligibility, dates, and assigned/shared status
+   - Show clear "Purchase required" or "Not assigned" feedback
+   - Purchases stored per Purchase schema and checked for access
+   - **Dependencies**: #1, #3
+   - **Status**: Planned
+   - **Key Files**:
+     - [`client/src/lib/learning-materials-api.ts`](client/src/lib/learning-materials-api.ts) - Access verification logic
+     - [`client/src/lib/learning-materials-api.test.ts`](client/src/lib/learning-materials-api.test.ts) - Access control tests
+     - [`client/src/components/AccessDenied.tsx`](client/src/components/AccessDenied.tsx) - Access denied UI
+     - [`docs/implementation/ACCESS_CONTROL_IMPLEMENTATION.md`](docs/implementation/ACCESS_CONTROL_IMPLEMENTATION.md) - Implementation guide
+   - **Code Example** (current state from `learning-materials-api.ts` - needs enhancement):
+     ```typescript
+     function checkMaterialAccess(material: Lecture, userId: string): boolean {
+       if (material.requiresPurchase && material.purchaseProductId) {
+         // TODO: Check if user has purchased the product
+         // For now, we'll return false for unpurchased materials
+         // Exception: owner can always access their own content
+         if (material.userId !== userId) {
+           return false;
+         }
+       }
+       /* ... other date/visibility checks ... */
+     }
+     ```
+     > **Note**: The TODO in this code indicates where purchase verification needs to be implemented.
+
+5. **Marketplace Testing, Documentation & QA**
+   - End-to-end and unit/integration tests for admin import, pack publishing, and account-based access
+   - Update documentation: ADMIN_GUIDE.md, DATA_IMPORT_GUIDE.md, MARKETPLACE_IMPLEMENTATION.md, ACCESS_CONTROL_IMPLEMENTATION.md
+   - **Dependencies**: #1-4
+   - **Status**: Planned
+   - **Test Files**:
+     - [`client/src/lib/import-questions.test.ts`](client/src/lib/import-questions.test.ts)
+     - [`client/src/lib/learning-materials-api.test.ts`](client/src/lib/learning-materials-api.test.ts)
+     - [`client/src/pages/marketplace.test.tsx`](client/src/pages/marketplace.test.tsx)
 
 ### **Phase 1: Foundation & Core Infrastructure** (Critical Path)
 
@@ -287,12 +391,13 @@ Final preparation for production:
 
 ### Implementation Notes
 
-- **Critical Path**: Phases 1-2 are the critical path and should be prioritized
+- **Critical Path**: Phase 0 (Study Materials Marketplace & Access Control) is the **highest priority** critical path and must be prioritized above all other features. Phases 1-2 remain critical path items for infrastructure.
 - **Parallel Development**: Some features within different phases can be developed in parallel if dependencies allow
 - **Security Focus**: Security-related issues (🔒) should not be skipped or delayed
 - **Accessibility**: Accessibility features (♿) are essential for inclusivity
 - **Iterative Approach**: Each phase should be fully tested before moving to the next
 - **User Feedback**: Gather feedback after each phase to refine subsequent phases
+- **Marketplace Priority**: The marketplace, admin study pack import/publishing, and access control enforcement are essential path items that enable monetization and content distribution
 
 ---
 
@@ -2114,6 +2219,7 @@ Have questions about the roadmap? Want to discuss priorities?
 
 | Date | Change |
 |------|--------|
+| Jan 2026 | **Phase 0 Priority**: Added "Study Materials Marketplace & Access Control" as highest critical-path phase (Phase 0), prioritizing marketplace setup, admin study pack import/publishing, and access control enforcement |
 | Jan 2026 | **Implementation Phases**: Added strategic 10-phase implementation roadmap with 29 feature issues (#615-#644) organized by dependencies and priority |
 | Dec 2024 | Initial roadmap created for v2.0.0 |
 | Dec 2024 | Added community requests section |
