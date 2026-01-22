@@ -9,11 +9,18 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+export interface GitHubIssue {
+  number: number;
+  title: string;
+  body?: string;
+  labels?: Array<{ name: string }>;
+}
 
 export interface PrioritizedIssue {
   number: number;
@@ -46,7 +53,8 @@ export const PHASES: Record<string, PhaseInfo> = {
   'phase-0': {
     number: 0,
     name: 'Study Materials Marketplace & Access Control',
-    description: 'Highest priority critical path - marketplace infrastructure, admin publishing, access control',
+    description:
+      'Highest priority critical path - marketplace infrastructure, admin publishing, access control',
     criticalPath: true,
     priority: 'critical',
   },
@@ -130,9 +138,9 @@ export const PHASES: Record<string, PhaseInfo> = {
 };
 
 /**
- * Map open issues to roadmap phases
+ * Prioritize issues according to roadmap phases
  */
-export function prioritizeIssues(openIssues: any[]): PrioritizedIssue[] {
+export function prioritizeIssues(openIssues: GitHubIssue[]): PrioritizedIssue[] {
   const prioritized: PrioritizedIssue[] = [];
 
   for (const issue of openIssues) {
@@ -171,7 +179,7 @@ export function prioritizeIssues(openIssues: any[]): PrioritizedIssue[] {
 /**
  * Map a single issue to its roadmap phase
  */
-function mapIssueToPhase(issue: any): PrioritizedIssue | null {
+function mapIssueToPhase(issue: GitHubIssue): PrioritizedIssue | null {
   const title = issue.title.toLowerCase();
   const body = (issue.body || '').toLowerCase();
   const labels = issue.labels?.map((l: any) => l.name) || [];
@@ -221,7 +229,8 @@ function mapIssueToPhase(issue: any): PrioritizedIssue | null {
       criticalPath: true,
       security: false,
       accessibility: false,
-      roadmapSection: 'Short-Term Roadmap (Q1-Q2 2025) > Q1 2025: Firebase Completion & Enhancement',
+      roadmapSection:
+        'Short-Term Roadmap (Q1-Q2 2025) > Q1 2025: Firebase Completion & Enhancement',
       reasoning,
       dependencies,
       labels: labels,
@@ -245,7 +254,8 @@ function mapIssueToPhase(issue: any): PrioritizedIssue | null {
       criticalPath: true,
       security: false,
       accessibility: false,
-      roadmapSection: 'Short-Term Roadmap (Q1-Q2 2025) > Q1 2025: Firebase Completion & Enhancement',
+      roadmapSection:
+        'Short-Term Roadmap (Q1-Q2 2025) > Q1 2025: Firebase Completion & Enhancement',
       reasoning:
         'Part of Firebase integration completion (95% → 100%). Critical infrastructure for cloud-native architecture.',
       dependencies: [],
@@ -271,7 +281,8 @@ function mapIssueToPhase(issue: any): PrioritizedIssue | null {
       criticalPath: true,
       security: title.includes('security') || title.includes('access'),
       accessibility: false,
-      roadmapSection: 'Implementation Phases > Phase 0: Study Materials Marketplace & Access Control',
+      roadmapSection:
+        'Implementation Phases > Phase 0: Study Materials Marketplace & Access Control',
       reasoning:
         'Phase 0 is the HIGHEST PRIORITY critical path. Must be completed before other features can proceed effectively.',
       dependencies: [],
@@ -432,7 +443,7 @@ This document provides a prioritized ordering of all open issues in the CertLab 
       if (issue.accessibility) badges.push('♿ ACCESSIBILITY');
 
       report += `#### ${orderNumber}. Issue #${issue.number}: ${issue.title}\n\n`;
-      
+
       if (badges.length > 0) {
         report += `**Badges**: ${badges.join(' | ')}\n\n`;
       }
@@ -450,7 +461,7 @@ This document provides a prioritized ordering of all open issues in the CertLab 
       }
 
       if (issue.dependencies.length > 0) {
-        report += `**Dependencies**: ${issue.dependencies.map(d => `#${d}`).join(', ')}\n\n`;
+        report += `**Dependencies**: ${issue.dependencies.map((d) => `#${d}`).join(', ')}\n\n`;
       }
 
       report += `**GitHub Issue**: [#${issue.number}](https://github.com/archubbuck/certlab/issues/${issue.number})\n\n`;
@@ -525,14 +536,12 @@ _This report was generated automatically by [scripts/issue-prioritizer.ts](https
 }
 
 /**
- * Main execution
+ * Load open issues - In production, this would fetch from GitHub API
+ * For now, we use a static list that should be updated as issues change
  */
-async function main() {
-  console.log('🎯 CertLab Issue Prioritization System\n');
-
-  // For this implementation, we'll work with the issues data we already have
-  // In a real scenario, this would fetch from GitHub API
-  const openIssues = [
+function getOpenIssues(): GitHubIssue[] {
+  // TODO: Replace with actual GitHub API call: gh api repos/archubbuck/certlab/issues?state=open
+  return [
     {
       number: 775,
       title: 'Complete Real-time Firestore Sync Edge Cases',
@@ -570,6 +579,16 @@ async function main() {
       labels: [{ name: 'enhancement' }, { name: 'timeline: Q1 2025' }],
     },
   ];
+}
+
+/**
+ * Main execution
+ */
+async function main() {
+  console.log('🎯 CertLab Issue Prioritization System\n');
+
+  // Load open issues
+  const openIssues = getOpenIssues();
 
   console.log(`📊 Analyzing ${openIssues.length} open issues...\n`);
 
@@ -594,31 +613,19 @@ async function main() {
   console.log('SUMMARY');
   console.log('='.repeat(60));
   console.log(`Total Issues: ${prioritized.length}`);
-  console.log(
-    `Critical Path: ${prioritized.filter((i) => i.criticalPath).length}`
-  );
+  console.log(`Critical Path: ${prioritized.filter((i) => i.criticalPath).length}`);
   console.log(`Security: ${prioritized.filter((i) => i.security).length}`);
-  console.log(
-    `Accessibility: ${prioritized.filter((i) => i.accessibility).length}`
-  );
+  console.log(`Accessibility: ${prioritized.filter((i) => i.accessibility).length}`);
   console.log('\nBy Priority:');
-  console.log(
-    `  Critical: ${prioritized.filter((i) => i.priority === 'critical').length}`
-  );
-  console.log(
-    `  High: ${prioritized.filter((i) => i.priority === 'high').length}`
-  );
-  console.log(
-    `  Medium: ${prioritized.filter((i) => i.priority === 'medium').length}`
-  );
-  console.log(
-    `  Low: ${prioritized.filter((i) => i.priority === 'low').length}`
-  );
+  console.log(`  Critical: ${prioritized.filter((i) => i.priority === 'critical').length}`);
+  console.log(`  High: ${prioritized.filter((i) => i.priority === 'high').length}`);
+  console.log(`  Medium: ${prioritized.filter((i) => i.priority === 'medium').length}`);
+  console.log(`  Low: ${prioritized.filter((i) => i.priority === 'low').length}`);
   console.log('='.repeat(60));
 }
 
 // Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((error) => {
     console.error('❌ Error:', error);
     process.exit(1);

@@ -1,6 +1,6 @@
 # CertLab Issue Prioritization Report
 
-**Generated**: 2026-01-22T05:04:26.640Z  
+**Generated**: 2026-01-22T05:08:26.543Z  
 **Total Open Issues**: 6
 
 ---
