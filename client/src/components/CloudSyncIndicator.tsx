@@ -75,7 +75,7 @@ export function CloudSyncIndicator({
           label: 'Connection Error',
           description: 'Failed to connect to Firebase. Please check your connection.',
           color: 'text-red-500',
-          showWarning: true,
+          showWarning: false,
         };
 
       case 'disabled':

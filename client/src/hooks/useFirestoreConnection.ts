@@ -111,6 +111,11 @@ export function useFirestoreConnection(): FirestoreConnectionState {
       setError(null);
       setIsSyncing(false);
       setReconnectAttempts(0);
+      // Clear any pending reconnect timeout
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
       return;
     }
 
@@ -119,6 +124,11 @@ export function useFirestoreConnection(): FirestoreConnectionState {
       setError(null);
       setIsSyncing(false);
       setReconnectAttempts(0);
+      // Clear any pending reconnect timeout
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
       return;
     }
 
@@ -242,6 +252,11 @@ export function useFirestoreConnection(): FirestoreConnectionState {
         setError(null);
         setIsSyncing(false);
         setReconnectAttempts(0);
+        // Clear any pending reconnect timeout
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
       }
     };
 
@@ -270,6 +285,11 @@ export function useFirestoreConnection(): FirestoreConnectionState {
       setError(null);
       setIsSyncing(false);
       setReconnectAttempts(0);
+      // Clear any pending reconnect timeout
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
       return;
     }
 
@@ -279,6 +299,11 @@ export function useFirestoreConnection(): FirestoreConnectionState {
       setError(null);
       setIsSyncing(false);
       setReconnectAttempts(0);
+      // Clear any pending reconnect timeout
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
       return;
     }
 
