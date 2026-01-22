@@ -39,6 +39,7 @@ const Accessibility = lazy(() => import('@/pages/accessibility'));
 const AdminDashboard = lazy(() => import('@/pages/admin'));
 const UIStructurePage = lazy(() => import('@/pages/ui-structure'));
 const I18nDemo = lazy(() => import('@/pages/i18n-demo'));
+const ConnectionDemo = lazy(() => import('@/pages/connection-demo'));
 
 const CreditsPage = lazy(() => import('@/pages/credits'));
 const ProfilePage = lazy(() => import('@/pages/profile'));
@@ -139,6 +140,7 @@ function Router() {
                   {isAdmin && <Route path="/app/ui-structure" element={<UIStructurePage />} />}
                   {/* i18n Demo - Available to all users */}
                   <Route path="/app/i18n-demo" element={<I18nDemo />} />
+                  <Route path="/app/connection-demo" element={<ConnectionDemo />} />
                   <Route path="/app/credits" element={<CreditsPage />} />
                   <Route path="/app/data-import" element={<DataImportPage />} />
                   <Route path="/app/personal-import" element={<PersonalImportPage />} />
