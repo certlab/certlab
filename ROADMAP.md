@@ -133,8 +133,8 @@ These items are the **top priority** and must be completed before other phases c
      resourceIds: jsonb('resource_ids').$type<number[]>().notNull(), // Content in this product
      price: integer('price').notNull(),
      currency: text('currency').notNull().default('USD'),
-     requiresPurchase: boolean('requires_purchase').default(false),
-     purchaseProductId: text('purchase_product_id'), // Product ID for marketplace access
+     isPremium: boolean('is_premium').notNull().default(false),
+     subscriptionDuration: integer('subscription_duration'), // in days; null for lifetime access
      ```
 
 4. **Access Control: Purchasing & Assignment Enforcement**
@@ -167,7 +167,7 @@ These items are the **top priority** and must be completed before other phases c
 
 5. **Marketplace Testing, Documentation & QA**
    - End-to-end and unit/integration tests for admin import, pack publishing, and account-based access
-   - Update documentation: ADMIN_GUIDE.md, DATA_IMPORT_GUIDE.md, MARKETPLACE_IMPLEMENTATION.md, ACCESS_CONTROL_IMPLEMENTATION.md
+   - Update documentation: ADMIN_GUIDE.md, DATA_IMPORT_GUIDE.md, docs/features/MARKETPLACE_IMPLEMENTATION.md, ACCESS_CONTROL_IMPLEMENTATION.md
    - **Dependencies**: #1-4
    - **Status**: Planned
    - **Test Files**:
@@ -2220,7 +2220,7 @@ Have questions about the roadmap? Want to discuss priorities?
 | Date | Change |
 |------|--------|
 | Jan 2026 | **Phase 0 Priority**: Added "Study Materials Marketplace & Access Control" as highest critical-path phase (Phase 0), prioritizing marketplace setup, admin study pack import/publishing, and access control enforcement |
-| Jan 2026 | **Implementation Phases**: Added strategic 10-phase implementation roadmap with 29 feature issues (#615-#644) organized by dependencies and priority |
+| Jan 2026 | **Implementation Phases**: Added strategic 11-phase implementation roadmap with 29 feature issues (#615-#644) organized by dependencies and priority |
 | Dec 2024 | Initial roadmap created for v2.0.0 |
 | Dec 2024 | Added community requests section |
 | Dec 2024 | Added technical roadmap |
