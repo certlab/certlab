@@ -93,6 +93,7 @@ export function useFirestoreConnection(): FirestoreConnectionState {
   const unsubscribeRef = useRef<Unsubscribe | null>(null);
   const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const healthCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
    * Check if Firestore is connected by attempting a lightweight query
@@ -291,21 +292,25 @@ export function useFirestoreConnection(): FirestoreConnectionState {
    * Periodic health check (every 30 seconds when connected)
    */
   useEffect(() => {
-    if (status === 'connected' && isCloudSyncEnabled && isFirestoreInitialized()) {
-      checkTimeoutRef.current = setInterval(() => {
-        // Only check if we're still marked as connected
-        if (status === 'connected') {
-          checkConnection();
-        }
-      }, 30000); // Check every 30 seconds
-
-      return () => {
-        if (checkTimeoutRef.current) {
-          clearInterval(checkTimeoutRef.current);
-          checkTimeoutRef.current = null;
-        }
-      };
+    // Clean up any existing interval
+    if (healthCheckIntervalRef.current) {
+      clearInterval(healthCheckIntervalRef.current);
+      healthCheckIntervalRef.current = null;
     }
+
+    // Only set up interval if cloud sync is enabled, Firestore is initialized, and we're connected
+    if (status === 'connected' && isCloudSyncEnabled && isFirestoreInitialized()) {
+      healthCheckIntervalRef.current = setInterval(() => {
+        checkConnection();
+      }, 30000); // Check every 30 seconds
+    }
+
+    return () => {
+      if (healthCheckIntervalRef.current) {
+        clearInterval(healthCheckIntervalRef.current);
+        healthCheckIntervalRef.current = null;
+      }
+    };
   }, [status, isCloudSyncEnabled, checkConnection]);
 
   const debugInfo: FirestoreDebugInfo = {
