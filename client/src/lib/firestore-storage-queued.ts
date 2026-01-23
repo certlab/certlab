@@ -32,10 +32,14 @@ import type { IClientStorage } from '@shared/storage-interface';
 
 /**
  * Check if a method name indicates a write operation
- * Write operations include: create*, update*, delete*, set*
+ * Write operations include: create*, update*, delete*
+ *
+ * Note: 'set*' methods are excluded because many are in-memory operations
+ * (e.g., setCurrentUserId, setSelectedTitle) that should not be queued.
+ * True Firestore set operations are rare in this codebase.
  */
 function isWriteMethod(methodName: string): boolean {
-  const writePatterns = ['create', 'update', 'delete', 'set'];
+  const writePatterns = ['create', 'update', 'delete'];
   const lowerMethod = methodName.toLowerCase();
   return writePatterns.some((pattern) => lowerMethod.startsWith(pattern));
 }
@@ -109,10 +113,10 @@ export function createFirestoreStorageWithQueue<T extends IClientStorage>(storag
  * Determine operation type from method name
  */
 function getOperationType(methodName: string): 'create' | 'update' | 'delete' {
-  if (methodName.startsWith('create')) return 'create';
-  if (methodName.startsWith('update')) return 'update';
-  if (methodName.startsWith('delete')) return 'delete';
-  if (methodName.startsWith('set')) return 'update';
+  const lowerMethod = methodName.toLowerCase();
+  if (lowerMethod.startsWith('create')) return 'create';
+  if (lowerMethod.startsWith('update')) return 'update';
+  if (lowerMethod.startsWith('delete')) return 'delete';
   return 'update'; // Default to update
 }
 

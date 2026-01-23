@@ -141,12 +141,35 @@ export class OfflineQueue {
       const stored = localStorage.getItem(this.config.storageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Filter out completed operations on load
-        this.queue = parsed.filter((op: QueuedOperation) => op.status !== 'completed');
+
+        // Validate that parsed data is an array
+        if (!Array.isArray(parsed)) {
+          logError('Invalid queue data in localStorage (not an array), clearing', null);
+          localStorage.removeItem(this.config.storageKey);
+          this.queue = [];
+          return;
+        }
+
+        // Filter out completed operations and validate structure
+        this.queue = parsed.filter((op: any) => {
+          // Basic validation of operation structure
+          if (!op || typeof op !== 'object' || !op.id || !op.type || !op.collection) {
+            logError('Invalid operation in queue, skipping', null, { op });
+            return false;
+          }
+          return op.status !== 'completed';
+        });
+
         logInfo('Offline queue loaded', { count: this.queue.length });
       }
     } catch (error) {
       logError('Failed to load offline queue', error);
+      // Clear corrupted data
+      try {
+        localStorage.removeItem(this.config.storageKey);
+      } catch (clearError) {
+        // Ignore clear errors
+      }
       this.queue = [];
     }
   }
@@ -162,6 +185,9 @@ export class OfflineQueue {
       this.notifyStateChange();
     } catch (error) {
       logError('Failed to save offline queue', error);
+      // Critical: If we can't persist, we should notify
+      // This could be due to quota exceeded or storage disabled
+      throw new Error('Failed to persist offline queue to localStorage');
     }
   }
 
@@ -170,10 +196,14 @@ export class OfflineQueue {
    */
   private setupNetworkListeners(): void {
     if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => {
+      const listener = () => {
         logInfo('Network reconnected, processing offline queue');
         this.processQueue();
-      });
+      };
+
+      // Store listener reference for cleanup
+      (this as any)._onlineListener = listener;
+      window.addEventListener('online', listener);
     }
   }
 
@@ -181,14 +211,45 @@ export class OfflineQueue {
    * Expose queue state to Dev Tools
    */
   private exposeToDevTools(): void {
-    if (this.config.exposeToDevTools && typeof window !== 'undefined') {
-      (window as any).__CERTLAB_OFFLINE_QUEUE__ = {
-        getState: () => this.getState(),
-        getQueue: () => this.queue.map(({ operation, ...rest }) => rest),
-        processQueue: () => this.processQueue(),
-        clearQueue: () => this.clearQueue(),
-        clearCompleted: () => this.clearCompleted(),
-      };
+    if (!this.config.exposeToDevTools || typeof window === 'undefined') {
+      return;
+    }
+
+    const globalObj = window as any;
+    const key = '__CERTLAB_OFFLINE_QUEUE__';
+
+    if (globalObj[key]) {
+      // Avoid overwriting an existing devtools hook (e.g. from another instance or HMR)
+      logInfo(
+        'OfflineQueue devtools hook already exists on window.__CERTLAB_OFFLINE_QUEUE__; skipping re-exposure.'
+      );
+      return;
+    }
+
+    globalObj[key] = {
+      getState: () => this.getState(),
+      getQueue: () => this.queue.map(({ operation, ...rest }) => rest),
+      processQueue: () => this.processQueue(),
+      clearQueue: () => this.clearQueue(),
+      clearCompleted: () => this.clearCompleted(),
+    };
+  }
+
+  /**
+   * Cleanup resources such as network listeners
+   *
+   * This should be called when the OfflineQueue instance is no longer needed
+   * to avoid accumulating event listeners on window.
+   */
+  public destroy(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const listener = (this as any)._onlineListener;
+    if (listener) {
+      window.removeEventListener('online', listener);
+      (this as any)._onlineListener = undefined;
     }
   }
 
@@ -196,7 +257,16 @@ export class OfflineQueue {
    * Generate unique ID for operation
    */
   private generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    // Prefer cryptographically strong UUIDs when available
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+      return (crypto as Crypto).randomUUID();
+    }
+
+    // Fallback: timestamp + extended random component
+    const timestamp = Date.now().toString(36);
+    const randomPart =
+      Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+    return `${timestamp}-${randomPart}`;
   }
 
   /**
@@ -258,7 +328,15 @@ export class OfflineQueue {
     };
 
     this.queue.push(queuedOp);
-    this.saveQueue();
+
+    // Save to localStorage - if this fails, remove from queue
+    try {
+      this.saveQueue();
+    } catch (error) {
+      // Revert the in-memory change if persistence fails
+      this.queue.pop();
+      throw error;
+    }
 
     logInfo('Operation queued', {
       id: queuedOp.id,
@@ -267,9 +345,15 @@ export class OfflineQueue {
     });
 
     // Try to process immediately if online
-    if (typeof navigator !== 'undefined' && navigator.onLine) {
-      // Don't await - process in background
-      this.processQueue();
+    if (typeof navigator !== 'undefined' && navigator.onLine && !this.isProcessing) {
+      // Process in background and log any errors
+      (async () => {
+        try {
+          await this.processQueue();
+        } catch (error) {
+          logError('Background offline queue processing failed', error);
+        }
+      })();
     }
 
     return queuedOp.id;
@@ -300,6 +384,8 @@ export class OfflineQueue {
           if (op.retryCount >= this.config.maxRetries) {
             op.status = 'failed';
             op.lastError = `Max retries (${this.config.maxRetries}) exceeded`;
+            // Save state immediately for failed operations
+            this.saveQueue();
             continue;
           }
 
@@ -312,6 +398,8 @@ export class OfflineQueue {
             });
             op.status = 'failed';
             op.lastError = 'Operation function not available';
+            // Save state immediately for failed operations
+            this.saveQueue();
             continue;
           }
 
@@ -339,19 +427,24 @@ export class OfflineQueue {
 
     op.status = 'processing';
     op.lastAttemptAt = Date.now();
-    op.retryCount++;
+
+    // Calculate remaining attempts (don't increment retryCount yet)
+    const remainingAttempts = this.config.maxRetries - op.retryCount;
 
     try {
       await withRetry(
         op.operation,
         `offline-queue:${op.type}:${op.collection}`,
         createNetworkRetryOptions({
-          maxAttempts: this.config.maxRetries - op.retryCount + 1,
+          maxAttempts: remainingAttempts,
           onRetry: (error, attempt, delayMs) => {
+            // Increment retry count on each retry attempt
+            op.retryCount++;
             logInfo('Retrying queued operation', {
               id: op.id,
               attempt,
               delayMs,
+              retryCount: op.retryCount,
               error: error instanceof Error ? error.message : String(error),
             });
           },
