@@ -39,8 +39,8 @@ When the network is offline or a network error occurs:
 ### Retry Logic
 
 Failed operations are retried automatically:
-- Exponential backoff (1s, 2s, 4s, 8s, 10s)
-- Maximum 5 retry attempts by default
+- Initial attempt at 0s, then exponential backoff for retries (1s, 2s, 4s, 8s) with a maximum delay cap of 10s
+- Maximum 5 total attempts (1 initial + 4 retries) by default
 - Only retries network-related errors
 - Validation errors are not retried
 
@@ -100,9 +100,14 @@ Operations that are queued have special properties:
 ```typescript
 const result = await storage.createQuiz(quizData);
 
-if ((result as any)._queued) {
+// Type-safe detection using a type guard
+function isQueuedResult(result: any): result is { _queued: true; _queueId: string } {
+  return result && typeof result === 'object' && result._queued === true;
+}
+
+if (isQueuedResult(result)) {
   // Operation was queued and will sync later
-  console.log('Queue ID:', (result as any)._queueId);
+  console.log('Queue ID:', result._queueId);
 } else {
   // Operation completed successfully
   console.log('Quiz ID:', result.id);
@@ -183,13 +188,15 @@ The system uses multiple signals to detect offline status:
 Operations are retried with exponential backoff:
 
 ```
-Attempt 1: Immediate
-Attempt 2: 1 second delay
-Attempt 3: 2 seconds delay
-Attempt 4: 4 seconds delay
-Attempt 5: 8 seconds delay
-Max delay: 10 seconds
+First attempt: Immediate (0s delay)
+Retry 1: after 1s delay
+Retry 2: after 2s delay
+Retry 3: after 4s delay
+Retry 4: after 8s delay
+Max delay cap: 10s
 ```
+
+With the default `maxRetries: 5`, this means 5 total attempts (1 initial + 4 retries).
 
 Only network-related errors are retried:
 - Network errors
@@ -265,6 +272,25 @@ Optimistic IDs are temporary and may not match the final Firestore document ID:
 - Use the `_queueId` to track operations
 - UI should handle ID changes when sync completes
 - Consider using client-generated UUIDs for documents
+
+#### Handling ID Changes After Sync
+
+When a queued write finishes, the underlying Firestore document may have a different ID than the optimistic ID the UI used while offline or pending.
+
+**How completion is observed:**
+
+The offline queue itself does not emit a special callback for every operation. Completion is typically observed through:
+- Your existing Firestore listeners (e.g., `onSnapshot`) updating with the new server state
+- Your data-fetching layer (e.g., TanStack Query) refetching after connectivity is restored
+- Use these updates as the trigger to reconcile optimistic state with real Firestore state
+
+**Recommended patterns:**
+
+1. While an operation is pending, store both the `_queueId` (stable operation identifier) and the optimistic document ID
+2. When server data arrives, match the server record to the pending operation using correlation (e.g., matching on content or temporary metadata)
+3. Update in-memory lists, caches, or UI state to replace the optimistic ID with the real Firestore ID
+4. For critical use cases, consider using client-generated UUIDs as document IDs (via `id` field in the data) so IDs remain stable
+
 
 ### Write Order
 
