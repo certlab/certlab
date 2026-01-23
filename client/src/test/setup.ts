@@ -9,7 +9,9 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
-// Set CI environment variable for fast-mock mode
+// Set CI environment variable for fast-mock mode in most tests
+// Tests that need to test non-CI behavior should delete/override process.env.CI in their beforeEach
+// Example: delete process.env.CI; (see useFirestoreConnection.test.ts)
 if (typeof process !== 'undefined') {
   process.env.CI = 'true';
 }

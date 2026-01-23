@@ -39,6 +39,14 @@ import { isFirestoreInitialized } from '@/lib/firestore-service';
 import { useAuth } from '@/lib/auth-provider';
 
 /**
+ * Check if running in CI environment
+ * Used to enable fast-mock mode that skips real connection checks
+ */
+function isCIMode(): boolean {
+  return typeof process !== 'undefined' && process.env?.CI === 'true';
+}
+
+/**
  * Firestore connection status
  */
 export type FirestoreConnectionStatus =
@@ -116,7 +124,7 @@ export function useFirestoreConnection(): FirestoreConnectionState {
    */
   const checkConnection = useCallback(async () => {
     // CI Fast-Mock Mode: Skip real connection checks in CI
-    if (isCIEnvironment) {
+    if (isCIMode()) {
       if (isCloudSyncEnabled && isFirestoreInitialized()) {
         setStatus('connected');
         setError(null);
@@ -297,7 +305,7 @@ export function useFirestoreConnection(): FirestoreConnectionState {
    */
   useEffect(() => {
     // CI Fast-Mock Mode: Skip snapshot listener in CI environments
-    if (isCIEnvironment) {
+    if (isCIMode()) {
       if (isCloudSyncEnabled && isFirestoreInitialized()) {
         setStatus('connected');
         setError(null);
@@ -430,7 +438,7 @@ export function useFirestoreConnection(): FirestoreConnectionState {
         reconnectTimeoutRef.current = null;
       }
     };
-  }, [isCloudSyncEnabled, firebaseUser, checkConnection, isCIEnvironment]);
+  }, [isCloudSyncEnabled, firebaseUser, checkConnection]);
 
   /**
    * Periodic health check (every 30 seconds when connected)
@@ -444,7 +452,7 @@ export function useFirestoreConnection(): FirestoreConnectionState {
     }
 
     // Skip health checks in CI environment
-    if (isCIEnvironment) {
+    if (isCIMode()) {
       return;
     }
 
@@ -461,7 +469,7 @@ export function useFirestoreConnection(): FirestoreConnectionState {
         healthCheckIntervalRef.current = null;
       }
     };
-  }, [status, isCloudSyncEnabled, checkConnection, isCIEnvironment]);
+  }, [status, isCloudSyncEnabled, checkConnection]);
 
   const debugInfo: FirestoreDebugInfo = {
     isFirestoreInitialized: isFirestoreInitialized(),

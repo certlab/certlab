@@ -43,12 +43,7 @@ class FirestoreMockService {
       !this.collections.has('categories') ||
       this.getCollection('categories').documents.size === 0
     ) {
-      await this.setDocument('categories', 'test-category-1', {
-        id: 1,
-        name: 'Test Category',
-        description: 'Default category for tests',
-        tenantId: 1,
-      });
+      this.seedDefaultCategories();
     }
 
     return true;
@@ -254,15 +249,10 @@ class FirestoreMockService {
   }
 
   /**
-   * Reset mock to initial state
+   * Seed default categories collection for health checks
+   * This ensures Firestore always has data for connection verification
    */
-  reset(): void {
-    this.collections.clear();
-    this.isInitialized = false;
-    this.currentUserId = null;
-
-    // After reset, ensure default categories exist for health checks
-    // This is done synchronously to avoid async race conditions
+  private seedDefaultCategories(): void {
     const categoriesCollection: MockCollection = {
       documents: new Map(),
       subcollections: new Map(),
@@ -279,6 +269,18 @@ class FirestoreMockService {
       updatedAt: new Date(),
     });
     this.collections.set('categories', categoriesCollection);
+  }
+
+  /**
+   * Reset mock to initial state
+   */
+  reset(): void {
+    this.collections.clear();
+    this.isInitialized = false;
+    this.currentUserId = null;
+
+    // After reset, ensure default categories exist for health checks
+    this.seedDefaultCategories();
   }
 
   /**
