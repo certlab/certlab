@@ -2833,6 +2833,17 @@ class FirestoreStorage implements IClientStorage {
 
       if (!progress) return null;
 
+      // Validate that the progress belongs to the specified tenant
+      if (progress.tenantId !== tenantId) {
+        logError('getUserQuestProgressByQuest', new Error('Cross-tenant access attempt'), {
+          userId,
+          questId,
+          expectedTenantId: tenantId,
+          actualTenantId: progress.tenantId,
+        });
+        return null;
+      }
+
       return convertTimestamps(progress);
     } catch (error) {
       logError('getUserQuestProgressByQuest', error);
@@ -3335,20 +3346,22 @@ class FirestoreStorage implements IClientStorage {
    * Get study timer statistics for a user.
    * Calculates today, week, month, and 90-day statistics.
    * Note: All-time stats limited to last 90 days for performance optimization.
+   * Stats are based on up to the 1000 most recent sessions within the 90-day window.
    * @param userId - The user's unique identifier
-   * @returns Study timer statistics (based on last 90 days)
+   * @returns Study timer statistics (based on last 90 days, up to 1000 sessions)
    */
   async getStudyTimerStats(userId: string): Promise<StudyTimerStats> {
     try {
       // Query sessions from the last 90 days instead of all sessions
-      // This reduces read costs while still providing accurate stats
+      // This reduces read costs while still providing accurate stats for most users
+      // The 1000 session limit prevents excessive reads for high-volume users
       const ninetyDaysAgo = new Date();
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
       const sessionsRaw = await getUserDocuments<StudyTimerSession>(userId, 'timerSessions', [
         where('startedAt', '>=', Timestamp.fromDate(ninetyDaysAgo)),
         orderBy('startedAt', 'desc'),
-        limit(1000), // Safety limit
+        limit(1000), // Safety limit - caps at 1000 most recent sessions
       ]);
 
       // Convert Firestore timestamps to Dates before any date math

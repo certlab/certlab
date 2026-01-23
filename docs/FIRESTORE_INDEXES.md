@@ -19,7 +19,6 @@ Firestore automatically creates single-field indexes, but queries with multiple 
 - **author + createdAt**: Lists quizzes by author
 
 #### Quiz Templates
-- **createdAt DESC**: Lists all templates sorted by creation date
 - **tenantId + createdAt DESC**: Lists templates by tenant sorted by creation date
 
 #### Lectures
@@ -31,16 +30,23 @@ Firestore automatically creates single-field indexes, but queries with multiple 
 #### User Progress
 - **userId + categoryId**: Gets user's progress for a specific category
 
-#### Timer Sessions
-- **startedAt ASC**: Range queries for date filtering (e.g., sessions after X date)
-- **startedAt DESC**: Recent sessions first (for displaying in UI)
+#### Quest Progress
+- **tenantId + updatedAt DESC**: Lists quest progress for a tenant ordered by most recently updated (used for tenant dashboards and admin views)
 
-Note: Both ascending and descending indexes are required because:
-- Range queries (`where('startedAt', '>=', date)`) use ASC index
-- Sorted lists (`orderBy('startedAt', 'desc')`) use DESC index
+#### Timer Sessions
+
+Common queries using `startedAt` (single-field index managed automatically by Firestore):
+- Range queries for date filtering, e.g. `where('startedAt', '>=', date)` (ascending time)
+- Sorted lists using `orderBy('startedAt', 'desc')` for recent sessions first (for displaying in UI)
+
+Note: These queries rely on Firestore's built-in single-field index on `startedAt`, which is created automatically and does **not** need to be defined in `firestore.indexes.json`. Both ascending and descending orderings are supported by this single-field index; no separate composite ASC/DESC index is required for `startedAt` alone.
 
 #### Personal Subcategories
-- **categoryId**: Filters subcategories by parent category
+
+Common queries using `categoryId` (single-field index managed automatically by Firestore):
+- Filters subcategories by parent category
+
+Note: Single-field indexes like `categoryId` are automatically created by Firestore and don't need to be defined in `firestore.indexes.json`.
 
 ### Shared Collections
 

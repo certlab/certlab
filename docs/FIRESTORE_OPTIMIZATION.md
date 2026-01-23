@@ -93,28 +93,24 @@ export const queryClient = new QueryClient({
 
 **Solution**: Added composite indexes to `firestore.indexes.json` for all multi-field queries.
 
-#### New Indexes Added:
+#### Required Composite Indexes
 
-1. **Timer Sessions**:
-   - `startedAt` (ascending)
-   - `startedAt` (descending)
+Only composite indexes that must be explicitly defined in `firestore.indexes.json` are listed here. Single-field indexes are omitted because Firestore manages them automatically.
 
-2. **Personal Subcategories**:
-   - `categoryId` (ascending)
+1. **Quests**:
+   - `isActive` (ascending) + `type` (ascending)
 
-3. **Quests**:
-   - `isActive` (ascending)
-   - `isActive` + `type` (composite)
+2. **Quiz Templates**:
+   - `tenantId` (ascending) + `createdAt` (descending)
 
-4. **Quiz Templates**:
-   - `createdAt` (descending)
-   - `tenantId` + `createdAt` (composite)
+3. **Quizzes**:
+   - `tenantId` (ascending) + `createdAt` (descending)
 
-5. **Quizzes**:
-   - `tenantId` + `createdAt` (composite)
+4. **Quest Progress**:
+   - `tenantId` (ascending) + `updatedAt` (descending)
 
-6. **Leaderboard Entries**:
-   - `tenantId` + `score` (composite, descending)
+5. **Leaderboard Entries**:
+   - `tenantId` (ascending) + `score` (descending)
 
 **Impact**: 
 - Prevents index creation errors

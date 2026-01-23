@@ -899,13 +899,15 @@ export async function apiRequest({
  * Configured TanStack Query client instance for the application.
  *
  * Configuration:
- * - Uses the custom getQueryFn for IndexedDB-based data fetching
+ * - Uses the custom getQueryFn for Firestore-based data fetching
  * - Default stale time is 30 seconds (staleTime.user) - optimal for frequently changing user data
  * - Individual queries can override with longer stale times using staleTime.static (5 min),
  *   staleTime.auth (1 min), or staleTime.quiz (2 min)
  * - Garbage collection time (gcTime) is 10 minutes - keeps data in cache even after it becomes stale
  * - Disables window focus refetching (prevents excessive Firestore reads when switching tabs)
- * - Disables retries (Firestore operations should succeed or fail immediately)
+ * - Disables retries at the TanStack Query layer to avoid extra Firestore reads and duplicated work;
+ *   this trades some resiliency to transient errors (offline, throttling, flaky networks) for lower
+ *   cost and simpler semantics. Firestore may still perform its own internal retries/offline handling.
  *
  * @example
  * ```tsx

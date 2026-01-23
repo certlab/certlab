@@ -96,11 +96,10 @@ const quests = await getSharedDocuments<Quest>('quests', [
 const templates = await getUserDocuments<QuizTemplate>(userId, 'quizTemplates');
 return templates.filter(t => t.tenantId === tenantId);
 
-// After: Server-side tenantId filter + limits
+// After: Server-side tenantId filter + ordering
 const templates = await getUserDocuments<QuizTemplate>(userId, 'quizTemplates', [
   where('tenantId', '==', tenantId),
   orderBy('createdAt', 'desc'),
-  limit(200),
 ]);
 ```
 **Impact**: Filters on server, reduces unnecessary reads
@@ -130,14 +129,15 @@ export const queryClient = new QueryClient({
 
 **File Modified**: `firestore.indexes.json`
 
-Added 8 new composite indexes:
+Added composite indexes for multi-field queries:
 
 | Collection | Fields | Purpose |
 |------------|--------|---------|
-| timerSessions | startedAt ASC/DESC | Date range queries |
-| personalSubcategories | categoryId | Filter by category |
-| quests | isActive | Filter active quests |
 | quests | isActive + type | Filter by type |
+| quizTemplates | tenantId + createdAt DESC | Tenant templates |
+| quizzes | tenantId + createdAt DESC | Tenant quizzes |
+| questProgress | tenantId + updatedAt DESC | Tenant progress |
+| entries | tenantId + score DESC | Leaderboards |
 | quizTemplates | createdAt DESC | Recent templates |
 | quizTemplates | tenantId + createdAt | Tenant templates |
 | quizzes | tenantId + createdAt | Tenant quizzes |
@@ -250,8 +250,8 @@ When adding queries with multiple constraints:
 
 ## References
 
-- [Firestore Query Optimization Guide](docs/FIRESTORE_OPTIMIZATION.md)
-- [Firestore Indexes Reference](docs/FIRESTORE_INDEXES.md)
+- [Firestore Query Optimization Guide](./FIRESTORE_OPTIMIZATION.md)
+- [Firestore Indexes Reference](./FIRESTORE_INDEXES.md)
 - [Firebase Firestore Best Practices](https://firebase.google.com/docs/firestore/best-practices)
 - [Firestore Indexing Guide](https://firebase.google.com/docs/firestore/query-data/indexing)
 
