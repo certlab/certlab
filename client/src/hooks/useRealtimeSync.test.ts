@@ -279,7 +279,9 @@ describe('useRealtimeSync Hooks', () => {
         );
       });
 
-      expect(result.current.data).toHaveLength(2);
+      await waitFor(() => {
+        expect(result.current.data).toHaveLength(2);
+      });
     });
 
     it('should not subscribe when userId is null', () => {
@@ -303,7 +305,9 @@ describe('useRealtimeSync Hooks', () => {
         );
       });
 
-      expect(result.current.data).toHaveLength(2);
+      await waitFor(() => {
+        expect(result.current.data).toHaveLength(2);
+      });
     });
 
     it('should not subscribe when userId is null', () => {
