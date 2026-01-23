@@ -69,7 +69,14 @@ vi.mock('@/lib/storage-factory', () => {
       ) => {
         const docs = await firestoreMock.getDocuments('questions');
         return docs
-          .map((doc) => ({ ...doc.data, id: Number(doc.id) }))
+          .map((doc) => ({
+            ...doc.data,
+            id: Number(doc.id),
+            categoryId: doc.data.categoryId ?? 0,
+            subcategoryId: doc.data.subcategoryId ?? 0,
+            difficultyLevel: doc.data.difficultyLevel ?? null,
+            tenantId: doc.data.tenantId ?? null,
+          }))
           .filter((q) => {
             const matchesCategory = categoryIds.includes(q.categoryId);
             const matchesSubcategory =
