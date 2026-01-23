@@ -36,6 +36,21 @@ class FirestoreMockService {
    */
   async initialize(): Promise<boolean> {
     this.isInitialized = true;
+
+    // In CI/test environments, seed default categories collection for health checks
+    // This prevents timeouts in useFirestoreConnection hook
+    if (
+      !this.collections.has('categories') ||
+      this.getCollection('categories').documents.size === 0
+    ) {
+      await this.setDocument('categories', 'test-category-1', {
+        id: 1,
+        name: 'Test Category',
+        description: 'Default category for tests',
+        tenantId: 1,
+      });
+    }
+
     return true;
   }
 
@@ -245,6 +260,25 @@ class FirestoreMockService {
     this.collections.clear();
     this.isInitialized = false;
     this.currentUserId = null;
+
+    // After reset, ensure default categories exist for health checks
+    // This is done synchronously to avoid async race conditions
+    const categoriesCollection: MockCollection = {
+      documents: new Map(),
+      subcollections: new Map(),
+    };
+    categoriesCollection.documents.set('test-category-1', {
+      id: 'test-category-1',
+      data: {
+        id: 1,
+        name: 'Test Category',
+        description: 'Default category for tests',
+        tenantId: 1,
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    this.collections.set('categories', categoriesCollection);
   }
 
   /**

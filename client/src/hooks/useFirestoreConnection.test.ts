@@ -40,6 +40,13 @@ describe('useFirestoreConnection', () => {
     // Reset all mocks
     vi.clearAllMocks();
 
+    // Temporarily disable CI mode for these tests to test real connection logic
+    const originalCI = process.env.CI;
+    delete process.env.CI;
+
+    // Store original CI value to restore later
+    (globalThis as any).__TEST_ORIGINAL_CI__ = originalCI;
+
     // Get fresh reference to mocked onSnapshot and reset it
     const { onSnapshot } = await import('firebase/firestore');
     const mockOnSnapshot = onSnapshot as unknown as ReturnType<typeof vi.fn>;
@@ -74,6 +81,14 @@ describe('useFirestoreConnection', () => {
       writable: true,
       value: originalOnLine,
     });
+
+    // Restore CI environment variable
+    const originalCI = (globalThis as any).__TEST_ORIGINAL_CI__;
+    if (originalCI !== undefined) {
+      process.env.CI = originalCI;
+      delete (globalThis as any).__TEST_ORIGINAL_CI__;
+    }
+
     vi.restoreAllMocks();
   });
 
@@ -475,6 +490,60 @@ describe('useFirestoreConnection', () => {
       // Verify we reach the cap (should happen when nextAttempt >= 16: 2^15 * 1000 = 32768 > 30000)
       const cappedDelays = delays.filter((d) => d === 30000);
       expect(cappedDelays.length).toBeGreaterThan(5); // Later delays should be capped
+    });
+  });
+
+  describe('CI Fast-Mock Mode', () => {
+    it('should immediately return connected status in CI environment', async () => {
+      // Set CI environment variable
+      process.env.CI = 'true';
+
+      const { result } = renderHook(() => useFirestoreConnection());
+
+      // In CI mode, should immediately be connected without waiting
+      expect(result.current.status).toBe('connected');
+      expect(result.current.error).toBeNull();
+      expect(result.current.debugInfo.lastSuccessfulSync).toBeInstanceOf(Date);
+
+      // Clean up
+      delete process.env.CI;
+    });
+
+    it('should skip connection checks in CI environment', async () => {
+      // Set CI environment variable
+      process.env.CI = 'true';
+
+      const { result } = renderHook(() => useFirestoreConnection());
+
+      // Manually trigger connection check
+      await act(async () => {
+        await result.current.checkConnection();
+      });
+
+      // Should still be connected without any actual Firestore calls
+      expect(result.current.status).toBe('connected');
+      expect(result.current.error).toBeNull();
+
+      // Clean up
+      delete process.env.CI;
+    });
+
+    it('should not set up health check intervals in CI environment', async () => {
+      // Set CI environment variable
+      process.env.CI = 'true';
+
+      const { result } = renderHook(() => useFirestoreConnection());
+
+      // Wait a bit to ensure no intervals are set up
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      });
+
+      // Should be connected but without periodic health checks
+      expect(result.current.status).toBe('connected');
+
+      // Clean up
+      delete process.env.CI;
     });
   });
 });

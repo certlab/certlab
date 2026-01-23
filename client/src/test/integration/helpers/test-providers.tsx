@@ -17,6 +17,101 @@ vi.mock('@/lib/firebase', () => createFirebaseMock());
 // Mock the Firestore service for integration tests
 vi.mock('@/lib/firestore-service', () => createFirestoreMock());
 
+// Mock storage-factory for integration tests with Firestore mock implementation
+vi.mock('@/lib/storage-factory', () => {
+  const mockStorage = {
+    getUser: vi.fn(async (userId: string) => {
+      return firestoreMock.getDocument('users', userId).then((doc) => doc?.data || null);
+    }),
+    getUserById: vi.fn(async (userId: string) => {
+      return firestoreMock.getDocument('users', userId).then((doc) => doc?.data || null);
+    }),
+    createUser: vi.fn(async (userData: any) => {
+      await firestoreMock.setDocument('users', userData.id, userData);
+      return userData;
+    }),
+    updateUser: vi.fn(async (userId: string, updates: any) => {
+      await firestoreMock.updateDocument('users', userId, updates);
+      return updates;
+    }),
+    setCurrentUserId: vi.fn(async (userId: string) => {
+      firestoreMock.setCurrentUserId(userId);
+    }),
+    clearCurrentUser: vi.fn(async () => {
+      firestoreMock.clearCurrentUser();
+    }),
+    getCurrentUserId: vi.fn(async () => {
+      return firestoreMock.getCurrentUserId();
+    }),
+    getCategories: vi.fn(async () => {
+      const docs = await firestoreMock.getDocuments('categories');
+      return docs.map((doc) => ({ id: Number(doc.id), ...doc.data }));
+    }),
+    getSubcategories: vi.fn(async () => {
+      const docs = await firestoreMock.getDocuments('subcategories');
+      return docs.map((doc) => ({ id: Number(doc.id), ...doc.data }));
+    }),
+    getQuestions: vi.fn(async () => {
+      const docs = await firestoreMock.getDocuments('questions');
+      return docs.map((doc) => ({ id: Number(doc.id), ...doc.data }));
+    }),
+    getQuestion: vi.fn(async (questionId: number) => {
+      const doc = await firestoreMock.getDocument('questions', questionId.toString());
+      return doc ? { id: Number(doc.id), ...doc.data } : null;
+    }),
+    getQuestionsByCategories: vi.fn(
+      async (
+        categoryIds: number[],
+        subcategoryIds?: number[],
+        difficultyLevels?: number[],
+        tenantId?: number
+      ) => {
+        const docs = await firestoreMock.getDocuments('questions');
+        return docs
+          .map((doc) => ({ id: Number(doc.id), ...doc.data }))
+          .filter((q) => {
+            const matchesCategory = categoryIds.includes(q.categoryId);
+            const matchesSubcategory = !subcategoryIds || subcategoryIds.includes(q.subcategoryId);
+            const matchesDifficulty =
+              !difficultyLevels || difficultyLevels.includes(q.difficultyLevel || 1);
+            const matchesTenant = !tenantId || q.tenantId === tenantId;
+            return matchesCategory && matchesSubcategory && matchesDifficulty && matchesTenant;
+          });
+      }
+    ),
+    getUserQuizzes: vi.fn(async (userId: string) => {
+      const docs = await firestoreMock.getSubcollectionDocuments('users', userId, 'quizzes');
+      return docs.map((doc) => ({ id: Number(doc.id), ...doc.data }));
+    }),
+    getUserProgress: vi.fn(async (userId: string) => {
+      const docs = await firestoreMock.getSubcollectionDocuments('users', userId, 'progress');
+      return docs.map((doc) => ({ id: Number(doc.id), ...doc.data }));
+    }),
+    getUserStats: vi.fn().mockResolvedValue({}),
+    getUserMasteryScores: vi.fn().mockResolvedValue([]),
+    getBadges: vi.fn(async () => {
+      const docs = await firestoreMock.getDocuments('badges');
+      return docs.map((doc) => ({ id: Number(doc.id), ...doc.data }));
+    }),
+    getUserBadges: vi.fn().mockResolvedValue([]),
+    getUserGameStats: vi.fn().mockResolvedValue(null),
+    getChallenges: vi.fn().mockResolvedValue([]),
+    getStudyGroups: vi.fn().mockResolvedValue([]),
+    getPracticeTests: vi.fn().mockResolvedValue([]),
+    getUserThemePreferences: vi.fn().mockResolvedValue(null),
+    getOrganizationBranding: vi.fn().mockResolvedValue(null),
+    setOrganizationBranding: vi.fn().mockResolvedValue(undefined),
+  };
+
+  return {
+    storage: mockStorage,
+    initializeStorage: vi.fn().mockResolvedValue(undefined),
+    isCloudSyncAvailable: vi.fn().mockReturnValue(true),
+    isUsingCloudSync: vi.fn().mockReturnValue(true),
+    getStorageMode: vi.fn().mockReturnValue('cloud'),
+  };
+});
+
 // Mock errors module
 vi.mock('@/lib/errors', () => ({
   logError: vi.fn((context, error) => {

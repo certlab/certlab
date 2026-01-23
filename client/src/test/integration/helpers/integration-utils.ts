@@ -10,10 +10,15 @@ import type { MockFirebaseUser } from '../mocks/firebase-mock';
 
 /**
  * Reset all integration test mocks to initial state
+ * Ensures categories collection always exists for health checks
  */
 export function resetIntegrationMocks(): void {
   firebaseMock.reset();
   firestoreMock.reset();
+
+  // Ensure Firestore is initialized after reset
+  // This prevents connection check timeouts
+  firestoreMock.isFirestoreInitialized(); // Call to ensure mock is ready
 }
 
 /**

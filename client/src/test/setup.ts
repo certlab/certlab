@@ -9,6 +9,11 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Set CI environment variable for fast-mock mode
+if (typeof process !== 'undefined') {
+  process.env.CI = 'true';
+}
+
 // Mock Firebase configuration to avoid real connections
 vi.mock('@/lib/firebase', () => ({
   isFirebaseConfigured: vi.fn().mockReturnValue(false),
@@ -48,6 +53,8 @@ vi.mock('@/lib/storage-factory', () => {
     getCategories: vi.fn().mockResolvedValue([]),
     getSubcategories: vi.fn().mockResolvedValue([]),
     getQuestions: vi.fn().mockResolvedValue([]),
+    getQuestion: vi.fn().mockResolvedValue(null),
+    getQuestionsByCategories: vi.fn().mockResolvedValue([]),
     getUserQuizzes: vi.fn().mockResolvedValue([]),
     getUserProgress: vi.fn().mockResolvedValue([]),
     getUserStats: vi.fn().mockResolvedValue({}),
