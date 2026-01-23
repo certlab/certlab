@@ -945,9 +945,19 @@ class FirestoreStorage implements IClientStorage {
 
   async getUserQuizzes(userId: string, tenantId?: number): Promise<Quiz[]> {
     try {
-      const quizzes = await getUserDocuments<Quiz>(userId, 'quizzes');
-      const filtered = tenantId ? quizzes.filter((q) => q.tenantId === tenantId) : quizzes;
-      return filtered.map((q) => convertTimestamps<Quiz>(q));
+      // Add limit and orderBy for better performance
+      const constraints = [
+        orderBy('createdAt', 'desc'),
+        limit(500), // Safety limit - most users won't have more than 500 quizzes
+      ];
+
+      // If tenantId provided, filter on server
+      if (tenantId) {
+        constraints.unshift(where('tenantId', '==', tenantId));
+      }
+
+      const quizzes = await getUserDocuments<Quiz>(userId, 'quizzes', constraints);
+      return quizzes.map((q) => convertTimestamps<Quiz>(q));
     } catch (error) {
       logError('getUserQuizzes', error, { userId, tenantId });
       return [];
@@ -1293,9 +1303,19 @@ class FirestoreStorage implements IClientStorage {
    */
   async getUserQuizTemplates(userId: string, tenantId?: number): Promise<QuizTemplate[]> {
     try {
-      const templates = await getUserDocuments<QuizTemplate>(userId, 'quizTemplates');
-      const filtered = tenantId ? templates.filter((t) => t.tenantId === tenantId) : templates;
-      return filtered.map((t) => convertTimestamps(t));
+      // Add limit and orderBy for better performance
+      const constraints = [
+        orderBy('createdAt', 'desc'),
+        limit(200), // Safety limit - typical users won't have 200+ templates
+      ];
+
+      // If tenantId provided, filter on server
+      if (tenantId) {
+        constraints.unshift(where('tenantId', '==', tenantId));
+      }
+
+      const templates = await getUserDocuments<QuizTemplate>(userId, 'quizTemplates', constraints);
+      return templates.map((t) => convertTimestamps(t));
     } catch (error) {
       logError('getUserQuizTemplates', error, { userId, tenantId });
       return [];
@@ -2828,7 +2848,10 @@ class FirestoreStorage implements IClientStorage {
    */
   async getUserQuestProgress(userId: string, tenantId: number): Promise<UserQuestProgress[]> {
     try {
-      const progressList = await getUserDocuments<UserQuestProgress>(userId, 'questProgress');
+      // Add limit to prevent excessive reads
+      const progressList = await getUserDocuments<UserQuestProgress>(userId, 'questProgress', [
+        limit(100), // Safety limit - unlikely to have more than 100 active quest progresses
+      ]);
       return progressList.map((progress) => convertTimestamps(progress));
     } catch (error) {
       logError('getUserQuestProgress', error);
