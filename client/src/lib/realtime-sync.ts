@@ -22,6 +22,7 @@ import {
   query,
   where,
   orderBy as firestoreOrderBy,
+  limit as firestoreLimit,
   type Unsubscribe,
   type DocumentSnapshot,
   type QuerySnapshot,
@@ -81,6 +82,15 @@ class RealtimeSyncManager {
     string,
     Array<{ operation: string; data: any; timestamp: Date }>
   >();
+  private subscriptionCounter = 0;
+
+  /**
+   * Generate a unique subscription ID
+   */
+  private generateSubscriptionId(prefix: string): string {
+    this.subscriptionCounter++;
+    return `${prefix}:${Date.now()}:${this.subscriptionCounter}`;
+  }
 
   /**
    * Subscribe to a single document
@@ -93,7 +103,7 @@ class RealtimeSyncManager {
     try {
       const db = getFirestore();
       const docRef = doc(db, path);
-      const subscriptionId = `doc:${path}:${Date.now()}`;
+      const subscriptionId = this.generateSubscriptionId(`doc:${path}`);
 
       const unsubscribe = onSnapshot(
         docRef,
@@ -158,7 +168,12 @@ class RealtimeSyncManager {
         );
       }
 
-      const subscriptionId = `col:${collectionPath}:${Date.now()}`;
+      // Apply limit
+      if (options.limit) {
+        collectionRef = query(collectionRef, firestoreLimit(options.limit));
+      }
+
+      const subscriptionId = this.generateSubscriptionId(`col:${collectionPath}`);
 
       const unsubscribe = onSnapshot(
         collectionRef,
@@ -270,6 +285,9 @@ class RealtimeSyncManager {
 
         switch (op.type) {
           case 'set':
+            if (!op.data) {
+              throw new Error(`data is required for 'set' operation on path: ${op.path}`);
+            }
             batch.set(
               docRef,
               { ...op.data, updatedAt: serverTimestamp() },
@@ -277,6 +295,9 @@ class RealtimeSyncManager {
             );
             break;
           case 'update':
+            if (!op.data) {
+              throw new Error(`data is required for 'update' operation on path: ${op.path}`);
+            }
             batch.update(docRef, { ...op.data, updatedAt: serverTimestamp() });
             break;
           case 'delete':

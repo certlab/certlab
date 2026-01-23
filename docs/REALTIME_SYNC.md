@@ -280,13 +280,27 @@ await updateWithVersionCheck(docPath, updates, 5);
 **Solution:** Real-time listeners detect deletion
 
 ```typescript
-useRealtimeDocument(docPath, (data, metadata) => {
-  if (metadata.isDeleted) {
-    // Show "Document was deleted" message
-    // Disable editing
-    // Option to restore if soft-deleted
-  }
-});
+import { useEffect } from 'react';
+import { realtimeSyncManager } from '@/lib/realtime-sync';
+
+function useDocumentDeletionWatcher(docPath: string) {
+  useEffect(() => {
+    const subId = realtimeSyncManager.subscribeToDocument(
+      docPath,
+      (data, metadata) => {
+        if (metadata.isDeleted) {
+          // Show "Document was deleted" message
+          // Disable editing
+          // Option to restore if soft-deleted
+        }
+      }
+    );
+
+    return () => {
+      realtimeSyncManager.unsubscribe(subId);
+    };
+  }, [docPath]);
+}
 ```
 
 ### 3. Network Interruption

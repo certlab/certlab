@@ -34,12 +34,10 @@ vi.mock('firebase/firestore', () => {
     orderBy: vi.fn((field, direction) => ({ type: 'orderBy', field, direction })),
     onSnapshot: vi.fn((ref, optionsOrCallback, callbackOrError, errorCallback) => {
       let callback: any;
-      let options: any = {};
 
       if (typeof optionsOrCallback === 'function') {
         callback = optionsOrCallback;
       } else {
-        options = optionsOrCallback;
         callback = callbackOrError;
       }
 
@@ -339,8 +337,8 @@ describe('Real-Time Sync Integration Tests', () => {
 
     it('should handle subscription cleanup properly', () => {
       const sub1 = realtimeSyncManager.subscribeToDocument('quizzes/1', vi.fn());
-      const sub2 = realtimeSyncManager.subscribeToDocument('quizzes/2', vi.fn());
-      const sub3 = realtimeSyncManager.subscribeToCollection('users', vi.fn());
+      realtimeSyncManager.subscribeToDocument('quizzes/2', vi.fn());
+      realtimeSyncManager.subscribeToCollection('users', vi.fn());
 
       expect(realtimeSyncManager.getActiveSubscriptionCount()).toBe(3);
 
@@ -354,8 +352,6 @@ describe('Real-Time Sync Integration Tests', () => {
     it('should prevent data loss during network interruption', async () => {
       // This test simulates that operations are queued when network fails
       // and successfully processed when network recovers
-
-      const operations: any[] = [];
 
       // Record all operations
       realtimeSyncManager.recordOperation('quizzes/123', 'update', {

@@ -51,16 +51,11 @@ vi.mock('firebase/firestore', () => {
     onSnapshot: vi.fn((ref, optionsOrCallback, callbackOrError, errorCallback) => {
       // Handle different call signatures
       let callback: any;
-      let options: any = {};
-      let onError: any;
 
       if (typeof optionsOrCallback === 'function') {
         callback = optionsOrCallback;
-        onError = callbackOrError;
       } else {
-        options = optionsOrCallback;
         callback = callbackOrError;
-        onError = errorCallback;
       }
 
       // Simulate successful snapshot after a short delay
@@ -147,7 +142,7 @@ describe('RealtimeSyncManager', () => {
         callback as DocumentChangeCallback
       );
 
-      expect(subscriptionId).toMatch(/^doc:users\/123:\d+$/);
+      expect(subscriptionId).toMatch(/^doc:users\/123:\d+:\d+$/);
 
       // Wait for async callback
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -234,7 +229,7 @@ describe('RealtimeSyncManager', () => {
         callback as CollectionChangeCallback
       );
 
-      expect(subscriptionId).toMatch(/^col:users:\d+$/);
+      expect(subscriptionId).toMatch(/^col:users:\d+:\d+$/);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -252,8 +247,7 @@ describe('RealtimeSyncManager', () => {
     });
 
     it('should support collection filters', async () => {
-      const { query, where } = await import('firebase/firestore');
-      const mockQuery = query as unknown as ReturnType<typeof vi.fn>;
+      const { where } = await import('firebase/firestore');
       const mockWhere = where as unknown as ReturnType<typeof vi.fn>;
 
       const callback = vi.fn();
@@ -269,7 +263,7 @@ describe('RealtimeSyncManager', () => {
     });
 
     it('should support collection ordering', async () => {
-      const { query, orderBy } = await import('firebase/firestore');
+      const { orderBy } = await import('firebase/firestore');
       const mockOrderBy = orderBy as unknown as ReturnType<typeof vi.fn>;
 
       const callback = vi.fn();

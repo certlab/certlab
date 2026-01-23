@@ -7,7 +7,7 @@
  * @module useRealtimeSync
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   realtimeSyncManager,
   type DocumentChangeCallback,
