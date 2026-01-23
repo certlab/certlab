@@ -68,8 +68,8 @@ describe('createFirestoreStorageWithQueue', () => {
       const result = await queuedStorage.createQuiz({ name: 'Test Quiz' } as any);
 
       // Should return optimistic result
-      expect(result._queued).toBe(true);
-      expect(result._queueId).toBeTruthy();
+      expect((result as any)._queued).toBe(true);
+      expect((result as any)._queueId).toBeTruthy();
 
       // Should have queued the operation
       const state = offlineQueue.getState();
@@ -82,7 +82,7 @@ describe('createFirestoreStorageWithQueue', () => {
 
       const result = await queuedStorage.updateQuiz(123, { name: 'Updated' } as any);
 
-      expect(result._queued).toBe(true);
+      expect((result as any)._queued).toBe(true);
 
       const state = offlineQueue.getState();
       expect(state.total).toBe(1);
@@ -93,7 +93,7 @@ describe('createFirestoreStorageWithQueue', () => {
 
       const result = await queuedStorage.deleteQuestion(456);
 
-      expect(result._queued).toBe(true);
+      expect((result as any)._queued).toBe(true);
 
       const state = offlineQueue.getState();
       expect(state.total).toBe(1);
@@ -109,7 +109,7 @@ describe('createFirestoreStorageWithQueue', () => {
 
       const result = await queuedStorage.createQuiz({ name: 'Test Quiz' } as any);
 
-      expect(result._queued).toBe(true);
+      expect((result as any)._queued).toBe(true);
 
       const state = offlineQueue.getState();
       expect(state.total).toBe(1);
@@ -142,10 +142,10 @@ describe('createFirestoreStorageWithQueue', () => {
         userId: 'user123',
       } as any);
 
-      expect(result.name).toBe('Test Quiz');
-      expect(result.userId).toBe('user123');
-      expect(result.id).toBeTruthy(); // Should have temporary ID
-      expect(result._queued).toBe(true);
+      expect((result as any).name).toBe('Test Quiz');
+      expect((result as any).userId).toBe('user123');
+      expect((result as any).id).toBeTruthy(); // Should have temporary ID
+      expect((result as any)._queued).toBe(true);
     });
 
     it('should use provided ID if available', async () => {
@@ -156,8 +156,8 @@ describe('createFirestoreStorageWithQueue', () => {
         name: 'Test Quiz',
       } as any);
 
-      expect(result.id).toBe('my-custom-id');
-      expect(result._queued).toBe(true);
+      expect((result as any).id).toBe('my-custom-id');
+      expect((result as any)._queued).toBe(true);
     });
 
     it('should return optimistic result for update operations', async () => {
@@ -167,9 +167,12 @@ describe('createFirestoreStorageWithQueue', () => {
         name: 'Updated Name',
       } as any);
 
-      expect(result.id).toBe(123);
-      expect(result.name).toBe('Updated Name');
-      expect(result._queued).toBe(true);
+      // Should have the ID and updates
+      expect((result as any).id).toBe(123);
+      expect((result as any).name).toBe('Updated Name');
+
+      // Should be marked as queued
+      expect((result as any)._queued).toBe(true);
     });
   });
 
@@ -193,7 +196,7 @@ describe('createFirestoreStorageWithQueue', () => {
       // First call fails and queues
       vi.mocked(mockStorage.createQuiz!)
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({ id: '123', name: 'Test Quiz' });
+        .mockResolvedValueOnce({ id: 123, name: 'Test Quiz' } as any);
 
       await queuedStorage.createQuiz({ name: 'Test Quiz' } as any);
 
