@@ -273,7 +273,7 @@
       ]
     },
     {
-      "collectionGroup": "quizTemplates",
+      "collectionGroup": "quests",
       "queryScope": "COLLECTION",
       "fields": [
         {
@@ -287,7 +287,7 @@
       ]
     },
     {
-      "collectionGroup": "entries",
+      "collectionGroup": "quizTemplates",
       "queryScope": "COLLECTION",
       "fields": [
         {
