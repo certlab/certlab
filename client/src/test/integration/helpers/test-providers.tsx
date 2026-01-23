@@ -72,9 +72,11 @@ vi.mock('@/lib/storage-factory', () => {
           .map((doc) => ({ ...doc.data, id: Number(doc.id) }))
           .filter((q) => {
             const matchesCategory = categoryIds.includes(q.categoryId);
-            const matchesSubcategory = !subcategoryIds || subcategoryIds.includes(q.subcategoryId);
+            const matchesSubcategory =
+              !subcategoryIds || (q.subcategoryId && subcategoryIds.includes(q.subcategoryId));
             const matchesDifficulty =
-              !difficultyLevels || difficultyLevels.includes(q.difficultyLevel || 1);
+              !difficultyLevels ||
+              (q.difficultyLevel !== null && difficultyLevels.includes(q.difficultyLevel));
             const matchesTenant = !tenantId || q.tenantId === tenantId;
             return matchesCategory && matchesSubcategory && matchesDifficulty && matchesTenant;
           });
