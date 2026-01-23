@@ -9,9 +9,21 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
-// Set CI environment variable for fast-mock mode in most tests
-// Tests that need to test non-CI behavior should delete/override process.env.CI in their beforeEach
-// Example: delete process.env.CI; (see useFirestoreConnection.test.ts)
+// Set CI environment variable for fast-mock mode in tests
+// This enables CI fast-mock mode by default to speed up test execution
+//
+// IMPORTANT: Tests that need to verify non-CI behavior (e.g. real connection logic)
+// MUST override this in their beforeEach:
+//   beforeEach(() => {
+//     const originalCI = process.env.CI;
+//     delete process.env.CI;
+//     // ... test code ...
+//     afterEach(() => {
+//       if (originalCI !== undefined) process.env.CI = originalCI;
+//     });
+//   })
+//
+// See useFirestoreConnection.test.ts for an example of properly handling CI mode overrides
 if (typeof process !== 'undefined') {
   process.env.CI = 'true';
 }

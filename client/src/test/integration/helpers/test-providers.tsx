@@ -32,7 +32,8 @@ vi.mock('@/lib/storage-factory', () => {
     }),
     updateUser: vi.fn(async (userId: string, updates: any) => {
       await firestoreMock.updateDocument('users', userId, updates);
-      return updates;
+      const updatedDoc = await firestoreMock.getDocument('users', userId);
+      return updatedDoc?.data || null;
     }),
     setCurrentUserId: vi.fn(async (userId: string) => {
       firestoreMock.setCurrentUserId(userId);
@@ -45,19 +46,19 @@ vi.mock('@/lib/storage-factory', () => {
     }),
     getCategories: vi.fn(async () => {
       const docs = await firestoreMock.getDocuments('categories');
-      return docs.map((doc) => ({ id: Number(doc.id), ...doc.data }));
+      return docs.map((doc) => ({ ...doc.data, id: Number(doc.id) }));
     }),
     getSubcategories: vi.fn(async () => {
       const docs = await firestoreMock.getDocuments('subcategories');
-      return docs.map((doc) => ({ id: Number(doc.id), ...doc.data }));
+      return docs.map((doc) => ({ ...doc.data, id: Number(doc.id) }));
     }),
     getQuestions: vi.fn(async () => {
       const docs = await firestoreMock.getDocuments('questions');
-      return docs.map((doc) => ({ id: Number(doc.id), ...doc.data }));
+      return docs.map((doc) => ({ ...doc.data, id: Number(doc.id) }));
     }),
     getQuestion: vi.fn(async (questionId: number) => {
       const doc = await firestoreMock.getDocument('questions', questionId.toString());
-      return doc ? { id: Number(doc.id), ...doc.data } : null;
+      return doc ? { ...doc.data, id: Number(doc.id) } : null;
     }),
     getQuestionsByCategories: vi.fn(
       async (
@@ -68,7 +69,7 @@ vi.mock('@/lib/storage-factory', () => {
       ) => {
         const docs = await firestoreMock.getDocuments('questions');
         return docs
-          .map((doc) => ({ id: Number(doc.id), ...doc.data }))
+          .map((doc) => ({ ...doc.data, id: Number(doc.id) }))
           .filter((q) => {
             const matchesCategory = categoryIds.includes(q.categoryId);
             const matchesSubcategory = !subcategoryIds || subcategoryIds.includes(q.subcategoryId);
@@ -81,17 +82,17 @@ vi.mock('@/lib/storage-factory', () => {
     ),
     getUserQuizzes: vi.fn(async (userId: string) => {
       const docs = await firestoreMock.getSubcollectionDocuments('users', userId, 'quizzes');
-      return docs.map((doc) => ({ id: Number(doc.id), ...doc.data }));
+      return docs.map((doc) => ({ ...doc.data, id: Number(doc.id) }));
     }),
     getUserProgress: vi.fn(async (userId: string) => {
       const docs = await firestoreMock.getSubcollectionDocuments('users', userId, 'progress');
-      return docs.map((doc) => ({ id: Number(doc.id), ...doc.data }));
+      return docs.map((doc) => ({ ...doc.data, id: Number(doc.id) }));
     }),
     getUserStats: vi.fn().mockResolvedValue({}),
     getUserMasteryScores: vi.fn().mockResolvedValue([]),
     getBadges: vi.fn(async () => {
       const docs = await firestoreMock.getDocuments('badges');
-      return docs.map((doc) => ({ id: Number(doc.id), ...doc.data }));
+      return docs.map((doc) => ({ ...doc.data, id: Number(doc.id) }));
     }),
     getUserBadges: vi.fn().mockResolvedValue([]),
     getUserGameStats: vi.fn().mockResolvedValue(null),

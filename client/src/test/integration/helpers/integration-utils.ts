@@ -18,7 +18,7 @@ export function resetIntegrationMocks(): void {
 
   // Ensure Firestore is initialized after reset
   // This prevents connection check timeouts
-  firestoreMock.isFirestoreInitialized(); // Call to ensure mock is ready
+  // Note: reset() already sets isInitialized = true and seeds default data
 }
 
 /**

@@ -276,11 +276,12 @@ class FirestoreMockService {
    */
   reset(): void {
     this.collections.clear();
-    this.isInitialized = false;
     this.currentUserId = null;
 
     // After reset, ensure default categories exist for health checks
     this.seedDefaultCategories();
+    // Mark as initialized to keep state consistent with seeded data
+    this.isInitialized = true;
   }
 
   /**

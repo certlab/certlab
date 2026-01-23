@@ -94,7 +94,7 @@ export function useFirestoreConnection(): FirestoreConnectionState {
 
   // CI Fast-Mock Mode: Skip real connection checks in CI environments
   // This prevents timeouts and speeds up test execution
-  const isCIEnvironment = typeof process !== 'undefined' && process.env?.CI === 'true';
+  const isCIEnvironment = isCIMode();
 
   const [status, setStatus] = useState<FirestoreConnectionStatus>(
     isCIEnvironment && isCloudSyncEnabled ? 'connected' : 'disabled'
@@ -255,7 +255,7 @@ export function useFirestoreConnection(): FirestoreConnectionState {
     } finally {
       setIsSyncing(false);
     }
-  }, [isCloudSyncEnabled, isCIEnvironment]);
+  }, [isCloudSyncEnabled]);
 
   /**
    * Set up browser online/offline event listeners

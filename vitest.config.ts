@@ -19,11 +19,10 @@ export default defineConfig({
     testTimeout: 10000,
     hookTimeout: 10000,
     teardownTimeout: 5000,
-    // Enable file parallelism for faster test execution in CI
+    // Disable file parallelism to prevent race conditions with shared mocks
+    // Integration tests use singleton firestoreMock which cannot safely run in parallel
     // Tests within a file still run sequentially for predictability
-    fileParallelism: true,
-    // Limit max concurrency to avoid overwhelming CI resources
-    maxConcurrency: 4,
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
