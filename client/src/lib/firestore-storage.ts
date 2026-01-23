@@ -56,6 +56,7 @@ import {
   getDocs,
   query,
   limit,
+  type QueryConstraint,
 } from 'firebase/firestore';
 import { logError, logInfo } from './errors';
 import { deleteDoc } from 'firebase/firestore';
@@ -946,7 +947,7 @@ class FirestoreStorage implements IClientStorage {
   async getUserQuizzes(userId: string, tenantId?: number): Promise<Quiz[]> {
     try {
       // Add orderBy for better performance
-      const constraints = [orderBy('createdAt', 'desc')];
+      const constraints: QueryConstraint[] = [orderBy('createdAt', 'desc')];
 
       // If tenantId provided (including 0), filter on server
       if (tenantId !== undefined && tenantId !== null) {
@@ -1301,7 +1302,7 @@ class FirestoreStorage implements IClientStorage {
   async getUserQuizTemplates(userId: string, tenantId?: number): Promise<QuizTemplate[]> {
     try {
       // Add orderBy for better performance
-      const constraints = [orderBy('createdAt', 'desc')];
+      const constraints: QueryConstraint[] = [orderBy('createdAt', 'desc')];
 
       // If tenantId provided (including 0), filter on server
       if (tenantId !== undefined && tenantId !== null) {
