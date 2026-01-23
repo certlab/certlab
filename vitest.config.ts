@@ -19,7 +19,11 @@ export default defineConfig({
     testTimeout: 10000,
     hookTimeout: 10000,
     teardownTimeout: 5000,
-    fileParallelism: false,
+    // Enable file parallelism for faster test execution in CI
+    // Tests within a file still run sequentially for predictability
+    fileParallelism: true,
+    // Limit max concurrency to avoid overwhelming CI resources
+    maxConcurrency: 4,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
