@@ -32,45 +32,38 @@ export function QuizEditorWithConflictResolution({
   const { toast } = useToast();
 
   // Initialize conflict resolution hook
-  const {
-    hasConflict,
-    conflict,
-    showDialog,
-    handleConflict,
-    resolveManually,
-    cancelResolution,
-    closeDialog,
-  } = useConflictResolution({
-    onResolved: async (result) => {
-      // Save the merged data after conflict resolution
-      try {
-        const merged = result.mergedData as Quiz;
-        await storage.updateQuiz(parseInt(quizId), merged);
-        setQuiz(merged);
-        setLocalChanges({});
+  const { conflict, showDialog, handleConflict, resolveManually, cancelResolution, closeDialog } =
+    useConflictResolution({
+      onResolved: async (result) => {
+        // Save the merged data after conflict resolution
+        try {
+          const merged = result.mergedData as Quiz;
+          await storage.updateQuiz(parseInt(quizId), merged);
+          setQuiz(merged);
+          setLocalChanges({});
 
-        toast({
-          title: 'Changes Saved',
-          description: 'Quiz updated successfully after resolving conflict.',
-        });
+          toast({
+            title: 'Changes Saved',
+            description: 'Quiz updated successfully after resolving conflict.',
+          });
 
-        onSaved?.(merged);
-      } catch (error) {
+          onSaved?.(merged);
+        } catch (error) {
+          toast({
+            title: 'Save Failed',
+            description: error instanceof Error ? error.message : 'Unknown error',
+            variant: 'destructive',
+          });
+        }
+      },
+      onError: (error) => {
         toast({
-          title: 'Save Failed',
-          description: error instanceof Error ? error.message : 'Unknown error',
+          title: 'Conflict Resolution Failed',
+          description: error.message,
           variant: 'destructive',
         });
-      }
-    },
-    onError: (error) => {
-      toast({
-        title: 'Conflict Resolution Failed',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
+      },
+    });
 
   // Load quiz
   useEffect(() => {
@@ -123,7 +116,6 @@ export function QuizEditorWithConflictResolution({
         },
         {
           strategy: 'auto-merge',
-          expectedVersion: quiz.version,
           trackPresence: true,
           maxRetries: 3,
         }
@@ -252,10 +244,9 @@ export function QuizEditorWithConflictResolution({
         )}
       </div>
 
-      {/* Version Info */}
+      {/* Last updated info */}
       <div className="text-xs text-muted-foreground">
-        Version: {quiz.version ?? 0} | Last updated:{' '}
-        {quiz.updatedAt ? new Date(quiz.updatedAt).toLocaleString() : 'Never'}
+        Last updated: {quiz.updatedAt ? new Date(quiz.updatedAt).toLocaleString() : 'Never'}
       </div>
 
       {/* Conflict Resolution Dialog */}

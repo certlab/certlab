@@ -4,7 +4,7 @@
  * Tests for conflict detection, resolution strategies, and merge logic
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   detectConflicts,
   autoMerge,
@@ -448,7 +448,6 @@ describe('Conflict Resolution', () => {
 
     it('should handle network delay causing version mismatch', async () => {
       const v1 = { title: 'Version 1', version: 1, updatedAt: new Date('2024-01-01') };
-      const v2 = { title: 'Version 2', version: 2, updatedAt: new Date('2024-01-02') };
       const v3 = { title: 'Version 3', version: 3, updatedAt: new Date('2024-01-03') };
 
       // User edits based on v1, but v3 is already on server
@@ -518,8 +517,8 @@ describe('Conflict Resolution', () => {
 
   describe('Edge Cases', () => {
     it('should handle null values', () => {
-      const local = { title: 'Title', description: null };
-      const remote = { title: 'Title', description: 'Description' };
+      const local = { title: 'Title', description: null as string | null };
+      const remote = { title: 'Title', description: 'Description' as string | null };
 
       const conflicts = detectConflicts(local, remote);
       expect(conflicts).toContain('description');

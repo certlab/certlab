@@ -49,15 +49,29 @@ export function useConflictResolution(options: UseConflictResolutionOptions = {}
       userId: string,
       baseVersion: any = null
     ) => {
+      // Import detectConflicts to compute conflicting fields
+      const conflictResolution = await import('@/lib/conflict-resolution');
+
+      const conflictingFields = conflictResolution.detectConflicts(localVersion, remoteVersion);
+
       const conflict: DocumentConflict = {
         documentType,
         documentId,
         localVersion,
         remoteVersion,
         baseVersion,
-        localTimestamp: localVersion.updatedAt || new Date(),
-        remoteTimestamp: remoteVersion.updatedAt || new Date(),
-        conflictingFields: [], // Will be detected during resolution
+        // Normalize timestamps to Date objects
+        localTimestamp: localVersion.updatedAt
+          ? localVersion.updatedAt instanceof Date
+            ? localVersion.updatedAt
+            : new Date(localVersion.updatedAt)
+          : new Date(),
+        remoteTimestamp: remoteVersion.updatedAt
+          ? remoteVersion.updatedAt instanceof Date
+            ? remoteVersion.updatedAt
+            : new Date(remoteVersion.updatedAt)
+          : new Date(),
+        conflictingFields,
         userId,
       };
 
@@ -72,9 +86,10 @@ export function useConflictResolution(options: UseConflictResolutionOptions = {}
       setState((prev) => ({ ...prev, isResolving: true }));
 
       try {
-        const result = await resolveConflict(conflict, {
-          strategy: options.strategy,
-        });
+        const result = await resolveConflict(
+          conflict,
+          options.strategy !== undefined ? { strategy: options.strategy } : undefined
+        );
 
         if (result.resolved && !result.requiresUserInput) {
           // Automatic resolution succeeded
@@ -149,7 +164,7 @@ export function useConflictResolution(options: UseConflictResolutionOptions = {}
       const result: ConflictResolutionResult = {
         resolved: true,
         mergedData: resultData,
-        strategy: resolution === 'manual' ? 'manual' : 'first-write-wins',
+        strategy: 'manual',
         requiresUserInput: false,
       };
 

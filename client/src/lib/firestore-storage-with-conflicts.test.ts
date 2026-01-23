@@ -108,7 +108,7 @@ describe('Conflict-Aware Firestore Storage', () => {
         .mockResolvedValueOnce({ title: 'Updated Quiz', version: 1 })
         .mockResolvedValueOnce({ title: 'Updated Quiz', version: 2 });
 
-      const result = await updateWithConflictResolution(
+      await updateWithConflictResolution(
         'quiz',
         '123',
         { title: 'Updated Quiz' },

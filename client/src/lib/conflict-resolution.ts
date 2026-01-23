@@ -14,7 +14,8 @@
  */
 
 import { ConflictError } from './errors';
-import { getDocumentLock, updateDocumentVersion, type DocumentLock } from './collaborative-editing';
+import { getDocumentLock, updateDocumentVersion } from './collaborative-editing';
+import type { DocumentLock } from '@shared/schema';
 
 /**
  * Shared document types for conflict resolution
@@ -146,9 +147,9 @@ export function detectConflicts<T extends Record<string, any>>(
 }
 
 /**
- * Deep equality check for values
+ * Deep equality check for values with cycle detection
  */
-function deepEqual(a: any, b: any): boolean {
+function deepEqual(a: any, b: any, visited: WeakSet<object> = new WeakSet()): boolean {
   if (a === b) return true;
 
   if (a == null || b == null) return a === b;
@@ -161,16 +162,27 @@ function deepEqual(a: any, b: any): boolean {
 
   if (Array.isArray(a) && Array.isArray(b)) {
     if (a.length !== b.length) return false;
-    return a.every((val, idx) => deepEqual(val, b[idx]));
+    return a.every((val, idx) => deepEqual(val, b[idx], visited));
   }
 
   if (typeof a === 'object' && typeof b === 'object') {
+    // Check for circular references
+    if (visited.has(a) || visited.has(b)) {
+      // If we've seen these objects before, consider them equal
+      // (we can't compare them further without infinite recursion)
+      return true;
+    }
+
+    // Mark these objects as visited
+    visited.add(a);
+    visited.add(b);
+
     const keysA = Object.keys(a);
     const keysB = Object.keys(b);
 
     if (keysA.length !== keysB.length) return false;
 
-    return keysA.every((key) => deepEqual(a[key], b[key]));
+    return keysA.every((key) => deepEqual(a[key], b[key], visited));
   }
 
   return false;
@@ -212,18 +224,18 @@ export function autoMerge<T extends Record<string, any>>(
   }
 
   // All conflicts are auto-mergeable
-  const merged = { ...remote };
+  const merged: any = { ...remote };
 
   for (const field of conflicts) {
     if (autoMergeFields.includes(field)) {
       // Use three-way merge if base version exists
       if (base && base[field] !== undefined) {
         // If local changed but remote didn't, use local
-        if (local[field] !== base[field] && remote[field] === base[field]) {
+        if (!deepEqual(local[field], base[field]) && deepEqual(remote[field], base[field])) {
           merged[field] = local[field];
         }
         // If remote changed but local didn't, use remote (already set)
-        else if (remote[field] !== base[field] && local[field] === base[field]) {
+        else if (!deepEqual(remote[field], base[field]) && deepEqual(local[field], base[field])) {
           // Already using remote value
         }
         // Both changed - use timestamp-based resolution
@@ -394,6 +406,7 @@ export async function resolveConflict<T extends Record<string, any>>(
 
 /**
  * Check for version conflicts and resolve if possible
+ * Note: Only supports document types that have version tracking in collaborative-editing
  */
 export async function checkAndResolveVersionConflict<T extends Record<string, any>>(
   documentType: ConflictDocumentType,
@@ -403,6 +416,22 @@ export async function checkAndResolveVersionConflict<T extends Record<string, an
   userId: string
 ): Promise<ConflictResolutionResult<T>> {
   try {
+    // Type guard: only quiz, quizTemplate, lecture, material support versioning
+    if (
+      documentType !== 'quiz' &&
+      documentType !== 'quizTemplate' &&
+      documentType !== 'lecture' &&
+      documentType !== 'material'
+    ) {
+      // For other document types, skip version checking
+      return {
+        resolved: true,
+        mergedData: localData,
+        strategy: 'version-based',
+        requiresUserInput: false,
+      };
+    }
+
     // Get current document lock
     const lock = await getDocumentLock(documentType, documentId, userId);
 
@@ -438,15 +467,32 @@ export async function checkAndResolveVersionConflict<T extends Record<string, an
 }
 
 /**
- * Apply resolved changes and update document version
+ * Update document version after successful conflict resolution.
+ *
+ * Note: The caller is responsible for persisting any merged document data
+ * to storage before or after invoking this function.
+ * Only supports document types with version tracking (quiz, quizTemplate, lecture, material).
  */
-export async function applyResolvedChanges<T extends Record<string, any>>(
+export async function applyResolvedChanges(
   documentType: ConflictDocumentType,
   documentId: string,
-  mergedData: T,
   userId: string,
   expectedVersion?: number
 ): Promise<{ success: boolean; newVersion: number }> {
+  // Type guard: only quiz, quizTemplate, lecture, material support versioning
+  if (
+    documentType !== 'quiz' &&
+    documentType !== 'quizTemplate' &&
+    documentType !== 'lecture' &&
+    documentType !== 'material'
+  ) {
+    // For other document types, return success with no version change
+    return {
+      success: true,
+      newVersion: 0,
+    };
+  }
+
   const result = await updateDocumentVersion(documentType, documentId, userId, expectedVersion);
 
   if (!result.success) {

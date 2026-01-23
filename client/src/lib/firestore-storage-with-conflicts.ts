@@ -9,12 +9,10 @@
 
 import { ConflictError } from './errors';
 import {
-  resolveConflict,
-  checkAndResolveVersionConflict,
-  applyResolvedChanges,
   type DocumentConflict,
   type ConflictResolutionResult,
   type ConflictStrategy,
+  type ConflictDocumentType,
 } from './conflict-resolution';
 import {
   getDocumentLock,
@@ -43,7 +41,7 @@ export interface UpdateWithConflictResult<T> {
  * Perform a version-aware update with conflict detection and resolution
  */
 export async function updateWithConflictResolution<T extends Record<string, any>>(
-  documentType: 'quiz' | 'quizTemplate' | 'lecture' | 'material',
+  documentType: ConflictDocumentType,
   documentId: string,
   localData: T,
   userId: string,
@@ -60,8 +58,14 @@ export async function updateWithConflictResolution<T extends Record<string, any>
   let retryCount = 0;
   let lastError: Error | undefined;
 
-  // Set presence if tracking is enabled
-  if (trackPresence) {
+  // Set presence if tracking is enabled (only for supported document types)
+  if (
+    trackPresence &&
+    (documentType === 'quiz' ||
+      documentType === 'quizTemplate' ||
+      documentType === 'lecture' ||
+      documentType === 'material')
+  ) {
     try {
       await setEditorPresence(userId, 'User', documentType, documentId);
     } catch (error) {
@@ -70,127 +74,186 @@ export async function updateWithConflictResolution<T extends Record<string, any>
     }
   }
 
-  while (retryCount < maxRetries) {
-    try {
-      // Get current document lock
-      const lock = await getDocumentLock(documentType, documentId, userId);
+  try {
+    while (retryCount < maxRetries) {
+      try {
+        // For document types that support versioning
+        const supportsVersioning =
+          documentType === 'quiz' ||
+          documentType === 'quizTemplate' ||
+          documentType === 'lecture' ||
+          documentType === 'material';
 
-      // Check for version conflict
-      if (expectedVersion !== undefined && lock.version !== expectedVersion) {
-        // Version conflict detected
-        // The caller should fetch the remote document and trigger conflict resolution
-        // via the useConflictResolution hook or resolveConflict function
-        throw new ConflictError('Version conflict detected', {
-          documentType,
-          documentId,
-          expectedVersion,
-          currentVersion: lock.version,
-          userId,
-        });
-      }
+        let currentVersion = 0;
 
-      // Perform the update
-      const updatedData = await updateFn({
-        ...localData,
-        version: lock.version,
-      });
+        if (supportsVersioning) {
+          // Get current document lock
+          const lock = await getDocumentLock(documentType, documentId, userId);
+          currentVersion = lock.version;
 
-      // Update document version
-      const versionResult = await updateDocumentVersion(
-        documentType,
-        documentId,
-        userId,
-        lock.version
-      );
-
-      if (!versionResult.success) {
-        throw new ConflictError('Failed to update document version', {
-          documentType,
-          documentId,
-          expectedVersion: lock.version,
-          currentVersion: versionResult.currentVersion,
-          conflict: versionResult.conflict,
-        });
-      }
-
-      // Success!
-      logInfo('Document updated successfully', {
-        documentType,
-        documentId,
-        version: versionResult.currentVersion,
-      });
-
-      // Remove presence
-      if (trackPresence) {
-        try {
-          await removeEditorPresence(userId, documentType, documentId);
-        } catch (error) {
-          logError('removeEditorPresence', error, { userId, documentType, documentId });
+          // Check for version conflict BEFORE updating
+          if (expectedVersion !== undefined && lock.version !== expectedVersion) {
+            // Version conflict detected
+            // The caller should fetch the remote document and trigger conflict resolution
+            // via the useConflictResolution hook or resolveConflict function
+            throw new ConflictError('Version conflict detected', {
+              documentType,
+              documentId,
+              expectedVersion,
+              currentVersion: lock.version,
+              userId,
+            });
+          }
         }
-      }
 
-      return {
-        success: true,
-        data: {
-          ...updatedData,
-          version: versionResult.currentVersion,
-        } as T,
-      };
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error('Unknown error');
+        // Perform the update (version check passed)
+        const updatedData = await updateFn({
+          ...localData,
+          version: currentVersion,
+        });
 
-      if (error instanceof ConflictError) {
-        // Handle conflict based on strategy
-        const context = error.context;
+        if (supportsVersioning) {
+          // Update document version after successful data update
+          const versionResult = await updateDocumentVersion(
+            documentType,
+            documentId,
+            userId,
+            currentVersion
+          );
 
-        if (!context || retryCount >= maxRetries - 1) {
-          // Cannot retry or max retries reached
+          if (!versionResult.success) {
+            throw new ConflictError('Failed to update document version', {
+              documentType,
+              documentId,
+              expectedVersion: currentVersion,
+              currentVersion: versionResult.currentVersion,
+              conflict: versionResult.conflict,
+            });
+          }
+
+          currentVersion = versionResult.currentVersion;
+        }
+
+        // Success!
+        logInfo('Document updated successfully', {
+          documentType,
+          documentId,
+          version: currentVersion,
+        });
+
+        return {
+          success: true,
+          data: {
+            ...updatedData,
+            version: currentVersion,
+          } as T,
+        };
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+
+        if (error instanceof ConflictError) {
+          // Handle conflict based on strategy
+          const context = error.context;
+
+          if (!context || retryCount >= maxRetries - 1) {
+            // Cannot retry or max retries reached
+            // Try to construct a conflict object from error context
+            let conflict: DocumentConflict | undefined;
+            if (context && context.documentType && context.documentId) {
+              conflict = {
+                documentType: context.documentType as ConflictDocumentType,
+                documentId: String(context.documentId),
+                localVersion: localData,
+                remoteVersion: {}, // Caller should fetch remote version
+                baseVersion: null,
+                localTimestamp: new Date(),
+                remoteTimestamp: new Date(),
+                conflictingFields: [],
+                userId: String(context.userId || userId),
+              };
+            }
+
+            return {
+              success: false,
+              requiresUserInput: true,
+              conflict,
+              error: lastError,
+            };
+          }
+
+          // Try automatic resolution if strategy allows
+          if (strategy !== 'manual') {
+            logInfo('Attempting automatic conflict resolution', {
+              documentType,
+              documentId,
+              strategy,
+              retryCount,
+            });
+
+            retryCount++;
+            // Retry with exponential backoff (100ms, 200ms, 400ms, ...)
+            const baseDelayMs = 100;
+            const delayMs = Math.pow(2, retryCount - 1) * baseDelayMs;
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+            continue;
+          }
+
+          // Manual resolution required
+          let conflict: DocumentConflict | undefined;
+          if (context && context.documentType && context.documentId) {
+            conflict = {
+              documentType: context.documentType as ConflictDocumentType,
+              documentId: String(context.documentId),
+              localVersion: localData,
+              remoteVersion: {},
+              baseVersion: null,
+              localTimestamp: new Date(),
+              remoteTimestamp: new Date(),
+              conflictingFields: [],
+              userId: String(context.userId || userId),
+            };
+          }
+
           return {
             success: false,
             requiresUserInput: true,
+            conflict,
             error: lastError,
           };
         }
 
-        // Try automatic resolution if strategy allows
-        if (strategy !== 'manual') {
-          logInfo('Attempting automatic conflict resolution', {
-            documentType,
-            documentId,
-            strategy,
-            retryCount,
-          });
+        // Non-conflict error
+        logError('updateWithConflictResolution', error, {
+          documentType,
+          documentId,
+          retryCount,
+        });
 
-          retryCount++;
-          // Retry with exponential backoff
-          await new Promise((resolve) => setTimeout(resolve, Math.pow(2, retryCount) * 100));
-          continue;
-        }
-
-        // Manual resolution required
-        return {
-          success: false,
-          requiresUserInput: true,
-          error: lastError,
-        };
+        throw error;
       }
+    }
 
-      // Non-conflict error
-      logError('updateWithConflictResolution', error, {
-        documentType,
-        documentId,
-        retryCount,
-      });
-
-      throw error;
+    // Max retries exceeded
+    return {
+      success: false,
+      error: lastError || new Error('Max retries exceeded'),
+    };
+  } finally {
+    // Remove presence on all exit paths (only for supported document types)
+    if (
+      trackPresence &&
+      (documentType === 'quiz' ||
+        documentType === 'quizTemplate' ||
+        documentType === 'lecture' ||
+        documentType === 'material')
+    ) {
+      try {
+        await removeEditorPresence(userId, documentType, documentId);
+      } catch (error) {
+        logError('removeEditorPresence', error, { userId, documentType, documentId });
+      }
     }
   }
-
-  // Max retries exceeded
-  return {
-    success: false,
-    error: lastError || new Error('Max retries exceeded'),
-  };
 }
 
 /**
@@ -198,7 +261,7 @@ export async function updateWithConflictResolution<T extends Record<string, any>
  * Updates multiple documents with conflict detection
  */
 export async function batchUpdateWithConflictResolution<T extends Record<string, any>>(
-  documentType: 'quiz' | 'quizTemplate' | 'lecture' | 'material',
+  documentType: ConflictDocumentType,
   updates: Array<{ id: string; data: T }>,
   userId: string,
   updateFn: (id: string, data: T) => Promise<T>,
@@ -259,7 +322,7 @@ export async function batchUpdateWithConflictResolution<T extends Record<string,
  * Returns a function that automatically handles conflicts for a specific document type
  */
 export function createConflictAwareUpdater<T extends Record<string, any>>(
-  documentType: 'quiz' | 'quizTemplate' | 'lecture' | 'material',
+  documentType: ConflictDocumentType,
   updateFn: (id: string, data: T) => Promise<T>,
   defaultOptions: ConflictAwareUpdateOptions = {}
 ) {

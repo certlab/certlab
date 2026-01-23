@@ -371,8 +371,8 @@ try {
     // Retry with exponential backoff
     await retryWithBackoff(
       () => updateQuiz(data),
-      maxRetries: 3,
-      baseDelay: 100
+      3,
+      100
     );
   } else {
     // Non-retryable error
