@@ -461,7 +461,12 @@ describe('FirestoreStorage - Query Operations', () => {
       vi.mocked(firestoreService.getSharedDocuments).mockResolvedValue([]);
 
       // Should not throw, should handle gracefully
-      const result = await firestoreStorage.getQuestionsByCategories(categoryIds, options);
+      const result = await firestoreStorage.getQuestionsByCategories(
+        categoryIds,
+        options.subcategoryIds as any,
+        options.difficultyLevels as any,
+        undefined as any
+      );
 
       expect(Array.isArray(result)).toBe(true);
     });

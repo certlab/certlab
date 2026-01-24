@@ -80,7 +80,7 @@ Tests edge cases, boundary conditions, and data integrity.
 
 **Coverage:**
 - ✅ Timestamp conversion (7 tests - all passing)
-  - Null/undefined timestamps
+  - Null/undefined timestamps (returns current date)
   - Epoch and far-future dates
   - Nanosecond precision
   - Date object handling

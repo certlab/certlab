@@ -184,18 +184,22 @@ describe('Firestore Sync - Integration Tests', () => {
           type: 'create',
           collection: 'quizzes',
           data: { title: 'Recovered Quiz 1' },
-          timestamp: Date.now(),
-          retries: 0,
+          queuedAt: Date.now(),
+          retryCount: 0,
           status: 'pending',
+          lastAttemptAt: null,
+          lastError: null,
         },
         {
           id: 'op2',
           type: 'update',
           collection: 'quizzes',
           data: { id: 1, title: 'Recovered Quiz 2' },
-          timestamp: Date.now(),
-          retries: 0,
+          queuedAt: Date.now(),
+          retryCount: 0,
           status: 'pending',
+          lastAttemptAt: null,
+          lastError: null,
         },
       ];
 
@@ -258,7 +262,7 @@ describe('Firestore Sync - Integration Tests', () => {
       const quizzes = await queuedStorage.getUserQuizzes('user123', 1);
 
       expect(quizzes).toHaveLength(1);
-      expect(quizzes[0].name).toBe('Shared Quiz');
+      expect(quizzes[0].title).toBe('Shared Quiz');
     });
   });
 
@@ -288,13 +292,13 @@ describe('Firestore Sync - Integration Tests', () => {
         if (attempts < 3) {
           throw new Error('Network error');
         }
-        return { id: 1, name: 'Quiz' } as Quiz;
+        return { id: 1, title: 'Quiz' } as Quiz;
       });
 
       (global.navigator as any).onLine = false;
 
       // Initial attempt (will fail and queue)
-      await queuedStorage.createQuiz({ name: 'Quiz' } as any);
+      await queuedStorage.createQuiz({ title: 'Quiz' } as any);
 
       // Go online and process
       (global.navigator as any).onLine = true;
@@ -319,10 +323,10 @@ describe('Firestore Sync - Integration Tests', () => {
       const stored = localStorageMock.getItem('certlab_offline_queue');
       const parsed = JSON.parse(stored!);
 
-      // Verify order is preserved
-      expect(parsed[0].data.name).toBe('Quiz 1');
-      expect(parsed[1].data.name).toBe('Quiz 2');
-      expect(parsed[2].data.name).toBe('Quiz 3');
+      // Verify order is preserved (data is the full argument array; first arg is the quiz)
+      expect(parsed[0].data[0].title).toBe('Quiz 1');
+      expect(parsed[1].data[0].title).toBe('Quiz 2');
+      expect(parsed[2].data[0].title).toBe('Quiz 3');
     });
 
     it('should handle corrupted localStorage data gracefully', async () => {
@@ -423,10 +427,10 @@ describe('Firestore Sync - Integration Tests', () => {
 
       vi.mocked(mockStorage.createQuiz!)
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValue({ id: 1, name: 'Quiz' } as Quiz);
+        .mockResolvedValue({ id: 1, title: 'Quiz' } as Quiz);
 
       // Queue operation while offline
-      await queuedStorage.createQuiz({ name: 'Quiz' } as any);
+      await queuedStorage.createQuiz({ title: 'Quiz' } as any);
 
       expect(offlineQueue.hasPendingOperations()).toBe(true);
 
@@ -489,7 +493,7 @@ describe('Firestore Sync - Integration Tests', () => {
 
       (global.navigator as any).onLine = false;
 
-      await queuedStorage.createQuiz({ name: 'Quiz' } as any);
+      await queuedStorage.createQuiz({ title: 'Quiz' } as any);
 
       // Go online and try to process
       (global.navigator as any).onLine = true;
@@ -508,7 +512,7 @@ describe('Firestore Sync - Integration Tests', () => {
 
       (global.navigator as any).onLine = false;
 
-      const result = await queuedStorage.createQuiz({ name: 'Quiz' } as any);
+      const result = await queuedStorage.createQuiz({ title: 'Quiz' } as any);
       const queueId = (result as any)._queueId;
 
       // Verify operation is in queue
@@ -521,7 +525,7 @@ describe('Firestore Sync - Integration Tests', () => {
 
       (global.navigator as any).onLine = false;
 
-      const result = await queuedStorage.createQuiz({ name: 'Quiz' } as any);
+      const result = await queuedStorage.createQuiz({ title: 'Quiz' } as any);
       const queueId = (result as any)._queueId;
 
       // Remove operation

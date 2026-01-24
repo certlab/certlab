@@ -305,8 +305,8 @@ describe('FirestoreStorage - Quiz Operations', () => {
         title: 'Test Quiz',
       };
 
-      vi.mocked(firestoreService.setUserSubcollectionDocument).mockResolvedValue(undefined);
-      vi.mocked(firestoreService.getUserSubcollectionDocument).mockResolvedValue({
+      vi.mocked(firestoreService.setUserDocument).mockResolvedValue(undefined);
+      vi.mocked(firestoreService.getUserDocument).mockResolvedValue({
         id: 12345,
         ...newQuiz,
       } as Quiz);
