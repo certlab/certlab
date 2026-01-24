@@ -142,9 +142,12 @@ describe('useRealtimeSync Hooks', () => {
     });
 
     it('should reset state when path becomes null', async () => {
-      const { result, rerender } = renderHook(({ path }) => useRealtimeDocument(path), {
-        initialProps: { path: 'users/123' },
-      });
+      const { result, rerender } = renderHook(
+        ({ path }: { path: string | null }) => useRealtimeDocument(path),
+        {
+          initialProps: { path: 'users/123' as string | null },
+        }
+      );
 
       // Wait for initial subscription to load data
       await waitFor(() => {
@@ -298,9 +301,12 @@ describe('useRealtimeSync Hooks', () => {
     });
 
     it('should reset state when path becomes null', async () => {
-      const { result, rerender } = renderHook(({ path }) => useRealtimeCollection(path), {
-        initialProps: { path: 'quizzes' },
-      });
+      const { result, rerender } = renderHook(
+        ({ path }: { path: string | null }) => useRealtimeCollection(path),
+        {
+          initialProps: { path: 'quizzes' as string | null },
+        }
+      );
 
       // Wait for initial subscription to load data
       await waitFor(() => {
