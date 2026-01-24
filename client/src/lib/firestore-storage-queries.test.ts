@@ -500,6 +500,7 @@ describe('FirestoreStorage - Query Operations', () => {
       expect(result).toHaveLength(1);
       expect(result[0].isPersonal).toBe(true);
       expect(result[0].userId).toBe(userId);
+      expect(firestoreService.getUserDocuments).toHaveBeenCalledWith(userId, 'personalQuestions');
     });
 
     it('should query personal categories for a user', async () => {
@@ -522,8 +523,18 @@ describe('FirestoreStorage - Query Operations', () => {
       const result = await firestoreStorage.getPersonalSubcategories(userId, categoryId);
 
       expect(Array.isArray(result)).toBe(true);
-      expect(firestoreService.getUserDocuments).toHaveBeenCalled();
-      expect(firestoreService.where).toHaveBeenCalledWith('categoryId', '==', categoryId);
+      expect(firestoreService.getUserDocuments).toHaveBeenCalledWith(
+        userId,
+        'personalSubcategories',
+        [
+          expect.objectContaining({
+            field: 'categoryId',
+            op: '==',
+            value: categoryId,
+            _type: 'where',
+          }),
+        ]
+      );
     });
   });
 });
