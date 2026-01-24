@@ -63,6 +63,40 @@ vi.mock('./sanitize', () => ({
   sanitizeArray: vi.fn((arr) => arr),
 }));
 
+/**
+ * Helper to create a valid Question mock with all required fields
+ */
+function createMockQuestion(overrides: Partial<Question> = {}): Question {
+  return {
+    id: 1,
+    text: 'What is 2+2? This is a test question with enough characters.',
+    questionType: 'multiple_choice_single',
+    options: [
+      { id: 0, text: '3' },
+      { id: 1, text: '4' },
+    ],
+    correctAnswer: 1,
+    correctAnswers: null,
+    acceptedAnswers: null,
+    matchingPairs: null,
+    orderingItems: null,
+    requiresManualGrading: false,
+    categoryId: 1,
+    subcategoryId: 1,
+    tenantId: 1,
+    difficultyLevel: 1,
+    explanation: null,
+    explanationSteps: null,
+    tags: null,
+    referenceLinks: null,
+    videoUrl: null,
+    communityExplanations: null,
+    explanationVotes: 0,
+    hasAlternativeViews: false,
+    ...overrides,
+  } as Question;
+}
+
 describe('FirestoreStorage - User Operations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -447,10 +481,9 @@ describe('FirestoreStorage - Question Operations', () => {
         difficultyLevel: 1,
       };
 
-      const mockCreatedQuestion: Question = {
+      const mockCreatedQuestion = createMockQuestion({
         id: 1,
         text: 'What is 2+2? This is a test question with enough characters.',
-        questionType: 'multiple_choice_single',
         options: [
           { id: 0, text: '3' },
           { id: 1, text: '4' },
@@ -458,14 +491,8 @@ describe('FirestoreStorage - Question Operations', () => {
         correctAnswer: 1,
         categoryId: 1,
         subcategoryId: 1,
-        difficultyLevel: 1,
-        explanation: null,
-        tags: null,
-        createdAt: null,
-        updatedAt: null,
-        tenantId: null,
-        userId: null,
-      } as Question;
+        tenantId: 1,
+      });
 
       vi.mocked(firestoreService.setSharedDocument).mockResolvedValue(undefined);
       vi.mocked(firestoreService.getSharedDocument).mockResolvedValue(mockCreatedQuestion);
@@ -502,10 +529,16 @@ describe('FirestoreStorage - Question Operations', () => {
       };
 
       vi.mocked(firestoreService.setSharedDocument).mockResolvedValue(undefined);
-      vi.mocked(firestoreService.getSharedDocument).mockResolvedValue({
-        id: 1,
-        ...newQuestion,
-      } as Question);
+      vi.mocked(firestoreService.getSharedDocument).mockResolvedValue(
+        createMockQuestion({
+          id: 1,
+          text: newQuestion.text,
+          options: newQuestion.options,
+          correctAnswer: newQuestion.correctAnswer,
+          categoryId: newQuestion.categoryId,
+          subcategoryId: newQuestion.subcategoryId,
+        })
+      );
 
       await firestoreStorage.createQuestion(newQuestion);
 
@@ -517,34 +550,21 @@ describe('FirestoreStorage - Question Operations', () => {
     it('should retrieve questions by category IDs', async () => {
       const categoryIds = [1, 2];
       const mockQuestions: Question[] = [
-        {
+        createMockQuestion({
           id: 1,
           text: 'Question 1',
-          options: [],
           categoryId: 1,
-          subcategoryId: null,
-          difficultyLevel: 1,
-          explanation: null,
-          tags: null,
-          createdAt: null,
-          updatedAt: null,
-          tenantId: null,
-          userId: null,
-        } as Question,
-        {
+          subcategoryId: 1,
+          tenantId: 1,
+        }),
+        createMockQuestion({
           id: 2,
           text: 'Question 2',
-          options: [],
           categoryId: 2,
-          subcategoryId: null,
+          subcategoryId: 2,
           difficultyLevel: 2,
-          explanation: null,
-          tags: null,
-          createdAt: null,
-          updatedAt: null,
-          tenantId: null,
-          userId: null,
-        } as Question,
+          tenantId: 1,
+        }),
       ];
 
       vi.mocked(firestoreService.getSharedDocuments).mockResolvedValue(mockQuestions);
@@ -585,20 +605,13 @@ describe('FirestoreStorage - Question Operations', () => {
         difficultyLevel: 2,
       };
 
-      const mockUpdatedQuestion: Question = {
+      const mockUpdatedQuestion = createMockQuestion({
         id: questionId,
         text: 'Updated question with proper length for validation?',
-        options: [],
-        categoryId: 1,
-        subcategoryId: null,
         difficultyLevel: 2,
-        explanation: null,
-        tags: null,
-        createdAt: null,
-        updatedAt: null,
-        tenantId: null,
-        userId: null,
-      } as Question;
+        tenantId: 1,
+        subcategoryId: 1,
+      });
 
       vi.mocked(firestoreService.getSharedDocument).mockResolvedValue(mockUpdatedQuestion);
       vi.mocked(firestoreService.setSharedDocument).mockResolvedValue(undefined);
@@ -650,7 +663,8 @@ describe('FirestoreStorage - Category Operations', () => {
         id: 1,
         name: 'Test Category',
         description: 'A test category',
-        tenantId: null,
+        tenantId: 1,
+        icon: null,
       };
 
       vi.mocked(firestoreService.setSharedDocument).mockResolvedValue(undefined);
@@ -674,8 +688,8 @@ describe('FirestoreStorage - Category Operations', () => {
   describe('getCategories', () => {
     it('should retrieve all categories', async () => {
       const mockCategories: Category[] = [
-        { id: 1, name: 'Category 1', description: null, tenantId: null },
-        { id: 2, name: 'Category 2', description: null, tenantId: null },
+        { id: 1, name: 'Category 1', description: null, tenantId: 1, icon: null },
+        { id: 2, name: 'Category 2', description: null, tenantId: 1, icon: null },
       ];
 
       vi.mocked(firestoreService.getSharedDocuments).mockResolvedValue(mockCategories);
@@ -708,7 +722,8 @@ describe('FirestoreStorage - Category Operations', () => {
         id: categoryId,
         name: 'Updated Category',
         description: 'Updated description',
-        tenantId: null,
+        tenantId: 1,
+        icon: null,
       };
 
       vi.mocked(firestoreService.getSharedDocument).mockResolvedValue(mockUpdatedCategory);
@@ -761,7 +776,7 @@ describe('FirestoreStorage - Subcategory Operations', () => {
         name: 'Test Subcategory',
         categoryId: 1,
         description: null,
-        tenantId: null,
+        tenantId: 1,
       };
 
       vi.mocked(firestoreService.setSharedDocument).mockResolvedValue(undefined);
@@ -777,8 +792,8 @@ describe('FirestoreStorage - Subcategory Operations', () => {
   describe('getSubcategories', () => {
     it('should retrieve all subcategories', async () => {
       const mockSubcategories: Subcategory[] = [
-        { id: 1, name: 'Subcategory 1', categoryId: 1, description: null, tenantId: null },
-        { id: 2, name: 'Subcategory 2', categoryId: 1, description: null, tenantId: null },
+        { id: 1, name: 'Subcategory 1', categoryId: 1, description: null, tenantId: 1 },
+        { id: 2, name: 'Subcategory 2', categoryId: 1, description: null, tenantId: 1 },
       ];
 
       vi.mocked(firestoreService.getSharedDocuments).mockResolvedValue(mockSubcategories);
@@ -811,7 +826,7 @@ describe('FirestoreStorage - Subcategory Operations', () => {
         name: 'Updated Subcategory',
         categoryId: 1,
         description: null,
-        tenantId: null,
+        tenantId: 1,
       };
 
       vi.mocked(firestoreService.getSharedDocument).mockResolvedValue(mockUpdatedSubcategory);

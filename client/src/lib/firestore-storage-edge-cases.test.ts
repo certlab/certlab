@@ -364,15 +364,13 @@ describe('FirestoreStorage - Edge Cases', () => {
         ],
         categoryId: 1,
         correctAnswer: 0,
-        subcategoryId: null,
+        subcategoryId: 1,
         difficultyLevel: (i % 3) + 1,
         explanation: null,
         tags: null,
         createdAt: null,
         updatedAt: null,
-        tenantId: null,
-        isPersonal: false,
-        userId: null,
+        tenantId: 1,
       }));
 
       vi.mocked(firestoreService.getSharedDocuments).mockResolvedValue(mockQuestions);
@@ -522,7 +520,7 @@ describe('FirestoreStorage - Edge Cases', () => {
         lastName: 'User',
         email: 'test@example.com',
         profileImageUrl: null,
-        tenantId: null,
+        tenantId: 1,
       };
 
       vi.mocked(firestoreService.setUserProfile).mockResolvedValue(undefined);

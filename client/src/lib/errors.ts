@@ -575,6 +575,21 @@ export function isStorageError(error: unknown): boolean {
 }
 
 /**
+ * Check if an error is a Firestore permission error
+ * Used to detect permission denied errors from Firestore operations
+ *
+ * @param error - The error to check
+ * @returns True if the error is a Firestore permission error
+ */
+export function isFirestorePermissionError(error: unknown): boolean {
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    return msg.includes('permission denied') || msg.includes('missing or insufficient permissions');
+  }
+  return false;
+}
+
+/**
  * Get a user-friendly error title based on the error code.
  * Used for displaying toast notifications and error messages.
  *
