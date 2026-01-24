@@ -140,6 +140,63 @@ describe('useRealtimeSync Hooks', () => {
         ).toBeGreaterThan(callCount);
       });
     });
+
+    it('should reset state when path becomes null', async () => {
+      const { result, rerender } = renderHook(({ path }) => useRealtimeDocument(path), {
+        initialProps: { path: 'users/123' },
+      });
+
+      // Wait for initial subscription to load data
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.data).toBeTruthy();
+      });
+
+      // Change path to null
+      rerender({ path: null });
+
+      // State should be reset
+      await waitFor(() => {
+        expect(result.current.data).toBeNull();
+        expect(result.current.error).toBeNull();
+        expect(result.current.fromCache).toBe(false);
+        expect(result.current.hasPendingWrites).toBe(false);
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should unsubscribe
+      expect(realtimeSync.realtimeSyncManager.unsubscribe).toHaveBeenCalled();
+    });
+
+    it('should reset state when enabled becomes false', async () => {
+      const { result, rerender } = renderHook(
+        ({ enabled }) => useRealtimeDocument('users/123', { enabled }),
+        {
+          initialProps: { enabled: true },
+        }
+      );
+
+      // Wait for initial subscription to load data
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.data).toBeTruthy();
+      });
+
+      // Disable hook
+      rerender({ enabled: false });
+
+      // State should be reset
+      await waitFor(() => {
+        expect(result.current.data).toBeNull();
+        expect(result.current.error).toBeNull();
+        expect(result.current.fromCache).toBe(false);
+        expect(result.current.hasPendingWrites).toBe(false);
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should unsubscribe
+      expect(realtimeSync.realtimeSyncManager.unsubscribe).toHaveBeenCalled();
+    });
   });
 
   describe('useRealtimeCollection', () => {
@@ -238,6 +295,65 @@ describe('useRealtimeSync Hooks', () => {
       });
 
       expect(result.current.error).toEqual(testError);
+    });
+
+    it('should reset state when path becomes null', async () => {
+      const { result, rerender } = renderHook(({ path }) => useRealtimeCollection(path), {
+        initialProps: { path: 'quizzes' },
+      });
+
+      // Wait for initial subscription to load data
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.data).toBeTruthy();
+      });
+
+      // Change path to null
+      rerender({ path: null });
+
+      // State should be reset
+      await waitFor(() => {
+        expect(result.current.data).toEqual([]);
+        expect(result.current.changes).toEqual([]);
+        expect(result.current.error).toBeNull();
+        expect(result.current.fromCache).toBe(false);
+        expect(result.current.hasPendingWrites).toBe(false);
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should unsubscribe
+      expect(realtimeSync.realtimeSyncManager.unsubscribe).toHaveBeenCalled();
+    });
+
+    it('should reset state when enabled becomes false', async () => {
+      const { result, rerender } = renderHook(
+        ({ enabled }) => useRealtimeCollection('quizzes', { enabled }),
+        {
+          initialProps: { enabled: true },
+        }
+      );
+
+      // Wait for initial subscription to load data
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.data).toBeTruthy();
+      });
+
+      // Disable hook
+      rerender({ enabled: false });
+
+      // State should be reset
+      await waitFor(() => {
+        expect(result.current.data).toEqual([]);
+        expect(result.current.changes).toEqual([]);
+        expect(result.current.error).toBeNull();
+        expect(result.current.fromCache).toBe(false);
+        expect(result.current.hasPendingWrites).toBe(false);
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should unsubscribe
+      expect(realtimeSync.realtimeSyncManager.unsubscribe).toHaveBeenCalled();
     });
   });
 

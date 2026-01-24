@@ -363,8 +363,8 @@ return (
 
 ### Unit Tests
 
-- **26 tests** for `realtime-sync.ts`
-- **19 tests** for `useRealtimeSync` hooks
+- **30 tests** for `realtime-sync.ts`
+- **23 tests** for `useRealtimeSync` hooks
 - All edge cases covered
 
 ### Integration Tests
@@ -378,8 +378,14 @@ return (
 Run tests:
 
 ```bash
-# All real-time sync tests
-npm run test:run -- realtime-sync
+# All real-time sync tests (66 tests total)
+npm run test:run -- "realtime-sync|useRealtimeSync"
+
+# Unit tests only
+npm run test:run -- realtime-sync.test.ts
+
+# Hook tests only
+npm run test:run -- useRealtimeSync.test.ts
 
 # Integration tests only
 npm run test:run -- realtime-sync.integration.test.ts
@@ -540,7 +546,7 @@ The real-time sync system provides:
 ✅ Atomic transactions  
 ✅ Operation history  
 ✅ React hooks for easy integration  
-✅ Comprehensive test coverage (62 tests, including soft delete detection, pagination, and batch validation)  
+✅ Comprehensive test coverage (66 tests, including soft delete detection, pagination, batch validation, and state cleanup transitions)  
 ✅ Edge case handling  
 ✅ No data loss  
 

@@ -187,9 +187,9 @@ function QuizListComponent({ userId }) {
 - ✅ Soft delete/restore (4 tests)
 - ✅ Edge cases (2 tests)
 
-### React Hook Tests (19 tests - `useRealtimeSync.test.ts`)
-- ✅ useRealtimeDocument (6 tests)
-- ✅ useRealtimeCollection (7 tests)
+### React Hook Tests (23 tests - `useRealtimeSync.test.ts`)
+- ✅ useRealtimeDocument (8 tests)
+- ✅ useRealtimeCollection (9 tests)
 - ✅ Specialized hooks (6 tests)
 
 ### Integration Tests (13 tests - `realtime-sync.integration.test.ts`)
@@ -198,7 +198,7 @@ function QuizListComponent({ userId }) {
 - ✅ Conflict resolution (3 tests)
 - ✅ Soft delete and restore (1 test)
 
-**Total: 62 tests, all passing ✅**
+**Total: 66 tests, all passing ✅**
 
 ## Files Added
 
@@ -217,9 +217,10 @@ function QuizListComponent({ userId }) {
    - 5 hooks (document, collection, quizzes, progress, badges)
    - Automatic cleanup on unmount
 
-4. **`client/src/hooks/useRealtimeSync.test.ts`** (~350 lines)
-   - 19 hook tests
+4. **`client/src/hooks/useRealtimeSync.test.ts`** (~400 lines)
+   - 23 hook tests
    - Tests all hooks with various scenarios
+   - Includes state cleanup transition tests
    - Mocked realtime-sync module
 
 5. **`client/src/lib/realtime-sync.integration.test.ts`** (~580 lines)
@@ -243,7 +244,7 @@ function QuizListComponent({ userId }) {
 | Handles record deletions | ✅ | Soft-delete with instant propagation |
 | Conflict scenarios | ✅ | Version-based optimistic locking |
 | Rollbacks gracefully | ✅ | Transaction support with automatic rollback |
-| Tests covering edge cases | ✅ | 58 comprehensive tests |
+| Tests covering edge cases | ✅ | 66 comprehensive tests |
 | No data loss | ✅ | Atomic transactions + operation history |
 
 ## Validation
@@ -251,7 +252,7 @@ function QuizListComponent({ userId }) {
 ### Build Status
 ✅ TypeScript check passes (`npm run check`)  
 ✅ Build succeeds (`npm run build`)  
-✅ All 58 new tests pass (`npm run test:run -- realtime-sync`)
+✅ All 66 new tests pass (`npm run test:run -- "realtime-sync|useRealtimeSync"`)
 
 ### Code Quality
 - ✅ Follows existing patterns and conventions
@@ -329,7 +330,7 @@ These are NOT part of this PR but could be added later:
 This implementation:
 - ✅ Addresses all acceptance criteria
 - ✅ Provides comprehensive edge case handling
-- ✅ Includes 58 passing tests
+- ✅ Includes 66 passing tests
 - ✅ Is fully documented
 - ✅ Is type-safe and follows best practices
 - ✅ Is non-breaking and can be adopted gradually
