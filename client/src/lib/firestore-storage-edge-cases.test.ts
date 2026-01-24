@@ -82,12 +82,12 @@ describe('FirestoreStorage - Edge Cases', () => {
   });
 
   describe('Timestamp conversion edge cases', () => {
-    it('should handle null timestamps', () => {
+    it('should handle null timestamps by returning current date', () => {
       const result = firestoreService.timestampToDate(null);
       expect(result).toBeInstanceOf(Date);
     });
 
-    it('should handle undefined timestamps', () => {
+    it('should handle undefined timestamps by returning current date', () => {
       const result = firestoreService.timestampToDate(undefined);
       expect(result).toBeInstanceOf(Date);
     });
@@ -322,7 +322,7 @@ describe('FirestoreStorage - Edge Cases', () => {
       const quizCount = 100;
       const quizzes: Partial<Quiz>[] = Array.from({ length: quizCount }, (_, i) => ({
         userId: 'user123',
-        name: `Quiz ${i}`,
+        title: `Quiz ${i}`,
         categoryIds: [1],
         mode: 'practice' as const,
       }));
@@ -343,7 +343,7 @@ describe('FirestoreStorage - Edge Cases', () => {
 
       expect(results).toHaveLength(quizCount);
       results.forEach((result, index) => {
-        expect(result.name).toBe(`Quiz ${index}`);
+        expect(result.title).toBe(`Quiz ${index}`);
       });
     });
 
@@ -357,10 +357,9 @@ describe('FirestoreStorage - Edge Cases', () => {
           { id: 2, text: 'B' },
         ],
         categoryId: 1,
-        subcategoryId: 1,
         correctAnswer: 0,
         subcategoryId: null,
-        difficulty: (i % 3) + 1,
+        difficultyLevel: (i % 3) + 1,
         explanation: null,
         tags: null,
         createdAt: null,
@@ -424,7 +423,8 @@ describe('FirestoreStorage - Edge Cases', () => {
     it('should handle intermittent network failures', async () => {
       const userId = 'user123';
       const newUser: Partial<User> = {
-        username: 'testuser',
+        firstName: 'Test',
+        lastName: 'User',
         email: 'test@example.com',
       };
 
@@ -448,10 +448,11 @@ describe('FirestoreStorage - Edge Cases', () => {
   });
 
   describe('Data integrity edge cases', () => {
-    it('should handle user with extremely long username', async () => {
-      const longUsername = 'a'.repeat(1000);
+    it('should handle user with extremely long first name', async () => {
+      const longFirstName = 'a'.repeat(1000);
       const newUser: Partial<User> = {
-        username: longUsername,
+        firstName: longFirstName,
+        lastName: 'User',
         email: 'test@example.com',
       };
 
@@ -463,13 +464,13 @@ describe('FirestoreStorage - Edge Cases', () => {
 
       const result = await firestoreStorage.createUser(newUser);
 
-      expect(result.username).toHaveLength(1000);
+      expect(result.firstName).toHaveLength(1000);
     });
 
     it('should handle quiz with empty category array', async () => {
       const quizWithEmptyCategories: Partial<Quiz> = {
         userId: 'user123',
-        name: 'Empty Quiz',
+        title: 'Empty Quiz',
         categoryIds: [],
         mode: 'practice',
       };
@@ -513,10 +514,10 @@ describe('FirestoreStorage - Edge Cases', () => {
     it('should handle null and undefined fields correctly', async () => {
       const userWithNulls: Partial<User> = {
         id: 'user123',
-        username: 'testuser',
+        firstName: 'Test',
+        lastName: 'User',
         email: 'test@example.com',
-        displayName: null,
-        photoURL: null,
+        profileImageUrl: null,
         tenantId: null,
       };
 
@@ -525,8 +526,7 @@ describe('FirestoreStorage - Edge Cases', () => {
 
       const result = await firestoreStorage.createUser(userWithNulls);
 
-      expect(result.displayName).toBeNull();
-      expect(result.photoURL).toBeNull();
+      expect(result.profileImageUrl).toBeNull();
       expect(result.tenantId).toBeNull();
     });
   });
