@@ -180,6 +180,32 @@ describe('RealtimeSyncManager', () => {
       expect(callback).toHaveBeenCalledWith(null, expect.objectContaining({ isDeleted: true }));
     });
 
+    it('should detect soft-deleted documents', async () => {
+      const { onSnapshot } = await import('firebase/firestore');
+      const mockOnSnapshot = onSnapshot as unknown as ReturnType<typeof vi.fn>;
+
+      mockOnSnapshot.mockImplementationOnce((ref: any, opts: any, callback: any) => {
+        setTimeout(() => {
+          callback({
+            exists: () => true,
+            data: () => ({ id: '123', name: 'Test', deleted: true }),
+            metadata: { fromCache: false, hasPendingWrites: false },
+          });
+        }, 0);
+        return vi.fn();
+      });
+
+      const callback = vi.fn();
+      realtimeSyncManager.subscribeToDocument('users/123', callback as DocumentChangeCallback);
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(callback).toHaveBeenCalledWith(
+        expect.objectContaining({ id: '123', name: 'Test', deleted: true }),
+        expect.objectContaining({ isDeleted: true })
+      );
+    });
+
     it('should handle subscription errors', async () => {
       const { onSnapshot } = await import('firebase/firestore');
       const mockOnSnapshot = onSnapshot as unknown as ReturnType<typeof vi.fn>;
@@ -274,6 +300,18 @@ describe('RealtimeSyncManager', () => {
       expect(mockOrderBy).toHaveBeenCalledWith('createdAt', 'desc');
     });
 
+    it('should support collection limit for pagination', async () => {
+      const { limit } = await import('firebase/firestore');
+      const mockLimit = limit as unknown as ReturnType<typeof vi.fn>;
+
+      const callback = vi.fn();
+      realtimeSyncManager.subscribeToCollection('quizzes', callback as CollectionChangeCallback, {
+        limit: 20,
+      });
+
+      expect(mockLimit).toHaveBeenCalledWith(20);
+    });
+
     it('should unsubscribe from all subscriptions', async () => {
       const callback = vi.fn();
 
@@ -355,6 +393,18 @@ describe('RealtimeSyncManager', () => {
           { type: 'set', path: 'users/1', data: { name: 'User 1' } },
         ])
       ).rejects.toThrow('Batch failed');
+    });
+
+    it('should validate data is required for set operations', async () => {
+      await expect(
+        realtimeSyncManager.executeBatch([{ type: 'set', path: 'users/1' } as any])
+      ).rejects.toThrow("data is required for 'set' operation on path: users/1");
+    });
+
+    it('should validate data is required for update operations', async () => {
+      await expect(
+        realtimeSyncManager.executeBatch([{ type: 'update', path: 'users/1' } as any])
+      ).rejects.toThrow("data is required for 'update' operation on path: users/1");
     });
   });
 
