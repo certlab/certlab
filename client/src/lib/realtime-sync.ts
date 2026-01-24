@@ -112,7 +112,7 @@ class RealtimeSyncManager {
         },
         (snapshot: DocumentSnapshot) => {
           const rawData = snapshot.exists() ? (snapshot.data() as T & { deleted?: boolean }) : null;
-          const isSoftDeleted = !!rawData && (rawData as any).deleted === true;
+          const isSoftDeleted = !!rawData && rawData.deleted === true;
           const data = snapshot.exists() ? (rawData as T) : null;
           const metadata = {
             fromCache: snapshot.metadata.fromCache,
