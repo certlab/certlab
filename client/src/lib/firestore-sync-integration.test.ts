@@ -86,7 +86,7 @@ describe('Firestore Sync - Integration Tests', () => {
 
       const quiz: Partial<Quiz> = {
         userId: 'user123',
-        name: 'Test Quiz',
+        title: 'Test Quiz',
         categoryIds: [1],
         mode: 'practice',
       };
@@ -109,10 +109,10 @@ describe('Firestore Sync - Integration Tests', () => {
       vi.mocked(mockStorage.createQuiz!)
         .mockRejectedValueOnce(new Error('Network error'))
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValue({ id: 1, name: 'Quiz 1' } as Quiz);
+        .mockResolvedValue({ id: 1, title: 'Quiz 1' } as Quiz);
 
-      await queuedStorage.createQuiz({ name: 'Quiz 1' } as any);
-      await queuedStorage.createQuiz({ name: 'Quiz 2' } as any);
+      await queuedStorage.createQuiz({ title: 'Quiz 1' } as any);
+      await queuedStorage.createQuiz({ title: 'Quiz 2' } as any);
 
       const stateBefore = offlineQueue.getState();
       expect(stateBefore.total).toBe(2);
@@ -148,7 +148,7 @@ describe('Firestore Sync - Integration Tests', () => {
           vi.mocked(mockStorage.createQuiz!).mockRejectedValue(new Error('Network error'));
         }
 
-        operations.push(queuedStorage.createQuiz({ name: `Quiz ${i}` } as any));
+        operations.push(queuedStorage.createQuiz({ title: `Quiz ${i}` } as any));
       }
 
       const results = await Promise.all(operations);
@@ -165,8 +165,8 @@ describe('Firestore Sync - Integration Tests', () => {
 
       vi.mocked(mockStorage.createQuiz!).mockRejectedValue(new Error('Network error'));
 
-      await queuedStorage.createQuiz({ name: 'Quiz 1' } as any);
-      await queuedStorage.createQuiz({ name: 'Quiz 2' } as any);
+      await queuedStorage.createQuiz({ title: 'Quiz 1' } as any);
+      await queuedStorage.createQuiz({ title: 'Quiz 2' } as any);
 
       // Check localStorage
       const stored = localStorageMock.getItem('certlab_offline_queue');
@@ -183,7 +183,7 @@ describe('Firestore Sync - Integration Tests', () => {
           id: 'op1',
           type: 'create',
           collection: 'quizzes',
-          data: { name: 'Recovered Quiz 1' },
+          data: { title: 'Recovered Quiz 1' },
           timestamp: Date.now(),
           retries: 0,
           status: 'pending',
@@ -192,7 +192,7 @@ describe('Firestore Sync - Integration Tests', () => {
           id: 'op2',
           type: 'update',
           collection: 'quizzes',
-          data: { id: 1, name: 'Recovered Quiz 2' },
+          data: { id: 1, title: 'Recovered Quiz 2' },
           timestamp: Date.now(),
           retries: 0,
           status: 'pending',
@@ -217,9 +217,9 @@ describe('Firestore Sync - Integration Tests', () => {
       const quizId = 1;
 
       // Device 1 updates
-      const device1Update = { name: 'Quiz from Device 1', score: 80 };
+      const device1Update = { title: 'Quiz from Device 1', score: 80 };
       // Device 2 updates
-      const device2Update = { name: 'Quiz from Device 2', score: 90 };
+      const device2Update = { title: 'Quiz from Device 2', score: 90 };
 
       vi.mocked(mockStorage.updateQuiz!)
         .mockResolvedValueOnce({ id: quizId, ...device1Update } as Quiz)
@@ -312,9 +312,9 @@ describe('Firestore Sync - Integration Tests', () => {
       vi.mocked(mockStorage.createQuiz!).mockRejectedValue(new Error('Network error'));
 
       // Queue operations in specific order
-      await queuedStorage.createQuiz({ name: 'Quiz 1' } as any);
-      await queuedStorage.createQuiz({ name: 'Quiz 2' } as any);
-      await queuedStorage.createQuiz({ name: 'Quiz 3' } as any);
+      await queuedStorage.createQuiz({ title: 'Quiz 1' } as any);
+      await queuedStorage.createQuiz({ title: 'Quiz 2' } as any);
+      await queuedStorage.createQuiz({ title: 'Quiz 3' } as any);
 
       const stored = localStorageMock.getItem('certlab_offline_queue');
       const parsed = JSON.parse(stored!);
@@ -347,7 +347,7 @@ describe('Firestore Sync - Integration Tests', () => {
       // Try to queue more than max
       const promises: Promise<any>[] = [];
       for (let i = 0; i < maxQueueSize + 5; i++) {
-        promises.push(queuedStorage.createQuiz({ name: `Quiz ${i}` } as any).catch(() => null));
+        promises.push(queuedStorage.createQuiz({ title: `Quiz ${i}` } as any).catch(() => null));
       }
 
       await Promise.all(promises);
@@ -360,8 +360,8 @@ describe('Firestore Sync - Integration Tests', () => {
     it('should clear completed operations from queue', async () => {
       vi.mocked(mockStorage.createQuiz!).mockResolvedValue({ id: 1 } as Quiz);
 
-      await queuedStorage.createQuiz({ name: 'Quiz 1' } as any);
-      await queuedStorage.createQuiz({ name: 'Quiz 2' } as any);
+      await queuedStorage.createQuiz({ title: 'Quiz 1' } as any);
+      await queuedStorage.createQuiz({ title: 'Quiz 2' } as any);
 
       // Wait for processing
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -378,10 +378,10 @@ describe('Firestore Sync - Integration Tests', () => {
     it('should propagate updates immediately when online', async () => {
       (global.navigator as any).onLine = true;
 
-      const mockQuiz = { id: 1, name: 'Real-time Quiz' } as Quiz;
+      const mockQuiz = { id: 1, title: 'Real-time Quiz' } as Quiz;
       vi.mocked(mockStorage.createQuiz!).mockResolvedValue(mockQuiz);
 
-      const result = await queuedStorage.createQuiz({ name: 'Real-time Quiz' } as any);
+      const result = await queuedStorage.createQuiz({ title: 'Real-time Quiz' } as any);
 
       // Should execute immediately
       expect(mockStorage.createQuiz).toHaveBeenCalledTimes(1);
@@ -401,9 +401,9 @@ describe('Firestore Sync - Integration Tests', () => {
 
       // Execute different operations simultaneously
       const [quiz, question, user] = await Promise.all([
-        queuedStorage.createQuiz({ name: 'Quiz' } as any),
-        queuedStorage.createQuestion({ question: 'Question' } as any),
-        queuedStorage.updateUser('user123', { username: 'updated' } as any),
+        queuedStorage.createQuiz({ title: 'Quiz' } as any),
+        queuedStorage.createQuestion({ text: 'Question' } as any),
+        queuedStorage.updateUser('user123', { firstName: 'Updated' } as any),
       ]);
 
       expect(quiz).toBeDefined();
@@ -451,9 +451,9 @@ describe('Firestore Sync - Integration Tests', () => {
         .mockResolvedValueOnce({ id: 3 } as Quiz);
 
       const results = await Promise.all([
-        queuedStorage.createQuiz({ name: 'Quiz 1' } as any),
-        queuedStorage.createQuiz({ name: 'Quiz 2' } as any).catch((e) => ({ error: e.message })),
-        queuedStorage.createQuiz({ name: 'Quiz 3' } as any),
+        queuedStorage.createQuiz({ title: 'Quiz 1' } as any),
+        queuedStorage.createQuiz({ title: 'Quiz 2' } as any).catch((e) => ({ error: e.message })),
+        queuedStorage.createQuiz({ title: 'Quiz 3' } as any),
       ]);
 
       // First and third should succeed

@@ -72,7 +72,8 @@ describe('FirestoreStorage - User Operations', () => {
     it('should create a new user with valid data', async () => {
       const newUser: Partial<User> = {
         id: 'user123',
-        usertitle: 'testuser',
+        firstName: 'Test',
+        lastName: 'User',
         email: 'test@example.com',
       };
 
@@ -125,7 +126,8 @@ describe('FirestoreStorage - User Operations', () => {
 
     it('should handle errors during user creation', async () => {
       const newUser: Partial<User> = {
-        usertitle: 'testuser',
+        firstName: 'Test',
+        lastName: 'User',
         email: 'test@example.com',
       };
 
@@ -554,9 +556,7 @@ describe('FirestoreStorage - Question Operations', () => {
 
       vi.mocked(firestoreService.getSharedDocuments).mockResolvedValue([]);
 
-      await firestoreStorage.getQuestionsByCategories(categoryIds, {
-        subcategoryIds,
-      });
+      await firestoreStorage.getQuestionsByCategories(categoryIds, subcategoryIds);
 
       expect(firestoreService.getSharedDocuments).toHaveBeenCalled();
     });
@@ -567,9 +567,7 @@ describe('FirestoreStorage - Question Operations', () => {
 
       vi.mocked(firestoreService.getSharedDocuments).mockResolvedValue([]);
 
-      await firestoreStorage.getQuestionsByCategories(categoryIds, {
-        difficultyLevels,
-      });
+      await firestoreStorage.getQuestionsByCategories(categoryIds, undefined, difficultyLevels);
 
       expect(firestoreService.getSharedDocuments).toHaveBeenCalled();
     });
@@ -716,13 +714,13 @@ describe('FirestoreStorage - Category Operations', () => {
     it('should update an existing category', async () => {
       const categoryId = 1;
       const updates: Partial<Category> = {
-        title: 'Updated Category',
+        name: 'Updated Category',
         description: 'Updated description',
       };
 
       const mockUpdatedCategory: Category = {
         id: categoryId,
-        title: 'Updated Category',
+        name: 'Updated Category',
         description: 'Updated description',
         tenantId: null,
       };
@@ -737,7 +735,7 @@ describe('FirestoreStorage - Category Operations', () => {
 
     it('should throw error if category does not exist', async () => {
       const categoryId = 999;
-      const updates: Partial<Category> = { title: 'Updated' };
+      const updates: Partial<Category> = { name: 'Updated' };
 
       vi.mocked(firestoreService.getSharedDocument).mockResolvedValue(null);
 
@@ -785,13 +783,13 @@ describe('FirestoreStorage - Subcategory Operations', () => {
   describe('createSubcategory', () => {
     it('should create a new subcategory', async () => {
       const newSubcategory: Partial<Subcategory> = {
-        title: 'Test Subcategory',
+        name: 'Test Subcategory',
         categoryId: 1,
       };
 
       const mockCreatedSubcategory: Subcategory = {
         id: 1,
-        title: 'Test Subcategory',
+        name: 'Test Subcategory',
         categoryId: 1,
         description: null,
         tenantId: null,
@@ -810,8 +808,8 @@ describe('FirestoreStorage - Subcategory Operations', () => {
   describe('getSubcategories', () => {
     it('should retrieve all subcategories', async () => {
       const mockSubcategories: Subcategory[] = [
-        { id: 1, title: 'Subcategory 1', categoryId: 1, description: null, tenantId: null },
-        { id: 2, title: 'Subcategory 2', categoryId: 1, description: null, tenantId: null },
+        { id: 1, name: 'Subcategory 1', categoryId: 1, description: null, tenantId: null },
+        { id: 2, name: 'Subcategory 2', categoryId: 1, description: null, tenantId: null },
       ];
 
       vi.mocked(firestoreService.getSharedDocuments).mockResolvedValue(mockSubcategories);
@@ -836,12 +834,12 @@ describe('FirestoreStorage - Subcategory Operations', () => {
     it('should update an existing subcategory', async () => {
       const subcategoryId = 1;
       const updates: Partial<Subcategory> = {
-        title: 'Updated Subcategory',
+        name: 'Updated Subcategory',
       };
 
       const mockUpdatedSubcategory: Subcategory = {
         id: subcategoryId,
-        title: 'Updated Subcategory',
+        name: 'Updated Subcategory',
         categoryId: 1,
         description: null,
         tenantId: null,
