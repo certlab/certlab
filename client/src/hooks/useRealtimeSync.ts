@@ -36,6 +36,15 @@ export function useRealtimeDocument<T = any>(
 
   useEffect(() => {
     if (!documentPath || !enabled) {
+      // Ensure any existing subscription is cleaned up and state is reset
+      if (subscriptionIdRef.current) {
+        realtimeSyncManager.unsubscribe(subscriptionIdRef.current);
+        subscriptionIdRef.current = null;
+      }
+      setData(null);
+      setError(null);
+      setFromCache(false);
+      setHasPendingWrites(false);
       setLoading(false);
       return;
     }
@@ -115,6 +124,16 @@ export function useRealtimeCollection<T = any>(
 
   useEffect(() => {
     if (!collectionPath || !enabled) {
+      // Ensure any existing subscription is cleaned up and reset state
+      if (subscriptionIdRef.current) {
+        realtimeSyncManager.unsubscribe(subscriptionIdRef.current);
+        subscriptionIdRef.current = null;
+      }
+      setData([]);
+      setChanges([]);
+      setError(null);
+      setFromCache(false);
+      setHasPendingWrites(false);
       setLoading(false);
       return;
     }

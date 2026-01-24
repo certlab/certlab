@@ -176,15 +176,16 @@ function QuizListComponent({ userId }) {
 
 ## Test Coverage
 
-### Unit Tests (26 tests - `realtime-sync.test.ts`)
-- ✅ Document subscriptions (4 tests)
+### Unit Tests (30 tests - `realtime-sync.test.ts`)
+- ✅ Document subscriptions (5 tests)
 - ✅ Collection subscriptions (5 tests)
 - ✅ Transactions (2 tests)
-- ✅ Batch operations (2 tests)
-- ✅ Operation history (4 tests)
+- ✅ Batch operations (4 tests)
+- ✅ Operation history (2 tests)
+- ✅ Subscription management (3 tests)
 - ✅ Version-based updates (3 tests)
 - ✅ Soft delete/restore (4 tests)
-- ✅ Edge cases (3 tests)
+- ✅ Edge cases (2 tests)
 
 ### React Hook Tests (19 tests - `useRealtimeSync.test.ts`)
 - ✅ useRealtimeDocument (6 tests)
@@ -197,36 +198,36 @@ function QuizListComponent({ userId }) {
 - ✅ Conflict resolution (3 tests)
 - ✅ Soft delete and restore (1 test)
 
-**Total: 58 tests, all passing ✅**
+**Total: 62 tests, all passing ✅**
 
 ## Files Added
 
-1. **`client/src/lib/realtime-sync.ts`** (368 lines)
+1. **`client/src/lib/realtime-sync.ts`** (~400 lines)
    - Core real-time sync infrastructure
    - RealtimeSyncManager class
    - Helper functions (updateWithVersionCheck, softDelete, restoreDeleted)
 
-2. **`client/src/lib/realtime-sync.test.ts`** (659 lines)
-   - 26 comprehensive unit tests
+2. **`client/src/lib/realtime-sync.test.ts`** (~730 lines)
+   - 30 comprehensive unit tests
    - Mock Firestore implementation
    - Edge case coverage
 
-3. **`client/src/hooks/useRealtimeSync.ts`** (187 lines)
+3. **`client/src/hooks/useRealtimeSync.ts`** (~220 lines)
    - React hooks for real-time sync
    - 5 hooks (document, collection, quizzes, progress, badges)
    - Automatic cleanup on unmount
 
-4. **`client/src/hooks/useRealtimeSync.test.ts`** (348 lines)
+4. **`client/src/hooks/useRealtimeSync.test.ts`** (~350 lines)
    - 19 hook tests
    - Tests all hooks with various scenarios
    - Mocked realtime-sync module
 
-5. **`client/src/lib/realtime-sync.integration.test.ts`** (551 lines)
+5. **`client/src/lib/realtime-sync.integration.test.ts`** (~580 lines)
    - 13 integration tests
    - Multi-client scenarios
    - Complex mock Firestore with subscriptions
 
-6. **`docs/REALTIME_SYNC.md`** (456 lines)
+6. **`docs/REALTIME_SYNC.md`** (~480 lines)
    - Comprehensive documentation
    - Usage examples
    - Migration guide

@@ -22,6 +22,12 @@ vi.mock('firebase/firestore', () => {
   const documentStore = new Map<string, any>();
   const subscriptions = new Map<string, { callback: any; path: string }>();
 
+  // Helper to reset state between tests
+  const resetMockState = () => {
+    documentStore.clear();
+    subscriptions.clear();
+  };
+
   return {
     getFirestore: vi.fn(() => ({ type: 'mock-firestore' })),
     collection: vi.fn((db, path) => ({ type: 'collection', path })),
@@ -135,12 +141,19 @@ vi.mock('firebase/firestore', () => {
       return transactionFn(mockTransaction);
     }),
     serverTimestamp: vi.fn(() => new Date()),
+    // Helper to reset mock state (accessed via re-import in tests)
+    __resetMockState: resetMockState,
   };
 });
 
 describe('Real-Time Sync Integration Tests', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    // Clear mock Firestore state to prevent test pollution
+    const firestore = await import('firebase/firestore');
+    if ((firestore as any).__resetMockState) {
+      (firestore as any).__resetMockState();
+    }
   });
 
   afterEach(() => {
