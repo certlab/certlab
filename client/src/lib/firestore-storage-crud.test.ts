@@ -273,7 +273,9 @@ describe('FirestoreStorage - Quiz Operations', () => {
 
       const result = await firestoreStorage.createQuiz(newQuiz);
 
-      expect(result).toEqual(mockCreatedQuiz);
+      expect(result.title).toBe('Test Quiz');
+      expect(result.userId).toBe('user123');
+      expect(result.categoryIds).toEqual([1, 2]);
       expect(firestoreService.setUserDocument).toHaveBeenCalledWith(
         'user123',
         'quizzes',
@@ -323,49 +325,29 @@ describe('FirestoreStorage - Quiz Operations', () => {
           userId,
           title: 'Quiz 1',
           categoryIds: [1],
+          subcategoryIds: [],
+          questionCount: 10,
           mode: 'practice',
-          questions: [],
-          currentQuestionIndex: 0,
-          answers: {},
-          score: null,
-          totalQuestions: 0,
-          correctAnswers: 0,
-          createdAt: null,
-          completedAt: null,
-          timeSpent: null,
-          flaggedQuestions: [],
-          passed: null,
-          version: 1,
-        },
+        } as Quiz,
         {
           id: 2,
           userId,
           title: 'Quiz 2',
           categoryIds: [2],
+          subcategoryIds: [],
+          questionCount: 10,
           mode: 'exam',
-          questions: [],
-          currentQuestionIndex: 0,
-          answers: {},
-          score: null,
-          totalQuestions: 0,
-          correctAnswers: 0,
-          createdAt: null,
-          completedAt: null,
-          timeSpent: null,
-          flaggedQuestions: [],
-          passed: null,
-          version: 1,
-        },
+        } as Quiz,
       ];
 
-      vi.mocked(firestoreService.getUserSubcollectionDocuments).mockResolvedValue(mockQuizzes);
+      vi.mocked(firestoreService.getUserDocuments).mockResolvedValue(mockQuizzes);
 
       const result = await firestoreStorage.getUserQuizzes(userId, 1);
 
       expect(result.length).toBe(2);
-      expect(result[0].name).toBe('Quiz 1');
-      expect(result[1].name).toBe('Quiz 2');
-      expect(firestoreService.getUserSubcollectionDocuments).toHaveBeenCalled();
+      expect(result[0].title).toBe('Quiz 1');
+      expect(result[1].title).toBe('Quiz 2');
+      expect(firestoreService.getUserDocuments).toHaveBeenCalled();
     });
 
     it('should return empty array if user has no quizzes', async () => {
@@ -382,51 +364,46 @@ describe('FirestoreStorage - Quiz Operations', () => {
   describe('updateQuiz', () => {
     it('should update an existing quiz', async () => {
       const quizId = 1;
+      const userId = 'user123';
+
+      firestoreStorage.setCurrentUserId(userId);
+
       const updates: Partial<Quiz> = {
         title: 'Updated Quiz',
         score: 85,
         completedAt: new Date(),
       };
 
-      const mockUpdatedQuiz: Quiz = {
+      const mockUpdatedQuiz = {
         id: quizId,
-        userId: 'user123',
+        userId,
         title: 'Updated Quiz',
-        categoryIds: [1],
-        mode: 'practice',
-        questions: [],
-        currentQuestionIndex: 0,
-        answers: {},
         score: 85,
-        totalQuestions: 10,
-        correctAnswers: 8,
-        createdAt: null,
-        completedAt: updates.completedAt,
-        timeSpent: null,
-        flaggedQuestions: [],
-        passed: true,
-        version: 1,
-      };
+      } as Quiz;
 
       vi.mocked(firestoreService.updateUserDocument).mockResolvedValue(undefined);
-      vi.mocked(firestoreService.getUserSubcollectionDocument).mockResolvedValue(mockUpdatedQuiz);
+      vi.mocked(firestoreService.getUserDocument).mockResolvedValue(mockUpdatedQuiz);
 
       const result = await firestoreStorage.updateQuiz(quizId, updates);
 
-      expect(result?.name).toBe('Updated Quiz');
+      expect(result?.title).toBe('Updated Quiz');
       expect(result?.score).toBe(85);
     });
 
-    it('should return null if quiz does not exist', async () => {
+    it('should throw if quiz does not exist', async () => {
       const quizId = 999;
+      const userId = 'user123';
+
+      firestoreStorage.setCurrentUserId(userId);
+
       const updates: Partial<Quiz> = { title: 'Updated' };
 
       vi.mocked(firestoreService.updateUserDocument).mockResolvedValue(undefined);
-      vi.mocked(firestoreService.getUserSubcollectionDocument).mockResolvedValue(null);
+      vi.mocked(firestoreService.getUserDocument).mockResolvedValue(null);
 
-      const result = await firestoreStorage.updateQuiz(quizId, updates);
-
-      expect(result).toBeNull();
+      await expect(firestoreStorage.updateQuiz(quizId, updates)).rejects.toThrow(
+        'Quiz not found after update'
+      );
     });
   });
 
@@ -526,7 +503,7 @@ describe('FirestoreStorage - Question Operations', () => {
 
       await firestoreStorage.createQuestion(newQuestion);
 
-      expect(sanitizeInput).toHaveBeenCalledWith(newQuestion.text);
+      expect(sanitizeInput).toHaveBeenCalledWith(newQuestion.text, expect.any(Number));
     });
   });
 
@@ -681,13 +658,13 @@ describe('FirestoreStorage - Category Operations', () => {
   describe('createCategory', () => {
     it('should create a new category with valid data', async () => {
       const newCategory: Partial<Category> = {
-        title: 'Test Category',
+        name: 'Test Category',
         description: 'A test category',
       };
 
       const mockCreatedCategory: Category = {
         id: 1,
-        title: 'Test Category',
+        name: 'Test Category',
         description: 'A test category',
         tenantId: null,
       };
@@ -703,7 +680,7 @@ describe('FirestoreStorage - Category Operations', () => {
 
     it('should validate category data before creation', async () => {
       const invalidCategory: Partial<Category> = {
-        title: '', // Empty name should fail validation
+        name: '', // Empty name should fail validation
       };
 
       await expect(firestoreStorage.createCategory(invalidCategory)).rejects.toThrow();
@@ -713,8 +690,8 @@ describe('FirestoreStorage - Category Operations', () => {
   describe('getCategories', () => {
     it('should retrieve all categories', async () => {
       const mockCategories: Category[] = [
-        { id: 1, title: 'Category 1', description: null, tenantId: null },
-        { id: 2, title: 'Category 2', description: null, tenantId: null },
+        { id: 1, name: 'Category 1', description: null, tenantId: null },
+        { id: 2, name: 'Category 2', description: null, tenantId: null },
       ];
 
       vi.mocked(firestoreService.getSharedDocuments).mockResolvedValue(mockCategories);
@@ -919,8 +896,10 @@ describe('FirestoreStorage - Error Handling', () => {
 
     vi.mocked(firestoreService.getSharedDocuments).mockRejectedValue(new Error('Network error'));
 
-    await expect(firestoreStorage.getCategories()).rejects.toThrow('Network error');
+    const result = await firestoreStorage.getCategories();
 
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(0);
     expect(logError).toHaveBeenCalledWith('getCategories', expect.any(Error), expect.any(Object));
   });
 

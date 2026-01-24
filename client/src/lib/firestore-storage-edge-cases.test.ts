@@ -640,8 +640,8 @@ describe('FirestoreStorage - Edge Cases', () => {
 
       const result = await firestoreStorage.createQuestion(question);
 
-      expect(result.question).toContain('¿Qué es esto?');
-      expect(result.question).toContain('🎉');
+      expect(result.text).toContain('¿Qué es esto?');
+      expect(result.text).toContain('🎉');
     });
 
     it('should handle category names with special characters', async () => {
