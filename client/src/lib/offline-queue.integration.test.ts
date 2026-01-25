@@ -250,10 +250,8 @@ describe('Offline Queue Integration Tests', () => {
         new Promise((resolve) => setTimeout(resolve, 1000)),
       ]);
 
-      // Should have retried at least twice (initial + 1 retry)
-      // But limit check to max 2 attempts to prevent infinite retries
-      expect(operation.mock.calls.length).toBeGreaterThanOrEqual(2);
-      expect(operation.mock.calls.length).toBeLessThanOrEqual(2);
+      // Should have retried exactly twice (initial + 1 retry)
+      expect(operation.mock.calls.length).toBe(2);
 
       // Should eventually succeed
       const state = offlineQueue.getState();
