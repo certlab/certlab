@@ -69,7 +69,7 @@ describe('OfflineQueue', () => {
 
   afterEach(() => {
     queue.clearQueue();
-    queue.destroy(); // Defensive cleanup: destroys event listeners in non-test mode (no-op in these tests)
+    queue.destroy(); // Clean up the queue instance (destroy() is a no-op in test mode since event listeners aren't set up)
   });
 
   describe('enqueue', () => {
@@ -347,7 +347,8 @@ describe('OfflineQueue', () => {
       const state = newQueue.getState();
       expect(state.total).toBeGreaterThanOrEqual(1);
 
-      // Clean up the new queue instance
+      // Explicitly clean up this extra queue instance since it is not managed by the shared
+      // beforeEach/afterEach hooks. Note: destroy() is a no-op in test mode.
       newQueue.destroy();
     });
 
@@ -441,7 +442,7 @@ describe('OfflineQueue', () => {
 
       // Cleanup
       testQueue.clearQueue();
-      testQueue.destroy(); // Clean up event listeners
+      testQueue.destroy(); // Clean up queue instance (no-op in test mode)
     });
   });
 
