@@ -13,7 +13,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { firestoreStorage } from './firestore-storage';
 import * as firestoreService from './firestore-service';
-import type { User, Quiz, Question, Category, Subcategory } from '@shared/schema';
+import type { User, Quiz, Question, Category, Subcategory, InsertQuestion } from '@shared/schema';
 
 // Mock the firestore-service module
 vi.mock('./firestore-service', () => ({
@@ -600,7 +600,7 @@ describe('FirestoreStorage - Question Operations', () => {
   describe('updateQuestion', () => {
     it('should update an existing question', async () => {
       const questionId = 1;
-      const updates: Partial<Question> = {
+      const updates: Partial<InsertQuestion> = {
         text: 'Updated question with proper length for validation?',
         difficultyLevel: 2,
       };
@@ -624,7 +624,7 @@ describe('FirestoreStorage - Question Operations', () => {
 
     it('should throw error if question does not exist', async () => {
       const questionId = 999;
-      const updates: Partial<Question> = { difficultyLevel: 2 };
+      const updates: Partial<InsertQuestion> = { difficultyLevel: 2 };
 
       vi.mocked(firestoreService.getSharedDocument).mockResolvedValue(null);
 

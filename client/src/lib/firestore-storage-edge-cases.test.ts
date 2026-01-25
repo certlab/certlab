@@ -77,6 +77,40 @@ vi.mock('./sanitize', () => ({
   }),
 }));
 
+/**
+ * Helper to create a valid Question mock with all required fields
+ */
+function createMockQuestion(overrides: Partial<Question> = {}): Question {
+  return {
+    id: 1,
+    text: 'What is 2+2? This is a test question with enough characters.',
+    questionType: 'multiple_choice_single',
+    options: [
+      { id: 0, text: '3' },
+      { id: 1, text: '4' },
+    ],
+    correctAnswer: 1,
+    correctAnswers: null,
+    acceptedAnswers: null,
+    matchingPairs: null,
+    orderingItems: null,
+    requiresManualGrading: false,
+    categoryId: 1,
+    subcategoryId: 1,
+    tenantId: 1,
+    difficultyLevel: 1,
+    explanation: null,
+    explanationSteps: null,
+    tags: null,
+    referenceLinks: null,
+    videoUrl: null,
+    communityExplanations: null,
+    explanationVotes: 0,
+    hasAlternativeViews: false,
+    ...overrides,
+  } as Question;
+}
+
 describe('FirestoreStorage - Edge Cases', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -355,23 +389,21 @@ describe('FirestoreStorage - Edge Cases', () => {
 
     it('should handle querying large question sets', async () => {
       const questionCount = 1000;
-      const mockQuestions: Question[] = Array.from({ length: questionCount }, (_, i) => ({
-        id: i + 1,
-        text: `Question ${i + 1}`,
-        options: [
-          { id: 1, text: 'A' },
-          { id: 2, text: 'B' },
-        ],
-        categoryId: 1,
-        correctAnswer: 0,
-        subcategoryId: 1,
-        difficultyLevel: (i % 3) + 1,
-        explanation: null,
-        tags: null,
-        createdAt: null,
-        updatedAt: null,
-        tenantId: 1,
-      }));
+      const mockQuestions: Question[] = Array.from({ length: questionCount }, (_, i) =>
+        createMockQuestion({
+          id: i + 1,
+          text: `Question ${i + 1}`,
+          options: [
+            { id: 1, text: 'A' },
+            { id: 2, text: 'B' },
+          ],
+          categoryId: 1,
+          correctAnswer: 0,
+          subcategoryId: 1,
+          difficultyLevel: (i % 3) + 1,
+          tenantId: 1,
+        })
+      );
 
       vi.mocked(firestoreService.getSharedDocuments).mockResolvedValue(mockQuestions);
 
