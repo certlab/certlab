@@ -573,6 +573,7 @@ describe('OfflineQueue', () => {
 describe('isOfflineError', () => {
   it('should return true for offline errors', () => {
     expect(isOfflineError(new Error('Network error'))).toBe(true);
+    expect(isOfflineError(new Error('Network request failed'))).toBe(true);
     expect(isOfflineError(new Error('Failed to fetch'))).toBe(true);
     expect(isOfflineError(new Error('You are offline'))).toBe(true);
     expect(isOfflineError(new Error('Connection refused'))).toBe(true);
