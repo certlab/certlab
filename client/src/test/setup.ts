@@ -24,17 +24,20 @@ if (typeof process !== 'undefined') {
 
 // Cleanup singleton instances after all tests complete to prevent hanging
 // The offlineQueue singleton has event listeners that need to be cleaned up
-afterAll(() => {
-  // Dynamically import to avoid circular dependencies and only cleanup if imported
-  import('@/lib/offline-queue')
-    .then((module) => {
-      if (module.offlineQueue && typeof module.offlineQueue.destroy === 'function') {
-        module.offlineQueue.destroy();
-      }
-    })
-    .catch(() => {
-      // Ignore errors if module wasn't imported
-    });
+afterAll(async () => {
+  // Import and destroy the offline queue singleton
+  try {
+    const { offlineQueue } = await import('@/lib/offline-queue');
+    if (offlineQueue && typeof offlineQueue.destroy === 'function') {
+      offlineQueue.destroy();
+      offlineQueue.clearQueue();
+    }
+  } catch (error) {
+    // Ignore errors if module wasn't imported
+  }
+
+  // Give a small delay to allow cleanup to complete
+  await new Promise((resolve) => setTimeout(resolve, 100));
 });
 
 // Set CI environment variable for fast-mock mode in tests

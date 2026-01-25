@@ -18,7 +18,7 @@ export default defineConfig({
     include: ['client/src/**/*.{test,spec}.{ts,tsx}', 'shared/**/*.{test,spec}.{ts,tsx}'],
     testTimeout: 10000,
     hookTimeout: 10000,
-    teardownTimeout: 5000,
+    teardownTimeout: 10000, // Increased from 5000 to allow cleanup of event listeners
     // Disable file parallelism to prevent race conditions with shared mocks
     // Integration tests use singleton firestoreMock which cannot safely run in parallel
     // Tests within a file still run sequentially for predictability
