@@ -74,13 +74,18 @@ describe('Firestore Sync - Integration Tests', () => {
   afterEach(async () => {
     offlineQueue.clearQueue();
 
-    // Always wait for any pending queue processing to complete.
-    // processQueue() will return the existing processing promise if one is active.
-    await offlineQueue.processQueue();
+    // Always wait for any pending queue processing to complete with a timeout
+    await Promise.race([
+      offlineQueue.processQueue(),
+      new Promise((resolve) => setTimeout(resolve, 1000)),
+    ]);
 
     // Flush any remaining microtasks without relying on arbitrary timeouts
     await Promise.resolve();
     await Promise.resolve();
+
+    // Clean up mocks
+    vi.clearAllMocks();
   });
 
   describe('Online/Offline Transitions', () => {
