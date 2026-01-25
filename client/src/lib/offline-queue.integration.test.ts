@@ -128,17 +128,18 @@ describe('Offline Queue Integration Tests', () => {
 
       (global.navigator as any).onLine = true;
       window.dispatchEvent(new Event('online'));
+      // In test mode, event listeners aren't set up, so manually process
+      await offlineQueue.processQueue();
 
       (global.navigator as any).onLine = false;
       window.dispatchEvent(new Event('offline'));
 
       (global.navigator as any).onLine = true;
       window.dispatchEvent(new Event('online'));
+      // In test mode, event listeners aren't set up, so manually process
+      await offlineQueue.processQueue();
 
-      // Wait for processing
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      // Operation should eventually succeed
+      // Operation should have succeeded
       const state = offlineQueue.getState();
       expect(state.completed).toBeGreaterThanOrEqual(1);
     }, 10000);
