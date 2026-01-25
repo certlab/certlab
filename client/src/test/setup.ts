@@ -22,8 +22,11 @@ if (typeof process !== 'undefined') {
   process.env.OFFLINE_QUEUE_MAX_RETRY_DELAY = '100'; // ms
 }
 
-// Cleanup singleton instances after all tests complete to prevent hanging
-// The offlineQueue singleton has event listeners that need to be cleaned up
+// Cleanup singleton instances after all tests complete to prevent hanging.
+// NOTE: This is a *global* afterAll hook from the test setup file and runs
+// once after ALL test files complete (end of the Vitest run), not after each
+// individual test file. The offlineQueue singleton has event listeners that
+// need to be cleaned up here.
 afterAll(async () => {
   // Import and destroy the offline queue singleton
   try {

@@ -354,7 +354,9 @@ export class OfflineQueue {
     });
 
     // Try to process immediately if online
-    // Skip automatic processing in test environment to prevent hanging tests
+    // Skip automatic background processing in test environments: this spawns
+    // fire-and-forget promises that may still be running when the test runner
+    // tears down, which can cause hanging tests or timeout failures.
     const isTestEnv =
       typeof process !== 'undefined' &&
       (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true');

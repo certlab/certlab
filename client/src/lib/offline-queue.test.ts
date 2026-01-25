@@ -34,6 +34,15 @@ Object.defineProperty(global.navigator, 'onLine', {
   value: true,
 });
 
+/**
+ * Helper function to manually process the queue in test mode.
+ * In test mode, event listeners aren't set up, so we need to manually
+ * trigger queue processing after simulating online events.
+ */
+async function manuallyProcessQueueInTestMode(queueInstance: OfflineQueue): Promise<void> {
+  await queueInstance.processQueue();
+}
+
 describe('OfflineQueue', () => {
   let queue: OfflineQueue;
 
@@ -60,7 +69,7 @@ describe('OfflineQueue', () => {
 
   afterEach(() => {
     queue.clearQueue();
-    queue.destroy(); // Clean up event listeners to prevent hanging tests
+    queue.destroy(); // Defensive cleanup: destroys event listeners in non-test mode (no-op in these tests)
   });
 
   describe('enqueue', () => {
@@ -122,6 +131,24 @@ describe('OfflineQueue', () => {
       await queue.processQueue();
 
       expect(operation).toHaveBeenCalled();
+    });
+
+    it('should not automatically process queue in test mode', async () => {
+      const operation = vi.fn().mockResolvedValue('success');
+      (global.navigator as any).onLine = true;
+
+      await queue.enqueue({
+        type: 'create',
+        collection: 'quizzes',
+        data: { name: 'Test Quiz' },
+        operation,
+      });
+
+      // Wait a bit to ensure no automatic processing happens
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Operation should NOT have been called because automatic processing is disabled in test mode
+      expect(operation).not.toHaveBeenCalled();
     });
 
     it('should not process queue immediately when offline', async () => {
@@ -460,16 +487,14 @@ describe('OfflineQueue', () => {
       // Simulate rapid online/offline
       (global.navigator as any).onLine = true;
       window.dispatchEvent(new Event('online'));
-      // In test mode, event listeners aren't set up, so manually process
-      await queue.processQueue();
+      await manuallyProcessQueueInTestMode(queue);
 
       (global.navigator as any).onLine = false;
       window.dispatchEvent(new Event('offline'));
 
       (global.navigator as any).onLine = true;
       window.dispatchEvent(new Event('online'));
-      // In test mode, event listeners aren't set up, so manually process
-      await queue.processQueue();
+      await manuallyProcessQueueInTestMode(queue);
 
       // Operation should have succeeded
       expect(operation).toHaveBeenCalled();
