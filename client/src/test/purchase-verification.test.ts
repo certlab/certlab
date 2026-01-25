@@ -20,6 +20,7 @@ vi.mock('../lib/storage-factory', () => ({
 // Mock the errors module
 vi.mock('../lib/errors', () => ({
   logError: vi.fn(),
+  logInfo: vi.fn(),
 }));
 
 import { storage } from '../lib/storage-factory';

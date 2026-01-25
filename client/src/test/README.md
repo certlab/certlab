@@ -87,6 +87,7 @@ vi.mock('@/lib/client-auth', () => ({
 
 vi.mock('@/lib/errors', () => ({
   logError: vi.fn(),
+  logInfo: vi.fn(),
 }));
 ```
 
@@ -458,6 +459,7 @@ vi.mock('@/lib/client-auth', () => ({
 
 vi.mock('@/lib/errors', () => ({
   logError: vi.fn(),
+  logInfo: vi.fn(),
 }));
 
 describe('Dashboard', () => {
@@ -537,6 +539,7 @@ vi.mock('@/lib/client-auth', () => ({
 
 vi.mock('@/lib/errors', () => ({
   logError: vi.fn(),
+  logInfo: vi.fn(),
 }));
 
 describe('ProtectedPage', () => {

@@ -26,6 +26,7 @@ vi.mock('./firestore-storage-queued', () => ({
 }));
 vi.mock('./errors', () => ({
   logError: vi.fn(),
+  logInfo: vi.fn(),
 }));
 
 describe('Storage Factory', () => {

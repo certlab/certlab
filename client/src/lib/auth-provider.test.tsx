@@ -40,6 +40,7 @@ vi.mock('./client-auth', () => ({
 // Mock the errors module
 vi.mock('./errors', () => ({
   logError: vi.fn(),
+  logInfo: vi.fn(),
 }));
 
 // Mock the dynatrace module

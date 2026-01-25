@@ -46,6 +46,7 @@ vi.mock('@/lib/client-auth', () => ({
 
 vi.mock('@/lib/errors', () => ({
   logError: vi.fn(),
+  logInfo: vi.fn(),
 }));
 
 describe('ProtectedRoute', () => {
