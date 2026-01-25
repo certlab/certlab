@@ -294,7 +294,7 @@ describe('AuthProvider', () => {
         expect(screen.getByTestId('loading')).toHaveTextContent('false');
         expect(screen.getByTestId('user')).toHaveTextContent('test@example.com');
       },
-      { timeout: 3000 }
+      { timeout: 500 }
     );
 
     // Verify isLoading became false
@@ -305,7 +305,7 @@ describe('AuthProvider', () => {
       () => {
         expect(mockProcessDailyLogin).toHaveBeenCalledWith('test-user-123', 1);
       },
-      { timeout: 3000 }
+      { timeout: 500 }
     );
 
     // Verify processDailyLogin was called after isLoading became false

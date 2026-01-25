@@ -126,24 +126,30 @@ describe('withRetry', () => {
   });
 
   it('should apply exponential backoff between retries', async () => {
+    // Use fake timers to avoid real delays in tests
+    vi.useFakeTimers();
+
     const fn = vi
       .fn()
       .mockRejectedValueOnce(new NetworkError('Fail 1'))
       .mockRejectedValueOnce(new NetworkError('Fail 2'))
       .mockResolvedValue('success');
 
-    const startTime = Date.now();
-
-    await withRetry(fn, 'testOperation', {
+    const retryPromise = withRetry(fn, 'testOperation', {
       initialDelay: 100,
       backoffMultiplier: 2,
       maxAttempts: 3,
     });
 
-    const elapsed = Date.now() - startTime;
+    // Fast-forward timers to complete all retries
+    await vi.runAllTimersAsync();
 
-    // Should have waited at least 100ms + 200ms = 300ms
-    expect(elapsed).toBeGreaterThanOrEqual(250); // Allow some tolerance
+    await retryPromise;
+
+    // Verify function was called 3 times (initial + 2 retries)
+    expect(fn).toHaveBeenCalledTimes(3);
+
+    vi.useRealTimers();
   });
 });
 

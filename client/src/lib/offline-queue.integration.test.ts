@@ -215,10 +215,8 @@ describe('Offline Queue Integration Tests', () => {
       });
 
       // Process queue (will retry internally with withRetry)
+      // The processQueue promise will resolve when all retries are complete
       await offlineQueue.processQueue();
-
-      // Wait for retries to complete (exponential backoff means delays)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Should have retried at least twice (initial + 1 retry)
       expect(operation.mock.calls.length).toBeGreaterThanOrEqual(2);
@@ -226,7 +224,7 @@ describe('Offline Queue Integration Tests', () => {
       // Should eventually succeed
       const state = offlineQueue.getState();
       expect(state.completed).toBeGreaterThanOrEqual(1);
-    }, 5000); // Increase test timeout
+    });
   });
 
   describe('Dev Tools Integration', () => {
