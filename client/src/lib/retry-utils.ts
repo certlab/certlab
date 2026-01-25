@@ -29,12 +29,37 @@ export interface RetryOptions {
 }
 
 /**
+ * Get environment-aware retry configuration values
+ * In test environments, these values are significantly reduced to prevent timeouts
+ */
+function getEnvAwareRetryConfig() {
+  // Check if we're in a test environment
+  const isTest =
+    typeof process !== 'undefined' &&
+    (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true');
+
+  if (isTest) {
+    // Use minimal delays in test environment to avoid timeouts
+    return {
+      maxAttempts: parseInt(process.env.OFFLINE_QUEUE_MAX_ATTEMPTS || '2', 10),
+      initialDelay: parseInt(process.env.OFFLINE_QUEUE_INITIAL_DELAY || '10', 10),
+      maxDelay: parseInt(process.env.OFFLINE_QUEUE_MAX_RETRY_DELAY || '100', 10),
+    };
+  }
+
+  // Production defaults
+  return {
+    maxAttempts: 3,
+    initialDelay: 1000,
+    maxDelay: 10000,
+  };
+}
+
+/**
  * Default retry configuration
  */
 const DEFAULT_RETRY_OPTIONS: Required<RetryOptions> = {
-  maxAttempts: 3,
-  initialDelay: 1000,
-  maxDelay: 10000,
+  ...getEnvAwareRetryConfig(),
   backoffMultiplier: 2,
   shouldRetry: (error: unknown) => {
     // By default, only retry network errors
@@ -208,10 +233,11 @@ export function isRetryableError(error: unknown): boolean {
  * @returns Retry options configured for network requests
  */
 export function createNetworkRetryOptions(customOptions?: Partial<RetryOptions>): RetryOptions {
+  const envConfig = getEnvAwareRetryConfig();
   return {
-    maxAttempts: 3,
-    initialDelay: 1000,
-    maxDelay: 10000,
+    maxAttempts: envConfig.maxAttempts,
+    initialDelay: envConfig.initialDelay,
+    maxDelay: envConfig.maxDelay,
     backoffMultiplier: 2,
     shouldRetry: (error: unknown) => {
       return isRetryableError(error);

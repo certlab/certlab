@@ -9,6 +9,19 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Set test environment variables to prevent long retry delays that cause CI timeouts
+if (typeof process !== 'undefined') {
+  process.env.NODE_ENV = 'test';
+  process.env.VITEST = 'true';
+  process.env.CI = 'true';
+
+  // Configure minimal retry delays for tests to avoid timeouts
+  // These are used by retry-utils.ts to provide fast-test configuration
+  process.env.OFFLINE_QUEUE_MAX_ATTEMPTS = '2';
+  process.env.OFFLINE_QUEUE_INITIAL_DELAY = '10'; // ms
+  process.env.OFFLINE_QUEUE_MAX_RETRY_DELAY = '100'; // ms
+}
+
 // Set CI environment variable for fast-mock mode in tests
 // This enables CI fast-mock mode by default to speed up test execution
 //
@@ -24,9 +37,6 @@ import { vi } from 'vitest';
 //   })
 //
 // See useFirestoreConnection.test.ts for an example of properly handling CI mode overrides
-if (typeof process !== 'undefined') {
-  process.env.CI = 'true';
-}
 
 // Mock Firebase configuration to avoid real connections
 vi.mock('@/lib/firebase', () => ({
