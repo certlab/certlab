@@ -60,6 +60,7 @@ describe('OfflineQueue', () => {
 
   afterEach(() => {
     queue.clearQueue();
+    queue.destroy(); // Clean up event listeners to prevent hanging tests
   });
 
   describe('enqueue', () => {
@@ -318,6 +319,9 @@ describe('OfflineQueue', () => {
 
       const state = newQueue.getState();
       expect(state.total).toBeGreaterThanOrEqual(1);
+
+      // Clean up the new queue instance
+      newQueue.destroy();
     });
 
     it('should not persist operation functions', async () => {
@@ -410,6 +414,7 @@ describe('OfflineQueue', () => {
 
       // Cleanup
       testQueue.clearQueue();
+      testQueue.destroy(); // Clean up event listeners
     });
   });
 
