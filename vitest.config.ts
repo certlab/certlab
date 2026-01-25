@@ -19,10 +19,8 @@ export default defineConfig({
     testTimeout: 10000,
     hookTimeout: 10000,
     teardownTimeout: 10000, // Increased from 5000 to allow cleanup of event listeners
-    // Disable file parallelism to prevent race conditions with shared mocks
-    // Integration tests use singleton firestoreMock which cannot safely run in parallel
-    // Tests within a file still run sequentially for predictability
-    fileParallelism: false,
+    // File parallelism is safe now that offline queue doesn't set up event listeners in test mode
+    fileParallelism: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
