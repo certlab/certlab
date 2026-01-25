@@ -17,9 +17,10 @@ if (typeof process !== 'undefined') {
 
   // Configure minimal retry delays for tests to avoid timeouts
   // These are used by retry-utils.ts to provide fast-test configuration
+  // Reduced from previous values to prevent test timeouts in CI
   process.env.OFFLINE_QUEUE_MAX_ATTEMPTS = '2';
-  process.env.OFFLINE_QUEUE_INITIAL_DELAY = '10'; // ms
-  process.env.OFFLINE_QUEUE_MAX_RETRY_DELAY = '100'; // ms
+  process.env.OFFLINE_QUEUE_INITIAL_DELAY = '5'; // ms (reduced from 10ms)
+  process.env.OFFLINE_QUEUE_MAX_RETRY_DELAY = '50'; // ms (reduced from 100ms)
 }
 
 // Cleanup singleton instances after all tests complete to prevent hanging.

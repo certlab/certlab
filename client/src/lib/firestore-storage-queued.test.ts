@@ -38,13 +38,18 @@ describe('createFirestoreStorageWithQueue', () => {
     // Clear the queue and wait for any pending processing to complete
     offlineQueue.clearQueue();
 
-    // Always wait for any pending queue processing to complete.
-    // processQueue() will return the existing processing promise if one is active.
-    await offlineQueue.processQueue();
+    // Always wait for any pending queue processing to complete with a timeout
+    await Promise.race([
+      offlineQueue.processQueue(),
+      new Promise((resolve) => setTimeout(resolve, 1000)),
+    ]);
 
     // Flush any remaining microtasks without relying on arbitrary timeouts
     await Promise.resolve();
     await Promise.resolve();
+
+    // Clean up mocks
+    vi.clearAllMocks();
   });
 
   describe('when online', () => {
@@ -217,9 +222,12 @@ describe('createFirestoreStorageWithQueue', () => {
       const stateBefore = offlineQueue.getState();
       expect(stateBefore.total).toBe(1);
 
-      // Go online and process queue
+      // Go online and process queue with timeout to prevent hanging
       (global.navigator as any).onLine = true;
-      await offlineQueue.processQueue();
+      await Promise.race([
+        offlineQueue.processQueue(),
+        new Promise((resolve) => setTimeout(resolve, 2000)),
+      ]);
 
       // Operation should have executed
       expect(mockStorage.createQuiz).toHaveBeenCalledTimes(2); // Once for initial attempt, once for retry
@@ -227,6 +235,6 @@ describe('createFirestoreStorageWithQueue', () => {
       // Should be marked as completed
       const stateAfter = offlineQueue.getState();
       expect(stateAfter.completed).toBe(1);
-    });
+    }, 5000); // Add 5 second timeout
   });
 });

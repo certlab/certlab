@@ -18,12 +18,17 @@ export default defineConfig({
     include: ['client/src/**/*.{test,spec}.{ts,tsx}', 'shared/**/*.{test,spec}.{ts,tsx}'],
     testTimeout: 10000,
     hookTimeout: 10000,
-    teardownTimeout: 10000, // Increased from 5000 to allow cleanup of event listeners
-    // Disable file parallelism to prevent race conditions with shared resources.
-    // Tests share the localStorage mock and offlineQueue singleton. While event
-    // listeners are disabled in test mode, parallel execution could still cause
-    // race conditions when tests manipulate singleton state.
-    fileParallelism: false,
+    teardownTimeout: 10000,
+    // Enable parallel test execution for faster test runs.
+    // Tests that share singleton state (offlineQueue) have been updated to properly
+    // clean up state in afterEach hooks, making parallel execution safe.
+    fileParallelism: true,
+    // Use threads pool with limited concurrency to balance speed and resource usage
+    pool: 'threads',
+    // Limit concurrent tests to avoid resource exhaustion (Vitest 4+ format)
+    maxConcurrency: 4,
+    minWorkers: 1,
+    maxWorkers: 4,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],

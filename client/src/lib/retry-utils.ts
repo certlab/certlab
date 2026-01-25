@@ -51,10 +51,11 @@ function getEnvAwareRetryConfig() {
 
   if (isTest) {
     // Use minimal delays in test environment to avoid timeouts
+    // Further reduced from previous values to prevent CI timeouts
     return {
       maxAttempts: parseInt(process.env.OFFLINE_QUEUE_MAX_ATTEMPTS || '2', 10),
-      initialDelay: parseInt(process.env.OFFLINE_QUEUE_INITIAL_DELAY || '10', 10),
-      maxDelay: parseInt(process.env.OFFLINE_QUEUE_MAX_RETRY_DELAY || '100', 10),
+      initialDelay: parseInt(process.env.OFFLINE_QUEUE_INITIAL_DELAY || '5', 10),
+      maxDelay: parseInt(process.env.OFFLINE_QUEUE_MAX_RETRY_DELAY || '50', 10),
     };
   }
 
