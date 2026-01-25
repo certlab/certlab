@@ -135,7 +135,7 @@
     "react-resizable-panels": "^4.5.0",
     "react-router-dom": "^7.13.0",
     "reactflow": "^11.11.4",
-    "recharts": "^3.6.0",
+    "recharts": "^3.7.0",
     "tailwind-merge": "^3.4.0",
     "tw-animate-css": "^1.2.5",
     "vaul": "^1.1.2",
