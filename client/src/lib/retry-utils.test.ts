@@ -224,9 +224,10 @@ describe('createNetworkRetryOptions', () => {
   it('should create options with network defaults', () => {
     const options = createNetworkRetryOptions();
 
-    expect(options.maxAttempts).toBe(3);
-    expect(options.initialDelay).toBe(1000);
-    expect(options.maxDelay).toBe(10000);
+    // In test environment, uses reduced values for faster tests
+    expect(options.maxAttempts).toBe(2);
+    expect(options.initialDelay).toBe(10);
+    expect(options.maxDelay).toBe(100);
     expect(options.backoffMultiplier).toBe(2);
     expect(options.shouldRetry).toBeDefined();
   });
@@ -239,7 +240,7 @@ describe('createNetworkRetryOptions', () => {
 
     expect(options.maxAttempts).toBe(5);
     expect(options.initialDelay).toBe(2000);
-    expect(options.maxDelay).toBe(10000); // Still uses default
+    expect(options.maxDelay).toBe(100); // Still uses test environment default
   });
 
   it('should retry network errors', () => {
