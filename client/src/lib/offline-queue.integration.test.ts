@@ -45,10 +45,14 @@ describe('Offline Queue Integration Tests', () => {
     (global.navigator as any).onLine = true;
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});
+    // Use fake timers to speed up tests by mocking setTimeout/setInterval
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
     offlineQueue.clearQueue();
+    // Restore real timers after each test
+    vi.useRealTimers();
   });
 
   describe('Offline/Online Transitions', () => {
@@ -89,8 +93,8 @@ describe('Offline Queue Integration Tests', () => {
       // Process the queue
       await offlineQueue.processQueue();
 
-      // Wait a bit for processing
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Advance timers to allow async operations to complete
+      await vi.advanceTimersByTimeAsync(100);
 
       // Operations should have executed
       expect(mockStorage.createQuiz).toHaveBeenCalledTimes(4); // 2 initial + 2 retries
@@ -125,8 +129,8 @@ describe('Offline Queue Integration Tests', () => {
       (global.navigator as any).onLine = true;
       window.dispatchEvent(new Event('online'));
 
-      // Wait for processing
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Advance timers to allow async processing
+      await vi.advanceTimersByTimeAsync(300);
 
       // Operation should eventually succeed
       const state = offlineQueue.getState();
@@ -214,11 +218,10 @@ describe('Offline Queue Integration Tests', () => {
         operation,
       });
 
-      // Process queue (will retry internally with withRetry)
-      await offlineQueue.processQueue();
-
-      // Wait for retries to complete (exponential backoff means delays)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Process queue with timer advancement
+      const processPromise = offlineQueue.processQueue();
+      await vi.runAllTimersAsync();
+      await processPromise;
 
       // Should have retried at least twice (initial + 1 retry)
       expect(operation.mock.calls.length).toBeGreaterThanOrEqual(2);

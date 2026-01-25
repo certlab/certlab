@@ -56,10 +56,15 @@ describe('OfflineQueue', () => {
     vi.clearAllMocks();
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    // Use fake timers to speed up tests
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
     queue.clearQueue();
+    // Restore real timers
+    vi.useRealTimers();
   });
 
   describe('enqueue', () => {
@@ -117,8 +122,8 @@ describe('OfflineQueue', () => {
         operation,
       });
 
-      // Wait for processing
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Advance timers to allow processing
+      await vi.advanceTimersByTimeAsync(100);
 
       expect(operation).toHaveBeenCalled();
     });
@@ -193,7 +198,10 @@ describe('OfflineQueue', () => {
         operation,
       });
 
-      await queue.processQueue();
+      // Process queue with timer advancement
+      const processPromise = queue.processQueue();
+      await vi.runAllTimersAsync();
+      await processPromise;
 
       // Should have been called twice (initial + 1 retry)
       expect(operation.mock.calls.length).toBeGreaterThanOrEqual(2);
@@ -212,7 +220,10 @@ describe('OfflineQueue', () => {
         operation,
       });
 
-      await queue.processQueue();
+      // Process queue with timer advancement
+      const processPromise = queue.processQueue();
+      await vi.runAllTimersAsync();
+      await processPromise;
 
       const state = queue.getState();
       expect(state.failed).toBe(1);
@@ -237,6 +248,9 @@ describe('OfflineQueue', () => {
 
       // Immediately try to process again
       const promise2 = queue.processQueue();
+
+      // Advance timers to complete the operations
+      await vi.advanceTimersByTimeAsync(100);
 
       // Both should complete successfully (second one should return same promise or wait)
       await Promise.all([promise1, promise2]);
@@ -462,8 +476,8 @@ describe('OfflineQueue', () => {
       (global.navigator as any).onLine = true;
       window.dispatchEvent(new Event('online'));
 
-      // Wait for processing
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Advance timers to allow processing
+      await vi.advanceTimersByTimeAsync(200);
 
       // Operation should eventually succeed
       expect(operation).toHaveBeenCalled();
