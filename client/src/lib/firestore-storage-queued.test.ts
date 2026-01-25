@@ -34,6 +34,20 @@ describe('createFirestoreStorageWithQueue', () => {
     });
   });
 
+  afterEach(async () => {
+    // Clear the queue and wait for any pending processing to complete
+    offlineQueue.clearQueue();
+
+    // Wait for any pending queue processing to complete
+    const state = offlineQueue.getState();
+    if (state.isProcessing) {
+      await offlineQueue.processQueue();
+    }
+
+    // Give a small delay to allow any final microtasks to complete
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
+
   describe('when online', () => {
     it('should execute write operations directly', async () => {
       const result = await queuedStorage.createQuiz({ name: 'Test Quiz' } as any);

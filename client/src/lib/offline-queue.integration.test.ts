@@ -47,8 +47,18 @@ describe('Offline Queue Integration Tests', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     offlineQueue.clearQueue();
+
+    // Wait for any pending queue processing to complete
+    // This prevents hanging tests due to background processing promises
+    const state = offlineQueue.getState();
+    if (state.isProcessing) {
+      await offlineQueue.processQueue();
+    }
+
+    // Give a small delay to allow any final microtasks to complete
+    await new Promise((resolve) => setTimeout(resolve, 50));
   });
 
   describe('Offline/Online Transitions', () => {

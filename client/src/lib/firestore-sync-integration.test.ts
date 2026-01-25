@@ -71,8 +71,19 @@ describe('Firestore Sync - Integration Tests', () => {
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    realtimeSyncManager.unsubscribeAll();
+    realtimeSyncManager.clearAllHistory();
     offlineQueue.clearQueue();
+
+    // Wait for any pending queue processing to complete
+    const state = offlineQueue.getState();
+    if (state.isProcessing) {
+      await offlineQueue.processQueue();
+    }
+
+    // Give a small delay to allow any final microtasks to complete
+    await new Promise((resolve) => setTimeout(resolve, 50));
   });
 
   describe('Online/Offline Transitions', () => {

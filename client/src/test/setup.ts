@@ -7,7 +7,7 @@
  */
 
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { vi, afterAll } from 'vitest';
 
 // Set test environment variables to prevent long retry delays that cause CI timeouts
 if (typeof process !== 'undefined') {
@@ -21,6 +21,21 @@ if (typeof process !== 'undefined') {
   process.env.OFFLINE_QUEUE_INITIAL_DELAY = '10'; // ms
   process.env.OFFLINE_QUEUE_MAX_RETRY_DELAY = '100'; // ms
 }
+
+// Cleanup singleton instances after all tests complete to prevent hanging
+// The offlineQueue singleton has event listeners that need to be cleaned up
+afterAll(() => {
+  // Dynamically import to avoid circular dependencies and only cleanup if imported
+  import('@/lib/offline-queue')
+    .then((module) => {
+      if (module.offlineQueue && typeof module.offlineQueue.destroy === 'function') {
+        module.offlineQueue.destroy();
+      }
+    })
+    .catch(() => {
+      // Ignore errors if module wasn't imported
+    });
+});
 
 // Set CI environment variable for fast-mock mode in tests
 // This enables CI fast-mock mode by default to speed up test execution
