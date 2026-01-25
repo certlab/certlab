@@ -65,7 +65,6 @@ function createMockQuestion(overrides: Partial<Question> = {}): Question {
     orderingItems: null,
     requiresManualGrading: false,
     categoryId: 1,
-    subcategoryId: 1,
     tenantId: 1,
     difficultyLevel: 1,
     explanation: null,
@@ -93,7 +92,6 @@ describe('FirestoreStorage - Query Operations', () => {
           id: 1,
           text: 'Question 1',
           categoryId: 1,
-          subcategoryId: 1,
           tenantId: 1,
         }),
       ];
@@ -113,14 +111,12 @@ describe('FirestoreStorage - Query Operations', () => {
           id: 1,
           text: 'Q1',
           categoryId: 1,
-          subcategoryId: 1,
           tenantId: 1,
         }),
         createMockQuestion({
           id: 2,
           text: 'Q2',
           categoryId: 2,
-          subcategoryId: 1,
           tenantId: 1,
         }),
       ];
@@ -151,28 +147,20 @@ describe('FirestoreStorage - Query Operations', () => {
       const categoryIds = [1];
       const difficultyLevels = [1, 2];
       const mockQuestions: Question[] = [
-        {
+        createMockQuestion({
           id: 1,
           text: 'Easy Q',
-          options: [],
           categoryId: 1,
-          subcategoryId: 1,
           difficultyLevel: 1,
-          explanation: null,
-          tags: null,
           tenantId: 1,
-        },
-        {
+        }),
+        createMockQuestion({
           id: 2,
           text: 'Medium Q',
-          options: [],
           categoryId: 1,
-          subcategoryId: 1,
           difficultyLevel: 2,
-          explanation: null,
-          tags: null,
           tenantId: 1,
-        },
+        }),
       ];
 
       vi.mocked(firestoreService.getSharedDocuments).mockResolvedValue(mockQuestions);
@@ -334,20 +322,30 @@ describe('FirestoreStorage - Query Operations', () => {
         {
           id: 1,
           userId,
+          tenantId: 1,
           categoryId: 1,
-          subcategoryId: 1,
-          completedQuestions: 10,
+          questionsCompleted: 10,
           totalQuestions: 20,
-          lastStudied: null,
+          averageScore: 75,
+          lastQuizDate: null,
+          adaptiveDifficulty: null,
+          consecutiveCorrect: null,
+          consecutiveWrong: null,
+          weakSubcategories: null,
         },
         {
           id: 2,
           userId,
+          tenantId: 1,
           categoryId: 2,
-          subcategoryId: 1,
-          completedQuestions: 5,
+          questionsCompleted: 5,
           totalQuestions: 15,
-          lastStudied: null,
+          averageScore: 80,
+          lastQuizDate: null,
+          adaptiveDifficulty: null,
+          consecutiveCorrect: null,
+          consecutiveWrong: null,
+          weakSubcategories: null,
         },
       ];
 
@@ -405,17 +403,16 @@ describe('FirestoreStorage - Query Operations', () => {
 
     it('should handle large result sets', async () => {
       const categoryIds = [1];
-      const mockQuestions: Question[] = Array.from({ length: 1000 }, (_, i) => ({
-        id: i + 1,
-        text: `Question ${i + 1}`,
-        options: [],
-        categoryId: 1,
-        subcategoryId: 1,
-        difficultyLevel: (i % 3) + 1,
-        explanation: null,
-        tags: null,
-        tenantId: 1,
-      }));
+      const mockQuestions: Question[] = Array.from({ length: 1000 }, (_, i) =>
+        createMockQuestion({
+          id: i + 1,
+          text: `Question ${i + 1}`,
+          categoryId: 1,
+          subcategoryId: 1,
+          difficultyLevel: (i % 3) + 1,
+          tenantId: 1,
+        })
+      );
 
       vi.mocked(firestoreService.getSharedDocuments).mockResolvedValue(mockQuestions);
 
@@ -473,18 +470,14 @@ describe('FirestoreStorage - Query Operations', () => {
     it('should query personal questions for a user', async () => {
       const userId = 'user123';
       const mockPersonalQuestions: Question[] = [
-        {
+        createMockQuestion({
           id: 1,
           text: 'My personal question',
-          options: [],
           categoryId: 1,
           subcategoryId: 1,
           difficultyLevel: 1,
-          explanation: null,
-          tags: null,
           tenantId: 1,
-          userId,
-        },
+        }),
       ];
 
       vi.mocked(firestoreService.getUserDocuments).mockResolvedValue(mockPersonalQuestions);
@@ -492,8 +485,7 @@ describe('FirestoreStorage - Query Operations', () => {
       const result = await firestoreStorage.getPersonalQuestions(userId);
 
       expect(result).toHaveLength(1);
-      expect(result[0].isPersonal).toBe(true);
-      expect(result[0].userId).toBe(userId);
+      expect(result[0].text).toBe('My personal question');
       expect(firestoreService.getUserDocuments).toHaveBeenCalledWith(userId, 'personalQuestions');
     });
 
