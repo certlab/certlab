@@ -27,11 +27,16 @@ export const mockUser = {
  * sessionStorage before any application script runs. Call this BEFORE
  * navigating to the app (e.g. before page.goto()).
  *
- * IMPORTANT: This only seeds the optimistic sessionStorage cache. The app's
- * AuthProvider treats firebaseUser as the source of truth and will clear the
- * cached session when Firebase reports null. In CI/clean browser contexts,
- * Firebase configuration is still required for the tests to work correctly.
- * Consider using Firebase Auth Emulator or custom tokens for reliable e2e testing.
+ * CRITICAL LIMITATION: This only seeds the optimistic sessionStorage cache.
+ * The app's AuthProvider requires a non-null firebaseUser as the source of
+ * truth and will clear the cached session on the first Firebase auth state
+ * callback when Firebase reports null. As a result, this helper alone will NOT
+ * actually authenticate the app and protected routes will still redirect to /.
+ *
+ * For reliable e2e testing, either:
+ * - Configure Firebase and use Auth Emulator with real sign-in
+ * - Implement custom token auth in tests
+ * - Add guards in tests to detect redirect and skip when not authenticated
  */
 export async function setupMockAuth(page: Page) {
   // Use addInitScript to inject auth state before any page scripts run

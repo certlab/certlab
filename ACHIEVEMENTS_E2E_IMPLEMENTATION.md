@@ -104,8 +104,6 @@ const streakInfo = page.getByText(/streak/i);
 const hasStreak = await streakInfo.isVisible().catch(() => false);
 // Test passes whether or not streak data is present
 ```
-// Test passes whether or not data is present
-```
 
 ## Limitations
 
