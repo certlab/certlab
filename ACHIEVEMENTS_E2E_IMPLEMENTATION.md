@@ -66,8 +66,9 @@ Enabled 12 of 14 tests in `04-achievements.spec.ts`:
 ### 4. Configuration Updates
 
 - Changed Playwright base URL from `http://localhost:4173` to `http://localhost:5000`
-- Dev server (port 5000) runs in development mode where Firebase validation is relaxed
-- This allows mock auth to work without real Firebase configuration
+- E2E tests now target the Vite dev server on port 5000
+- **Important**: Firebase/Firestore configuration is still required; mock auth only simulates the authenticated user session (via `sessionStorage`) on top of the existing Firebase-backed app
+- Dev mode provides the same Firebase/Firestore integration as local development
 
 ### 5. Documentation
 

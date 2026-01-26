@@ -21,18 +21,18 @@ export const mockUser = {
 };
 
 /**
- * Set up mock authenticated state in sessionStorage
- * This simulates what auth-provider.tsx does when a user logs in
+ * Set up mock authenticated state in sessionStorage.
+ *
+ * This injects an init script so that the auth state is present in
+ * sessionStorage before any application script runs. Call this BEFORE
+ * navigating to the app (e.g. before page.goto()).
  */
 export async function setupMockAuth(page: Page) {
-  await page.goto('/');
-  await page.waitForLoadState('networkidle');
-
-  // Set authentication state in sessionStorage to match auth-provider.tsx pattern
-  await page.evaluate((user) => {
-    sessionStorage.setItem('certlab_auth_state', 'authenticated');
-    sessionStorage.setItem('certlab_auth_user', JSON.stringify(user));
-    sessionStorage.setItem('certlab_auth_timestamp', Date.now().toString());
+  // Use addInitScript to inject auth state before any page scripts run
+  await page.addInitScript((user) => {
+    window.sessionStorage.setItem('certlab_auth_state', 'authenticated');
+    window.sessionStorage.setItem('certlab_auth_user', JSON.stringify(user));
+    window.sessionStorage.setItem('certlab_auth_timestamp', Date.now().toString());
   }, mockUser);
 }
 

@@ -110,12 +110,12 @@ test('my protected route test', async ({ authenticatedPage: page }) => {
 ```
 
 The `authenticatedPage` fixture:
-- Sets up mock user data in sessionStorage
+- Sets up mock user data in sessionStorage using `addInitScript` (before page load)
 - Simulates authenticated state matching the app's auth-provider pattern
-- Works in development mode where Firebase validation is relaxed
-- Allows testing of protected routes without real authentication
+- Requires Firebase/Firestore to be configured (mock auth works on top of existing Firebase integration)
+- Allows testing of protected routes with a mock user session
 
-**Note**: While mock auth works for UI testing, Firestore is still required for full functionality since the app stores all data in Firestore.
+**Note**: Firebase/Firestore configuration is still required for the app to function. Mock auth simulates the user session in sessionStorage but does not replace Firebase Auth or Firestore storage.
 
 ### In CI
 Tests run automatically with Firebase credentials from GitHub secrets. CI environment should have test data seeded in Firestore.

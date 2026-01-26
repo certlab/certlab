@@ -24,8 +24,7 @@ export const test = base.extend<CustomFixtures>({
    * Provides a page with mock authentication state set up.
    *
    * This fixture automatically sets up a mock authenticated user in sessionStorage
-   * before the test runs, allowing tests to access protected routes and features
-   * without requiring real Firebase authentication.
+   * before the test runs, allowing tests to access protected routes and features.
    *
    * The mock user has:
    * - id: 'test-user-123'
@@ -34,9 +33,12 @@ export const test = base.extend<CustomFixtures>({
    * - lastName: 'User'
    * - role: 'user'
    * - tenantId: 1
+   *
+   * Note: This uses addInitScript to inject auth state before page load,
+   * so no extra navigation is performed by this fixture.
    */
   authenticatedPage: async ({ page }, use) => {
-    // Set up mock authentication before the test
+    // Set up mock authentication via init script (no navigation)
     await setupMockAuth(page);
     await use(page);
   },

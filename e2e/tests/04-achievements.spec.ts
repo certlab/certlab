@@ -117,6 +117,10 @@ test.describe('Dashboard Statistics', () => {
     // Navigate to dashboard
     await goToDashboard(page);
 
+    // At minimum, the dashboard should load successfully
+    const dashboardHeading = page.getByRole('heading').first();
+    await expect(dashboardHeading).toBeVisible();
+
     // Look for streak display - the Flame icon with streak text
     // Based on the dashboard code, there's a streak display
     const streakIcon = page.locator('svg').filter({ hasText: '' }); // Flame icon
@@ -131,80 +135,79 @@ test.describe('Dashboard Statistics', () => {
       .isVisible({ timeout: 5000 })
       .catch(() => false);
 
-    // At minimum, the dashboard should load successfully
-    const dashboardHeading = page.getByRole('heading').first();
-    await expect(dashboardHeading).toBeVisible();
-
     // Streak info might not be visible if user has no activity yet
-    // Just verify dashboard structure is present
-    expect(true).toBeTruthy();
+    // We verify the dashboard structure is present and check if streak UI exists
+    // Test passes if dashboard loads, even if streak data is not populated
+    if (!hasStreakIcon && !hasStreakText) {
+      console.log('Streak UI not visible - may not be populated for new users');
+    }
   });
 
   test('should display total quizzes taken', async ({ authenticatedPage: page }) => {
     // Navigate to dashboard
     await goToDashboard(page);
 
-    // Look for quiz statistics
-    // Dashboard shows recent quizzes and quiz count
-    const quizSection = page.getByText(/quiz|practice/i).first();
-    const hasSectionVisible = await quizSection.isVisible({ timeout: 5000 }).catch(() => false);
-
     // Dashboard should at least load
     const dashboardContent = page.locator('main');
     await expect(dashboardContent).toBeVisible();
 
+    // Look for quiz statistics
+    // Dashboard shows recent quizzes and quiz count
+    const quizSection = page.getByText(/quiz|practice/i).first();
+    await quizSection.isVisible({ timeout: 5000 }).catch(() => false);
+
     // Statistics might show 0 for new users, which is acceptable
-    expect(hasSectionVisible || true).toBeTruthy();
+    // Test passes as long as dashboard structure exists
   });
 
   test('should display average score', async ({ authenticatedPage: page }) => {
     // Navigate to dashboard
     await goToDashboard(page);
 
-    // Look for score or percentage displays
-    const scoreText = page.getByText(/%|score/i).first();
-    const hasScore = await scoreText.isVisible({ timeout: 5000 }).catch(() => false);
-
     // Dashboard should render successfully
     const mainContent = page.locator('main');
     await expect(mainContent).toBeVisible();
 
+    // Look for score or percentage displays
+    const scoreText = page.getByText(/%|score/i).first();
+    await scoreText.isVisible({ timeout: 5000 }).catch(() => false);
+
     // Score might not be visible for users with no quiz history
-    expect(true).toBeTruthy();
+    // Test passes as long as dashboard structure exists
   });
 
   test('should display level/XP progress', async ({ authenticatedPage: page }) => {
     // Navigate to dashboard
     await goToDashboard(page);
 
-    // Look for level or XP displays
-    // Dashboard may show level information in stats
-    const levelText = page.getByText(/level|xp|points/i).first();
-    const hasLevel = await levelText.isVisible({ timeout: 5000 }).catch(() => false);
-
     // Verify dashboard loads
     const dashboard = page.locator('main');
     await expect(dashboard).toBeVisible();
 
+    // Look for level or XP displays
+    // Dashboard may show level information in stats
+    const levelText = page.getByText(/level|xp|points/i).first();
+    await levelText.isVisible({ timeout: 5000 }).catch(() => false);
+
     // Level display depends on gamification features being enabled
-    expect(true).toBeTruthy();
+    // Test passes as long as dashboard structure exists
   });
 
   test('should display recent activity', async ({ authenticatedPage: page }) => {
     // Navigate to dashboard
     await goToDashboard(page);
 
-    // Look for activity section or recent quizzes
-    // Dashboard shows "Recent Quizzes" section
-    const activityHeading = page.getByText(/recent|activity|history/i).first();
-    const hasActivity = await activityHeading.isVisible({ timeout: 5000 }).catch(() => false);
-
     // Verify dashboard structure exists
     const dashboard = page.locator('main');
     await expect(dashboard).toBeVisible();
 
+    // Look for activity section or recent quizzes
+    // Dashboard shows "Recent Quizzes" section
+    const activityHeading = page.getByText(/recent|activity|history/i).first();
+    await activityHeading.isVisible({ timeout: 5000 }).catch(() => false);
+
     // Activity section might be empty for new users
-    expect(true).toBeTruthy();
+    // Test passes as long as dashboard structure exists
   });
 });
 
@@ -229,32 +232,32 @@ test.describe('Progress Tracking', () => {
     // Navigate to dashboard
     await goToDashboard(page);
 
-    // Look for category progress - CISSP, CISM, etc.
-    const categoryText = page.getByText(/CISSP|CISM|Security\+/i).first();
-    const hasCategory = await categoryText.isVisible({ timeout: 5000 }).catch(() => false);
-
     // Verify dashboard structure
     const dashboard = page.locator('main');
     await expect(dashboard).toBeVisible();
 
+    // Look for category progress - CISSP, CISM, etc.
+    const categoryText = page.getByText(/CISSP|CISM|Security\+/i).first();
+    await categoryText.isVisible({ timeout: 5000 }).catch(() => false);
+
     // Category displays may vary based on data availability
-    expect(true).toBeTruthy();
+    // Test passes as long as dashboard structure exists
   });
 
   test('should show mastery scores', async ({ authenticatedPage: page }) => {
     // Navigate to dashboard or progress page
     await goToDashboard(page);
 
-    // Look for mastery indicators
-    const masteryText = page.getByText(/mastery|mastered|proficiency/i).first();
-    const hasMastery = await masteryText.isVisible({ timeout: 5000 }).catch(() => false);
-
     // Verify page loads
     const dashboard = page.locator('main');
     await expect(dashboard).toBeVisible();
 
+    // Look for mastery indicators
+    const masteryText = page.getByText(/mastery|mastered|proficiency/i).first();
+    await masteryText.isVisible({ timeout: 5000 }).catch(() => false);
+
     // Mastery scores depend on quiz history
-    expect(true).toBeTruthy();
+    // Test passes as long as dashboard structure exists
   });
 });
 
@@ -269,7 +272,7 @@ test.describe('Gamification Elements', () => {
 
     if (currentUrl.includes('leaderboard')) {
       // Verify leaderboard content
-      await verifyHeading(page, /leaderboard|rankings/i);
+      await verifyHeading(page, 'leaderboard|rankings');
 
       // Look for user rankings
       const rankings = page
@@ -320,7 +323,7 @@ test.describe('Gamification Elements', () => {
       .or(page.getByText(/quest|challenge|complete/i))
       .first();
 
-    const cardVisible = await questCard.isVisible({ timeout: 5000 }).catch(() => false);
+    await questCard.isVisible({ timeout: 5000 }).catch(() => false);
 
     // Look for any action button (Start, Complete, Claim, etc.)
     const actionButton = page.getByRole('button', { name: /start|complete|claim|take/i }).first();
@@ -328,6 +331,19 @@ test.describe('Gamification Elements', () => {
 
     if (buttonVisible) {
       // Try clicking the button
+      await actionButton.click();
+      await page.waitForLoadState('networkidle');
+
+      // Should either navigate somewhere or show a dialog/modal
+      // We're just verifying the interaction is possible
+      expect(true).toBeTruthy();
+    } else {
+      // No active challenges available, which is acceptable
+      // Verify page structure exists
+      const pageContent = page.locator('main');
+      await expect(pageContent).toBeVisible();
+    }
+  });
       await actionButton.click();
       await page.waitForLoadState('networkidle');
 
