@@ -9,6 +9,7 @@
 
 import { test as base, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { setupMockAuth } from '../utils/auth-helpers';
 
 // Define custom fixture types
 type CustomFixtures = {
@@ -20,22 +21,23 @@ type CustomFixtures = {
  */
 export const test = base.extend<CustomFixtures>({
   /**
-   * Provides a page that can be used for tests that perform authentication themselves.
+   * Provides a page with mock authentication state set up.
    *
-   * Note: This fixture is just a named alias for Playwright's `page`.
-   * It does not automatically authenticate, check whether authentication is available,
-   * or provide any authentication-checking utilities.
+   * This fixture automatically sets up a mock authenticated user in sessionStorage
+   * before the test runs, allowing tests to access protected routes and features
+   * without requiring real Firebase authentication.
    *
-   * Tests that require authentication are responsible for:
-   * - Performing any sign-in or session setup
-   * - Checking whether authentication is available in the current environment
-   * - Skipping gracefully if auth is not configured (e.g., when Firebase is not set up)
-   *
-   * In CI, Firebase credentials should be configured, allowing such tests to work.
+   * The mock user has:
+   * - id: 'test-user-123'
+   * - email: 'test@certlab.app'
+   * - firstName: 'Test'
+   * - lastName: 'User'
+   * - role: 'user'
+   * - tenantId: 1
    */
   authenticatedPage: async ({ page }, use) => {
-    // Just provide the page - authentication must be handled by the test itself
-    // or by external setup (e.g., Firebase emulator, test user credentials)
+    // Set up mock authentication before the test
+    await setupMockAuth(page);
     await use(page);
   },
 });

@@ -33,6 +33,14 @@ export async function goToDashboard(page: Page) {
 }
 
 /**
+ * Navigate to the achievements page (requires authentication)
+ */
+export async function goToAchievements(page: Page) {
+  await page.goto('/app/achievements');
+  await waitForAppReady(page);
+}
+
+/**
  * Check if user is authenticated by looking for logout button or user menu
  */
 export async function isAuthenticated(page: Page): Promise<boolean> {
