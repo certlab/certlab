@@ -120,7 +120,7 @@
     "i18next-browser-languagedetector": "^8.2.0",
     "input-otp": "^1.4.2",
     "js-yaml": "^4.1.0",
-    "katex": "^0.16.27",
+    "katex": "^0.16.28",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.562.0",
     "mermaid": "^11.12.2",
