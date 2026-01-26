@@ -124,10 +124,7 @@ describe('Firestore Sync - Integration Tests', () => {
       expect(state.total).toBe(1);
     });
 
-    it.skip('should process queued operations when coming back online', async () => {
-      // TODO: This test passes in isolation but times out when run with other tests
-      // Likely due to mock state pollution. Needs investigation of beforeEach/afterEach cleanup
-
+    it('should process queued operations when coming back online', async () => {
       // Mock to fail when offline, succeed when online
       vi.mocked(mockStorage.createQuiz!).mockImplementation(async () => {
         if (!(global.navigator as any).onLine) {
@@ -148,11 +145,8 @@ describe('Firestore Sync - Integration Tests', () => {
       // Go online
       (global.navigator as any).onLine = true;
 
-      // Process queue (processQueue may schedule async work)
+      // Process queue - with reduced retry delays, this completes quickly
       await offlineQueue.processQueue();
-
-      // Give a small amount of time for async processing to complete
-      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Operations should be executed
       expect(mockStorage.createQuiz).toHaveBeenCalledTimes(4); // 2 failed offline + 2 succeeded online
@@ -357,16 +351,13 @@ describe('Firestore Sync - Integration Tests', () => {
       expect(mockStorage.updateQuiz).toHaveBeenCalledTimes(1);
     });
 
-    it.skip('should retry failed operations with exponential backoff', async () => {
-      // TODO: This test has timing dependencies on retry logic and is flaky in CI
-      // The offline queue's exponential backoff uses real timers which are hard to reliably test
-
+    it('should retry failed operations with exponential backoff', async () => {
       let attempts = 0;
 
       vi.mocked(mockStorage.createQuiz!).mockImplementation(async () => {
         attempts++;
-        // Fail when offline, then fail twice more, then succeed
-        if (!(global.navigator as any).onLine || attempts < 3) {
+        // Fail twice, then succeed on third attempt
+        if (attempts < 3) {
           throw new Error('Network error');
         }
         return { id: 1, title: 'Quiz' } as Quiz;
@@ -377,17 +368,16 @@ describe('Firestore Sync - Integration Tests', () => {
       // Initial attempt (will fail and queue)
       await queuedStorage.createQuiz({ title: 'Quiz' } as any);
 
-      // Go online and process: simulate multiple retry cycles
+      // Go online and process - with reduced retry delays (5ms/50ms), this completes quickly
       (global.navigator as any).onLine = true;
       await offlineQueue.processQueue();
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      await offlineQueue.processQueue();
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      await offlineQueue.processQueue();
-      await new Promise((resolve) => setTimeout(resolve, 50));
 
-      // Should have retried until the third attempt succeeds (1 offline + 2 online retries + 1 success = 4)
-      expect(attempts).toBeGreaterThanOrEqual(3);
+      // Should have retried and succeeded (1 initial + 2 retries = 3 attempts)
+      expect(attempts).toBe(3);
+
+      // Queue should show completed operation
+      const state = offlineQueue.getState();
+      expect(state.completed).toBe(1);
     });
   });
 
@@ -450,25 +440,37 @@ describe('Firestore Sync - Integration Tests', () => {
       expect(state.total).toBeLessThanOrEqual(maxQueueSize + 5);
     });
 
-    it.skip('should clear completed operations from queue', async () => {
-      // TODO: Flaky test with timing dependencies on async queue processing
+    it('should clear completed operations from queue', async () => {
+      // Start offline to ensure operations get queued
+      (global.navigator as any).onLine = false;
 
-      vi.mocked(mockStorage.createQuiz!).mockResolvedValue({ id: 1 } as Quiz);
+      vi.mocked(mockStorage.createQuiz!)
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce({ id: 1 } as Quiz)
+        .mockResolvedValueOnce({ id: 2 } as Quiz);
 
       await queuedStorage.createQuiz({ title: 'Quiz 1' } as any);
       await queuedStorage.createQuiz({ title: 'Quiz 2' } as any);
 
-      // Process queue to complete operations
+      // Verify operations are queued
+      const stateQueued = offlineQueue.getState();
+      expect(stateQueued.total).toBe(2);
+
+      // Go online and process queue to complete operations
+      (global.navigator as any).onLine = true;
       await offlineQueue.processQueue();
 
-      // Give time for async processing
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Verify operations completed
+      const stateBefore = offlineQueue.getState();
+      expect(stateBefore.completed).toBe(2);
 
       // Clear completed
       offlineQueue.clearCompleted();
 
-      const state = offlineQueue.getState();
-      expect(state.completed).toBe(0);
+      const stateAfter = offlineQueue.getState();
+      expect(stateAfter.completed).toBe(0);
+      expect(stateAfter.total).toBe(0);
     });
   });
 
@@ -582,25 +584,21 @@ describe('Firestore Sync - Integration Tests', () => {
   });
 
   describe('Error Recovery', () => {
-    it.skip('should mark operations as failed after max retries', async () => {
-      // TODO: Flaky test depending on retry timing logic
-
+    it('should mark operations as failed after max retries', async () => {
       vi.mocked(mockStorage.createQuiz!).mockRejectedValue(new Error('Permanent failure'));
 
       (global.navigator as any).onLine = false;
 
       await queuedStorage.createQuiz({ title: 'Quiz' } as any);
 
-      // Go online and try to process
+      // Go online and try to process - with max 2 attempts, this will fail quickly
       (global.navigator as any).onLine = true;
       await offlineQueue.processQueue();
 
-      // Wait for retries to attempt
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       const state = offlineQueue.getState();
-      // Should have some failed operations
-      expect(state.failed).toBeGreaterThanOrEqual(0);
+      // Should have failed after retries
+      expect(state.failed).toBe(1);
+      expect(state.completed).toBe(0);
     });
 
     it('should preserve failed operations for manual retry', async () => {
