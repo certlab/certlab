@@ -50,7 +50,29 @@ Current test coverage includes:
 - ✅ Quiz creation flows (enabled, require Firebase auth + data)
 - ⏸️ Quiz taking flows (TODO: require programmatic quiz creation)
 - ⏸️ Quiz results/review flows (TODO: require programmatic quiz completion)
-- ⏸️ Achievements (requires authentication)
+- ✅ Achievements and gamification (newly unskipped, most tests enabled)
+
+### Achievements Tests Status (04-achievements.spec.ts)
+
+The achievement and gamification tests have been **unskipped** with mock authentication support:
+
+**✅ Enabled:**
+- `should navigate to achievements page` - Tests navigation to achievements
+- `should display earned badges` - Verifies badge display structure
+- `should show badge details on hover or click` - Tests badge interactions
+- `should display streak information` - Checks streak display on dashboard
+- `should display total quizzes taken` - Verifies quiz statistics
+- `should display average score` - Tests score display
+- `should display level/XP progress` - Checks gamification progress
+- `should display recent activity` - Verifies activity feed
+- `should display category-specific progress` - Tests category progress
+- `should show mastery scores` - Checks mastery indicators
+- `should display challenges` - Verifies daily challenges page
+- `should allow completing daily challenge` - Tests challenge interactions
+
+**⏸️ Skipped:**
+- `should show notification when earning first badge` - Requires complex quiz completion
+- `should display leaderboard` - Feature may not be fully implemented
 
 ### Quiz Flow Tests Status
 
@@ -74,6 +96,26 @@ The quiz flow tests (03-quiz-flow.spec.ts) have been partially enabled:
 ## Running Quiz Tests
 
 Quiz tests require Firebase authentication and seeded data.
+
+## Mock Authentication for E2E Tests
+
+Tests that require authentication now use a mock authentication system that works without real Firebase:
+
+```typescript
+test('my protected route test', async ({ authenticatedPage: page }) => {
+  // authenticatedPage automatically sets up mock auth in sessionStorage
+  await page.goto('/app/dashboard');
+  // User is authenticated as test@certlab.app with id 'test-user-123'
+});
+```
+
+The `authenticatedPage` fixture:
+- Sets up mock user data in sessionStorage
+- Simulates authenticated state matching the app's auth-provider pattern
+- Works in development mode where Firebase validation is relaxed
+- Allows testing of protected routes without real authentication
+
+**Note**: While mock auth works for UI testing, Firestore is still required for full functionality since the app stores all data in Firestore.
 
 ### In CI
 Tests run automatically with Firebase credentials from GitHub secrets. CI environment should have test data seeded in Firestore.
