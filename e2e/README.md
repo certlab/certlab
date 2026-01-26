@@ -49,6 +49,12 @@ See [docs/E2E_TESTING.md](../docs/E2E_TESTING.md) for comprehensive documentatio
 - Best practices
 - Enabling authentication tests
 
+See [e2e-skipped-tests-catalog.md](../e2e-skipped-tests-catalog.md) for:
+- Comprehensive list of all 36 skipped tests
+- Root cause analysis and categorization
+- Impact analysis and risk assessment
+- Recommendations for enabling skipped tests
+
 ## Test Coverage
 
 Current test coverage includes:
@@ -59,7 +65,7 @@ Current test coverage includes:
 - ⏸️ Quiz flows (requires authentication)
 - ⏸️ Achievements (requires authentication)
 
-Many tests are skipped by default because they require Firebase authentication. See the documentation for details on enabling these tests.
+**36 tests are currently skipped** (72% of total e2e tests). See [e2e-skipped-tests-catalog.md](../e2e-skipped-tests-catalog.md) for a comprehensive breakdown of all skipped tests, reasons, and recommendations for enabling them.
 
 ## Writing Tests
 
