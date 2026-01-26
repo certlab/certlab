@@ -139,7 +139,7 @@
     "tailwind-merge": "^3.4.0",
     "tw-animate-css": "^1.2.5",
     "vaul": "^1.1.2",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@axe-core/react": "^4.11.0",
