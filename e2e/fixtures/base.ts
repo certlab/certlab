@@ -9,6 +9,8 @@
 
 import { test as base, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { setupTestEnvironment } from '../utils/test-data-seeder';
+import { setupMockAuth, clearAuth } from '../utils/auth-setup';
 
 // Define custom fixture types
 type CustomFixtures = {
@@ -20,20 +22,18 @@ type CustomFixtures = {
  */
 export const test = base.extend<CustomFixtures>({
   /**
-   * Provides a page that is pre-authenticated
-   * This fixture handles mock authentication for testing
+   * Provides a page that is pre-authenticated with test data seeded
+   * This fixture handles mock authentication and test data setup for testing
    */
   authenticatedPage: async ({ page }, use) => {
-    // Since we're using Firebase auth which requires real credentials,
-    // for E2E tests we'll navigate through the normal flow
-    // In a real scenario, you might:
-    // 1. Use Firebase auth emulator
-    // 2. Create test users in Firebase
-    // 3. Use Playwright's storage state to persist auth
+    // Set up mock authentication and seed test data
+    await setupTestEnvironment(page);
 
-    // For now, this is a placeholder that just returns the page
-    // Tests using this fixture should handle auth themselves
+    // Provide the authenticated page to the test
     await use(page);
+
+    // Cleanup: Clear authentication after test
+    await clearAuth(page);
   },
 });
 
