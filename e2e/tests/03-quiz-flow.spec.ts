@@ -2,10 +2,10 @@
  * Quiz Flow E2E Tests
  *
  * Tests quiz creation, taking, and completion flows.
- * These tests use the authenticatedPage fixture but rely on real Firebase authentication (no mock auth).
+ * These tests rely on real Firebase authentication state being available.
  *
- * Note: These tests assume Firebase/Firestore is configured or emulator is running; otherwise they skip gracefully.
- * In CI, real Firebase credentials should be available.
+ * Note: Tests check for authentication state and skip gracefully if Firebase is not configured.
+ * In CI, Firebase credentials should provide authentication state for tests to run.
  */
 
 import { test, expect } from '../fixtures/base';
@@ -94,7 +94,7 @@ test.describe('Quiz Creation Flow', () => {
     await createButton.click();
     await page.waitForLoadState('networkidle');
 
-    // Select multiple categories - for consistency with basic quiz test, CISSP is required
+    // Select multiple categories - CISSP is required as the baseline test category
     const cisspOption = page.getByText(/CISSP/i).first();
     const cismOption = page.getByText(/CISM/i).first();
 
