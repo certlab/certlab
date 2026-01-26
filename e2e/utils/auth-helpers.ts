@@ -5,7 +5,7 @@
  * protected routes and features without requiring real Firebase authentication.
  */
 
-import { Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 /**
  * Mock user data for e2e tests

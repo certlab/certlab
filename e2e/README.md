@@ -99,7 +99,7 @@ Quiz tests require Firebase authentication and seeded data.
 
 ## Mock Authentication for E2E Tests
 
-Tests that require authentication now use a mock authentication system that works without real Firebase:
+Tests that require authentication use a mock authentication system that seeds sessionStorage:
 
 ```typescript
 test('my protected route test', async ({ authenticatedPage: page }) => {
@@ -111,11 +111,12 @@ test('my protected route test', async ({ authenticatedPage: page }) => {
 
 The `authenticatedPage` fixture:
 - Sets up mock user data in sessionStorage using `addInitScript` (before page load)
-- Simulates authenticated state matching the app's auth-provider pattern
-- Requires Firebase/Firestore to be configured (mock auth works on top of existing Firebase integration)
-- Allows testing of protected routes with a mock user session
+- Seeds optimistic cache that mimics the app's auth-provider pattern
+- **Requires Firebase/Firestore to be configured** - mock auth alone does NOT provide authenticated access
+- App's AuthProvider treats firebaseUser as source of truth and will clear cache when Firebase reports null
+- Tests should check for redirect and skip gracefully when Firebase is not available
 
-**Note**: Firebase/Firestore configuration is still required for the app to function. Mock auth simulates the user session in sessionStorage but does not replace Firebase Auth or Firestore storage.
+**Important**: Firebase/Firestore configuration is still required. Mock auth only seeds sessionStorage cache on top of Firebase - it does not replace Firebase Auth or Firestore storage.
 
 ### In CI
 Tests run automatically with Firebase credentials from GitHub secrets. CI environment should have test data seeded in Firestore.
