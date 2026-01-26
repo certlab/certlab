@@ -23,8 +23,15 @@ export const test = base.extend<CustomFixtures>({
   /**
    * Provides a page with mock authentication state set up.
    *
-   * This fixture automatically sets up a mock authenticated user in sessionStorage
-   * before the test runs, allowing tests to access protected routes and features.
+   * This fixture sets up a mock authenticated user in sessionStorage before
+   * the test runs. However, the app's AuthProvider requires Firebase auth and
+   * will clear the cached session when Firebase reports null.
+   *
+   * IMPORTANT: This fixture alone does NOT provide authenticated access to
+   * protected routes without Firebase. Tests using this fixture should:
+   * 1. Check if navigation was redirected (URL still contains /app/...)
+   * 2. Skip gracefully when Firebase auth is not available
+   * 3. Or ensure Firebase Auth Emulator/real auth is configured
    *
    * The mock user has:
    * - id: 'test-user-123'
@@ -33,9 +40,6 @@ export const test = base.extend<CustomFixtures>({
    * - lastName: 'User'
    * - role: 'user'
    * - tenantId: 1
-   *
-   * Note: This uses addInitScript to inject auth state before page load,
-   * so no extra navigation is performed by this fixture.
    */
   authenticatedPage: async ({ page }, use) => {
     // Set up mock authentication via init script (no navigation)

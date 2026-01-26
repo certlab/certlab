@@ -95,8 +95,8 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  // Note: Uncomment webServer when running locally
-  // The webServer will auto-start the dev server on port 5000.
+  // Note: Uncomment webServer when running locally to auto-start dev server on port 5000
+  // In CI, the workflow uses 'npm run preview' on port 4173 with PLAYWRIGHT_BASE_URL set
   // webServer: {
   //   command: 'npm run dev',
   //   url: 'http://localhost:5000',
