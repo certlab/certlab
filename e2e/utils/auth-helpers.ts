@@ -26,6 +26,12 @@ export const mockUser = {
  * This injects an init script so that the auth state is present in
  * sessionStorage before any application script runs. Call this BEFORE
  * navigating to the app (e.g. before page.goto()).
+ *
+ * IMPORTANT: This only seeds the optimistic sessionStorage cache. The app's
+ * AuthProvider treats firebaseUser as the source of truth and will clear the
+ * cached session when Firebase reports null. In CI/clean browser contexts,
+ * Firebase configuration is still required for the tests to work correctly.
+ * Consider using Firebase Auth Emulator or custom tokens for reliable e2e testing.
  */
 export async function setupMockAuth(page: Page) {
   // Use addInitScript to inject auth state before any page scripts run

@@ -88,26 +88,22 @@ Updated `/e2e/README.md` with:
    - `certlab_auth_user`: JSON-encoded user object
    - `certlab_auth_timestamp`: Current timestamp
 3. **App Recognition**: The app's auth provider (`client/src/lib/auth-provider.tsx`) reads these values on startup
-4. **Development Mode**: In dev mode, Firebase validation is skipped, allowing the mock auth to work
+4. **Firebase Still Required**: Firebase/Firestore configuration is required for the app to function. The mock auth provides an optimistic cached session, but the app's AuthProvider treats `firebaseUser` as the source of truth and will clear the cached session when Firebase reports null. For reliable e2e testing, configure Firebase or use Firebase Auth Emulator.
 
 ### Test Strategy
 
-Tests use a "verify structure exists" approach:
+Tests verify dashboard structure loads correctly:
 
 ```typescript
-// Check for configuration errors first
-const configError = page.getByText(/configuration error/i);
-if (await configError.isVisible().catch(() => false)) {
-  test.skip(true, 'Firebase required');
-}
-
-// Verify page structure exists
+// Assert dashboard loads
 const dashboard = page.locator('main');
 await expect(dashboard).toBeVisible();
 
-// Check for optional features that may not be populated
+// Check for optional features (don't fail if empty)
 const streakInfo = page.getByText(/streak/i);
 const hasStreak = await streakInfo.isVisible().catch(() => false);
+// Test passes whether or not streak data is present
+```
 // Test passes whether or not data is present
 ```
 
