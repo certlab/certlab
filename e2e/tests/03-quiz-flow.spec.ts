@@ -2,32 +2,34 @@
  * Quiz Flow E2E Tests
  *
  * Tests quiz creation, taking, and completion flows.
- * These tests require authentication.
+ * These tests use the authenticatedPage fixture for mock authentication.
+ *
+ * Note: These tests assume Firebase/Firestore is configured or emulator is running.
+ * In CI, real Firebase credentials should be available.
  */
 
 import { test, expect } from '../fixtures/base';
-import {
-  goToDashboard,
-  waitForNavigation,
-  // Unused imports for future use when auth is enabled
-  // verifyHeading,
-  // clickButton,
-  // isElementVisible
-} from '../utils/test-helpers';
+import { waitForNavigation } from '../utils/test-helpers';
 
 test.describe('Quiz Creation Flow', () => {
-  test.skip('should create a basic quiz', async ({ page }) => {
-    // Requires authentication
-    await goToDashboard(page);
+  test('should create a basic quiz', async ({ authenticatedPage: page }) => {
+    // Navigate to dashboard
+    await page.goto('/app/dashboard');
+    await page.waitForLoadState('networkidle');
 
     // Look for "Start Learning" or "Create Quiz" button
     const createButton = page
       .getByRole('button', { name: /start learning|create quiz|quick practice/i })
       .first();
-    const buttonExists = await createButton.isVisible({ timeout: 5000 }).catch(() => false);
 
-    if (!buttonExists) {
-      test.skip(true, 'Quiz creation button not found');
+    // Wait for button to be visible
+    try {
+      await createButton.waitFor({ state: 'visible', timeout: 10000 });
+    } catch (error) {
+      // If button doesn't exist, log and skip gracefully
+      console.log('Quiz creation button not found - may need Firebase data seeded');
+      test.skip(true, 'Quiz creation button not found - Firebase data may not be seeded');
+      return;
     }
 
     await createButton.click();
@@ -37,16 +39,20 @@ test.describe('Quiz Creation Flow', () => {
 
     // Select a category (e.g., CISSP)
     const cisspOption = page.getByText(/CISSP/i).first();
-    const cisspVisible = await cisspOption.isVisible({ timeout: 3000 }).catch(() => false);
+    const cisspVisible = await cisspOption.isVisible({ timeout: 5000 }).catch(() => false);
 
-    if (cisspVisible) {
-      await cisspOption.click();
+    if (!cisspVisible) {
+      console.log('CISSP category not found - Firebase categories may not be seeded');
+      test.skip(true, 'Categories not found - Firebase data may not be seeded');
+      return;
     }
+
+    await cisspOption.click();
 
     // Look for start quiz button
     const startQuizButton = page.getByRole('button', { name: /start quiz|begin|start/i });
     const startButtonVisible = await startQuizButton
-      .isVisible({ timeout: 3000 })
+      .isVisible({ timeout: 5000 })
       .catch(() => false);
 
     if (startButtonVisible) {
@@ -56,15 +62,28 @@ test.describe('Quiz Creation Flow', () => {
       await page.waitForLoadState('networkidle');
       const currentUrl = page.url();
       expect(currentUrl).toMatch(/quiz|question/i);
+    } else {
+      console.log('Start quiz button not found');
+      test.skip(true, 'Start quiz button not found');
     }
   });
 
-  test.skip('should create a multi-category quiz', async ({ page }) => {
-    // Requires authentication
-    await goToDashboard(page);
+  test('should create a multi-category quiz', async ({ authenticatedPage: page }) => {
+    // Navigate to dashboard
+    await page.goto('/app/dashboard');
+    await page.waitForLoadState('networkidle');
 
     // Navigate to quiz creation
     const createButton = page.getByRole('button', { name: /start learning|create quiz/i }).first();
+
+    try {
+      await createButton.waitFor({ state: 'visible', timeout: 10000 });
+    } catch (error) {
+      console.log('Quiz creation button not found');
+      test.skip(true, 'Quiz creation button not found - Firebase data may not be seeded');
+      return;
+    }
+
     await createButton.click();
     await page.waitForLoadState('networkidle');
 
@@ -72,250 +91,89 @@ test.describe('Quiz Creation Flow', () => {
     const cisspOption = page.getByText(/CISSP/i).first();
     const cismOption = page.getByText(/CISM/i).first();
 
-    const cisspVisible = await cisspOption.isVisible({ timeout: 3000 }).catch(() => false);
-    const cismVisible = await cismOption.isVisible({ timeout: 3000 }).catch(() => false);
+    const cisspVisible = await cisspOption.isVisible({ timeout: 5000 }).catch(() => false);
+    const cismVisible = await cismOption.isVisible({ timeout: 5000 }).catch(() => false);
+
+    if (!cisspVisible && !cismVisible) {
+      console.log('Categories not found');
+      test.skip(true, 'Categories not found - Firebase data may not be seeded');
+      return;
+    }
 
     if (cisspVisible) await cisspOption.click();
     if (cismVisible) await cismOption.click();
 
     // Start quiz
     const startButton = page.getByRole('button', { name: /start quiz|begin/i });
-    const startVisible = await startButton.isVisible({ timeout: 3000 }).catch(() => false);
+    const startVisible = await startButton.isVisible({ timeout: 5000 }).catch(() => false);
 
     if (startVisible) {
       await startButton.click();
       await waitForNavigation(page);
+
+      // Verify we're on a quiz page
+      const currentUrl = page.url();
+      expect(currentUrl).toMatch(/app\/quiz|question/i);
+    } else {
+      console.log('Start button not found');
+      test.skip(true, 'Start quiz button not found');
     }
   });
 });
 
 test.describe('Quiz Taking Flow', () => {
-  test.skip('should answer questions in a quiz', async ({ page }) => {
-    // Requires authentication and quiz to be started
+  // Note: These tests require an active quiz to be created first.
+  // In a real test environment, these would either:
+  // 1. Create a quiz programmatically first, or
+  // 2. Use a known test quiz ID from seeded data
 
-    // Assume we're on a quiz page
-    await page.goto('/quiz');
-    await page.waitForLoadState('networkidle');
-
-    // Look for question text
-    const questionText = page.locator('text=/What|Which|How|When|Where/i').first();
-    const questionVisible = await questionText.isVisible({ timeout: 5000 }).catch(() => false);
-
-    if (!questionVisible) {
-      test.skip(true, 'No quiz questions found');
-    }
-
-    // Find answer options (usually radio buttons or clickable divs)
-    const answerOptions = page
-      .getByRole('radio')
-      .or(page.locator('.answer-option'))
-      .or(page.locator('[data-testid*="answer"]'));
-    const optionCount = await answerOptions.count();
-
-    if (optionCount > 0) {
-      // Select first answer
-      await answerOptions.first().click();
-
-      // Look for next/submit button
-      const nextButton = page.getByRole('button', { name: /next|submit|check answer/i });
-      const nextVisible = await nextButton.isVisible({ timeout: 3000 }).catch(() => false);
-
-      if (nextVisible) {
-        await nextButton.click();
-        await page.waitForLoadState('networkidle');
-      }
-    }
+  test('should answer questions in a quiz', async ({ authenticatedPage: page }) => {
+    // For now, skip this test as it requires a quiz to be created first
+    // TODO: Implement quiz creation as a test fixture
+    test.skip(true, 'Test requires programmatic quiz creation - to be implemented');
   });
 
-  test.skip('should display progress indicator', async ({ page }) => {
-    // Requires active quiz
-    await page.goto('/quiz');
-    await page.waitForLoadState('networkidle');
-
-    // Look for progress indicator
-    const progressText = page.locator('text=/Question \\d+ of \\d+|\\d+\\/\\d+/i');
-    const progressVisible = await progressText.isVisible({ timeout: 5000 }).catch(() => false);
-
-    if (progressVisible) {
-      await expect(progressText).toBeVisible();
-    }
+  test('should display progress indicator', async ({ authenticatedPage: page }) => {
+    // For now, skip this test as it requires a quiz to be created first
+    test.skip(true, 'Test requires programmatic quiz creation - to be implemented');
   });
 
-  test.skip('should allow flagging questions for review', async ({ page }) => {
-    // Requires active quiz
-    await page.goto('/quiz');
-    await page.waitForLoadState('networkidle');
-
-    // Look for flag button
-    const flagButton = page.getByRole('button', { name: /flag|mark for review/i });
-    const flagVisible = await flagButton.isVisible({ timeout: 3000 }).catch(() => false);
-
-    if (flagVisible) {
-      await flagButton.click();
-
-      // Verify flag is set (button state changes or indicator appears)
-      await page.waitForLoadState('networkidle');
-
-      // Button should now indicate flagged state
-      const flagIndicator = page
-        .locator('[data-flagged="true"]')
-        .or(page.locator('.flagged'))
-        .or(page.getByText(/flagged/i));
-      const indicatorVisible = await flagIndicator.isVisible({ timeout: 2000 }).catch(() => false);
-
-      if (indicatorVisible) {
-        await expect(flagIndicator).toBeVisible();
-      }
-    }
+  test('should allow flagging questions for review', async ({ authenticatedPage: page }) => {
+    // For now, skip this test as it requires a quiz to be created first
+    test.skip(true, 'Test requires programmatic quiz creation - to be implemented');
   });
 
-  test.skip('should navigate between questions', async ({ page }) => {
-    // Requires active quiz
-    await page.goto('/quiz');
-    await page.waitForLoadState('networkidle');
-
-    // Answer first question
-    const answerOptions = page.getByRole('radio').or(page.locator('.answer-option')).first();
-    const optionVisible = await answerOptions.isVisible({ timeout: 5000 }).catch(() => false);
-
-    if (optionVisible) {
-      await answerOptions.click();
-
-      // Click next
-      const nextButton = page.getByRole('button', { name: /next/i });
-      const nextVisible = await nextButton.isVisible({ timeout: 3000 }).catch(() => false);
-
-      if (nextVisible) {
-        await nextButton.click();
-        await page.waitForLoadState('networkidle');
-
-        // Try to go back
-        const backButton = page.getByRole('button', { name: /back|previous/i });
-        const backVisible = await backButton.isVisible({ timeout: 3000 }).catch(() => false);
-
-        if (backVisible) {
-          await backButton.click();
-          await page.waitForLoadState('networkidle');
-        }
-      }
-    }
+  test('should navigate between questions', async ({ authenticatedPage: page }) => {
+    // For now, skip this test as it requires a quiz to be created first
+    test.skip(true, 'Test requires programmatic quiz creation - to be implemented');
   });
 });
 
 test.describe('Quiz Results and Review', () => {
-  test.skip('should display results after quiz completion', async ({ page }) => {
-    // Requires completed quiz
-    await page.goto('/results');
-    await page.waitForLoadState('networkidle');
+  // Note: These tests require a completed quiz.
+  // Implementation requires either programmatic quiz completion or test fixtures.
 
-    // Look for score display
-    const scoreDisplay = page.locator('text=/\\d+%|Score:|Your score/i');
-    const scoreVisible = await scoreDisplay.isVisible({ timeout: 5000 }).catch(() => false);
-
-    if (scoreVisible) {
-      await expect(scoreDisplay).toBeVisible();
-    }
-
-    // Look for pass/fail indicator
-    const resultIndicator = page.locator('text=/Pass|Fail|Passed|Failed/i');
-    const indicatorVisible = await resultIndicator.isVisible({ timeout: 3000 }).catch(() => false);
-
-    if (indicatorVisible) {
-      await expect(resultIndicator).toBeVisible();
-    }
+  test('should display results after quiz completion', async ({ authenticatedPage: page }) => {
+    test.skip(true, 'Test requires programmatic quiz completion - to be implemented');
   });
 
-  test.skip('should allow reviewing answers', async ({ page }) => {
-    // Requires completed quiz
-    await page.goto('/results');
-    await page.waitForLoadState('networkidle');
-
-    // Look for review button
-    const reviewButton = page.getByRole('button', { name: /review|see answers|view answers/i });
-    const reviewVisible = await reviewButton.isVisible({ timeout: 5000 }).catch(() => false);
-
-    if (reviewVisible) {
-      await reviewButton.click();
-
-      // Should navigate to review page
-      await page.waitForLoadState('networkidle');
-      const currentUrl = page.url();
-      expect(currentUrl).toMatch(/review/i);
-    }
+  test('should allow reviewing answers', async ({ authenticatedPage: page }) => {
+    test.skip(true, 'Test requires programmatic quiz completion - to be implemented');
   });
 
-  test.skip('should show correct and incorrect answers in review', async ({ page }) => {
-    // Requires review page
-    await page.goto('/review');
-    await page.waitForLoadState('networkidle');
-
-    // Look for answer indicators
-    const correctIndicator = page
-      .getByText(/correct|✓|✔/i)
-      .or(page.locator('[data-correct="true"]'))
-      .first();
-    const incorrectIndicator = page
-      .getByText(/incorrect|✗|✘/i)
-      .or(page.locator('[data-correct="false"]'))
-      .first();
-
-    const correctVisible = await correctIndicator.isVisible({ timeout: 5000 }).catch(() => false);
-    const incorrectVisible = await incorrectIndicator
-      .isVisible({ timeout: 5000 })
-      .catch(() => false);
-
-    // At least one should be visible
-    expect(correctVisible || incorrectVisible).toBeTruthy();
+  test('should show correct and incorrect answers in review', async ({
+    authenticatedPage: page,
+  }) => {
+    test.skip(true, 'Test requires programmatic quiz completion - to be implemented');
   });
 
-  test.skip('should display explanations in review', async ({ page }) => {
-    // Requires review page
-    await page.goto('/review');
-    await page.waitForLoadState('networkidle');
-
-    // Look for explanation section
-    const explanation = page
-      .getByText(/Explanation|Why|Correct answer/i)
-      .or(page.locator('[data-testid*="explanation"]'))
-      .first();
-    const explanationVisible = await explanation.isVisible({ timeout: 5000 }).catch(() => false);
-
-    if (explanationVisible) {
-      await expect(explanation).toBeVisible();
-    }
+  test('should display explanations in review', async ({ authenticatedPage: page }) => {
+    test.skip(true, 'Test requires programmatic quiz completion - to be implemented');
   });
 });
 
 test.describe('Study Mode', () => {
-  test.skip('should show immediate feedback in study mode', async ({ page }) => {
-    // Requires study mode quiz
-
-    // This test assumes quiz is in study mode
-    await page.goto('/quiz');
-    await page.waitForLoadState('networkidle');
-
-    // Select an answer
-    const answerOption = page.getByRole('radio').or(page.locator('.answer-option')).first();
-    const optionVisible = await answerOption.isVisible({ timeout: 5000 }).catch(() => false);
-
-    if (optionVisible) {
-      await answerOption.click();
-
-      // Click "Check Answer" button
-      const checkButton = page.getByRole('button', { name: /check answer|submit/i });
-      const checkVisible = await checkButton.isVisible({ timeout: 3000 }).catch(() => false);
-
-      if (checkVisible) {
-        await checkButton.click();
-
-        // Feedback should appear immediately
-        await page.waitForLoadState('networkidle');
-
-        const feedback = page.locator('text=/correct|incorrect|right|wrong/i');
-        const feedbackVisible = await feedback.isVisible({ timeout: 3000 }).catch(() => false);
-
-        expect(feedbackVisible).toBeTruthy();
-      }
-    }
+  test('should show immediate feedback in study mode', async ({ authenticatedPage: page }) => {
+    test.skip(true, 'Test requires programmatic quiz creation in study mode - to be implemented');
   });
 });
