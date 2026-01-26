@@ -58,7 +58,7 @@ test.describe('Quiz Creation Flow', () => {
     await cisspOption.click();
 
     // Look for start quiz button
-    const startQuizButton = page.getByRole('button', { name: /start quiz|begin|start/i });
+    const startQuizButton = page.getByRole('button', { name: /start quiz|begin/i });
     await expect(startQuizButton).toBeVisible({ timeout: 5000 });
     await startQuizButton.click();
 
