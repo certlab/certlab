@@ -9,7 +9,6 @@
  */
 
 import { test, expect } from '../fixtures/base';
-import { waitForNavigation } from '../utils/test-helpers';
 
 test.describe('Quiz Creation Flow', () => {
   test('should create a basic quiz', async ({ authenticatedPage: page }) => {
@@ -119,7 +118,7 @@ test.describe('Quiz Creation Flow', () => {
     const startButton = page.getByRole('button', { name: /start quiz|begin/i });
     await expect(startButton).toBeVisible({ timeout: 5000 });
     await startButton.click();
-    await waitForNavigation(page);
+    await page.waitForLoadState('networkidle');
 
     // Verify we're on a quiz page
     const quizUrl = page.url();
