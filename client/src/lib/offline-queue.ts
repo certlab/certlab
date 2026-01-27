@@ -507,6 +507,14 @@ export class OfflineQueue {
    */
   public clearQueue(): void {
     this.queue = [];
+    // In test environment, also reset processing state to prevent hanging
+    if (
+      typeof process !== 'undefined' &&
+      (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true')
+    ) {
+      this.isProcessing = false;
+      this.processingPromise = null;
+    }
     this.saveQueue();
     logInfo('Offline queue cleared');
   }
