@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, cleanup } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { usePagination } from '@/hooks/use-pagination';
 
 // Wrapper component for hooks that need router context
+// Using MemoryRouter instead of BrowserRouter to avoid hanging in test environment
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <BrowserRouter>{children}</BrowserRouter>
+  <MemoryRouter>{children}</MemoryRouter>
 );
 
 describe('usePagination', () => {
@@ -19,7 +20,7 @@ describe('usePagination', () => {
   });
 
   it('should initialize with default values', () => {
-    const { result } = renderHook(() => usePagination(), { wrapper });
+    const { result } = renderHook(() => usePagination({ syncWithUrl: false }), { wrapper });
 
     expect(result.current.currentPage).toBe(1);
     expect(result.current.pageSize).toBe(25);
@@ -31,6 +32,7 @@ describe('usePagination', () => {
         usePagination({
           initialPage: 2,
           initialPageSize: 50,
+          syncWithUrl: false,
         }),
       { wrapper }
     );
@@ -40,7 +42,7 @@ describe('usePagination', () => {
   });
 
   it('should update current page', () => {
-    const { result } = renderHook(() => usePagination(), { wrapper });
+    const { result } = renderHook(() => usePagination({ syncWithUrl: false }), { wrapper });
 
     act(() => {
       result.current.setCurrentPage(3);
@@ -50,7 +52,7 @@ describe('usePagination', () => {
   });
 
   it('should update page size', () => {
-    const { result } = renderHook(() => usePagination(), { wrapper });
+    const { result } = renderHook(() => usePagination({ syncWithUrl: false }), { wrapper });
 
     act(() => {
       result.current.setPageSize(100);
@@ -62,7 +64,7 @@ describe('usePagination', () => {
   });
 
   it('should reset pagination', () => {
-    const { result } = renderHook(() => usePagination(), { wrapper });
+    const { result } = renderHook(() => usePagination({ syncWithUrl: false }), { wrapper });
 
     act(() => {
       result.current.setCurrentPage(5);
@@ -122,7 +124,7 @@ describe('usePagination', () => {
   });
 
   it('should save page size preference to localStorage', () => {
-    const { result } = renderHook(() => usePagination(), { wrapper });
+    const { result } = renderHook(() => usePagination({ syncWithUrl: false }), { wrapper });
 
     act(() => {
       result.current.setPageSize(50);
@@ -145,7 +147,7 @@ describe('usePagination', () => {
   });
 
   it('should prevent invalid page numbers', () => {
-    const { result } = renderHook(() => usePagination(), { wrapper });
+    const { result } = renderHook(() => usePagination({ syncWithUrl: false }), { wrapper });
 
     act(() => {
       result.current.setCurrentPage(0);
@@ -161,7 +163,7 @@ describe('usePagination', () => {
   });
 
   it('should prevent invalid page sizes', () => {
-    const { result } = renderHook(() => usePagination(), { wrapper });
+    const { result } = renderHook(() => usePagination({ syncWithUrl: false }), { wrapper });
 
     act(() => {
       result.current.setPageSize(0);
@@ -178,7 +180,9 @@ describe('usePagination', () => {
 
   it('should call onPageChange callback', () => {
     const onPageChange = vi.fn();
-    const { result } = renderHook(() => usePagination({ onPageChange }), { wrapper });
+    const { result } = renderHook(() => usePagination({ onPageChange, syncWithUrl: false }), {
+      wrapper,
+    });
 
     act(() => {
       result.current.setCurrentPage(3);
@@ -189,7 +193,9 @@ describe('usePagination', () => {
 
   it('should call onPageSizeChange callback', () => {
     const onPageSizeChange = vi.fn();
-    const { result } = renderHook(() => usePagination({ onPageSizeChange }), { wrapper });
+    const { result } = renderHook(() => usePagination({ onPageSizeChange, syncWithUrl: false }), {
+      wrapper,
+    });
 
     act(() => {
       result.current.setPageSize(50);

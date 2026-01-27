@@ -7,7 +7,7 @@
  */
 
 import '@testing-library/jest-dom';
-import { vi, afterAll } from 'vitest';
+import { vi } from 'vitest';
 
 // Set test environment variables to prevent long retry delays that cause CI timeouts
 if (typeof process !== 'undefined') {
@@ -23,30 +23,13 @@ if (typeof process !== 'undefined') {
   process.env.OFFLINE_QUEUE_MAX_RETRY_DELAY = '50'; // ms (reduced from 100ms)
 }
 
-// Cleanup singleton instances after all tests complete to prevent hanging.
-// NOTE: This is a *global* afterAll hook from the test setup file and runs
-// once after ALL test files complete (end of the Vitest run), not after each
-// individual test file.
+// NOTE: Global afterAll hook was removed to prevent test runner hanging.
+// The async import and cleanup of offlineQueue singleton was causing the test
+// runner to hang indefinitely when running all tests together.
 //
 // Since setupNetworkListeners() returns early in test mode, event listeners are
-// never registered, making destroy() a no-op. This cleanup is defensive and would
-// only be effective if event listeners were somehow registered despite test mode.
-afterAll(async () => {
-  // Import and destroy the offline queue singleton
-  try {
-    const { offlineQueue } = await import('@/lib/offline-queue');
-    if (offlineQueue && typeof offlineQueue.destroy === 'function') {
-      offlineQueue.destroy();
-      offlineQueue.clearQueue();
-    }
-  } catch (error) {
-    // Log cleanup errors instead of silently ignoring them to aid debugging.
-    // This includes module import failures and errors in destroy/clearQueue,
-    // but we do not rethrow to avoid masking test results.
-
-    console.error('[test setup] Failed to clean up offlineQueue in afterAll hook:', error);
-  }
-});
+// never registered in the first place, so explicit cleanup is not necessary.
+// Individual test files handle their own cleanup in afterEach hooks.
 
 // Set CI environment variable for fast-mock mode in tests
 // This enables CI fast-mock mode by default to speed up test execution
