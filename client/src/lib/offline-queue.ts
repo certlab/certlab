@@ -34,6 +34,7 @@
 
 import { logError, logInfo } from './errors';
 import { withRetry, createNetworkRetryOptions } from './retry-utils';
+import { isTestEnvironment } from './utils';
 
 /**
  * Operation types that can be queued
@@ -197,10 +198,7 @@ export class OfflineQueue {
   private setupNetworkListeners(): void {
     // Skip setting up network listeners in test environment to prevent hanging tests
     // Tests can manually call processQueue() when needed
-    if (
-      typeof process !== 'undefined' &&
-      (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true')
-    ) {
+    if (isTestEnvironment()) {
       return;
     }
 
@@ -357,10 +355,12 @@ export class OfflineQueue {
     // Skip automatic background processing in test environments: this spawns
     // fire-and-forget promises that may still be running when the test runner
     // tears down, which can cause hanging tests or timeout failures.
-    const isTestEnv =
-      typeof process !== 'undefined' &&
-      (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true');
-    if (!isTestEnv && typeof navigator !== 'undefined' && navigator.onLine && !this.isProcessing) {
+    if (
+      !isTestEnvironment() &&
+      typeof navigator !== 'undefined' &&
+      navigator.onLine &&
+      !this.isProcessing
+    ) {
       // Process in background and log any errors
       (async () => {
         try {
@@ -508,10 +508,7 @@ export class OfflineQueue {
   public clearQueue(): void {
     this.queue = [];
     // In test environment, also reset processing state to prevent hanging
-    if (
-      typeof process !== 'undefined' &&
-      (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true')
-    ) {
+    if (isTestEnvironment()) {
       this.isProcessing = false;
       this.processingPromise = null;
     }

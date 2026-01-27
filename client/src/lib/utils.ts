@@ -131,3 +131,28 @@ export function formatNotificationCount(count: number, includeNumber = true): st
   const word = `notification${pluralSuffix}`;
   return includeNumber ? `${count} ${word}` : word;
 }
+
+/**
+ * Detects if the code is running in a test environment.
+ *
+ * This function checks for common test environment indicators including:
+ * - NODE_ENV set to 'test'
+ * - VITEST environment variable set to 'true'
+ *
+ * The check is defensive and handles cases where `process` may not be defined
+ * (e.g., in certain browser environments or with specific bundler configurations).
+ *
+ * @returns true if running in a test environment, false otherwise
+ *
+ * @example
+ * if (isTestEnvironment()) {
+ *   // Use fast-path logic for tests
+ *   return mockData;
+ * }
+ */
+export function isTestEnvironment(): boolean {
+  if (typeof process === 'undefined') {
+    return false;
+  }
+  return process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+}

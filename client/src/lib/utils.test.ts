@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cn, formatNotificationCount } from './utils';
+import { cn, formatNotificationCount, isTestEnvironment } from './utils';
 
 describe('cn utility function', () => {
   it('should merge class names correctly', () => {
@@ -65,5 +65,24 @@ describe('formatNotificationCount utility function', () => {
       expect(formatNotificationCount(2, false)).toBe('notifications');
       expect(formatNotificationCount(10, false)).toBe('notifications');
     });
+  });
+});
+
+describe('isTestEnvironment utility function', () => {
+  it('should return true when running in test environment', () => {
+    // This test itself is running in a test environment, so it should return true
+    expect(isTestEnvironment()).toBe(true);
+  });
+
+  it('should detect NODE_ENV=test', () => {
+    // In Vitest, this should be set by default
+    expect(process.env.NODE_ENV).toBe('test');
+    expect(isTestEnvironment()).toBe(true);
+  });
+
+  it('should detect VITEST=true', () => {
+    // In Vitest, this should be set by default
+    expect(process.env.VITEST).toBe('true');
+    expect(isTestEnvironment()).toBe(true);
   });
 });
