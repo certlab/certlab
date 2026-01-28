@@ -2,9 +2,12 @@
 
 This document describes the technical architecture of CertLab, including the overall system design, data flow, and key components.
 
+> **📚 For detailed architectural decisions**, see the [Architecture Decision Records (ADRs)](README.md) which provide comprehensive documentation of all significant architectural choices.
+
 ## Table of Contents
 
 - [System Overview](#system-overview)
+- [Architecture Decision Records](#architecture-decision-records)
 - [Architecture Diagram](#architecture-diagram)
 - [Frontend Architecture](#frontend-architecture)
 - [Data Layer](#data-layer)
@@ -15,9 +18,43 @@ This document describes the technical architecture of CertLab, including the ove
 - [Build and Deployment](#build-and-deployment)
 - [Key Design Decisions](#key-design-decisions)
 
+## Architecture Decision Records
+
+CertLab's architecture is thoroughly documented through **16 Architecture Decision Records (ADRs)** organized into 4 phases:
+
+### Phase 1: Foundation (Infrastructure & Core)
+- **[ADR-001](ADR-001-authentication-authorization.md)**: Authentication, Authorization, User State Management
+- **[ADR-002](ADR-002-cloud-first-firebase-integration.md)**: Cloud-First Architecture & Firebase Integration
+- **[ADR-003](ADR-003-data-storage-firestore-collections.md)**: Data Storage & Firestore Collections
+- **[ADR-004](ADR-004-security-firestore-rules.md)**: Security Model & Firestore Rules
+
+### Phase 2: Frontend Architecture
+- **[ADR-005](ADR-005-frontend-technology-stack.md)**: Frontend Technology Stack
+- **[ADR-006](ADR-006-component-architecture.md)**: Component Architecture & Organization
+- **[ADR-007](ADR-007-state-management.md)**: State Management Strategy
+- **[ADR-008](ADR-008-client-side-routing.md)**: Client-Side Routing
+
+### Phase 3: Features & User Experience
+- **[ADR-009](ADR-009-multi-tenancy.md)**: Multi-Tenancy Architecture
+- **[ADR-010](ADR-010-quiz-system-architecture.md)**: Quiz System Architecture
+- **[ADR-011](ADR-011-gamification-achievements.md)**: Gamification & Achievement System
+- **[ADR-012](ADR-012-theme-accessibility.md)**: Theme System & Accessibility
+
+### Phase 4: Quality & Operations
+- **[ADR-013](ADR-013-testing-strategy.md)**: Testing Strategy
+- **[ADR-014](ADR-014-observability-monitoring.md)**: Observability & Monitoring
+- **[ADR-015](ADR-015-build-deployment.md)**: Build & Deployment Strategy
+- **[ADR-016](ADR-016-performance-optimization.md)**: Performance Optimization
+
+📖 **[Complete ADR Index](README.md)** - Full list with summaries and guidance
+
+---
+
 ## System Overview
 
 CertLab is an **online-first, cloud-native Single-Page Application (SPA)** designed for certification exam preparation. The application uses Firebase for authentication and Firestore for cloud storage, requiring an active internet connection to function.
+
+> **📚 Learn more**: [ADR-002: Cloud-First Architecture](ADR-002-cloud-first-firebase-integration.md)
 
 ### Key Characteristics
 
@@ -91,6 +128,8 @@ CertLab is an **online-first, cloud-native Single-Page Application (SPA)** desig
 
 ## Frontend Architecture
 
+> **📚 Learn more**: [ADR-005: Frontend Technology Stack](ADR-005-frontend-technology-stack.md), [ADR-006: Component Architecture](ADR-006-component-architecture.md)
+
 ### Technology Stack
 
 | Technology | Version | Purpose |
@@ -133,6 +172,8 @@ client/src/
 ```
 
 ## Data Layer
+
+> **📚 Learn more**: [ADR-003: Data Storage & Firestore Collections](ADR-003-data-storage-firestore-collections.md)
 
 ### Firestore Collections
 
@@ -215,6 +256,8 @@ const jsonData = await storage.exportData();
 
 ## Authentication
 
+> **📚 Learn more**: [ADR-001: Authentication, Authorization, User State Management](ADR-001-authentication-authorization.md), [ADR-004: Security Model](ADR-004-security-firestore-rules.md)
+
 CertLab uses a client-side authentication system:
 
 ### Auth Flow
@@ -240,9 +283,10 @@ CertLab uses a client-side authentication system:
 
 ## State Management
 
-CertLab uses four complementary state management approaches, each suited for specific use cases.
-
+> **📚 Learn more**: [ADR-007: State Management Strategy](ADR-007-state-management.md)  
 > **For detailed guidance on when to use each approach, see [state-management.md](state-management.md)**
+
+CertLab uses four complementary state management approaches, each suited for specific use cases.
 
 ### Quick Reference
 
@@ -313,6 +357,8 @@ See `hooks/useQuizState.ts` and `components/quiz/quizReducer.ts` for implementat
 
 ## Routing
 
+> **📚 Learn more**: [ADR-008: Client-Side Routing](ADR-008-client-side-routing.md)
+
 ### Client-Side Routing with React Router
 
 CertLab uses React Router for declarative, dynamic routing throughout the application.
@@ -380,6 +426,8 @@ base: process.env.VITE_BASE_PATH || '/'
 
 ## Multi-Tenancy
 
+> **📚 Learn more**: [ADR-009: Multi-Tenancy Architecture](ADR-009-multi-tenancy.md)
+
 CertLab supports multiple isolated environments (tenants):
 
 ### Tenant Isolation
@@ -417,6 +465,8 @@ const switchTenant = async (tenantId: number) => {
 ```
 
 ## Observability
+
+> **📚 Learn more**: [ADR-014: Observability & Monitoring](ADR-014-observability-monitoring.md)
 
 CertLab integrates Dynatrace Real User Monitoring (RUM) for comprehensive observability and analytics.
 
@@ -497,6 +547,8 @@ See [../setup/dynatrace.md](../setup/dynatrace.md) for complete dashboard and al
 
 ## Build and Deployment
 
+> **📚 Learn more**: [ADR-015: Build & Deployment Strategy](ADR-015-build-deployment.md), [ADR-016: Performance Optimization](ADR-016-performance-optimization.md)
+
 ### Build Process
 
 ```
@@ -521,6 +573,8 @@ The build uses manual chunks for optimal loading:
 | Page chunks | Lazy-loaded page components |
 
 ### Testing
+
+> **📚 Learn more**: [ADR-013: Testing Strategy](ADR-013-testing-strategy.md)
 
 The project uses Vitest for unit and component testing:
 
@@ -604,6 +658,11 @@ async createNewCollectionItem(userId: string, data: any) {
 
 ## Related Documentation
 
+### Architecture Decision Records
+- **[ADR Index](README.md)** - Complete list of all architectural decisions
+- **[ADR-001 to ADR-016]** - Individual decision records organized by phase
+
+### Essential Guides
 - [README.md](README.md) - Getting started and features
 - [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute
 - [../setup/deployment.md](../setup/deployment.md) - Deployment instructions
