@@ -23,14 +23,6 @@ if (typeof process !== 'undefined') {
   process.env.OFFLINE_QUEUE_MAX_RETRY_DELAY = '50'; // ms (reduced from 100ms)
 }
 
-// NOTE: Global afterAll hook was removed to prevent test runner hanging.
-// The async import and cleanup of offlineQueue singleton was causing the test
-// runner to hang indefinitely when running all tests together.
-//
-// Since setupNetworkListeners() returns early in test mode, event listeners are
-// never registered in the first place, so explicit cleanup is not necessary.
-// Individual test files handle their own cleanup in afterEach hooks.
-
 // Set CI environment variable for fast-mock mode in tests
 // This enables CI fast-mock mode by default to speed up test execution
 //
