@@ -158,7 +158,7 @@
     "@types/react-katex": "^3.0.4",
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/coverage-v8": "^4.0.18",
-    "autoprefixer": "^10.4.23",
+    "autoprefixer": "^10.4.24",
     "axe-core": "^4.11.1",
     "cross-env": "^10.1.0",
     "esbuild": "^0.27.2",
