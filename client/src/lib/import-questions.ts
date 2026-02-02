@@ -152,16 +152,53 @@ export async function importQuestionsFromYAML(
 
     result.questionsImported = imported;
     result.questionsSkipped = skipped;
-    result.success = true;
 
-    onProgress?.({
-      total: data.questions.length,
-      current: data.questions.length,
-      status: `Successfully imported ${imported} questions for ${data.category}!${skipped > 0 ? ` (${skipped} skipped due to validation errors)` : ''}`,
-      category: data.category,
-    });
+    // Only mark as successful if at least one question was imported
+    // If all questions failed, this is not a successful import
+    result.success = imported > 0;
+
+    if (imported > 0) {
+      onProgress?.({
+        total: data.questions.length,
+        current: data.questions.length,
+        status: `Successfully imported ${imported} questions for ${data.category}!${skipped > 0 ? ` (${skipped} skipped due to validation errors)` : ''}`,
+        category: data.category,
+      });
+    } else if (skipped > 0) {
+      // All questions failed - check if it's a permission error
+      const hasPermissionError = result.errors.some(
+        (err) =>
+          err.toLowerCase().includes('permission') ||
+          err.toLowerCase().includes('insufficient permissions')
+      );
+
+      const failureMessage = hasPermissionError
+        ? `Failed to import questions: Permission denied. You need admin access to import questions. Please contact your administrator to set your role to 'admin' in Firestore.`
+        : `Failed to import ${skipped} questions for ${data.category}. Check the error messages for details.`;
+
+      onProgress?.({
+        total: data.questions.length,
+        current: data.questions.length,
+        status: failureMessage,
+        category: data.category,
+      });
+    }
   } catch (error) {
-    result.errors.push(error instanceof Error ? error.message : 'Unknown error');
+    // Check if it's a permission error
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const isPermissionError =
+      errorMessage.toLowerCase().includes('permission') ||
+      errorMessage.toLowerCase().includes('insufficient permissions');
+
+    if (isPermissionError) {
+      result.errors.push(
+        'Permission denied: You need admin access to import questions. ' +
+          'To enable admin access, update your user role to "admin" in the Firestore database. ' +
+          'See the Admin Guide for instructions.'
+      );
+    } else {
+      result.errors.push(errorMessage);
+    }
   }
 
   return result;
