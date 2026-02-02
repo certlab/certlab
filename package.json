@@ -103,7 +103,7 @@
     "@tiptap/extension-table": "^3.14.0",
     "@tiptap/extension-table-cell": "^3.17.1",
     "@tiptap/extension-table-header": "^3.17.1",
-    "@tiptap/extension-table-row": "^3.17.1",
+    "@tiptap/extension-table-row": "^3.18.0",
     "@tiptap/react": "^3.17.1",
     "@tiptap/starter-kit": "^3.17.1",
     "class-variance-authority": "^0.7.1",
