@@ -152,12 +152,16 @@ export async function importQuestionsFromYAML(
 
     result.questionsImported = imported;
     result.questionsSkipped = skipped;
-    result.success = true;
+    // Only mark as successful if at least one question was imported
+    // or if there were no questions to import (empty file edge case)
+    result.success = imported > 0 || data.questions.length === 0;
 
     onProgress?.({
       total: data.questions.length,
       current: data.questions.length,
-      status: `Successfully imported ${imported} questions for ${data.category}!${skipped > 0 ? ` (${skipped} skipped due to validation errors)` : ''}`,
+      status: result.success
+        ? `Successfully imported ${imported} questions for ${data.category}!${skipped > 0 ? ` (${skipped} skipped due to validation errors)` : ''}`
+        : `Failed to import questions for ${data.category}. ${skipped} questions skipped due to errors.`,
       category: data.category,
     });
   } catch (error) {

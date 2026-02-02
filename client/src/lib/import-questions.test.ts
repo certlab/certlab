@@ -647,11 +647,65 @@ questions:
 
     const result = await importQuestionsFromYAML(yamlContent);
 
-    expect(result.success).toBe(true); // Overall import succeeds
+    expect(result.success).toBe(false); // Should fail when all questions fail to import
     expect(result.questionsImported).toBe(0);
     expect(result.questionsSkipped).toBe(1);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toContain('Storage error');
+  });
+
+  it('should return success=false when all questions fail to import', async () => {
+    // Simulate Firestore permission error that would occur for non-admin users
+    mockStorage.createQuestion.mockRejectedValue(new Error('Missing or insufficient permissions.'));
+
+    const yamlContent = `
+category: CISSP
+questions:
+  - text: "Question 1?"
+    options:
+      - id: 0
+        text: "A"
+      - id: 1
+        text: "B"
+    correctAnswer: 0
+    explanation: "Explanation"
+    difficultyLevel: 1
+    tags: []
+    subcategory: "Security"
+  - text: "Question 2?"
+    options:
+      - id: 0
+        text: "A"
+      - id: 1
+        text: "B"
+    correctAnswer: 1
+    explanation: "Explanation"
+    difficultyLevel: 1
+    tags: []
+    subcategory: "Security"
+`;
+
+    const result = await importQuestionsFromYAML(yamlContent);
+
+    expect(result.success).toBe(false);
+    expect(result.questionsImported).toBe(0);
+    expect(result.questionsSkipped).toBe(2);
+    expect(result.errors).toHaveLength(2);
+    expect(result.errors[0]).toContain('Missing or insufficient permissions');
+  });
+
+  it('should return success=true for empty question list', async () => {
+    const yamlContent = `
+category: CISSP
+questions: []
+`;
+
+    const result = await importQuestionsFromYAML(yamlContent);
+
+    expect(result.success).toBe(true);
+    expect(result.questionsImported).toBe(0);
+    expect(result.questionsSkipped).toBe(0);
+    expect(result.errors).toHaveLength(0);
   });
 
   it('should set correct icon for CISSP category', async () => {
