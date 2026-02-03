@@ -647,7 +647,7 @@ questions:
 
     const result = await importQuestionsFromYAML(yamlContent);
 
-    expect(result.success).toBe(false); // Should fail when all questions fail to import
+    expect(result.success).toBe(false); // Import fails if no questions are imported
     expect(result.questionsImported).toBe(0);
     expect(result.questionsSkipped).toBe(1);
     expect(result.errors).toHaveLength(1);
@@ -758,6 +758,66 @@ questions:
         icon: 'briefcase',
       })
     );
+  });
+
+  it('should handle permission denied errors with helpful message', async () => {
+    mockStorage.createQuestion.mockRejectedValue(
+      new Error('Missing or insufficient permissions to write to questions collection')
+    );
+
+    const yamlContent = `
+category: CISSP
+questions:
+  - text: "Question?"
+    options:
+      - id: 0
+        text: "A"
+      - id: 1
+        text: "B"
+    correctAnswer: 0
+    explanation: "Explanation"
+    difficultyLevel: 1
+    tags: []
+    subcategory: "Security"
+`;
+
+    const result = await importQuestionsFromYAML(yamlContent);
+
+    expect(result.success).toBe(false);
+    expect(result.questionsImported).toBe(0);
+    expect(result.questionsSkipped).toBe(1);
+    expect(result.errors).toHaveLength(1);
+    // Error message includes question number prefix
+    expect(result.errors[0]).toContain('Missing or insufficient permissions');
+  });
+
+  it('should handle category creation permission errors', async () => {
+    mockStorage.createCategory.mockRejectedValue(
+      new Error('Missing or insufficient permissions to write to categories collection')
+    );
+
+    const yamlContent = `
+category: NewCategory
+questions:
+  - text: "Question?"
+    options:
+      - id: 0
+        text: "A"
+      - id: 1
+        text: "B"
+    correctAnswer: 0
+    explanation: "Explanation"
+    difficultyLevel: 1
+    tags: []
+    subcategory: "Security"
+`;
+
+    const result = await importQuestionsFromYAML(yamlContent);
+
+    expect(result.success).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('Permission denied');
+    expect(result.errors[0]).toContain('admin access');
   });
 });
 

@@ -165,7 +165,21 @@ export async function importQuestionsFromYAML(
       category: data.category,
     });
   } catch (error) {
-    result.errors.push(error instanceof Error ? error.message : 'Unknown error');
+    // Check if it's a permission error
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const isPermissionError =
+      errorMessage.toLowerCase().includes('permission') ||
+      errorMessage.toLowerCase().includes('insufficient permissions');
+
+    if (isPermissionError) {
+      result.errors.push(
+        'Permission denied: You need admin access to import questions. ' +
+          'To enable admin access, update your user role to "admin" in the Firestore database. ' +
+          'See the Admin Guide for instructions.'
+      );
+    } else {
+      result.errors.push(errorMessage);
+    }
   }
 
   return result;
