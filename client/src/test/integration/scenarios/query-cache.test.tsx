@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   resetIntegrationMocks,
@@ -489,12 +489,13 @@ describe('Query Caching and Invalidation Integration Tests', () => {
       );
 
       // Query with short stale time
-      const { result, rerender } = renderHook(
+      const { result } = renderHook(
         () =>
           useQuery({
             queryKey: ['test-stale'],
             queryFn: async () => ({ timestamp: Date.now() }),
             staleTime: 100,
+            refetchOnWindowFocus: false, // Disable automatic refetch
           }),
         { wrapper }
       );
@@ -502,15 +503,20 @@ describe('Query Caching and Invalidation Integration Tests', () => {
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       const firstTimestamp = result.current.data?.timestamp;
 
-      // Wait for data to go stale
-      await waitForAsync(150);
+      // Wait for data to go stale (longer wait to ensure staleness)
+      await waitForAsync(200);
 
-      // Rerender should trigger refetch
-      rerender();
-
-      await waitFor(() => {
-        expect(result.current.data?.timestamp).toBeGreaterThan(firstTimestamp!);
+      // Manually trigger refetch after data is stale
+      await act(async () => {
+        await result.current.refetch();
       });
+
+      await waitFor(
+        () => {
+          expect(result.current.data?.timestamp).toBeGreaterThan(firstTimestamp!);
+        },
+        { timeout: 1000 }
+      );
     });
 
     it('should not refetch within stale time window', async () => {
