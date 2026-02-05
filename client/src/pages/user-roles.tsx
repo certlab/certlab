@@ -90,8 +90,8 @@ export default function UserRolesPage() {
       result = result.filter(
         (user) =>
           user.email.toLowerCase().includes(query) ||
-          user.firstName?.toLowerCase().includes(query) ||
-          user.lastName?.toLowerCase().includes(query) ||
+          user.firstName?.toLowerCase()?.includes(query) ||
+          user.lastName?.toLowerCase()?.includes(query) ||
           user.id.toLowerCase().includes(query)
       );
     }
@@ -114,7 +114,9 @@ export default function UserRolesPage() {
 
   const handleEditRole = (user: User) => {
     setSelectedUser(user);
-    setNewRole((user.role as UserRole) || 'user');
+    // Ensure role is one of the valid UserRole values, default to 'user' if invalid
+    const validRole = user.role === 'admin' || user.role === 'user' ? user.role : 'user';
+    setNewRole(validRole);
     setEditDialogOpen(true);
   };
 
@@ -206,7 +208,10 @@ export default function UserRolesPage() {
                   />
                 </div>
                 {/* Role Filter */}
-                <Select value={roleFilter} onValueChange={(value: any) => setRoleFilter(value)}>
+                <Select
+                  value={roleFilter}
+                  onValueChange={(value: 'all' | 'admin' | 'user') => setRoleFilter(value)}
+                >
                   <SelectTrigger className="w-full sm:w-[150px]">
                     <SelectValue placeholder="Filter by role" />
                   </SelectTrigger>
