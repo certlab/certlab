@@ -387,19 +387,28 @@ class FirestoreStorage implements IClientStorage {
       const id = user.id || generateId();
 
       // Build newUser with explicit field handling
-      // Preserve explicit null values, use defaults only for missing fields
+      // Preserve explicit null values, use defaults only for missing/undefined fields
       const newUser: User = {
         id,
         email: user.email || '',
         passwordHash: user.passwordHash || '',
-        firstName: 'firstName' in user ? user.firstName : null,
-        lastName: 'lastName' in user ? user.lastName : null,
-        profileImageUrl: 'profileImageUrl' in user ? user.profileImageUrl : null,
+        firstName: 'firstName' in user && user.firstName !== undefined ? user.firstName : null,
+        lastName: 'lastName' in user && user.lastName !== undefined ? user.lastName : null,
+        profileImageUrl:
+          'profileImageUrl' in user && user.profileImageUrl !== undefined
+            ? user.profileImageUrl
+            : null,
         role: user.role || 'user',
-        tenantId: 'tenantId' in user ? user.tenantId! : 1,
+        tenantId: 'tenantId' in user && user.tenantId !== undefined ? user.tenantId : 1,
         certificationGoals: user.certificationGoals || [],
-        studyPreferences: 'studyPreferences' in user ? user.studyPreferences : null,
-        skillsAssessment: 'skillsAssessment' in user ? user.skillsAssessment : null,
+        studyPreferences:
+          'studyPreferences' in user && user.studyPreferences !== undefined
+            ? user.studyPreferences
+            : null,
+        skillsAssessment:
+          'skillsAssessment' in user && user.skillsAssessment !== undefined
+            ? user.skillsAssessment
+            : null,
         createdAt: user.createdAt || new Date(),
       } as User;
 

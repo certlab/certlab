@@ -552,7 +552,7 @@ describe('FirestoreStorage - Edge Cases', () => {
         lastName: 'User',
         email: 'test@example.com',
         profileImageUrl: null,
-        tenantId: null,
+        tenantId: undefined,
       };
 
       vi.mocked(firestoreService.setUserProfile).mockResolvedValue(undefined);
@@ -561,7 +561,7 @@ describe('FirestoreStorage - Edge Cases', () => {
       const result = await firestoreStorage.createUser(userWithNulls);
 
       expect(result.profileImageUrl).toBeNull();
-      expect(result.tenantId).toBeNull();
+      expect(result.tenantId).toBe(1); // Should use default value when undefined
     });
   });
 
