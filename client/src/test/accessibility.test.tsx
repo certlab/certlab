@@ -26,7 +26,16 @@ function AuthenticatedWrapper({ children }: { children: React.ReactNode }) {
         <AuthProvider>
           <BrandingProvider>
             <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-              {children}
+              <div className="min-h-screen bg-background">
+                {/* Skip to main content link for keyboard navigation */}
+                <a
+                  href="#main-content"
+                  className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-background focus:text-foreground focus:px-4 focus:py-2 focus:rounded-md focus:border focus:border-primary focus:shadow-lg"
+                >
+                  Skip to main content
+                </a>
+                {children}
+              </div>
             </ThemeProvider>
           </BrandingProvider>
         </AuthProvider>
@@ -92,7 +101,7 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
       expect(h1?.textContent).toBeTruthy();
     });
 
-    it('should not have skip navigation link (landing page exception)', async () => {
+    it('should have skip navigation link on landing page', async () => {
       let container: HTMLElement;
       await act(async () => {
         const result = render(
@@ -103,10 +112,10 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
         container = result.container;
       });
 
-      // Landing page doesn't have skip link as it's a simple single-screen page
-      // Skip links are present on authenticated pages with complex navigation
+      // Landing page now has skip link for accessibility
       const skipLink = container!.querySelector('a[href="#main-content"]');
-      expect(skipLink).toBeNull();
+      expect(skipLink).toBeTruthy();
+      expect(skipLink?.textContent).toContain('Skip to main content');
     });
   });
 
