@@ -46,7 +46,7 @@ vi.mock('@/lib/storage-factory', () => {
     }),
     getCategories: vi.fn(async (tenantId?: number) => {
       const docs = await firestoreMock.getDocuments('categories');
-      const categories = docs.map((doc) => ({ ...doc.data, id: Number(doc.id) }));
+      const categories = docs.map((doc) => ({ ...doc.data, id: Number(doc.id) }) as any);
       return tenantId ? categories.filter((c) => c.tenantId === tenantId) : categories;
     }),
     getSubcategories: vi.fn(async () => {
@@ -119,13 +119,13 @@ vi.mock('@/lib/storage-factory', () => {
     getQuestionsByTenant: vi.fn(async (tenantId: number) => {
       const docs = await firestoreMock.getDocuments('questions');
       return docs
-        .map((doc) => ({ ...doc.data, id: Number(doc.id) }))
+        .map((doc) => ({ ...doc.data, id: Number(doc.id) }) as any)
         .filter((q) => q.tenantId === tenantId);
     }),
     getUsersByTenant: vi.fn(async (tenantId: number) => {
       const docs = await firestoreMock.getDocuments('users');
       return docs
-        .map((doc) => ({ ...doc.data, id: doc.id }))
+        .map((doc) => ({ ...doc.data, id: doc.id }) as any)
         .filter((u) => u.tenantId === tenantId);
     }),
   };
