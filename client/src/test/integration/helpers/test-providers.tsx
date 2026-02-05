@@ -44,9 +44,10 @@ vi.mock('@/lib/storage-factory', () => {
     getCurrentUserId: vi.fn(async () => {
       return firestoreMock.getCurrentUserId();
     }),
-    getCategories: vi.fn(async () => {
+    getCategories: vi.fn(async (tenantId?: number) => {
       const docs = await firestoreMock.getDocuments('categories');
-      return docs.map((doc) => ({ ...doc.data, id: Number(doc.id) }));
+      const categories = docs.map((doc) => ({ ...doc.data, id: Number(doc.id) }));
+      return tenantId ? categories.filter((c) => c.tenantId === tenantId) : categories;
     }),
     getSubcategories: vi.fn(async () => {
       const docs = await firestoreMock.getDocuments('subcategories');
@@ -111,6 +112,22 @@ vi.mock('@/lib/storage-factory', () => {
     getUserThemePreferences: vi.fn().mockResolvedValue(null),
     getOrganizationBranding: vi.fn().mockResolvedValue(null),
     setOrganizationBranding: vi.fn().mockResolvedValue(undefined),
+    getTenant: vi.fn(async (id: number) => {
+      const doc = await firestoreMock.getDocument('tenants', id.toString());
+      return doc ? { ...doc.data, id: Number(doc.id) } : null;
+    }),
+    getQuestionsByTenant: vi.fn(async (tenantId: number) => {
+      const docs = await firestoreMock.getDocuments('questions');
+      return docs
+        .map((doc) => ({ ...doc.data, id: Number(doc.id) }))
+        .filter((q) => q.tenantId === tenantId);
+    }),
+    getUsersByTenant: vi.fn(async (tenantId: number) => {
+      const docs = await firestoreMock.getDocuments('users');
+      return docs
+        .map((doc) => ({ ...doc.data, id: doc.id }))
+        .filter((u) => u.tenantId === tenantId);
+    }),
   };
 
   return {

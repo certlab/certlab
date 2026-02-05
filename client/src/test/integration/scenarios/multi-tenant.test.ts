@@ -283,8 +283,8 @@ describe('Multi-Tenant Integration Tests', () => {
     });
 
     it('should handle tenant not found gracefully', async () => {
-      // Try to get a non-existent tenant
-      const nonExistentTenant = await storage.getTenant(999);
+      // Try to get a non-existent tenant (using ID that doesn't exist)
+      const nonExistentTenant = await storage.getTenant(9999);
 
       // Should return null for non-existent tenant
       expect(nonExistentTenant).toBeNull();

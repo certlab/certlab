@@ -5,6 +5,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Unmock storage-factory since we want to test the real implementation
+vi.unmock('./storage-factory');
+
 import * as storageFactory from './storage-factory';
 import * as firestoreService from './firestore-service';
 import * as firebase from './firebase';
