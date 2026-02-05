@@ -377,7 +377,10 @@ describe('useRealtimeSync Hooks', () => {
         );
       });
 
-      expect(result.current.data).toHaveLength(2);
+      // Wait for the callback to fire and data to be set
+      await waitFor(() => {
+        expect(result.current.data).toHaveLength(2);
+      });
     });
 
     it('should not subscribe when userId is null', () => {

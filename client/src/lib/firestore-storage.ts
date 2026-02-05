@@ -178,7 +178,7 @@ function getCollectionName(resourceType: 'lecture' | 'quiz' | 'material'): strin
 /**
  * Convert Firestore timestamps in an object to Dates
  */
-function convertTimestamps<T>(obj: any): T {
+function convertTimestamps<T>(obj: any, normalizeDateFields: boolean = false): T {
   if (!obj) return obj;
 
   const result = { ...obj };
@@ -188,11 +188,14 @@ function convertTimestamps<T>(obj: any): T {
     }
   }
 
-  // Normalize undefined or missing date fields to null for consistency
-  const dateFields = ['createdAt', 'completedAt', 'startedAt', 'lastQuizDate', 'updatedAt'];
-  for (const field of dateFields) {
-    if (!(field in result) || result[field] === undefined) {
-      result[field] = null;
+  // Optionally normalize undefined or missing date fields to null for consistency
+  // This is used for Quiz and similar types that have optional date fields
+  if (normalizeDateFields) {
+    const dateFields = ['createdAt', 'completedAt', 'startedAt', 'lastQuizDate', 'updatedAt'];
+    for (const field of dateFields) {
+      if (!(field in result) || result[field] === undefined) {
+        result[field] = null;
+      }
     }
   }
 
@@ -964,7 +967,7 @@ class FirestoreStorage implements IClientStorage {
       }
 
       const quizzes = await getUserDocuments<Quiz>(userId, 'quizzes', constraints);
-      return quizzes.map((q) => convertTimestamps<Quiz>(q));
+      return quizzes.map((q) => convertTimestamps<Quiz>(q, true));
     } catch (error) {
       logError('getUserQuizzes', error, { userId, tenantId });
       return [];
