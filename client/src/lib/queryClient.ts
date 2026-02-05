@@ -240,9 +240,6 @@ export const queryKeys = {
       users: (tenantId: number | null | undefined) =>
         ['/api', 'admin', 'tenants', tenantId, 'users'] as const,
     },
-    users: {
-      all: () => ['/api', 'admin', 'users'] as const,
-    },
   },
 
   // Credits queries
