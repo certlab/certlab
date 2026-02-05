@@ -47,7 +47,7 @@ export default function UserRolesPage() {
 
   // Fetch all users
   const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: queryKeys.admin.users.all(),
+    queryKey: queryKeys.users.all(),
     queryFn: () => storage.getAllUsers(),
   });
 
@@ -57,7 +57,7 @@ export default function UserRolesPage() {
       return await storage.updateUser(userId, { role });
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all() });
       setEditDialogOpen(false);
       setSelectedUser(null);
       toast({
