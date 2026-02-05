@@ -385,20 +385,22 @@ class FirestoreStorage implements IClientStorage {
   async createUser(user: Partial<User>): Promise<User> {
     try {
       const id = user.id || generateId();
+
+      // Build newUser with explicit field handling
+      // Preserve explicit null values, use defaults only for missing fields
       const newUser: User = {
         id,
         email: user.email || '',
         passwordHash: user.passwordHash || '',
-        firstName: user.firstName ?? null,
-        lastName: user.lastName ?? null,
-        profileImageUrl: user.profileImageUrl ?? null,
+        firstName: 'firstName' in user ? user.firstName : null,
+        lastName: 'lastName' in user ? user.lastName : null,
+        profileImageUrl: 'profileImageUrl' in user ? user.profileImageUrl : null,
         role: user.role || 'user',
-        tenantId: user.tenantId ?? 1,
+        tenantId: 'tenantId' in user ? user.tenantId! : 1,
         certificationGoals: user.certificationGoals || [],
-        studyPreferences: user.studyPreferences ?? null,
-        skillsAssessment: user.skillsAssessment ?? null,
-        createdAt: new Date(),
-        ...user,
+        studyPreferences: 'studyPreferences' in user ? user.studyPreferences : null,
+        skillsAssessment: 'skillsAssessment' in user ? user.skillsAssessment : null,
+        createdAt: user.createdAt || new Date(),
       } as User;
 
       await setUserProfile(id, newUser);
