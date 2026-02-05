@@ -211,6 +211,7 @@ export function createTestQuestion(
     text: `Question ${id}`,
     categoryId,
     subcategoryId,
+    tenantId: 1, // Default tenantId for test questions
     options: [
       { text: 'Option A', isCorrect: true },
       { text: 'Option B', isCorrect: false },
@@ -218,7 +219,7 @@ export function createTestQuestion(
       { text: 'Option D', isCorrect: false },
     ],
     explanation: `Explanation for question ${id}`,
-    difficulty: 1,
+    difficultyLevel: 1,
     ...overrides,
   };
 }

@@ -187,6 +187,15 @@ function convertTimestamps<T>(obj: any): T {
       result[key] = timestampToDate(result[key]);
     }
   }
+
+  // Normalize undefined or missing date fields to null for consistency
+  const dateFields = ['createdAt', 'completedAt', 'startedAt', 'lastQuizDate', 'updatedAt'];
+  for (const field of dateFields) {
+    if (!(field in result) || result[field] === undefined) {
+      result[field] = null;
+    }
+  }
+
   return result as T;
 }
 
@@ -377,14 +386,14 @@ class FirestoreStorage implements IClientStorage {
         id,
         email: user.email || '',
         passwordHash: user.passwordHash || '',
-        firstName: user.firstName || null,
-        lastName: user.lastName || null,
-        profileImageUrl: user.profileImageUrl || null,
+        firstName: user.firstName ?? null,
+        lastName: user.lastName ?? null,
+        profileImageUrl: user.profileImageUrl ?? null,
         role: user.role || 'user',
-        tenantId: user.tenantId || 1,
+        tenantId: user.tenantId ?? 1,
         certificationGoals: user.certificationGoals || [],
-        studyPreferences: user.studyPreferences || null,
-        skillsAssessment: user.skillsAssessment || null,
+        studyPreferences: user.studyPreferences ?? null,
+        skillsAssessment: user.skillsAssessment ?? null,
         createdAt: new Date(),
         ...user,
       } as User;
