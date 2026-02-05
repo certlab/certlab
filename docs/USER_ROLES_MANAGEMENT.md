@@ -191,7 +191,7 @@ UPDATE /users/{userId}
 
 ## Performance Considerations
 
-- Users are cached for 30 seconds (configurable in queryClient)
+- Users are cached using TanStack Query's default stale time
 - Search and filter operations happen client-side for instant results
 - Optimistic updates provide immediate UI feedback
 - Automatic cache invalidation after successful mutations
