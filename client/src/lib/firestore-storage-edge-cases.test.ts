@@ -552,7 +552,7 @@ describe('FirestoreStorage - Edge Cases', () => {
         lastName: 'User',
         email: 'test@example.com',
         profileImageUrl: null,
-        tenantId: 1,
+        tenantId: null,
       };
 
       vi.mocked(firestoreService.setUserProfile).mockResolvedValue(undefined);
