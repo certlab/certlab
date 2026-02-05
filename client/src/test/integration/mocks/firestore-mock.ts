@@ -252,23 +252,52 @@ class FirestoreMockService {
    * Seed default categories collection for health checks
    * This ensures Firestore always has data for connection verification
    */
+  /**
+   * Seed default data for health checks
+   * This includes a default category (tenantId: 999) and corresponding tenant
+   */
   private seedDefaultCategories(): void {
-    const categoriesCollection: MockCollection = {
-      documents: new Map(),
-      subcollections: new Map(),
-    };
-    categoriesCollection.documents.set('test-category-1', {
-      id: 'test-category-1',
+    // Seed default tenant for health checks
+    const tenantsCollection: MockCollection = this.getOrCreateCollection('tenants');
+    tenantsCollection.documents.set('999', {
+      id: '999',
       data: {
-        id: 1,
-        name: 'Test Category',
-        description: 'Default category for tests',
-        tenantId: 1,
+        id: 999,
+        name: 'Default Test Tenant',
+        isActive: true,
       },
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    this.collections.set('categories', categoriesCollection);
+
+    // Seed default category for health checks
+    const categoriesCollection: MockCollection = this.getOrCreateCollection('categories');
+    // Use a unique tenant ID that won't conflict with test data (999)
+    // This category is only for health checks to prevent connection timeouts
+    categoriesCollection.documents.set('test-category-999', {
+      id: 'test-category-999',
+      data: {
+        id: 999,
+        name: 'Default Test Category',
+        description: 'Default category for health checks',
+        tenantId: 999,
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  }
+
+  /**
+   * Get or create a collection
+   */
+  private getOrCreateCollection(name: string): MockCollection {
+    if (!this.collections.has(name)) {
+      this.collections.set(name, {
+        documents: new Map(),
+        subcollections: new Map(),
+      });
+    }
+    return this.collections.get(name)!;
   }
 
   /**

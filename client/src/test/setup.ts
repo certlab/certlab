@@ -93,6 +93,9 @@ vi.mock('@/lib/storage-factory', () => {
     getUserThemePreferences: vi.fn().mockResolvedValue(null),
     getOrganizationBranding: vi.fn().mockResolvedValue(null),
     setOrganizationBranding: vi.fn().mockResolvedValue(undefined),
+    getTenant: vi.fn().mockResolvedValue(null),
+    getQuestionsByTenant: vi.fn().mockResolvedValue([]),
+    getUsersByTenant: vi.fn().mockResolvedValue([]),
   };
 
   return {
@@ -138,3 +141,16 @@ vi.mock('@/lib/gamification-service', () => ({
     processDailyLogin: vi.fn().mockResolvedValue({ shouldShowReward: false, day: 1 }),
   },
 }));
+
+// Mock window.matchMedia for use-mobile hook and other media query usage
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
