@@ -215,6 +215,12 @@ describe('AuthProvider', () => {
     }
   });
 
+  // TODO: Fix or replace this test - currently skipped due to complex mock setup
+  // This test is important for verifying async daily login processing doesn't block auth
+  // Consider: 1) Using fake timers for deterministic timing
+  //          2) Replacing with a smaller unit test for async trigger
+  //          3) Fixing mock setup to avoid race conditions
+  // Tracking issue: https://github.com/certlab/certlab/issues/XXX (create issue)
   it.skip('processes daily login asynchronously without blocking loading state', async () => {
     // Mock gamification service
     const mockProcessDailyLogin = vi.fn().mockResolvedValue({ shouldShowReward: false, day: 1 });

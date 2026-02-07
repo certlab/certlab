@@ -34,7 +34,9 @@ function AuthenticatedWrapper({ children }: { children: React.ReactNode }) {
                 >
                   Skip to main content
                 </a>
-                {children}
+                <main id="main-content" tabIndex={-1}>
+                  {children}
+                </main>
               </div>
             </ThemeProvider>
           </BrandingProvider>
