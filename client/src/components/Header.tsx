@@ -62,6 +62,7 @@ import {
   Heart,
   Folder,
   Flame,
+  UserCog,
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme-provider';
 import { themes } from '@/lib/theme-constants';
@@ -867,24 +868,44 @@ export default function Header() {
                               <Settings className="w-4 h-4" />
                               Administration
                             </h3>
-                            <NavigationMenuLink
-                              className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
-                                isActivePath('/admin')
-                                  ? 'bg-primary/10 border-2 border-primary'
-                                  : 'hover:bg-accent/10'
-                              }`}
-                              onClick={() => navigate('/admin')}
-                            >
-                              <div className="flex items-center text-sm font-medium leading-none text-foreground">
-                                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
-                                  <Settings className="w-3 h-3 text-primary" />
+                            <div className="grid grid-cols-2 gap-3">
+                              <NavigationMenuLink
+                                className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                  isActivePath('/admin')
+                                    ? 'bg-primary/10 border-2 border-primary'
+                                    : 'hover:bg-accent/10'
+                                }`}
+                                onClick={() => navigate('/admin')}
+                              >
+                                <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                  <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                    <Settings className="w-3 h-3 text-primary" />
+                                  </div>
+                                  Admin Dashboard
                                 </div>
-                                Admin Dashboard
-                              </div>
-                              <p className="text-xs leading-relaxed text-muted-foreground pl-8">
-                                Manage users, content, and system settings
-                              </p>
-                            </NavigationMenuLink>
+                                <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                  Manage users, content, and system settings
+                                </p>
+                              </NavigationMenuLink>
+                              <NavigationMenuLink
+                                className={`block select-none space-y-2 rounded-lg p-3 leading-none no-underline outline-none transition-all cursor-pointer ${
+                                  isActivePath('/app/user-roles')
+                                    ? 'bg-primary/10 border-2 border-primary'
+                                    : 'hover:bg-accent/10'
+                                }`}
+                                onClick={() => navigate('/app/user-roles')}
+                              >
+                                <div className="flex items-center text-sm font-medium leading-none text-foreground">
+                                  <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center mr-2">
+                                    <UserCog className="w-3 h-3 text-primary" />
+                                  </div>
+                                  User Roles
+                                </div>
+                                <p className="text-xs leading-relaxed text-muted-foreground pl-8">
+                                  Manage user roles and permissions
+                                </p>
+                              </NavigationMenuLink>
+                            </div>
                           </div>
                         )}
                       </div>
