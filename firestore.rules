@@ -44,8 +44,8 @@ service cloud.firestore {
     
     // User profile documents
     match /users/{userId} {
-      // Users can read their own profile
-      allow read: if isOwner(userId);
+      // Users can read their own profile, admins can read all profiles
+      allow read: if isOwner(userId) || isAdmin();
       
       // Users can create their profile on first sign-up
       allow create: if isOwner(userId) && 
