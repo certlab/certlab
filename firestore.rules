@@ -52,10 +52,11 @@ service cloud.firestore {
                       request.resource.data.keys().hasAll(['email', 'createdAt']) &&
                       request.resource.data.email == request.auth.token.email;
       
-      // Users can update their own profile (but not role or tenantId without admin)
-      allow update: if isOwner(userId) && 
-                      (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'tenantId']) || 
-                       isAdmin());
+      // Users can update their own profile (but not role or tenantId)
+      // Admins can update any user profile including role and tenantId
+      allow update: if (isOwner(userId) && 
+                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'tenantId'])) || 
+                       isAdmin();
       
       // Only admins can delete users
       allow delete: if isAdmin();
