@@ -182,8 +182,5 @@
     "vitest": "^4.0.14",
     "vitest-axe": "^0.1.0",
     "wait-on": "^9.0.3"
-  },
-  "optionalDependencies": {
-    "bufferutil": "^4.1.0"
   }
 }
