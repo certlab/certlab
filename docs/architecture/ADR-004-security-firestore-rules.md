@@ -279,8 +279,8 @@ service cloud.firestore {
 ```javascript
 // User profile documents
 match /users/{userId} {
-  // Users can read their own profile
-  allow read: if isOwner(userId);
+  // Users can read their own profile, admins can read all profiles
+  allow read: if isOwner(userId) || isAdmin();
   
   // Users can create their profile on first sign-up
   allow create: if isAuthenticated() && 
@@ -288,12 +288,11 @@ match /users/{userId} {
                    request.resource.data.email == request.auth.token.email;
   
   // Users can update their own profile
-  // But cannot change their role (prevents privilege escalation)
+  // But cannot change their role or tenantId without admin privileges
+  // (prevents privilege escalation)
   allow update: if isOwner(userId) &&
-                   (
-                     !request.resource.data.keys().hasAny(['role']) ||
-                     request.resource.data.role == resource.data.role
-                   );
+                   (!request.resource.data.diff(resource.data).affectedKeys()
+                      .hasAny(['role', 'tenantId']) || isAdmin());
   
   // Only admins can delete user profiles
   allow delete: if isAdmin();
@@ -823,6 +822,7 @@ Store JWT tokens in localStorage instead of Firebase's secure storage:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2024-12-20 | CertLab Team | Initial ADR documenting security model and Firestore rules |
+| 1.1 | 2026-02-07 | CertLab Team | Updated user profile read rule to allow admins to read all profiles for user management features |
 
 ---
 
