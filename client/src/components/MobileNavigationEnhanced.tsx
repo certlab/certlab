@@ -165,13 +165,13 @@ export default function MobileNavigationEnhanced() {
             label: 'Admin Dashboard',
             icon: <Building className="w-5 h-5" />,
             href: '/admin',
+            dividerAfter: true,
           } as NavigationItem,
           {
             id: 'user-roles',
             label: 'User Roles',
             icon: <UserCog className="w-5 h-5" />,
             href: '/app/user-roles',
-            dividerAfter: true,
           } as NavigationItem,
         ]
       : []),
