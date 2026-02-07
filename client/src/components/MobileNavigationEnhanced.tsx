@@ -29,7 +29,6 @@ import {
   Folder,
   Database,
   Sparkles,
-  Shield,
   UserCog,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
