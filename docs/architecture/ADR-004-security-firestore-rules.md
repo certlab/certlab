@@ -287,12 +287,13 @@ match /users/{userId} {
                    request.auth.uid == userId &&
                    request.resource.data.email == request.auth.token.email;
   
-  // Users can update their own profile
-  // But cannot change their role or tenantId without admin privileges
-  // (prevents privilege escalation)
-  allow update: if isOwner(userId) &&
-                   (!request.resource.data.diff(resource.data).affectedKeys()
-                      .hasAny(['role', 'tenantId']) || isAdmin());
+  // Users can update their own profile (but not role or tenantId)
+  // Admins can update any user profile including role and tenantId
+  // (prevents privilege escalation for non-admins)
+  allow update: if (isOwner(userId) &&
+                     !request.resource.data.diff(resource.data).affectedKeys()
+                       .hasAny(['role', 'tenantId'])) ||
+                   isAdmin();
   
   // Only admins can delete user profiles
   allow delete: if isAdmin();
