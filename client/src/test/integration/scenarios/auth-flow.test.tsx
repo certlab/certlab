@@ -268,16 +268,16 @@ describe('Authentication Flow Integration Tests', () => {
   });
 
   describe('Local/Dev Fallback Authentication', () => {
-    it('should indicate Firebase/Firestore is required (mocked in tests)', async () => {
-      // Disable Firebase
+    it('should verify mocked Firestore initialization succeeds without Firebase config', async () => {
+      // Disable Firebase in mock
       firebaseMock.setConfigured(false);
 
-      // In integration tests, we use Firestore mocks so initialization succeeds
-      // In production, this would fail because Firestore is mandatory
+      // In integration tests with mocks, initialization succeeds even without Firebase
+      // This tests the mock behavior, not production behavior
       await initializeStorage(null);
 
-      // In integration tests, cloud sync appears available because mocks are used
-      // In production without Firebase, this would be false
+      // Mock Firestore is available even when Firebase config is disabled
+      // Note: In real production, initialization would fail without Firebase
       expect(isCloudSyncAvailable()).toBe(true);
     });
 

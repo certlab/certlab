@@ -191,7 +191,9 @@ function convertTimestamps<T>(obj: any, normalizeDateFields: boolean = false): T
   // Optionally normalize undefined or missing date fields to null for consistency
   // This is used for Quiz and similar types that have optional date fields
   if (normalizeDateFields) {
-    const dateFields = ['createdAt', 'completedAt', 'startedAt', 'lastQuizDate', 'updatedAt'];
+    // Note: Only include fields that belong to Quiz type
+    // lastQuizDate belongs to UserProgress, not Quiz
+    const dateFields = ['createdAt', 'completedAt', 'startedAt', 'updatedAt'];
     for (const field of dateFields) {
       if (!(field in result) || result[field] === undefined) {
         result[field] = null;
