@@ -53,6 +53,13 @@ See the [features/README.md](features/README.md) for a complete index of all fea
 - **[favicon-options.md](favicon-options.md)** - Favicon design options
 - **[known-issues.md](known-issues.md)** - Known issues and planned improvements
 
+### Issues & Technical Debt (`issues/`)
+
+Documented issues with root cause analysis and remediation steps:
+
+- **[firebase-local-testing-limitation.md](issues/firebase-local-testing-limitation.md)** - Firebase Emulator integration for local development
+- **[github-issue-firebase-testing-limitation.md](issues/github-issue-firebase-testing-limitation.md)** - GitHub issue template for the Firebase testing limitation
+
 ## 📖 Root-Level Documentation
 
 Essential project documents in the repository root:
