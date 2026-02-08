@@ -259,11 +259,20 @@ The app uses Firestore for all data storage with automatic offline persistence:
 - **Workaround**: Server code is not built or deployed (Vite only builds client/)
 - **Action**: Ignore server code unless working on legacy features or migration
 
-### Firestore Required
-- **Issue**: Application requires Firebase/Firestore to function
-- **Context**: IndexedDB standalone storage has been removed
-- **Workaround**: Must configure Firebase credentials for development and production
-- **Action**: See Firebase setup documentation
+### Firebase Emulator Required for Copilot Tasks
+- **Context**: Application requires Firebase/Firestore to function
+- **Solution**: **ALWAYS use Firebase Emulator Suite** - no Firebase credentials needed
+- **Configuration**: Automatically set up in `copilot-setup-steps.yaml`
+  - Sets `VITE_USE_FIREBASE_EMULATOR=true` in `.env.local`
+  - Starts emulators on ports: Auth (9099), Firestore (8080), Storage (9199), UI (4000)
+  - Seeds test data with `npm run emulators:seed`
+- **Test Accounts**: Use these for testing
+  - Admin: `admin@certlab.local` / `admin123`
+  - User: `user@certlab.local` / `password123`
+  - Contributor: `contributor@certlab.local` / `contributor123`
+- **Verification**: Check console for `[Firestore] ✓ Initialized successfully (Emulator mode)`
+- **Documentation**: See `docs/setup/firebase-emulator-setup.md` for detailed guide
+- **Important**: Never use production Firebase credentials in Copilot tasks
 
 ## Best Practices for Code Changes
 
@@ -356,8 +365,8 @@ import type { User } from '@shared/schema';
 
 **Test in browser**: This is a browser app. After building, test functionality manually at http://localhost:5000 using `npm run dev`.
 
-**Firestore is critical**: The app requires Firebase/Firestore to function. Storage operations always go through `storage` from `storage-factory.ts`.
+**Firebase Emulator required**: The app requires Firebase/Firestore to function. **Always use Firebase Emulator Suite** (automatically configured in setup steps). Emulators run on http://localhost:4000 (UI). Sign in with test accounts: `admin@certlab.local` / `admin123`.
+
+**Storage operations**: Always go through `storage` from `storage-factory.ts`, never directly from `firestore-storage.ts`.
 
 **Base path matters**: The app deploys to root path `/` on Firebase Hosting. Don't change `vite.config.ts` base path without good reason.
-
-**Use storage factory**: Always import `storage` from `storage-factory.ts`, never directly from `firestore-storage.ts`.

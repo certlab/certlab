@@ -7,6 +7,29 @@ steps:
   - name: Install dependencies
     run: npm install
 
+  # Configure Firebase Emulator for local development
+  # This ensures all Copilot tasks use emulator instead of requiring Firebase credentials
+  - name: Configure Firebase Emulator
+    run: |
+      cp .env.example .env.local
+      echo "VITE_USE_FIREBASE_EMULATOR=true" >> .env.local
+
+  # Start Firebase Emulators in background
+  - name: Start Firebase Emulators
+    run: npm run emulators:start &
+    background: true
+
+  # Wait for emulators to be ready
+  - name: Wait for emulators
+    run: |
+      echo "Waiting for Firebase Emulators to start..."
+      timeout 30 bash -c 'until curl -s http://localhost:4000 > /dev/null; do sleep 1; done'
+      echo "✓ Firebase Emulators ready"
+
+  # Seed emulator with test data
+  - name: Seed emulator data
+    run: npm run emulators:seed
+
   # Verify the build works
   - name: Build project
     run: npm run build
