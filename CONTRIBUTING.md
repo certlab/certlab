@@ -21,8 +21,13 @@ Thank you for your interest in contributing to CertLab! This guide will help you
 - **Node.js**: v20.x or higher
 - **npm**: v10.x or higher
 - **Git**: Latest version
+- **Firebase CLI** (for emulator): `npm install -g firebase-tools` (optional but recommended)
 
 ### Quick Setup
+
+**Option 1: Firebase Emulator (Recommended)**
+
+Develop without a Firebase account or credentials:
 
 ```bash
 # Clone the repository
@@ -32,11 +37,51 @@ cd certlab
 # Install dependencies
 npm install
 
+# Configure for emulator
+cp .env.example .env.local
+# Edit .env.local and set: VITE_USE_FIREBASE_EMULATOR=true
+
+# Terminal 1: Start emulators
+npm run emulators:start
+
+# Terminal 2: Start development server
+npm run dev
+```
+
+The development server will start at `http://localhost:5000` and Emulator UI at `http://localhost:4000`
+
+📖 **Complete Emulator Guide**: [docs/setup/firebase-emulator-setup.md](docs/setup/firebase-emulator-setup.md)
+
+**Benefits of Using Emulators:**
+- ✅ No Firebase account needed
+- ✅ No credentials to manage
+- ✅ Offline development capability
+- ✅ Isolated testing environment
+- ✅ Fast iteration with instant resets
+
+**Option 2: Live Firebase**
+
+For production-like testing:
+
+```bash
+# Clone the repository
+git clone https://github.com/archubbuck/certlab.git
+cd certlab
+
+# Install dependencies
+npm install
+
+# Configure Firebase
+cp .env.example .env.local
+# Edit .env.local with your Firebase credentials from Firebase Console
+
 # Start development server
 npm run dev
 ```
 
 The development server will start at `http://localhost:5000`
+
+📖 **Firebase Setup**: [docs/setup/firebase.md](docs/setup/firebase.md)
 
 ## Development Environment
 
