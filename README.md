@@ -27,17 +27,44 @@ CertLab is a modern, cloud-based certification study platform. Study for certifi
 
 ## 🚀 Quick Start
 
+### Option 1: Firebase Emulator (Recommended for Contributors)
+
+No Firebase account or credentials needed! Perfect for local development:
+
 ```bash
-# Clone the repository
+# Clone and install
 git clone https://github.com/archubbuck/certlab.git
 cd certlab
-
-# Install dependencies
 npm install
 
-# Configure Firebase (required)
+# Configure for emulator
 cp .env.example .env.local
-# Edit .env.local with your Firebase credentials
+# Edit .env.local and set: VITE_USE_FIREBASE_EMULATOR=true
+
+# Terminal 1: Start Firebase Emulators
+npm run emulators:start
+
+# Terminal 2: Start development server
+npm run dev
+```
+
+Open http://localhost:5000 and sign in with any email/password to get started!
+
+📖 **Emulator Setup Guide**: [docs/setup/firebase-emulator-setup.md](docs/setup/firebase-emulator-setup.md)
+
+### Option 2: Live Firebase
+
+For production-like testing with real Firebase project:
+
+```bash
+# Clone and install
+git clone https://github.com/archubbuck/certlab.git
+cd certlab
+npm install
+
+# Configure Firebase credentials
+cp .env.example .env.local
+# Edit .env.local with your Firebase project credentials
 
 # Start development server
 npm run dev
