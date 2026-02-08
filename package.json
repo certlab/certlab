@@ -56,6 +56,8 @@
     "deploy:all": "npm run build:firebase && firebase deploy",
     "emulators:start": "firebase emulators:start",
     "emulators:exec": "firebase emulators:exec",
+    "emulators:seed": "npx tsx scripts/seed-emulators.ts",
+    "dev:emulator": "concurrently \"npm run emulators:start\" \"wait-on http://localhost:4000 && npm run emulators:seed && npm run dev\"",
     "dynatrace:snippet": "node scripts/generate-dynatrace-snippet.js",
     "prepare": "husky"
   },

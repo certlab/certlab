@@ -129,11 +129,14 @@ export async function initializeFirestoreService(): Promise<boolean> {
     // Connect to emulator if enabled
     const useEmulator = import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true';
     if (useEmulator) {
-      console.log('[Firestore] Connecting to Firebase Emulator Suite');
+      console.log('[Firestore] 🚀 Connecting to Firebase Emulator Suite');
+      console.log('[Firestore] Emulator URL: http://localhost:8080');
+      console.log('[Firestore] Emulator UI: http://localhost:4000');
       connectFirestoreEmulator(firestoreInstance, 'localhost', 8080);
     }
 
-    console.log('[Firestore] Initialized successfully');
+    const mode = useEmulator ? 'Emulator' : 'Production';
+    console.log(`[Firestore] ✓ Initialized successfully (${mode} mode)`);
     return true;
   } catch (error) {
     logError('initializeFirestoreService', error);

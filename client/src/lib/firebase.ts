@@ -32,6 +32,7 @@ import {
   sendEmailVerification,
   setPersistence,
   browserLocalPersistence,
+  connectAuthEmulator,
   type Auth,
   type User as FirebaseUser,
   type UserCredential,
@@ -69,6 +70,20 @@ let googleProvider: GoogleAuthProvider | null = null;
  */
 export async function initializeFirebase(): Promise<boolean> {
   if (!isFirebaseConfigured()) {
+    // Show helpful message in development
+    if (import.meta.env.DEV) {
+      console.warn(
+        '\n⚠️  Firebase not configured!\n\n' +
+        'Options for local development:\n' +
+        '  1. Use Firebase Emulator (recommended):\n' +
+        '     • Run: npm run emulators:start\n' +
+        '     • Set: VITE_USE_FIREBASE_EMULATOR=true in .env.local\n' +
+        '     • Docs: docs/setup/firebase-emulator-setup.md\n\n' +
+        '  2. Use live Firebase:\n' +
+        '     • Follow: docs/setup/firebase.md\n' +
+        '     • Add credentials to .env.local\n'
+      );
+    }
     return false;
   }
 
@@ -80,6 +95,18 @@ export async function initializeFirebase(): Promise<boolean> {
   }
 
   auth = getAuth(app);
+  
+  // Connect to Auth Emulator if enabled
+  const useEmulator = import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true';
+  if (useEmulator && import.meta.env.DEV) {
+    try {
+      connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+      console.log('[Firebase] 🚀 Connected to Auth Emulator: http://localhost:9099');
+    } catch (error) {
+      console.error('[Firebase] Failed to connect to Auth Emulator:', error);
+    }
+  }
+  
   googleProvider = new GoogleAuthProvider();
 
   // Add additional scopes if needed
