@@ -30,7 +30,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -44,7 +43,6 @@ import {
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { useBranding } from '@/lib/branding-provider';
 
 interface NavItem {
@@ -310,17 +308,19 @@ export function AppNavigation() {
             <>
               <div className="flex items-center gap-2">
                 <img
-                  src={branding.logo || '/logo.png'}
-                  alt={branding.name}
+                  src={branding?.logoUrl || '/logo.png'}
+                  alt={branding?.organizationName || 'CertLab'}
                   className="h-8 w-8 object-contain"
                 />
-                <span className="font-semibold text-lg">{branding.name}</span>
+                <span className="font-semibold text-lg">
+                  {branding?.organizationName || 'CertLab'}
+                </span>
               </div>
             </>
           ) : (
             <img
-              src={branding.logo || '/logo.png'}
-              alt={branding.name}
+              src={branding?.logoUrl || '/logo.png'}
+              alt={branding?.organizationName || 'CertLab'}
               className="h-8 w-8 object-contain"
             />
           )}

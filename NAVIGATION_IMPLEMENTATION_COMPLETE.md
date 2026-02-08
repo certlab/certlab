@@ -170,7 +170,7 @@ Successfully implemented a unified side navigation drawer with 2-level collapsib
 
 ### State Management
 - Sidebar open/closed state managed by `SidebarProvider`
-- State persisted to localStorage cookie (`sidebar_state`)
+- State persisted to cookie (`sidebar_state`)
 - Keyboard shortcut handled by SidebarProvider
 - Mobile sheet state separate from desktop sidebar state
 

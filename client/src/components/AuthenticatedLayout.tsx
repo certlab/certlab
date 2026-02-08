@@ -5,7 +5,7 @@ import { RightSidebar } from '@/components/RightSidebar';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import Header from '@/components/Header';
 import { AppNavigation } from '@/components/AppNavigation';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -33,9 +33,9 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
           <AppNavigation />
           <SidebarInset>
             <Header />
-            <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto p-4 md:p-6">
               {children}
-            </main>
+            </div>
             <MobileBottomNav />
           </SidebarInset>
           <RightSidebar />
