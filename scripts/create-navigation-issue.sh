@@ -1,8 +1,6 @@
 #!/bin/bash
 # Script to create the side navigation refactor GitHub issue
-# This script requires GH_TOKEN environment variable to be set
-
-set -e
+# This script requires GitHub CLI (gh) to be installed and authenticated
 
 REPO="certlab/certlab"
 TITLE="Refactor app to use side navigation drawer with 2-level navigation items"
@@ -39,13 +37,11 @@ echo ""
 BODY_CONTENT=$(sed -n '/^---$/,/^---$/{ /^---$/d; p; }' "$BODY_FILE" | tail -n +2)
 
 # Create the issue
-ISSUE_URL=$(gh issue create \
+if ISSUE_URL=$(gh issue create \
     --repo "$REPO" \
     --title "$TITLE" \
     --body "$BODY_CONTENT" \
-    --label "$LABELS" 2>&1)
-
-if [ $? -eq 0 ]; then
+    --label "$LABELS" 2>&1); then
     echo "✅ Issue created successfully!"
     echo "URL: $ISSUE_URL"
 else
