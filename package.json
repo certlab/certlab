@@ -163,7 +163,7 @@
     "autoprefixer": "^10.4.24",
     "axe-core": "^4.11.1",
     "cross-env": "^10.1.0",
-    "esbuild": "^0.27.2",
+    "esbuild": "^0.27.3",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
