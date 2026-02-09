@@ -40,7 +40,7 @@ This investigation analyzed the CertLab CI/CD pipeline to identify discrepancies
 ### Why Deploy Fails When PRs Pass
 
 1. **Unit tests only run during deployment** - The most critical gap
-   - 67 tests across 6 files run only after merge
+   - 1138 tests run only after merge
    - Test failures discovered too late
 
 2. **Custom timeout handling in deploy** - Deploy uses a hardened bash script
