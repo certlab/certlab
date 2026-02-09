@@ -35,13 +35,9 @@ const Achievements = lazy(() => import('@/pages/achievements'));
 const Leaderboard = lazy(() => import('@/pages/leaderboard'));
 const Analytics = lazy(() => import('@/pages/analytics'));
 const DailyChallenges = lazy(() => import('@/pages/daily-challenges'));
-const Accessibility = lazy(() => import('@/pages/accessibility'));
 const AdminDashboard = lazy(() => import('@/pages/admin'));
-const UIStructurePage = lazy(() => import('@/pages/ui-structure'));
-const I18nDemo = lazy(() => import('@/pages/i18n-demo'));
 const ConnectionDemo = lazy(() => import('@/pages/connection-demo'));
 
-const CreditsPage = lazy(() => import('@/pages/credits'));
 const ProfilePage = lazy(() => import('@/pages/profile'));
 const PracticeTests = lazy(() => import('@/pages/practice-tests'));
 const DataImportPage = lazy(() => import('@/pages/data-import'));
@@ -133,16 +129,11 @@ function Router() {
                   <Route path="/app/leaderboard" element={<Leaderboard />} />
                   <Route path="/app/analytics" element={<Analytics />} />
                   <Route path="/app/daily-challenges" element={<DailyChallenges />} />
-                  <Route path="/app/accessibility" element={<Accessibility />} />
                   <Route path="/app/practice-tests" element={<PracticeTests />} />
 
                   <Route path="/app/marketplace" element={<MarketplacePage />} />
                   <Route path="/app/marketplace/:id" element={<ProductDetailPage />} />
-                  {isAdmin && <Route path="/app/ui-structure" element={<UIStructurePage />} />}
-                  {/* i18n Demo - Available to all users */}
-                  <Route path="/app/i18n-demo" element={<I18nDemo />} />
                   <Route path="/app/connection-demo" element={<ConnectionDemo />} />
-                  <Route path="/app/credits" element={<CreditsPage />} />
                   <Route path="/app/data-import" element={<DataImportPage />} />
                   <Route path="/app/personal-import" element={<PersonalImportPage />} />
                   <Route path="/app/question-bank" element={<QuestionBankPage />} />
