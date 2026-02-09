@@ -31,7 +31,7 @@ Develop without a Firebase account or credentials:
 
 ```bash
 # Clone the repository
-git clone https://github.com/archubbuck/certlab.git
+git clone https://github.com/certlab/certlab.git
 cd certlab
 
 # Install dependencies
@@ -39,12 +39,17 @@ npm install
 
 # Configure for emulator
 cp .env.example .env.local
-# Edit .env.local and set: VITE_USE_FIREBASE_EMULATOR=true
+# Add to .env.local:
+# VITE_USE_FIREBASE_EMULATOR=true
+# VITE_FIREBASE_API_KEY=demo-api-key
+# VITE_FIREBASE_AUTH_DOMAIN=localhost
+# VITE_FIREBASE_PROJECT_ID=demo-certlab
 
 # Terminal 1: Start emulators
 npm run emulators:start
 
-# Terminal 2: Start development server
+# Terminal 2: Seed data and start development server
+npm run emulators:seed
 npm run dev
 ```
 
@@ -65,7 +70,7 @@ For production-like testing:
 
 ```bash
 # Clone the repository
-git clone https://github.com/archubbuck/certlab.git
+git clone https://github.com/certlab/certlab.git
 cd certlab
 
 # Install dependencies

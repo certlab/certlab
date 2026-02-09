@@ -12,11 +12,19 @@ steps:
   - name: Configure Firebase Emulator
     run: |
       cp .env.example .env.local
-      echo "VITE_USE_FIREBASE_EMULATOR=true" >> .env.local
+      if grep -q '^VITE_USE_FIREBASE_EMULATOR=' .env.local; then
+        sed -i 's/^VITE_USE_FIREBASE_EMULATOR=.*/VITE_USE_FIREBASE_EMULATOR=true/' .env.local
+      else
+        echo "VITE_USE_FIREBASE_EMULATOR=true" >> .env.local
+      fi
+      # Add placeholder Firebase credentials for emulator mode
+      echo "VITE_FIREBASE_API_KEY=demo-api-key" >> .env.local
+      echo "VITE_FIREBASE_AUTH_DOMAIN=localhost" >> .env.local
+      echo "VITE_FIREBASE_PROJECT_ID=demo-certlab" >> .env.local
 
   # Start Firebase Emulators in background
   - name: Start Firebase Emulators
-    run: npm run emulators:start &
+    run: npm run emulators:start
     background: true
 
   # Wait for emulators to be ready

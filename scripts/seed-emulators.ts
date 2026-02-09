@@ -21,7 +21,7 @@
  * For production seeding, use proper service account credentials.
  */
 
-import { initializeApp, cert, getApps, App } from 'firebase-admin/app';
+import { initializeApp, getApps, App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
@@ -35,12 +35,22 @@ if (process.env.VITE_USE_FIREBASE_EMULATOR !== 'true') {
   console.warn('To proceed, set: VITE_USE_FIREBASE_EMULATOR=true\n');
 }
 
+// Get project ID from environment or use default
+const projectId = process.env.VITE_FIREBASE_PROJECT_ID || 'demo-certlab';
+
+if (!process.env.VITE_FIREBASE_PROJECT_ID) {
+  console.log(
+    'ℹ️  Using default Firebase projectId "demo-certlab" for emulator seeding.\n' +
+      '   Set VITE_FIREBASE_PROJECT_ID to override.\n'
+  );
+}
+
 // Initialize Firebase Admin SDK for Emulator
 let app: App;
 if (getApps().length === 0) {
   // For emulator, we can initialize without credentials
   app = initializeApp({
-    projectId: 'demo-certlab',
+    projectId,
   });
   
   // Configure to use emulator
