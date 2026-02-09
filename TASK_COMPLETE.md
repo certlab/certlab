@@ -135,7 +135,7 @@ If you have the authority to:
 2. `INVESTIGATION_SUMMARY.md` - Executive summary
 3. `TASK_COMPLETE.md` - This file
 
-All files are committed to the `copilot/investigate-deploy-failure` branch.
+These files are included in this pull request.
 
 ## Impact
 

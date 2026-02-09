@@ -12,14 +12,12 @@ Successfully implemented the recommended solution from the CI/CD gap investigati
 
 Created a new GitHub Actions workflow that:
 - ✅ Runs on every `pull_request` to `main`
-- ✅ Runs on every `push` to `main`
 - ✅ Executes `npm run test:run` (Vitest unit tests)
 - ✅ Uses 15-minute job timeout
 - ✅ Uses 10-minute test timeout
 - ✅ Follows same pattern as `lint.yml` and `type-check.yml`
 
-**File**: `.github/workflows/unit-tests.yml`  
-**Commit**: a4c6876
+**File**: `.github/workflows/unit-tests.yml`
 
 ---
 
@@ -100,10 +98,12 @@ To fully enforce this fix, update branch protection for the `main` branch:
 1. Go to: Settings → Branches → Branch protection rules for `main`
 2. Enable: "Require status checks to pass before merging"
 3. Add required checks:
-   - `lint` (already exists)
-   - `type-check` (already exists)
-   - `test` ← **Add this new check**
-   - `e2e-tests` (if desired)
+   - `lint` (from "Lint" workflow)
+   - `type-check` (from "Type Check" workflow)
+   - `test` (from "Unit Tests" workflow) ← **Add this new check**
+   - `e2e-tests` (from "E2E Tests" workflow, if desired)
+
+**Important**: When selecting the `test` check, make sure to choose the one from the "Unit Tests" workflow, not from "Deploy to Firebase Hosting / test" (which only runs on push to main, not on PRs).
 
 **Why**: Without branch protection, developers could bypass the check. Branch protection makes it mandatory.
 

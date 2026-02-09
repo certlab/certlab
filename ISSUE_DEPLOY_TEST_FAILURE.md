@@ -310,7 +310,7 @@ This issue is resolved when:
 
 ### Current Test Coverage
 
-- **Unit/Integration Tests**: Vitest (67 tests across 6 files)
+- **Unit/Integration Tests**: Vitest (1138 tests total as reported by `npm run test:run`)
 - **E2E Tests**: Playwright
 - **Test Files**: Located in `client/src/` and `shared/` directories
 
