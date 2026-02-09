@@ -7,6 +7,7 @@ import { createTestQueryClient } from '@/test/mocks/providers';
 import { ThemeProvider } from '@/lib/theme-provider';
 import { AuthProvider } from '@/lib/auth-provider';
 import { BrandingProvider } from '@/lib/branding-provider';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 // Test pages
 import Landing from '@/pages/landing';
@@ -26,18 +27,20 @@ function AuthenticatedWrapper({ children }: { children: React.ReactNode }) {
         <AuthProvider>
           <BrandingProvider>
             <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-              <div className="min-h-screen bg-background">
-                {/* Skip to main content link for keyboard navigation */}
-                <a
-                  href="#main-content"
-                  className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-background focus:text-foreground focus:px-4 focus:py-2 focus:rounded-md focus:border focus:border-primary focus:shadow-lg"
-                >
-                  Skip to main content
-                </a>
-                <main id="main-content" tabIndex={-1}>
-                  {children}
-                </main>
-              </div>
+              <SidebarProvider>
+                <div className="min-h-screen bg-background">
+                  {/* Skip to main content link for keyboard navigation */}
+                  <a
+                    href="#main-content"
+                    className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-background focus:text-foreground focus:px-4 focus:py-2 focus:rounded-md focus:border focus:border-primary focus:shadow-lg"
+                  >
+                    Skip to main content
+                  </a>
+                  <main id="main-content" tabIndex={-1}>
+                    {children}
+                  </main>
+                </div>
+              </SidebarProvider>
             </ThemeProvider>
           </BrandingProvider>
         </AuthProvider>
@@ -148,8 +151,9 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
         container = result.container;
       });
 
-      const nav = container!.querySelector('nav');
-      expect(nav).toBeTruthy();
+      // Header component renders a <header> element
+      const header = container!.querySelector('header');
+      expect(header).toBeTruthy();
     });
 
     it('should have accessible user menu button', async () => {
