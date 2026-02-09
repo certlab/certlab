@@ -109,14 +109,10 @@ describe('Header Navigation Menu Structure', () => {
     });
 
     describe('Other Features Section', () => {
-      it('should contain 3 other feature items', () => {
-        const otherFeatureItems = [
-          { name: 'Import Sample Data', route: '/app/data-import' },
-          { name: 'I18n Demo', route: '/app/i18n-demo' },
-          { name: 'Credits', route: '/app/credits' },
-        ];
+      it('should contain 1 other feature item', () => {
+        const otherFeatureItems = [{ name: 'Import Sample Data', route: '/app/data-import' }];
 
-        expect(otherFeatureItems).toHaveLength(3);
+        expect(otherFeatureItems).toHaveLength(1);
 
         // Verify all routes are defined
         otherFeatureItems.forEach((item) => {
@@ -126,14 +122,10 @@ describe('Header Navigation Menu Structure', () => {
     });
 
     describe('Admin Tools Section (Admin Only)', () => {
-      it('should contain 3 admin tool items', () => {
-        const adminToolItems = [
-          { name: 'Reporting', route: '/app/reporting' },
-          { name: 'Accessibility', route: '/app/accessibility' },
-          { name: 'UI Structure', route: '/app/ui-structure' },
-        ];
+      it('should contain 1 admin tool item', () => {
+        const adminToolItems = [{ name: 'Reporting', route: '/app/reporting' }];
 
-        expect(adminToolItems).toHaveLength(3);
+        expect(adminToolItems).toHaveLength(1);
 
         // Verify all routes are defined
         adminToolItems.forEach((item) => {
@@ -217,12 +209,8 @@ describe('Header Navigation Menu Structure', () => {
         '/app/wallet',
         // Tools & Resources - Other
         '/app/data-import',
-        '/app/i18n-demo',
-        '/app/credits',
         // Tools & Resources - Admin
         '/app/reporting',
-        '/app/accessibility',
-        '/app/ui-structure',
         '/admin',
       ];
 
@@ -256,11 +244,7 @@ describe('Header Navigation Menu Structure', () => {
         '/app/my-materials',
         '/app/wallet',
         '/app/data-import',
-        '/app/i18n-demo',
-        '/app/credits',
         '/app/reporting',
-        '/app/accessibility',
-        '/app/ui-structure',
       ];
 
       // All routes should start with /app/ (except admin which is /admin)

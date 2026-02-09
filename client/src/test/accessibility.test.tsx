@@ -11,7 +11,6 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 
 // Test pages
 import Landing from '@/pages/landing';
-import Accessibility from '@/pages/accessibility';
 
 // Test components
 import Header from '@/components/Header';
@@ -222,13 +221,13 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
     });
   });
 
-  describe('Accessibility Page', () => {
+  describe('Header Component', () => {
     it('should not have accessibility violations', async () => {
       let container: HTMLElement;
       await act(async () => {
         const result = render(
           <AuthenticatedWrapper>
-            <Accessibility />
+            <Header />
           </AuthenticatedWrapper>
         );
         container = result.container;
@@ -238,20 +237,19 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
       expect(results.violations).toHaveLength(0);
     });
 
-    it('should have proper page title', async () => {
+    it('should have proper semantic structure', async () => {
       let container: HTMLElement;
       await act(async () => {
         const result = render(
           <AuthenticatedWrapper>
-            <Accessibility />
+            <Header />
           </AuthenticatedWrapper>
         );
         container = result.container;
       });
 
-      const h1 = container!.querySelector('h1');
-      expect(h1).toBeTruthy();
-      expect(h1?.textContent).toContain('Accessibility');
+      const header = container!.querySelector('header');
+      expect(header).toBeTruthy();
     });
   });
 
@@ -338,7 +336,7 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
     it('should use semantic HTML elements', async () => {
       const { container } = render(
         <AuthenticatedWrapper>
-          <Accessibility />
+          <Header />
         </AuthenticatedWrapper>
       );
 
@@ -387,7 +385,7 @@ describe('Accessibility Tests - WCAG 2.2 AA Compliance', () => {
     it('should have skip to main content link in authenticated pages', async () => {
       const { container } = render(
         <AuthenticatedWrapper>
-          <Accessibility />
+          <Header />
         </AuthenticatedWrapper>
       );
       // Skip link is rendered in App.tsx for authenticated pages
