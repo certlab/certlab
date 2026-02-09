@@ -63,6 +63,7 @@ export function isFirebaseConfigured(): boolean {
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let googleProvider: GoogleAuthProvider | null = null;
+let authEmulatorConnected = false; // Track emulator connection to avoid errors on hot reload
 
 /**
  * Initialize Firebase if configured
@@ -96,14 +97,18 @@ export async function initializeFirebase(): Promise<boolean> {
 
   auth = getAuth(app);
   
-  // Connect to Auth Emulator if enabled
+  // Connect to Auth Emulator if enabled (guard against multiple connections)
   const useEmulator = import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true';
-  if (useEmulator && import.meta.env.DEV) {
+  if (useEmulator && import.meta.env.DEV && !authEmulatorConnected) {
     try {
       connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+      authEmulatorConnected = true;
       console.log('[Firebase] 🚀 Connected to Auth Emulator: http://localhost:9099');
     } catch (error) {
-      console.error('[Firebase] Failed to connect to Auth Emulator:', error);
+      // Emulator already connected, ignore error
+      if (error instanceof Error && !error.message.includes('already')) {
+        console.error('[Firebase] Failed to connect to Auth Emulator:', error);
+      }
     }
   }
   

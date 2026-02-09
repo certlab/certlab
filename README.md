@@ -33,22 +33,27 @@ No Firebase account or credentials needed! Perfect for local development:
 
 ```bash
 # Clone and install
-git clone https://github.com/archubbuck/certlab.git
+git clone https://github.com/certlab/certlab.git
 cd certlab
 npm install
 
 # Configure for emulator
 cp .env.example .env.local
-# Edit .env.local and set: VITE_USE_FIREBASE_EMULATOR=true
+# Add to .env.local:
+# VITE_USE_FIREBASE_EMULATOR=true
+# VITE_FIREBASE_API_KEY=demo-api-key
+# VITE_FIREBASE_AUTH_DOMAIN=localhost
+# VITE_FIREBASE_PROJECT_ID=demo-certlab
 
 # Terminal 1: Start Firebase Emulators
 npm run emulators:start
 
-# Terminal 2: Start development server
+# Terminal 2: Seed data and start development server
+npm run emulators:seed
 npm run dev
 ```
 
-Open http://localhost:5000 and sign in with any email/password to get started!
+Open http://localhost:5000 and click **Continue with Google** to sign in using the Auth Emulator Google popup (no real Google account required).
 
 📖 **Emulator Setup Guide**: [docs/setup/firebase-emulator-setup.md](docs/setup/firebase-emulator-setup.md)
 
@@ -58,7 +63,7 @@ For production-like testing with real Firebase project:
 
 ```bash
 # Clone and install
-git clone https://github.com/archubbuck/certlab.git
+git clone https://github.com/certlab/certlab.git
 cd certlab
 npm install
 

@@ -131,8 +131,13 @@ The application checks `VITE_USE_FIREBASE_EMULATOR` to determine whether to conn
 # For local development with emulators
 VITE_USE_FIREBASE_EMULATOR=true
 
-# No other Firebase credentials needed!
+# Minimal Firebase config required by the app (placeholders work fine with emulators)
+VITE_FIREBASE_API_KEY=demo-api-key
+VITE_FIREBASE_AUTH_DOMAIN=localhost
+VITE_FIREBASE_PROJECT_ID=demo-certlab
 ```
+
+**Note**: The app requires these Firebase config values to initialize, but when using emulators, placeholder values work perfectly fine. No real Firebase project needed!
 
 **Connection Logic** (in `client/src/lib/firestore-service.ts:130-134`):
 ```typescript
@@ -166,11 +171,19 @@ firebase emulators:export ./emulator-data
 firebase emulators:start --import=./emulator-data
 ```
 
-**Option 4: Seed Script** (Future Enhancement)
+**Option 4: Seed Script**
 ```bash
-# Planned feature
+# Seed the emulators with baseline data (categories, questions, badges, test users)
 npm run emulators:seed
 ```
+
+This populates the emulator with:
+- 3 test user accounts (admin, user, contributor)
+- CISSP, CISM, Security+ categories
+- 12 subcategories
+- 3 sample questions
+- 4 achievement badges
+- 2 study groups
 
 ## Working with Emulators
 
@@ -226,19 +239,19 @@ The Emulator UI (http://localhost:4000) provides:
 
 ### Authentication in Emulators
 
-The Authentication Emulator accepts **any** credentials:
+For CertLab, the primary auth flow (both in production and in emulators) is **Google Sign-In**.
 
-```typescript
-// All of these work in emulators:
-email: "test@example.com", password: "password123"
-email: "admin@test.com", password: "admin"
-email: "any@email.com", password: "anypassword"
-```
-
-**Google Sign-In:**
-- Emulator shows a popup with test accounts
+**Google Sign-In (recommended):**
+- When running against the Auth Emulator, Google sign-in opens a popup with test accounts
 - Select any test account to sign in
-- No real Google account needed
+- No real Google account or credentials are needed
+
+> **Note**: The Authentication Emulator also supports email/password users, custom tokens, and other providers, but CertLab's current UI only exposes Google sign-in. If you add an email/password UI or run scripted tests, you can still create and manage email/password users via the emulator UI or Admin SDK.
+
+The seeded test users are accessible via Google Sign-In emulator popup:
+- **Admin**: admin@certlab.local
+- **User**: user@certlab.local
+- **Contributor**: contributor@certlab.local
 
 ### Testing Features
 
