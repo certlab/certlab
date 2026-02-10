@@ -1040,7 +1040,11 @@ export default function QuestionBankPage() {
             className="max-w-2xl max-h-[90vh] overflow-y-auto"
             onOpenAutoFocus={(e) => {
               e.preventDefault();
-              // Focus the question text field when dialog opens
+              // Focus the question text field when dialog opens.
+              // Using setTimeout with 0ms is a common pattern for Radix UI Dialog
+              // to ensure the DOM is fully rendered before focusing.
+              // The 'text' ID is unique within the active dialog (only one dialog
+              // can be open at a time), so there's no collision risk.
               setTimeout(() => {
                 const textField = document.getElementById('text');
                 textField?.focus();
@@ -1064,7 +1068,11 @@ export default function QuestionBankPage() {
             className="max-w-2xl max-h-[90vh] overflow-y-auto"
             onOpenAutoFocus={(e) => {
               e.preventDefault();
-              // Focus the question text field when dialog opens
+              // Focus the question text field when dialog opens.
+              // Using setTimeout with 0ms is a common pattern for Radix UI Dialog
+              // to ensure the DOM is fully rendered before focusing.
+              // The 'text' ID is unique within the active dialog (only one dialog
+              // can be open at a time), so there's no collision risk.
               setTimeout(() => {
                 const textField = document.getElementById('text');
                 textField?.focus();
