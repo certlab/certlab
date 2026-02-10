@@ -121,6 +121,11 @@ export default function PersonalImportPage() {
           Questions imported here are <strong>private to you</strong> and won't be visible to other
           users or added to the shared question bank. Use this feature to create custom practice
           questions or import questions from external sources.
+          <div className="mt-3">
+            <Button asChild variant="outline" size="sm">
+              <a href="/app/my-questions">View My Questions →</a>
+            </Button>
+          </div>
         </AlertDescription>
       </Alert>
 
@@ -169,6 +174,13 @@ export default function PersonalImportPage() {
                       <div className="text-yellow-600 dark:text-yellow-400">
                         ⚠ {importState.result.questionsSkipped} questions skipped due to validation
                         errors
+                      </div>
+                    )}
+                    {importState.result.questionsImported > 0 && (
+                      <div className="mt-4 pt-2 border-t">
+                        <Button asChild variant="default" size="sm" className="w-full sm:w-auto">
+                          <a href="/app/my-questions">View My Questions →</a>
+                        </Button>
                       </div>
                     )}
                   </div>
