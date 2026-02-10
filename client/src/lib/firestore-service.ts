@@ -279,6 +279,35 @@ export async function deleteUserDocument(
 }
 
 /**
+ * Normalize an ID to ensure it's a safe 32-bit integer
+ * This handles cases where IDs might be strings or exceed the 32-bit limit
+ * @param id - The ID to normalize (can be string or number)
+ * @returns A safe 32-bit integer, or the original value if it can't be safely converted
+ */
+function normalizeSafeId(id: any): any {
+  // If it's already a valid number within 32-bit range, return it
+  if (typeof id === 'number' && Number.isInteger(id) && id >= 1 && id <= 2147483647) {
+    return id;
+  }
+
+  // If it's a string that represents a number, try to convert it
+  if (typeof id === 'string') {
+    const parsed = Number(id);
+    // Check if the parsed number is valid and within 32-bit range
+    if (!isNaN(parsed) && Number.isInteger(parsed) && parsed >= 1 && parsed <= 2147483647) {
+      return parsed;
+    }
+    // If the string number exceeds 32-bit range, we keep it as a string
+    // This will cause validation errors later, which is the correct behavior
+    // to alert the user that the data needs to be fixed
+    return id;
+  }
+
+  // For any other type or invalid values, return as-is
+  return id;
+}
+
+/**
  * Get a document from a shared collection (categories, questions, etc.)
  */
 export async function getSharedDocument<T>(
@@ -291,7 +320,16 @@ export async function getSharedDocument<T>(
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() } as T;
+      const data = docSnap.data();
+      // Normalize the id field if it exists in the data
+      const normalizedData =
+        data.id !== undefined ? { ...data, id: normalizeSafeId(data.id) } : data;
+      // If data doesn't have an id field, use the document ID (normalized)
+      return (
+        normalizedData.id !== undefined
+          ? normalizedData
+          : { id: normalizeSafeId(docSnap.id), ...normalizedData }
+      ) as T;
     }
     return null;
   } catch (error) {
@@ -315,7 +353,18 @@ export async function getSharedDocuments<T>(
       constraints && constraints.length > 0 ? query(collectionRef, ...constraints) : collectionRef;
 
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as T);
+    return querySnapshot.docs.map((doc) => {
+      const data = doc.data();
+      // Normalize the id field if it exists in the data
+      const normalizedData =
+        data.id !== undefined ? { ...data, id: normalizeSafeId(data.id) } : data;
+      // If data doesn't have an id field, use the document ID (normalized)
+      return (
+        normalizedData.id !== undefined
+          ? normalizedData
+          : { id: normalizeSafeId(doc.id), ...normalizedData }
+      ) as T;
+    });
   } catch (error) {
     logError('getSharedDocuments', error, { collectionName });
     throw error;
