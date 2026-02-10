@@ -28,9 +28,18 @@ import type { Question, Category, Subcategory } from '@shared/schema';
 // Difficulty level configuration
 const DIFFICULTY_CONFIG = {
   1: { label: 'Basic', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
-  2: { label: 'Intermediate', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
-  3: { label: 'Advanced', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
-  4: { label: 'Expert', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' },
+  2: {
+    label: 'Intermediate',
+    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  },
+  3: {
+    label: 'Advanced',
+    color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  },
+  4: {
+    label: 'Expert',
+    color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+  },
   5: { label: 'Master', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
 } as const;
 
@@ -80,7 +89,7 @@ export default function MyQuestionsPage() {
     return (
       q.text.toLowerCase().includes(query) ||
       q.explanation?.toLowerCase().includes(query) ||
-      q.tags?.some((tag) => tag.toLowerCase().includes(query))
+      (Array.isArray(q.tags) && q.tags.some((tag: string) => tag.toLowerCase().includes(query)))
     );
   });
 
@@ -264,65 +273,70 @@ export default function MyQuestionsPage() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                               {/* Options */}
-                              <div className="space-y-2">
-                                <p className="text-sm font-medium text-muted-foreground">
-                                  Answer Options:
-                                </p>
-                                <div className="space-y-1.5">
-                                  {question.options.map((option) => {
-                                    const isCorrect = option.id === question.correctAnswer;
-                                    return (
-                                      <div
-                                        key={option.id}
-                                        className={`flex items-start gap-2 p-3 rounded-md border ${
-                                          isCorrect
-                                            ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800'
-                                            : 'bg-muted/30'
-                                        }`}
-                                      >
-                                        {isCorrect ? (
-                                          <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                                        ) : (
-                                          <XCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                                        )}
-                                        <span className="text-sm flex-1">{option.text}</span>
-                                        {isCorrect && (
-                                          <Badge
-                                            variant="outline"
-                                            className="text-xs bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200"
-                                          >
-                                            Correct
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-
-                              {/* Explanation */}
-                              {question.explanation && (
-                                <div className="space-y-2 pt-2 border-t">
+                              {question.options && Array.isArray(question.options) && (
+                                <div className="space-y-2">
                                   <p className="text-sm font-medium text-muted-foreground">
-                                    Explanation:
+                                    Answer Options:
                                   </p>
-                                  <p className="text-sm">{question.explanation}</p>
-                                </div>
-                              )}
-
-                              {/* Tags */}
-                              {question.tags && question.tags.length > 0 && (
-                                <div className="flex items-center gap-2 pt-2">
-                                  <span className="text-xs text-muted-foreground">Tags:</span>
-                                  <div className="flex flex-wrap gap-1">
-                                    {question.tags.map((tag, i) => (
-                                      <Badge key={i} variant="outline" className="text-xs">
-                                        {tag}
-                                      </Badge>
-                                    ))}
+                                  <div className="space-y-1.5">
+                                    {question.options.map((option) => {
+                                      const isCorrect = option.id === question.correctAnswer;
+                                      return (
+                                        <div
+                                          key={option.id}
+                                          className={`flex items-start gap-2 p-3 rounded-md border ${
+                                            isCorrect
+                                              ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800'
+                                              : 'bg-muted/30'
+                                          }`}
+                                        >
+                                          {isCorrect ? (
+                                            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                                          ) : (
+                                            <XCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                          )}
+                                          <span className="text-sm flex-1">{option.text}</span>
+                                          {isCorrect && (
+                                            <Badge
+                                              variant="outline"
+                                              className="text-xs bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200"
+                                            >
+                                              Correct
+                                            </Badge>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               )}
+
+                              {/* Explanation */}
+                              {question.explanation != null &&
+                                typeof question.explanation === 'string' && (
+                                  <div className="space-y-2 pt-2 border-t">
+                                    <p className="text-sm font-medium text-muted-foreground">
+                                      Explanation:
+                                    </p>
+                                    <p className="text-sm">{question.explanation}</p>
+                                  </div>
+                                )}
+
+                              {/* Tags */}
+                              {question.tags &&
+                                Array.isArray(question.tags) &&
+                                question.tags.length > 0 && (
+                                  <div className="flex items-center gap-2 pt-2">
+                                    <span className="text-xs text-muted-foreground">Tags:</span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {question.tags.map((tag: string, i: number) => (
+                                        <Badge key={i} variant="outline" className="text-xs">
+                                          {tag}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                             </CardContent>
                           </Card>
                         ))}
