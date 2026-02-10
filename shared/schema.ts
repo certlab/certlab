@@ -957,6 +957,18 @@ export const insertQuestionSchema = createInsertSchema(questions)
     id: true,
   })
   .extend({
+    // Validate foreign key references - must be non-negative integers within PostgreSQL INT range
+    // Note: 0 may be used as a sentinel value in some contexts (e.g., "no subcategory selected")
+    categoryId: z
+      .number()
+      .int('Category ID must be an integer')
+      .min(0, 'Category ID must be non-negative')
+      .max(2147483647, 'Category ID exceeds maximum allowed value'),
+    subcategoryId: z
+      .number()
+      .int('Subcategory ID must be an integer')
+      .min(0, 'Subcategory ID must be non-negative')
+      .max(2147483647, 'Subcategory ID exceeds maximum allowed value'),
     // Enhanced validation with character limits to prevent abuse
     text: z
       .string()
