@@ -1036,7 +1036,17 @@ export default function QuestionBankPage() {
 
         {/* Add Question Dialog */}
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent
+            className="max-w-2xl max-h-[90vh] overflow-y-auto"
+            onOpenAutoFocus={(e) => {
+              e.preventDefault();
+              // Focus the question text field when dialog opens
+              setTimeout(() => {
+                const textField = document.getElementById('text');
+                textField?.focus();
+              }, 0);
+            }}
+          >
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <PlusCircle className="h-5 w-5 text-blue-600" />
@@ -1050,7 +1060,17 @@ export default function QuestionBankPage() {
 
         {/* Edit Question Dialog */}
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent
+            className="max-w-2xl max-h-[90vh] overflow-y-auto"
+            onOpenAutoFocus={(e) => {
+              e.preventDefault();
+              // Focus the question text field when dialog opens
+              setTimeout(() => {
+                const textField = document.getElementById('text');
+                textField?.focus();
+              }, 0);
+            }}
+          >
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Edit className="h-5 w-5 text-blue-600" />
