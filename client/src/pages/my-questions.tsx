@@ -89,7 +89,7 @@ export default function MyQuestionsPage() {
     return (
       q.text.toLowerCase().includes(query) ||
       q.explanation?.toLowerCase().includes(query) ||
-      (Array.isArray(q.tags) && q.tags.some((tag: string) => tag.toLowerCase().includes(query)))
+      (Array.isArray(q.tags) && q.tags.some((tag) => tag.toLowerCase().includes(query)))
     );
   });
 
