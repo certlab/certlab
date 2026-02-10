@@ -54,6 +54,7 @@ const PerformancePage = lazy(() => import('@/pages/performance'));
 const QuizBuilderPage = lazy(() => import('@/pages/quiz-builder'));
 const MyQuizzesPage = lazy(() => import('@/pages/my-quizzes'));
 const MyMaterialsPage = lazy(() => import('@/pages/my-materials'));
+const MyQuestionsPage = lazy(() => import('@/pages/my-questions'));
 const ReportingDashboard = lazy(() => import('@/pages/reporting'));
 const UserRolesPage = lazy(() => import('@/pages/user-roles'));
 
@@ -145,6 +146,7 @@ function Router() {
                   <Route path="/app/credits" element={<CreditsPage />} />
                   <Route path="/app/data-import" element={<DataImportPage />} />
                   <Route path="/app/personal-import" element={<PersonalImportPage />} />
+                  <Route path="/app/my-questions" element={<MyQuestionsPage />} />
                   <Route path="/app/question-bank" element={<QuestionBankPage />} />
                   <Route path="/app/quiz-builder" element={<QuizBuilderPage />} />
                   <Route path="/app/my-quizzes" element={<MyQuizzesPage />} />
