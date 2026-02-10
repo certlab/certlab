@@ -1036,7 +1036,21 @@ export default function QuestionBankPage() {
 
         {/* Add Question Dialog */}
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent
+            className="max-w-2xl max-h-[90vh] overflow-y-auto"
+            onOpenAutoFocus={(e) => {
+              e.preventDefault();
+              // Focus the question text field when dialog opens.
+              // Using setTimeout with 0ms is a common pattern for Radix UI Dialog
+              // to ensure the DOM is fully rendered before focusing.
+              // The 'text' ID is unique within the active dialog (only one dialog
+              // can be open at a time), so there's no collision risk.
+              setTimeout(() => {
+                const textField = document.getElementById('text');
+                textField?.focus();
+              }, 0);
+            }}
+          >
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <PlusCircle className="h-5 w-5 text-blue-600" />
@@ -1050,7 +1064,21 @@ export default function QuestionBankPage() {
 
         {/* Edit Question Dialog */}
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent
+            className="max-w-2xl max-h-[90vh] overflow-y-auto"
+            onOpenAutoFocus={(e) => {
+              e.preventDefault();
+              // Focus the question text field when dialog opens.
+              // Using setTimeout with 0ms is a common pattern for Radix UI Dialog
+              // to ensure the DOM is fully rendered before focusing.
+              // The 'text' ID is unique within the active dialog (only one dialog
+              // can be open at a time), so there's no collision risk.
+              setTimeout(() => {
+                const textField = document.getElementById('text');
+                textField?.focus();
+              }, 0);
+            }}
+          >
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Edit className="h-5 w-5 text-blue-600" />
