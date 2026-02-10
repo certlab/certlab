@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -123,7 +124,7 @@ export default function PersonalImportPage() {
           questions or import questions from external sources.
           <div className="mt-3">
             <Button asChild variant="outline" size="sm">
-              <a href="/app/my-questions">View My Questions →</a>
+              <Link to="/app/my-questions">View My Questions →</Link>
             </Button>
           </div>
         </AlertDescription>
@@ -179,7 +180,7 @@ export default function PersonalImportPage() {
                     {importState.result.questionsImported > 0 && (
                       <div className="mt-4 pt-2 border-t">
                         <Button asChild variant="default" size="sm" className="w-full sm:w-auto">
-                          <a href="/app/my-questions">View My Questions →</a>
+                          <Link to="/app/my-questions">View My Questions →</Link>
                         </Button>
                       </div>
                     )}
