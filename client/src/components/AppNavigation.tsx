@@ -18,12 +18,9 @@ import {
   Award,
   Wallet,
   PlusCircle,
-  Languages,
-  Heart,
   Settings,
   Building,
   UserCog,
-  Accessibility,
   Flame,
 } from 'lucide-react';
 import {
@@ -229,18 +226,6 @@ export function AppNavigation() {
           icon: PlusCircle,
           href: '/app/personal-import',
         },
-        {
-          id: 'i18n-demo',
-          label: 'I18n Demo',
-          icon: Languages,
-          href: '/app/i18n-demo',
-        },
-        {
-          id: 'credits',
-          label: 'Credits',
-          icon: Heart,
-          href: '/app/credits',
-        },
       ],
     },
     // Admin group (conditional)
@@ -271,20 +256,6 @@ export function AppNavigation() {
                 label: 'Reporting',
                 icon: BarChart3,
                 href: '/app/reporting',
-                adminOnly: true,
-              },
-              {
-                id: 'accessibility',
-                label: 'Accessibility',
-                icon: Accessibility,
-                href: '/app/accessibility',
-                adminOnly: true,
-              },
-              {
-                id: 'ui-structure',
-                label: 'UI Structure',
-                icon: Database,
-                href: '/app/ui-structure',
                 adminOnly: true,
               },
             ],
