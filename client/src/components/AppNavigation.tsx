@@ -108,6 +108,12 @@ export function AppNavigation() {
           href: '/app/my-quizzes',
         },
         {
+          id: 'my-questions',
+          label: 'My Questions',
+          icon: FileText,
+          href: '/app/my-questions',
+        },
+        {
           id: 'practice-tests',
           label: 'Practice Tests',
           icon: FileText,
